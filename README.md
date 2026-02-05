@@ -148,8 +148,8 @@ Before you begin, ensure you have the following installed:
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/Piyush-Kumar62/Demo.git
-cd Demo
+git clone https://github.com/Piyush-Kumar62/Digital-Cafe-Ordering-and-Operations-Platform.git
+cd Digital-Cafe-Ordering-and-Operations-Platform
 ```
 
 ### 2. Database Setup
@@ -539,8 +539,8 @@ For support, email piyushkumar30066@gmail.com or create an issue in this reposit
 
 ## 🔗 Links
 
-- **Repository:** https://github.com/Piyush-Kumar62/Demo
-- **Issues:** https://github.com/Piyush-Kumar62/Demo/issues
+- **Repository:** https://github.com/Piyush-Kumar62/Digital-Cafe-Ordering-and-Operations-Platform
+- **Issues:** https://github.com/Piyush-Kumar62/Digital-Cafe-Ordering-and-Operations-Platform/issues
 
 ---
 

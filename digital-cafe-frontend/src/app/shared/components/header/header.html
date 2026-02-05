@@ -1,0 +1,65 @@
+<header id="header" class="header fixed-top" [class.scrolled]="isScrolled">
+  <div class="topbar d-flex align-items-center">
+    <div class="container d-flex justify-content-end justify-content-md-between">
+      <div class="contact-info d-flex align-items-center">
+        <i class="bi bi-phone d-flex align-items-center d-none d-lg-block">
+          <span>+91 9876543210</span>
+        </i>
+        <i class="bi bi-clock ms-4 d-none d-lg-flex align-items-center">
+          <span>Mon-Sat: 8:00 AM - 11:00 PM</span>
+        </i>
+      </div>
+
+      <div class="d-flex align-items-center gap-2">
+        <!-- Cart Icon -->
+        <button *ngIf="isLoggedIn" class="btn btn-link position-relative text-white" (click)="navigateToCart()">
+          <i class="bi bi-cart3 fs-5"></i>
+          <span *ngIf="cartItemCount > 0" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+            {{ cartItemCount }}
+          </span>
+        </button>
+
+        <!-- Login/Register or User Menu -->
+        <div *ngIf="!isLoggedIn" class="d-flex gap-2">
+          <a routerLink="/auth/login" class="cta-btn">Login</a>
+          <a routerLink="/auth/register" class="cta-btn d-none d-md-inline">Register</a>
+        </div>
+
+        <div *ngIf="isLoggedIn" class="dropdown">
+          <button class="cta-btn dropdown-toggle" type="button" data-bs-toggle="dropdown">
+            <i class="bi bi-person-circle me-1"></i>
+            {{ currentUser?.username }}
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li><a class="dropdown-item" (click)="navigateToDashboard()"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a></li>
+            <li><a class="dropdown-item" routerLink="/orders"><i class="bi bi-receipt me-2"></i>My Orders</a></li>
+            <li><a class="dropdown-item" routerLink="/profile"><i class="bi bi-person me-2"></i>Profile</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item text-danger" (click)="logout()"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="branding d-flex align-items-center">
+    <div class="container position-relative d-flex align-items-center justify-content-between">
+      <a routerLink="/" class="logo d-flex align-items-center">
+        <h1 class="sitename">Digital Cafe</h1>
+      </a>
+
+      <nav id="navmenu" class="navmenu" [class.mobile-nav-active]="isMobileMenuOpen">
+        <ul>
+          <li><a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" (click)="closeMobileMenu()">Home</a></li>
+          <li><a routerLink="/menu" routerLinkActive="active" (click)="closeMobileMenu()">Menu</a></li>
+          <li><a routerLink="/about" routerLinkActive="active" (click)="closeMobileMenu()">About</a></li>
+          <li><a routerLink="/contact" routerLinkActive="active" (click)="closeMobileMenu()">Contact</a></li>
+        </ul>
+        <i class="mobile-nav-toggle d-xl-none bi"
+           [class.bi-list]="!isMobileMenuOpen"
+           [class.bi-x]="isMobileMenuOpen"
+           (click)="toggleMobileMenu()"></i>
+      </nav>
+    </div>
+  </div>
+</header>

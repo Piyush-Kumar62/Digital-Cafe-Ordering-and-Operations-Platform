@@ -1,0 +1,35 @@
+spring.application.name=digital-cafe-backend
+
+# Database Configuration
+# Update these values with your local database credentials
+spring.datasource.url=jdbc:mysql://localhost:3306/digital_cafe_db?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+spring.datasource.username=root
+spring.datasource.password=YOUR_MYSQL_PASSWORD_HERE
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+
+# JPA Configuration
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.format_sql=true
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQLDialect
+
+# JWT Configuration
+# IMPORTANT: Change this secret in production! This is a base64 encoded secret
+jwt.secret=5367566B59703373367639792F423F4528482B4D6251655468576D5A71347437
+jwt.expiration=86400000
+jwt.refresh-expiration=604800000
+
+# Email Configuration (Gmail SMTP Example)
+# For Gmail: Enable 2FA and create App-Specific Password at https://myaccount.google.com/apppasswords
+spring.mail.host=smtp.gmail.com
+spring.mail.port=587
+spring.mail.username=YOUR_EMAIL@gmail.com
+spring.mail.password=YOUR_APP_SPECIFIC_PASSWORD
+spring.mail.properties.mail.smtp.auth=true
+spring.mail.properties.mail.smtp.starttls.enable=true
+spring.mail.properties.mail.smtp.starttls.required=true
+
+# Application Configuration
+app.frontend.url=http://localhost:4200
+app.name=Digital Cafe Platform
+logging.level.com.digitalcafe=DEBUG

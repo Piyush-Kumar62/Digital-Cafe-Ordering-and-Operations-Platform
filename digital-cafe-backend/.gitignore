@@ -1,0 +1,86 @@
+### Compiled class files ###
+target/
+!**/src/main/**/target/
+!**/src/test/**/target/
+*.class
+
+### Log files ###
+*.log
+logs/
+
+### Maven ###
+.mvn/wrapper/maven-wrapper.jar
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.properties
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### VS Code ###
+.vscode/
+
+### Sensitive Configuration Files ###
+src/main/resources/application.properties
+src/main/resources/application-dev.properties
+src/main/resources/application-prod.properties
+src/main/resources/application-local.properties
+*-secret.properties
+src/main/resources/sample-data.sql
+target/classes/application.properties
+target/classes/sample-data.sql
+Digital_Cafe_API.postman_collection.json
+### Internal Documentation (Not for GitHub) ###
+*.md
+!README.md
+PUSH_GUIDE.md
+PROJECT_DOCUMENTATION.md
+ postman-test-script.js
+### Project Materials & Internal Files ###
+Project Materials/
+*.txt
+
+### OS Files ###
+.DS_Store
+Thumbs.db
+
+### Package Files ###
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+### Database ###
+*.db
+*.sqlite
+
+### Temporary Files ###
+*.tmp
+*.bak
+*.swp
+*~.nib
+

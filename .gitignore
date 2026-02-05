@@ -1,0 +1,60 @@
+# Root .gitignore for Digital Cafe Platform
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Operating System Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# Security sensitive files
+*-secret.*
+*.key
+*.pem
+*.p12
+*.jks
+credentials.json
+secrets.json
+
+# Project Materials (remove this line if you want to include project docs)
+Project Materials/
+
+# Personal guide files (keep local, don't push to GitHub)
+GITHUB_PUSH_GUIDE.md
+QUICK_GIT_COMMANDS.md
+PROJECT_EXPLANATION.md
+
+application.properties
+/src/environments/environment.prod.ts
+.env
+.env.local
+.env.*.local
+/.angular/cache

@@ -1,0 +1,155 @@
+<section class="cart section">
+  <div class="container">
+    <div class="section-title">
+      <h2>Shopping Cart</h2>
+    </div>
+
+    <!-- Empty Cart Message -->
+    <div *ngIf="cartItems.length === 0" class="text-center py-5">
+      <i class="bi bi-cart-x display-1 text-muted"></i>
+      <h3 class="mt-3">Your cart is empty</h3>
+      <p class="text-muted">Add some delicious items from our menu!</p>
+      <a routerLink="/menu" class="btn btn-primary">Browse Menu</a>
+    </div>
+
+    <!-- Cart Items -->
+    <div *ngIf="cartItems.length > 0" class="row">
+      <div class="col-lg-8">
+        <div class="card mb-4">
+          <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="bi bi-bag"></i> Cart Items ({{ cartItems.length }})</h5>
+          </div>
+          <div class="card-body">
+            <div *ngFor="let item of cartItems; let last = last" class="cart-item" [class.border-bottom]="!last">
+              <div class="row align-items-center py-3">
+                <div class="col-md-2">
+                  <img
+                    [src]="item.imageUrl || 'assets/img/menu/default.jpg'"
+                    [alt]="item.name"
+                    class="img-fluid rounded"
+                    style="width: 80px; height: 80px; object-fit: cover;">
+                </div>
+                <div class="col-md-4">
+                  <h6 class="mb-0">{{ item.name }}</h6>
+                  <small class="text-muted">₹{{ item.price | number:'1.2-2' }} each</small>
+                </div>
+                <div class="col-md-3">
+                  <div class="input-group input-group-sm">
+                    <button class="btn btn-outline-secondary" (click)="updateQuantity(item, -1)">
+                      <i class="bi bi-dash"></i>
+                    </button>
+                    <input type="text" class="form-control text-center" [value]="item.quantity" readonly>
+                    <button class="btn btn-outline-secondary" (click)="updateQuantity(item, 1)">
+                      <i class="bi bi-plus"></i>
+                    </button>
+                  </div>
+                </div>
+                <div class="col-md-2 text-end">
+                  <strong class="text-primary">₹{{ (item.price * item.quantity) | number:'1.2-2' }}</strong>
+                </div>
+                <div class="col-md-1 text-end">
+                  <button class="btn btn-sm btn-outline-danger" (click)="removeItem(item)">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card-footer text-end">
+            <button class="btn btn-outline-danger" (click)="clearCart()">
+              <i class="bi bi-trash"></i> Clear Cart
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Order Summary -->
+      <div class="col-lg-4">
+        <div class="card mb-4">
+          <div class="card-header bg-success text-white">
+            <h5 class="mb-0"><i class="bi bi-receipt"></i> Order Summary</h5>
+          </div>
+          <div class="card-body">
+            <!-- Order Type -->
+            <div class="mb-3">
+              <label class="form-label fw-bold">Order Type</label>
+              <div class="btn-group w-100" role="group">
+                <input type="radio" class="btn-check" name="orderType" id="dineIn"
+                       [(ngModel)]="orderType" value="DINE_IN" autocomplete="off">
+                <label class="btn btn-outline-primary" for="dineIn">
+                  <i class="bi bi-house"></i> Dine In
+                </label>
+
+                <input type="radio" class="btn-check" name="orderType" id="takeaway"
+                       [(ngModel)]="orderType" value="TAKEAWAY" autocomplete="off">
+                <label class="btn btn-outline-primary" for="takeaway">
+                  <i class="bi bi-bag"></i> Takeaway
+                </label>
+              </div>
+            </div>
+
+            <!-- Table Number (if Dine In) -->
+            <div *ngIf="orderType === 'DINE_IN'" class="mb-3">
+              <label for="tableId" class="form-label fw-bold">Table Number *</label>
+              <input
+                type="number"
+                class="form-control"
+                id="tableId"
+                [(ngModel)]="tableId"
+                placeholder="Enter table number"
+                min="1"
+                required>
+            </div>
+
+            <!-- Special Instructions -->
+            <div class="mb-3">
+              <label for="specialInstructions" class="form-label fw-bold">Special Instructions</label>
+              <textarea
+                class="form-control"
+                id="specialInstructions"
+                rows="3"
+                [(ngModel)]="specialInstructions"
+                placeholder="Any special requests? (optional)"></textarea>
+            </div>
+
+            <hr>
+
+            <!-- Price Breakdown -->
+            <div class="d-flex justify-content-between mb-2">
+              <span>Subtotal:</span>
+              <span>₹{{ totalAmount | number:'1.2-2' }}</span>
+            </div>
+            <div class="d-flex justify-content-between mb-2">
+              <span>Tax (5%):</span>
+              <span>₹{{ (totalAmount * 0.05) | number:'1.2-2' }}</span>
+            </div>
+            <hr>
+            <div class="d-flex justify-content-between mb-3">
+              <strong>Total:</strong>
+              <strong class="text-primary fs-5">₹{{ (totalAmount * 1.05) | number:'1.2-2' }}</strong>
+            </div>
+
+            <!-- Place Order Button -->
+            <button
+              class="btn btn-success w-100 btn-lg"
+              (click)="placeOrder()"
+              [disabled]="isProcessing || cartItems.length === 0">
+              <span *ngIf="!isProcessing">
+                <i class="bi bi-check-circle"></i> Place Order
+              </span>
+              <span *ngIf="isProcessing">
+                <span class="spinner-border spinner-border-sm me-2"></span>
+                Processing...
+              </span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Continue Shopping -->
+        <a routerLink="/menu" class="btn btn-outline-primary w-100">
+          <i class="bi bi-arrow-left"></i> Continue Shopping
+        </a>
+      </div>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,102 @@
+<section id="menu" class="menu section">
+  <!-- Section Title -->
+  <div class="container section-title" data-aos="fade-up">
+    <h2>Menu</h2>
+    <div><span>Check Our Tasty</span> <span class="description-title">Menu</span></div>
+  </div>
+
+  <div class="container">
+    <!-- Search Bar -->
+    <div class="row mb-4" data-aos="fade-up">
+      <div class="col-lg-6 mx-auto">
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-search"></i></span>
+          <input
+            type="text"
+            class="form-control"
+            placeholder="Search menu items..."
+            [(ngModel)]="searchTerm"
+            (ngModelChange)="onSearchChange()">
+        </div>
+      </div>
+    </div>
+
+    <!-- Category Filters -->
+    <div class="row" data-aos="fade-up" data-aos-delay="100">
+      <div class="col-lg-12 d-flex justify-content-center">
+        <ul class="menu-filters">
+          <li
+            (click)="filterByCategory('all')"
+            [class.filter-active]="selectedCategory === 'all'"
+            style="cursor: pointer;">
+            All
+          </li>
+          <li
+            *ngFor="let category of categories"
+            (click)="filterByCategory(category.id!.toString())"
+            [class.filter-active]="selectedCategory === category.id!.toString()"
+            style="cursor: pointer;">
+            {{ category.name }}
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div *ngIf="isLoading" class="text-center my-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+
+    <!-- Menu Items Grid -->
+    <div class="row" data-aos="fade-up" data-aos-delay="200" *ngIf="!isLoading">
+      <div
+        *ngFor="let item of filteredItems"
+        class="col-lg-6 menu-item mb-4">
+        <div class="d-flex align-items-start">
+          <img
+            [src]="item.imageUrl || 'assets/img/menu/default.jpg'"
+            class="menu-img"
+            [alt]="item.name"
+            style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px;">
+          <div class="flex-grow-1 ms-3">
+            <div class="menu-content d-flex justify-content-between align-items-center">
+              <a href="javascript:void(0)" class="fw-bold">{{ item.name }}</a>
+              <span class="text-primary fw-bold">₹{{ item.price | number:'1.2-2' }}</span>
+            </div>
+            <div class="menu-ingredients text-muted small">
+              {{ item.description }}
+            </div>
+            <div class="menu-category text-secondary small">
+              <i class="bi bi-tag"></i> {{ getCategoryName(item.categoryId) }}
+            </div>
+            <div class="menu-actions mt-2">
+              <button
+                class="btn btn-sm btn-primary"
+                [disabled]="!item.available"
+                (click)="addToCart(item)">
+                <i class="bi bi-cart-plus"></i> Add to Cart
+              </button>
+              <span *ngIf="!item.available" class="badge bg-danger ms-2">
+                Not Available
+              </span>
+              <span *ngIf="item.available" class="badge bg-success ms-2">
+                Available
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- No Items Found -->
+    <div *ngIf="!isLoading && filteredItems.length === 0" class="text-center my-5">
+      <i class="bi bi-search fs-1 text-muted"></i>
+      <p class="text-muted mt-3">No menu items found matching your criteria.</p>
+      <button class="btn btn-primary" (click)="selectedCategory = 'all'; searchTerm = ''; applyFilters()">
+        Clear Filters
+      </button>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,185 @@
+/* Header component styles */
+.header {
+  background-color: transparent;
+  transition: all 0.5s;
+}
+
+/* Header becomes solid on scroll */
+.header.scrolled {
+  background-color: rgba(21, 17, 13, 0.95);
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+}
+
+.header .topbar {
+  background-color: transparent;
+  padding: 10px 0;
+  font-size: 14px;
+  transition: all 0.5s;
+}
+
+.header.scrolled .topbar {
+  background-color: rgba(21, 17, 13, 0.95);
+}
+
+.header .topbar .contact-info i {
+  font-style: normal;
+  color: #cda45e;
+}
+
+.header .topbar .contact-info i a,
+.header .topbar .contact-info i span {
+  padding-left: 5px;
+  color: #ffffff;
+}
+
+.header .topbar .contact-info i a:hover {
+  color: #ffffff;
+  text-decoration: underline;
+}
+
+.header .topbar .cta-btn {
+  color: #ffffff;
+  background: #cda45e;
+  font-weight: 500;
+  font-size: 14px;
+  letter-spacing: 1px;
+  display: inline-block;
+  padding: 6px 30px 8px 30px;
+  border-radius: 50px;
+  transition: 0.3s;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+}
+
+.header .topbar .cta-btn:hover {
+  background: #d3af71;
+  color: #ffffff;
+}
+
+.header .branding {
+  min-height: 60px;
+  padding: 5px 0;
+  background-color: transparent;
+  transition: all 0.5s;
+}
+
+.header.scrolled .branding {
+  background-color: rgba(21, 17, 13, 0.95);
+}
+
+.header .logo h1 {
+  font-size: 30px;
+  margin: 0;
+  font-weight: 700;
+  color: #ffffff;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.header .logo:hover h1 {
+  color: #cda45e;
+}
+
+/* Navigation menu styles */
+.navmenu ul {
+  margin: 0;
+  padding: 0;
+  display: flex;
+  list-style: none;
+  align-items: center;
+}
+
+.navmenu a {
+  color: rgba(255, 255, 255, 0.7);
+  padding: 18px 15px;
+  font-size: 14px;
+  font-weight: 400;
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  transition: 0.3s;
+}
+
+.navmenu a:hover,
+.navmenu a.active {
+  color: #ffffff;
+}
+
+/* Dropdown menu styling */
+.header .dropdown-menu {
+  background-color: #1a1a1a;
+  border: 1px solid rgba(205, 164, 94, 0.3);
+}
+
+.header .dropdown-item {
+  color: #ffffff;
+  padding: 10px 20px;
+}
+
+.header .dropdown-item:hover {
+  background-color: rgba(205, 164, 94, 0.2);
+  color: #cda45e;
+}
+
+.header .dropdown-item.text-danger {
+  color: #dc3545 !important;
+}
+
+.header .dropdown-item.text-danger:hover {
+  background-color: rgba(220, 53, 69, 0.1);
+}
+
+/* Cart button styling */
+.header .btn-link {
+  color: #ffffff;
+  text-decoration: none;
+  padding: 8px 12px;
+}
+
+.header .btn-link:hover {
+  color: #cda45e;
+}
+
+/* Mobile menu toggle */
+.mobile-nav-toggle {
+  color: #ffffff;
+  font-size: 28px;
+  line-height: 0;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.mobile-nav-toggle:hover {
+  color: #cda45e;
+}
+
+/* Responsive styles */
+@media (max-width: 1199px) {
+  .navmenu {
+    position: fixed;
+    top: 0;
+    right: -100%;
+    width: 100%;
+    max-width: 300px;
+    bottom: 0;
+    transition: 0.3s;
+    z-index: 9997;
+  }
+
+  .navmenu.mobile-nav-active {
+    right: 0;
+    background-color: rgba(21, 17, 13, 0.98);
+    box-shadow: -10px 0 20px rgba(0, 0, 0, 0.3);
+  }
+
+  .navmenu ul {
+    flex-direction: column;
+    padding: 80px 20px 20px 20px;
+  }
+
+  .navmenu a {
+    width: 100%;
+    padding: 15px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+}

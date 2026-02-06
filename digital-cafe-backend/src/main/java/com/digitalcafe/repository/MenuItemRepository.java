@@ -12,4 +12,7 @@ public interface MenuItemRepository extends JpaRepository<MenuItem, Long> {
     List<MenuItem> findByCafeId(Long cafeId);
     List<MenuItem> findByCafeIdAndCategoryId(Long cafeId, Long categoryId);
     List<MenuItem> findByAvailableAndActive(Boolean available, Boolean active);
+    
+    // Dashboard queries
+    Long countByCafeId(Long cafeId);
 }

@@ -1,0 +1,94 @@
+<section class="verify-email section">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-5 col-md-7 col-sm-10">
+        <div class="card shadow-lg">
+          <div class="card-body p-4">
+            <div class="text-center mb-4">
+              <i
+                class="bi bi-envelope-check"
+                style="font-size: 3rem; color: var(--accent-color)"
+              ></i>
+              <h2 class="fw-bold mt-3">Verify Your Email</h2>
+              <p class="text-muted">Enter the verification token sent to your email</p>
+            </div>
+
+            <div *ngIf="errorMessage" class="alert alert-danger" role="alert">
+              <i class="bi bi-exclamation-circle me-2"></i>{{ errorMessage }}
+            </div>
+
+            <div *ngIf="successMessage" class="alert alert-success" role="alert">
+              <i class="bi bi-check-circle me-2"></i>{{ successMessage }}
+            </div>
+
+            <form (ngSubmit)="onVerify()" *ngIf="!isVerified">
+              <div class="mb-3">
+                <label for="email" class="form-label">Email Address</label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                  <input
+                    type="email"
+                    class="form-control"
+                    id="email"
+                    [(ngModel)]="email"
+                    name="email"
+                    placeholder="your.email@example.com"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label for="token" class="form-label">Verification Token</label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="bi bi-key"></i></span>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="token"
+                    [(ngModel)]="token"
+                    name="token"
+                    placeholder="Enter token from email"
+                    required
+                  />
+                </div>
+                <small class="text-muted">Check your email inbox for the verification token</small>
+              </div>
+
+              <button type="submit" class="btn btn-primary w-100 mb-3" [disabled]="isLoading">
+                <span *ngIf="!isLoading">
+                  <i class="bi bi-check-circle me-2"></i>Verify Email
+                </span>
+                <span *ngIf="isLoading">
+                  <span class="spinner-border spinner-border-sm me-2"></span>
+                  Verifying...
+                </span>
+              </button>
+
+              <div class="text-center">
+                <button
+                  type="button"
+                  class="btn btn-link text-decoration-none"
+                  (click)="onResendVerification()"
+                  [disabled]="isLoading"
+                >
+                  <i class="bi bi-arrow-repeat me-1"></i>Resend Verification Email
+                </button>
+              </div>
+            </form>
+
+            <hr class="my-4" />
+
+            <div class="text-center">
+              <p class="mb-0">
+                <a routerLink="/auth/login" class="text-decoration-none">
+                  <i class="bi bi-arrow-left me-1"></i>Back to Login
+                </a>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

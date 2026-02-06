@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AuthResponse {
+    private Long id;  // Added user ID
     private String token;
     @Builder.Default
     private String type = "Bearer";

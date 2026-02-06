@@ -59,7 +59,7 @@ public class User {
     private LocalDateTime updatedAt;
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
-    private com.digitalcafe.model.Profile profile;
+    private Profile profile;
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
     private EmailVerification emailVerification;

@@ -1,5 +1,6 @@
 package com.digitalcafe.service;
 
+import com.digitalcafe.config.JwtUtil;
 import com.digitalcafe.dto.UserDTO;
 import com.digitalcafe.dto.UserRequestDTO;
 import com.digitalcafe.exception.BadRequestException;
@@ -7,6 +8,7 @@ import com.digitalcafe.exception.ResourceNotFoundException;
 import com.digitalcafe.model.User;
 import com.digitalcafe.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,6 +20,8 @@ import java.util.stream.Collectors;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtUtil jwtUtil;
 
     @Transactional(readOnly = true)
     public List<UserDTO> getAllUsers() {
@@ -139,5 +143,169 @@ public class UserService {
         dto.setEmailVerified(user.getEmailVerified());
         dto.setProfileCompleted(user.getProfileCompleted());
         return dto;
+    }
+
+    /**
+     * Admin creates Café Owner account
+     */
+    @Transactional
+    public com.digitalcafe.dto.StaffCreationResponse createCafeOwner(com.digitalcafe.dto.CreateStaffRequest request, String authHeader) {
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new BadRequestException("Email already exists: " + request.getEmail());
+        }
+
+        // Extract admin user from JWT
+        String token = authHeader.replace("Bearer ", "");
+        String adminUsername = jwtUtil.extractUsername(token);
+        User admin = userRepository.findByUsername(adminUsername)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "username", adminUsername));
+
+        String tempPassword = generateTempPassword();
+
+        User owner = new User();
+        owner.setUsername(generateUsername(request.getFirstName(), request.getLastName()));
+        owner.setEmail(request.getEmail());
+        owner.setPassword(passwordEncoder.encode(tempPassword));
+        owner.setRole(User.Role.CAFE_OWNER);
+        owner.setActive(true);
+        owner.setEmailVerified(false);
+        owner.setProfileCompleted(false);
+        owner.setTempPassword(true);
+        owner.setCreatedBy(admin);
+
+        User savedOwner = userRepository.save(owner);
+        // TODO: Send email with credentials (temp password: tempPassword)
+        
+        return new com.digitalcafe.dto.StaffCreationResponse(
+            savedOwner.getId(),
+            savedOwner.getUsername(),
+            savedOwner.getEmail(),
+            savedOwner.getRole().name(),
+            tempPassword,
+            savedOwner.getActive(),
+            savedOwner.getEmailVerified(),
+            savedOwner.getProfileCompleted()
+        );
+    }
+
+    /**
+     * Café Owner creates Chef account
+     */
+    @Transactional
+    public com.digitalcafe.dto.StaffCreationResponse createChef(com.digitalcafe.dto.CreateStaffRequest request, String authHeader) {
+        // CafeId is optional - if provided, validate it exists
+        if (request.getCafeId() != null) {
+            // TODO: Validate cafe exists and belongs to the owner
+        }
+
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new BadRequestException("Email already exists: " + request.getEmail());
+        }
+
+        // Extract owner user from JWT
+        String token = authHeader.replace("Bearer ", "");
+        String ownerUsername = jwtUtil.extractUsername(token);
+        User owner = userRepository.findByUsername(ownerUsername)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "username", ownerUsername));
+
+        String tempPassword = generateTempPassword();
+
+        User chef = new User();
+        chef.setUsername(generateUsername(request.getFirstName(), request.getLastName()));
+        chef.setEmail(request.getEmail());
+        chef.setPassword(passwordEncoder.encode(tempPassword));
+        chef.setRole(User.Role.CHEF);
+        chef.setActive(true);
+        chef.setEmailVerified(false);
+        chef.setProfileCompleted(false);
+        chef.setTempPassword(true);
+        chef.setCreatedBy(owner);
+
+        User savedChef = userRepository.save(chef);
+        // TODO: Send email with credentials (temp password: tempPassword)
+        
+        return new com.digitalcafe.dto.StaffCreationResponse(
+            savedChef.getId(),
+            savedChef.getUsername(),
+            savedChef.getEmail(),
+            savedChef.getRole().name(),
+            tempPassword,
+            savedChef.getActive(),
+            savedChef.getEmailVerified(),
+            savedChef.getProfileCompleted()
+        );
+    }
+
+    /**
+     * Café Owner creates Waiter account
+     */
+    @Transactional
+    public com.digitalcafe.dto.StaffCreationResponse createWaiter(com.digitalcafe.dto.CreateStaffRequest request, String authHeader) {
+        // CafeId is optional - if provided, validate it exists
+        if (request.getCafeId() != null) {
+            // TODO: Validate cafe exists and belongs to the owner
+        }
+
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new BadRequestException("Email already exists: " + request.getEmail());
+        }
+
+        // Extract owner user from JWT
+        String token = authHeader.replace("Bearer ", "");
+        String ownerUsername = jwtUtil.extractUsername(token);
+        User owner = userRepository.findByUsername(ownerUsername)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "username", ownerUsername));
+
+        String tempPassword = generateTempPassword();
+
+        User waiter = new User();
+        waiter.setUsername(generateUsername(request.getFirstName(), request.getLastName()));
+        waiter.setEmail(request.getEmail());
+        waiter.setPassword(passwordEncoder.encode(tempPassword));
+        waiter.setRole(User.Role.WAITER);
+        waiter.setActive(true);
+        waiter.setEmailVerified(false);
+        waiter.setProfileCompleted(false);
+        waiter.setTempPassword(true);
+        waiter.setCreatedBy(owner);
+
+        User savedWaiter = userRepository.save(waiter);
+        // TODO: Send email with credentials (temp password: tempPassword)
+        
+        return new com.digitalcafe.dto.StaffCreationResponse(
+            savedWaiter.getId(),
+            savedWaiter.getUsername(),
+            savedWaiter.getEmail(),
+            savedWaiter.getRole().name(),
+            tempPassword,
+            savedWaiter.getActive(),
+            savedWaiter.getEmailVerified(),
+            savedWaiter.getProfileCompleted()
+        );
+    }
+
+    private String generateUsername(String firstName, String lastName) {
+        String baseUsername = (firstName + "." + lastName).toLowerCase().replaceAll("[^a-z.]", "");
+        String username = baseUsername;
+        int counter = 1;
+        
+        while (userRepository.existsByUsername(username)) {
+            username = baseUsername + counter;
+            counter++;
+        }
+        
+        return username;
+    }
+
+    private String generateTempPassword() {
+        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%";
+        StringBuilder password = new StringBuilder();
+        java.util.Random random = new java.util.Random();
+        
+        for (int i = 0; i < 8; i++) {
+            password.append(chars.charAt(random.nextInt(chars.length())));
+        }
+        
+        return password.toString();
     }
 }

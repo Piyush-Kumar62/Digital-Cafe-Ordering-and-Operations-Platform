@@ -1,0 +1,214 @@
+<section class="waiter-dashboard section">
+  <div class="container-fluid">
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <h2 class="mb-1"><i class="bi bi-person-workspace me-2"></i>Waiter Dashboard</h2>
+            <p class="text-muted mb-0">Manage customer service and deliveries</p>
+          </div>
+          <button class="btn btn-primary" (click)="loadDashboard()">
+            <i class="bi bi-arrow-clockwise me-2"></i>Refresh
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="isLoading" class="text-center py-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <p class="mt-3">Loading dashboard data...</p>
+    </div>
+
+    <div *ngIf="errorMessage" class="alert alert-danger alert-dismissible fade show">
+      <i class="bi bi-exclamation-circle me-2"></i>{{ errorMessage }}
+      <button type="button" class="btn-close" (click)="errorMessage = ''"></button>
+    </div>
+
+    <div *ngIf="successMessage" class="alert alert-success alert-dismissible fade show">
+      <i class="bi bi-check-circle me-2"></i>{{ successMessage }}
+      <button type="button" class="btn-close" (click)="successMessage = ''"></button>
+    </div>
+
+    <div *ngIf="dashboard && !isLoading">
+      <!-- Stats Cards Row -->
+      <div class="row g-4 mb-4">
+        <div class="col-xl-4 col-md-6">
+          <div class="stat-card">
+            <div class="stat-icon bg-success">
+              <i class="bi bi-check2-circle"></i>
+            </div>
+            <div class="stat-content">
+              <h3>{{ dashboard.readyOrders }}</h3>
+              <p>Ready to Serve</p>
+              <div class="stat-footer">
+                <span class="text-success"> <i class="bi bi-bell-fill"></i> Action Required </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-xl-4 col-md-6">
+          <div class="stat-card">
+            <div class="stat-icon bg-primary">
+              <i class="bi bi-calendar-check"></i>
+            </div>
+            <div class="stat-content">
+              <h3>{{ dashboard.activeBookings }}</h3>
+              <p>Active Bookings</p>
+              <div class="stat-footer">
+                <span class="text-primary"> <i class="bi bi-people"></i> Today's Tables </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-xl-4 col-md-6">
+          <div class="stat-card">
+            <div class="stat-icon bg-info">
+              <i class="bi bi-clipboard-check"></i>
+            </div>
+            <div class="stat-content">
+              <h3>{{ dashboard.servedTodayOrders }}</h3>
+              <p>Served Today</p>
+              <div class="stat-footer">
+                <span class="text-info"> <i class="bi bi-trophy"></i> Great Work! </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Service Queue -->
+      <div class="row">
+        <div class="col-12">
+          <div class="card shadow-sm">
+            <div class="card-header bg-white">
+              <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-list-check me-2"></i>Service Queue</h5>
+                <span class="badge bg-success">{{ dashboard.serviceQueue.length }} orders</span>
+              </div>
+            </div>
+            <div class="card-body">
+              <div *ngIf="dashboard.serviceQueue.length === 0" class="text-center py-5">
+                <i class="bi bi-cup-hot" style="font-size: 4rem; color: #ccc"></i>
+                <h4 class="mt-3">All Set!</h4>
+                <p class="text-muted">No orders waiting to be served</p>
+              </div>
+
+              <div *ngIf="dashboard.serviceQueue.length > 0" class="service-queue">
+                <div
+                  *ngFor="let order of dashboard.serviceQueue; let i = index"
+                  class="service-card"
+                  [class.service-priority]="i < 2"
+                >
+                  <div class="service-header">
+                    <div class="order-number">
+                      <i class="bi bi-receipt-cutoff"></i>
+                      <strong>{{ order.orderNumber }}</strong>
+                    </div>
+                    <div>
+                      <span class="badge" [ngClass]="getStatusBadgeClass(order.status)">
+                        {{ order.status }}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div class="service-body">
+                    <div class="service-info">
+                      <div class="info-row">
+                        <div class="info-item">
+                          <i class="bi bi-person-fill"></i>
+                          <span><strong>Customer:</strong> {{ order.customerName }}</span>
+                        </div>
+                        <div class="info-item">
+                          <i class="bi bi-table"></i>
+                          <span><strong>Table:</strong> {{ order.tableNumber }}</span>
+                        </div>
+                      </div>
+                      <div class="info-row">
+                        <div class="info-item">
+                          <i class="bi bi-cash"></i>
+                          <span><strong>Amount:</strong> ₹{{ order.totalAmount }}</span>
+                        </div>
+                        <div class="info-item">
+                          <i class="bi bi-clock-history"></i>
+                          <span
+                            ><strong>Ordered:</strong>
+                            {{ order.createdAt | date: 'shortTime' }}</span
+                          >
+                        </div>
+                      </div>
+                    </div>
+
+                    <div *ngIf="i < 2" class="priority-badge">
+                      <i class="bi bi-exclamation-circle-fill"></i> Priority
+                    </div>
+                  </div>
+
+                  <div class="service-footer">
+                    <small class="text-muted">
+                      <i class="bi bi-calendar3"></i>
+                      {{ order.createdAt | date: 'medium' }}
+                    </small>
+                    <button
+                      *ngIf="canTakeAction(order.status)"
+                      class="btn btn-sm"
+                      [ngClass]="{
+                        'btn-success': order.status === 'READY',
+                        'btn-info': order.status === 'SERVED',
+                      }"
+                      (click)="handleOrderAction(order)"
+                    >
+                      <i
+                        class="bi"
+                        [ngClass]="{
+                          'bi-hand-thumbs-up': order.status === 'READY',
+                          'bi-check-all': order.status === 'SERVED',
+                        }"
+                      >
+                      </i>
+                      {{ getActionButtonText(order.status) }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Tips Section -->
+      <div class="row mt-4">
+        <div class="col-12">
+          <div class="card shadow-sm border-0 bg-gradient-primary text-white">
+            <div class="card-body">
+              <h5 class="mb-3"><i class="bi bi-lightbulb-fill me-2"></i>Quick Tips</h5>
+              <div class="row g-3">
+                <div class="col-md-4">
+                  <div class="tip-item">
+                    <i class="bi bi-1-circle-fill"></i>
+                    <span>Check table readiness before serving</span>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="tip-item">
+                    <i class="bi bi-2-circle-fill"></i>
+                    <span>Verify order completeness with customer</span>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="tip-item">
+                    <i class="bi bi-3-circle-fill"></i>
+                    <span>Mark orders served promptly</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

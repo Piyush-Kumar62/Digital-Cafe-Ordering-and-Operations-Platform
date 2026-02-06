@@ -127,6 +127,122 @@ public class OrderService {
     }
 
     @Transactional
+    public OrderDTO confirmOrder(Long orderId, Long ownerId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order", "id", orderId));
+        
+        if (order.getStatus() != Order.OrderStatus.PLACED) {
+            throw new BadRequestException("Order can only be confirmed from PLACED status");
+        }
+        
+        order.setStatus(Order.OrderStatus.CONFIRMED);
+        Order savedOrder = orderRepository.save(order);
+        
+        return convertToDTO(savedOrder);
+    }
+
+    @Transactional
+    public OrderDTO startPreparing(Long orderId, Long chefId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order", "id", orderId));
+        
+        User chef = userRepository.findById(chefId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", chefId));
+        
+        if (chef.getRole() != User.Role.CHEF) {
+            throw new BadRequestException("Only chefs can start preparing orders");
+        }
+        
+        if (order.getStatus() != Order.OrderStatus.CONFIRMED && order.getStatus() != Order.OrderStatus.PLACED) {
+            throw new BadRequestException("Order can only be prepared from CONFIRMED or PLACED status");
+        }
+        
+        order.setStatus(Order.OrderStatus.PREPARING);
+        order.setPreparingStartedAt(LocalDateTime.now());
+        order.setPreparedBy(chef);
+        
+        Order savedOrder = orderRepository.save(order);
+        return convertToDTO(savedOrder);
+    }
+
+    @Transactional
+    public OrderDTO markReady(Long orderId, Long chefId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order", "id", orderId));
+        
+        if (order.getStatus() != Order.OrderStatus.PREPARING) {
+            throw new BadRequestException("Order can only be marked ready from PREPARING status");
+        }
+        
+        if (order.getPreparedBy() == null || !order.getPreparedBy().getId().equals(chefId)) {
+            throw new BadRequestException("Only the chef preparing this order can mark it ready");
+        }
+        
+        order.setStatus(Order.OrderStatus.READY);
+        order.setReadyAt(LocalDateTime.now());
+        
+        Order savedOrder = orderRepository.save(order);
+        return convertToDTO(savedOrder);
+    }
+
+    @Transactional
+    public OrderDTO markServed(Long orderId, Long waiterId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order", "id", orderId));
+        
+        User waiter = userRepository.findById(waiterId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", waiterId));
+        
+        if (waiter.getRole() != User.Role.WAITER) {
+            throw new BadRequestException("Only waiters can serve orders");
+        }
+        
+        if (order.getStatus() != Order.OrderStatus.READY) {
+            throw new BadRequestException("Order can only be served from READY status");
+        }
+        
+        order.setStatus(Order.OrderStatus.SERVED);
+        order.setServedAt(LocalDateTime.now());
+        order.setServedBy(waiter);
+        
+        Order savedOrder = orderRepository.save(order);
+        return convertToDTO(savedOrder);
+    }
+
+    @Transactional
+    public OrderDTO completeOrder(Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order", "id", orderId));
+        
+        if (order.getStatus() != Order.OrderStatus.SERVED) {
+            throw new BadRequestException("Order can only be completed from SERVED status");
+        }
+        
+        order.setStatus(Order.OrderStatus.COMPLETED);
+        order.setCompletedAt(LocalDateTime.now());
+        
+        Order savedOrder = orderRepository.save(order);
+        return convertToDTO(savedOrder);
+    }
+
+    @Transactional
+    public OrderDTO cancelOrder(Long orderId, String reason) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order", "id", orderId));
+        
+        if (order.getStatus() == Order.OrderStatus.COMPLETED || 
+            order.getStatus() == Order.OrderStatus.CANCELLED) {
+            throw new BadRequestException("Cannot cancel completed or already cancelled order");
+        }
+        
+        order.setStatus(Order.OrderStatus.CANCELLED);
+        order.setSpecialInstructions(order.getSpecialInstructions() + " | Cancelled: " + reason);
+        
+        Order savedOrder = orderRepository.save(order);
+        return convertToDTO(savedOrder);
+    }
+
+    @Transactional
     public void deleteOrder(Long id) {
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Order", "id", id));

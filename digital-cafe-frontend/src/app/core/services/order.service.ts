@@ -6,7 +6,7 @@ import { Order, OrderItem, CartItem, Booking, Payment } from '../../shared/model
 import { AuthService } from './auth.service';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class OrderService {
   private cartItems: CartItem[] = [];
@@ -18,7 +18,7 @@ export class OrderService {
 
   constructor(
     private apiService: ApiService,
-    private authService: AuthService
+    private authService: AuthService,
   ) {
     this.loadCartFromStorage();
   }
@@ -50,7 +50,7 @@ export class OrderService {
 
   // Cart Management
   addToCart(item: CartItem): void {
-    const existingItem = this.cartItems.find(i => i.menuItemId === item.menuItemId);
+    const existingItem = this.cartItems.find((i) => i.menuItemId === item.menuItemId);
 
     if (existingItem) {
       existingItem.quantity += item.quantity;
@@ -62,12 +62,12 @@ export class OrderService {
   }
 
   removeFromCart(menuItemId: number): void {
-    this.cartItems = this.cartItems.filter(item => item.menuItemId !== menuItemId);
+    this.cartItems = this.cartItems.filter((item) => item.menuItemId !== menuItemId);
     this.saveCartToStorage();
   }
 
   updateCartItem(item: CartItem): void {
-    const index = this.cartItems.findIndex(i => i.menuItemId === item.menuItemId);
+    const index = this.cartItems.findIndex((i) => i.menuItemId === item.menuItemId);
     if (index !== -1) {
       this.cartItems[index] = item;
       this.saveCartToStorage();
@@ -75,7 +75,7 @@ export class OrderService {
   }
 
   updateQuantity(menuItemId: number, quantity: number): void {
-    const item = this.cartItems.find(i => i.menuItemId === menuItemId);
+    const item = this.cartItems.find((i) => i.menuItemId === menuItemId);
     if (item) {
       if (quantity <= 0) {
         this.removeFromCart(menuItemId);
@@ -91,7 +91,7 @@ export class OrderService {
   }
 
   getCartTotal(): number {
-    return this.cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    return this.cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
   }
 
   getCartItemCount(): number {
@@ -107,9 +107,7 @@ export class OrderService {
 
   // Order API calls
   createOrder(order: any): Observable<Order> {
-    return this.apiService.post<Order>('/api/orders', order).pipe(
-      tap(() => this.clearCart())
-    );
+    return this.apiService.post<Order>('/api/orders', order).pipe(tap(() => this.clearCart()));
   }
 
   getAllOrders(): Observable<Order[]> {
@@ -122,6 +120,14 @@ export class OrderService {
 
   getCustomerOrders(customerId: number): Observable<Order[]> {
     return this.apiService.get<Order[]>(`/api/orders/customer/${customerId}`);
+  }
+
+  getMyOrders(): Observable<Order[]> {
+    const userId = this.getCurrentUserId();
+    if (!userId) {
+      throw new Error('User not authenticated');
+    }
+    return this.getCustomerOrders(userId);
   }
 
   getCafeOrders(cafeId: number): Observable<Order[]> {
@@ -140,8 +146,32 @@ export class OrderService {
     return this.apiService.patch<Order>(`/api/orders/${orderId}/status`, { status });
   }
 
+  confirmOrder(orderId: number, ownerId: number): Observable<Order> {
+    return this.apiService.post<Order>(`/api/orders/${orderId}/confirm`, { ownerId });
+  }
+
+  startPreparing(orderId: number, chefId: number): Observable<Order> {
+    return this.apiService.post<Order>(`/api/orders/${orderId}/start-preparing`, { chefId });
+  }
+
+  markReady(orderId: number, chefId: number): Observable<Order> {
+    return this.apiService.post<Order>(`/api/orders/${orderId}/mark-ready`, { chefId });
+  }
+
+  markServed(orderId: number, waiterId: number): Observable<Order> {
+    return this.apiService.post<Order>(`/api/orders/${orderId}/mark-served`, { waiterId });
+  }
+
+  completeOrder(orderId: number): Observable<Order> {
+    return this.apiService.post<Order>(`/api/orders/${orderId}/complete`, {});
+  }
+
+  cancelOrderWithReason(orderId: number, reason: string): Observable<Order> {
+    return this.apiService.post<Order>(`/api/orders/${orderId}/cancel`, { reason });
+  }
+
   cancelOrder(orderId: number): Observable<Order> {
-    return this.updateOrderStatus(orderId, 'CANCELLED');
+    return this.cancelOrderWithReason(orderId, 'Cancelled by user');
   }
 
   deleteOrder(orderId: number): Observable<void> {

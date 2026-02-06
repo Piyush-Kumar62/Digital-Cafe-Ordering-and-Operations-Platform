@@ -1,0 +1,187 @@
+<section class="chef-dashboard section">
+  <div class="container-fluid">
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <h2 class="mb-1"><i class="bi bi-egg-fried me-2"></i>Chef Dashboard</h2>
+            <p class="text-muted mb-0">Manage your kitchen orders</p>
+          </div>
+          <button class="btn btn-primary" (click)="loadDashboard()">
+            <i class="bi bi-arrow-clockwise me-2"></i>Refresh
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="isLoading" class="text-center py-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <p class="mt-3">Loading dashboard data...</p>
+    </div>
+
+    <div *ngIf="errorMessage" class="alert alert-danger alert-dismissible fade show">
+      <i class="bi bi-exclamation-circle me-2"></i>{{ errorMessage }}
+      <button type="button" class="btn-close" (click)="errorMessage = ''"></button>
+    </div>
+
+    <div *ngIf="successMessage" class="alert alert-success alert-dismissible fade show">
+      <i class="bi bi-check-circle me-2"></i>{{ successMessage }}
+      <button type="button" class="btn-close" (click)="successMessage = ''"></button>
+    </div>
+
+    <div *ngIf="dashboard && !isLoading">
+      <!-- Stats Cards Row -->
+      <div class="row g-4 mb-4">
+        <div class="col-xl-3 col-md-6">
+          <div class="stat-card">
+            <div class="stat-icon bg-warning">
+              <i class="bi bi-clock-history"></i>
+            </div>
+            <div class="stat-content">
+              <h3>{{ dashboard.pendingOrders }}</h3>
+              <p>Pending Orders</p>
+              <div class="stat-footer">
+                <span class="text-warning"><i class="bi bi-hourglass-split"></i> Waiting</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+          <div class="stat-card">
+            <div class="stat-icon bg-primary">
+              <i class="bi bi-fire"></i>
+            </div>
+            <div class="stat-content">
+              <h3>{{ dashboard.preparingOrders }}</h3>
+              <p>In Preparation</p>
+              <div class="stat-footer">
+                <span class="text-primary"><i class="bi bi-arrow-repeat"></i> Cooking</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+          <div class="stat-card">
+            <div class="stat-icon bg-success">
+              <i class="bi bi-check-circle-fill"></i>
+            </div>
+            <div class="stat-content">
+              <h3>{{ dashboard.completedTodayOrders }}</h3>
+              <p>Completed Today</p>
+              <div class="stat-footer">
+                <span class="text-success"><i class="bi bi-trophy"></i> Done</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+          <div class="stat-card">
+            <div class="stat-icon bg-info">
+              <i class="bi bi-stopwatch"></i>
+            </div>
+            <div class="stat-content">
+              <h3>{{ dashboard.averagePreparationTime }} min</h3>
+              <p>Avg Prep Time</p>
+              <div class="stat-footer">
+                <span class="text-info"><i class="bi bi-speedometer2"></i> Average</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Order Queue -->
+      <div class="row">
+        <div class="col-12">
+          <div class="card shadow-sm">
+            <div class="card-header bg-white">
+              <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-list-ul me-2"></i>Order Queue</h5>
+                <span class="badge bg-primary">{{ dashboard.orderQueue.length }} orders</span>
+              </div>
+            </div>
+            <div class="card-body">
+              <div *ngIf="dashboard.orderQueue.length === 0" class="text-center py-5">
+                <i class="bi bi-emoji-smile" style="font-size: 4rem; color: #ccc"></i>
+                <h4 class="mt-3">All Caught Up!</h4>
+                <p class="text-muted">No pending orders at the moment</p>
+              </div>
+
+              <div *ngIf="dashboard.orderQueue.length > 0" class="order-queue">
+                <div
+                  *ngFor="let order of dashboard.orderQueue; let i = index"
+                  class="order-card"
+                  [class.order-urgent]="i < 3"
+                >
+                  <div class="order-header">
+                    <div class="order-number">
+                      <i class="bi bi-receipt"></i>
+                      <strong>{{ order.orderNumber }}</strong>
+                    </div>
+                    <div>
+                      <span class="badge" [ngClass]="getStatusBadgeClass(order.status)">
+                        {{ order.status }}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div class="order-body">
+                    <div class="order-info">
+                      <div class="info-item">
+                        <i class="bi bi-person"></i>
+                        <span>{{ order.customerName }}</span>
+                      </div>
+                      <div class="info-item">
+                        <i class="bi bi-table"></i>
+                        <span>Table {{ order.tableNumber }}</span>
+                      </div>
+                      <div class="info-item">
+                        <i class="bi bi-currency-rupee"></i>
+                        <span>{{ order.totalAmount }}</span>
+                      </div>
+                      <div class="info-item">
+                        <i class="bi bi-clock"></i>
+                        <span>{{ order.createdAt | date: 'shortTime' }}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="order-footer">
+                    <small class="text-muted">
+                      <i class="bi bi-calendar"></i>
+                      {{ order.createdAt | date: 'medium' }}
+                    </small>
+                    <button
+                      *ngIf="canTakeAction(order.status)"
+                      class="btn btn-sm"
+                      [ngClass]="{
+                        'btn-primary': order.status === 'PLACED' || order.status === 'CONFIRMED',
+                        'btn-success': order.status === 'PREPARING',
+                      }"
+                      (click)="handleOrderAction(order)"
+                    >
+                      <i
+                        class="bi"
+                        [ngClass]="{
+                          'bi-play-fill': order.status === 'PLACED' || order.status === 'CONFIRMED',
+                          'bi-check-lg': order.status === 'PREPARING',
+                        }"
+                      >
+                      </i>
+                      {{ getActionButtonText(order.status) }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

@@ -40,8 +40,9 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers("/api/cafes/public/**").permitAll()
-                .requestMatchers("/api/menu-items/public/**").permitAll()
+                .requestMatchers("/api/cafes", "/api/cafes/**").permitAll()
+                .requestMatchers("/api/menu-items", "/api/menu-items/**").permitAll()
+                .requestMatchers("/api/tables/**").permitAll()
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

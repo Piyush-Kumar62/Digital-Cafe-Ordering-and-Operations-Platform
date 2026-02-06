@@ -1,0 +1,251 @@
+<section class="admin-dashboard section">
+  <div class="container-fluid">
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <h2 class="mb-1"><i class="bi bi-speedometer2 me-2"></i>Admin Dashboard</h2>
+            <p class="text-muted mb-0">System Overview and Analytics</p>
+          </div>
+          <div>
+            <button class="btn btn-success me-2" routerLink="/create-staff">
+              <i class="bi bi-person-plus me-2"></i>Create Café Owner
+            </button>
+            <button class="btn btn-primary" (click)="loadDashboard()">
+              <i class="bi bi-arrow-clockwise me-2"></i>Refresh
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="isLoading" class="text-center py-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <p class="mt-3">Loading dashboard data...</p>
+    </div>
+
+    <div *ngIf="errorMessage" class="alert alert-danger">
+      <i class="bi bi-exclamation-circle me-2"></i>{{ errorMessage }}
+    </div>
+
+    <div *ngIf="dashboard && !isLoading">
+      <!-- Stats Cards Row -->
+      <div class="row g-4 mb-4">
+        <div class="col-xl-3 col-md-6">
+          <div class="stat-card">
+            <div class="stat-icon bg-primary">
+              <i class="bi bi-people-fill"></i>
+            </div>
+            <div class="stat-content">
+              <h3>{{ dashboard.totalUsers }}</h3>
+              <p>Total Users</p>
+              <div class="stat-footer">
+                <span class="text-success"
+                  ><i class="bi bi-check-circle"></i> {{ dashboard.activeUsers }} Active</span
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+          <div class="stat-card">
+            <div class="stat-icon bg-success">
+              <i class="bi bi-shop"></i>
+            </div>
+            <div class="stat-content">
+              <h3>{{ dashboard.totalCafes }}</h3>
+              <p>Total Cafés</p>
+              <div class="stat-footer">
+                <span class="text-info"><i class="bi bi-graph-up"></i> Growing</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+          <div class="stat-card">
+            <div class="stat-icon bg-warning">
+              <i class="bi bi-person-plus-fill"></i>
+            </div>
+            <div class="stat-content">
+              <h3>{{ dashboard.todayRegistrations }}</h3>
+              <p>Today's Registrations</p>
+              <div class="stat-footer">
+                <span class="text-muted"><i class="bi bi-calendar-day"></i> New users</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+          <div class="stat-card">
+            <div class="stat-icon bg-danger">
+              <i class="bi bi-envelope-x"></i>
+            </div>
+            <div class="stat-content">
+              <h3>{{ dashboard.unverifiedEmails }}</h3>
+              <p>Unverified Emails</p>
+              <div class="stat-footer">
+                <span class="text-warning"><i class="bi bi-exclamation-triangle"></i> Pending</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts Row -->
+      <div class="row g-4 mb-4">
+        <div class="col-xl-8">
+          <div class="card shadow-sm">
+            <div class="card-header bg-white">
+              <h5 class="mb-0"><i class="bi bi-graph-up me-2"></i>Weekly Registration Trend</h5>
+            </div>
+            <div class="card-body">
+              <div class="chart-container">
+                <canvas
+                  baseChart
+                  [data]="weeklyGrowthChartData"
+                  [options]="weeklyGrowthChartOptions"
+                  [type]="weeklyGrowthChartType"
+                >
+                </canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-xl-4">
+          <div class="card shadow-sm">
+            <div class="card-header bg-white">
+              <h5 class="mb-0"><i class="bi bi-pie-chart me-2"></i>Users by Role</h5>
+            </div>
+            <div class="card-body">
+              <div class="chart-container">
+                <canvas
+                  baseChart
+                  [data]="roleChartData"
+                  [options]="roleChartOptions"
+                  [type]="roleChartType"
+                >
+                </canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Progress Metrics Row -->
+      <div class="row g-4 mb-4">
+        <div class="col-md-6">
+          <div class="card shadow-sm">
+            <div class="card-body">
+              <h6 class="card-title">
+                <i class="bi bi-person-check me-2"></i>Profile Completion Rate
+              </h6>
+              <div class="progress" style="height: 25px">
+                <div
+                  class="progress-bar bg-success"
+                  role="progressbar"
+                  [style.width.%]="getProfileCompletionRate()"
+                  [attr.aria-valuenow]="getProfileCompletionRate()"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                >
+                  {{ getProfileCompletionRate() }}%
+                </div>
+              </div>
+              <small class="text-muted mt-2 d-block">
+                {{ dashboard.totalUsers - dashboard.incompleteProfiles }} of
+                {{ dashboard.totalUsers }} users completed
+              </small>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <div class="card shadow-sm">
+            <div class="card-body">
+              <h6 class="card-title">
+                <i class="bi bi-envelope-check me-2"></i>Email Verification Rate
+              </h6>
+              <div class="progress" style="height: 25px">
+                <div
+                  class="progress-bar bg-info"
+                  role="progressbar"
+                  [style.width.%]="getEmailVerificationRate()"
+                  [attr.aria-valuenow]="getEmailVerificationRate()"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                >
+                  {{ getEmailVerificationRate() }}%
+                </div>
+              </div>
+              <small class="text-muted mt-2 d-block">
+                {{ dashboard.totalUsers - dashboard.unverifiedEmails }} of
+                {{ dashboard.totalUsers }} verified
+              </small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Users Table -->
+      <div class="row">
+        <div class="col-12">
+          <div class="card shadow-sm">
+            <div class="card-header bg-white">
+              <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Recent Users</h5>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="table table-hover">
+                  <thead>
+                    <tr>
+                      <th>Username</th>
+                      <th>Email</th>
+                      <th>Role</th>
+                      <th>Email Status</th>
+                      <th>Profile Status</th>
+                      <th>Joined</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let user of dashboard.recentUsers">
+                      <td><i class="bi bi-person-circle me-2"></i>{{ user.username }}</td>
+                      <td>{{ user.email }}</td>
+                      <td>
+                        <span class="badge bg-primary">{{ user.role }}</span>
+                      </td>
+                      <td>
+                        <span *ngIf="user.emailVerified" class="badge bg-success">
+                          <i class="bi bi-check-circle"></i> Verified
+                        </span>
+                        <span *ngIf="!user.emailVerified" class="badge bg-warning">
+                          <i class="bi bi-exclamation-circle"></i> Pending
+                        </span>
+                      </td>
+                      <td>
+                        <span *ngIf="user.profileCompleted" class="badge bg-success">
+                          <i class="bi bi-check-circle"></i> Complete
+                        </span>
+                        <span *ngIf="!user.profileCompleted" class="badge bg-secondary">
+                          <i class="bi bi-dash-circle"></i> Incomplete
+                        </span>
+                      </td>
+                      <td>
+                        <small>{{ user.createdAt | date: 'short' }}</small>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

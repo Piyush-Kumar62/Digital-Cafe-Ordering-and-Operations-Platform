@@ -32,4 +32,8 @@ public interface TableBookingRepository extends JpaRepository<TableBooking, Long
     boolean existsByTableIdAndBookingDateAndBookingTime(@Param("tableId") Long tableId,
                                                          @Param("date") LocalDate date,
                                                          @Param("time") LocalTime time);
+    
+    // Dashboard queries
+    Long countByCafeIdAndBookingDate(Long cafeId, LocalDate date);
+    Long countByCafeIdAndBookingDateAndStatus(Long cafeId, LocalDate date, TableBooking.BookingStatus status);
 }

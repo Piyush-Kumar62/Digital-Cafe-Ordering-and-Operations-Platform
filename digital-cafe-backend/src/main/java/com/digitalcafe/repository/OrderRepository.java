@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -39,4 +40,14 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     @Query("SELECT o FROM Order o WHERE o.servedBy.id = :waiterId " +
            "ORDER BY o.servedAt DESC")
     List<Order> findOrdersServedByWaiter(Long waiterId);
+    
+    // Dashboard queries
+    Long countByCafeIdAndCreatedAtBetween(Long cafeId, LocalDateTime start, LocalDateTime end);
+    Long countByCafeIdAndStatusIn(Long cafeId, List<Order.OrderStatus> statuses);
+    Long countByCafeIdAndStatus(Long cafeId, Order.OrderStatus status);
+    Long countByCafeIdAndStatusAndCreatedAtBetween(Long cafeId, Order.OrderStatus status, LocalDateTime start, LocalDateTime end);
+    List<Order> findByCafeIdAndCreatedAtBetween(Long cafeId, LocalDateTime start, LocalDateTime end);
+    List<Order> findByCafeIdAndCreatedAtAfter(Long cafeId, LocalDateTime date);
+    List<Order> findByCafeIdAndStatusInOrderByCreatedAtAsc(Long cafeId, List<Order.OrderStatus> statuses);
+    List<Order> findByCafeIdAndStatusOrderByCreatedAtAsc(Long cafeId, Order.OrderStatus status);
 }

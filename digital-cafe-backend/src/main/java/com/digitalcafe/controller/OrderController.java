@@ -65,6 +65,52 @@ public class OrderController {
         return ResponseEntity.ok(updatedOrder);
     }
 
+    @PostMapping("/{orderId}/confirm")
+    public ResponseEntity<OrderDTO> confirmOrder(@PathVariable Long orderId,
+                                                 @RequestBody Map<String, Long> request) {
+        Long ownerId = request.get("ownerId");
+        OrderDTO confirmedOrder = orderService.confirmOrder(orderId, ownerId);
+        return ResponseEntity.ok(confirmedOrder);
+    }
+
+    @PostMapping("/{orderId}/start-preparing")
+    public ResponseEntity<OrderDTO> startPreparing(@PathVariable Long orderId,
+                                                   @RequestBody Map<String, Long> request) {
+        Long chefId = request.get("chefId");
+        OrderDTO order = orderService.startPreparing(orderId, chefId);
+        return ResponseEntity.ok(order);
+    }
+
+    @PostMapping("/{orderId}/mark-ready")
+    public ResponseEntity<OrderDTO> markReady(@PathVariable Long orderId,
+                                              @RequestBody Map<String, Long> request) {
+        Long chefId = request.get("chefId");
+        OrderDTO order = orderService.markReady(orderId, chefId);
+        return ResponseEntity.ok(order);
+    }
+
+    @PostMapping("/{orderId}/mark-served")
+    public ResponseEntity<OrderDTO> markServed(@PathVariable Long orderId,
+                                               @RequestBody Map<String, Long> request) {
+        Long waiterId = request.get("waiterId");
+        OrderDTO order = orderService.markServed(orderId, waiterId);
+        return ResponseEntity.ok(order);
+    }
+
+    @PostMapping("/{orderId}/complete")
+    public ResponseEntity<OrderDTO> completeOrder(@PathVariable Long orderId) {
+        OrderDTO order = orderService.completeOrder(orderId);
+        return ResponseEntity.ok(order);
+    }
+
+    @PostMapping("/{orderId}/cancel")
+    public ResponseEntity<OrderDTO> cancelOrder(@PathVariable Long orderId,
+                                               @RequestBody Map<String, String> request) {
+        String reason = request.getOrDefault("reason", "Cancelled by user");
+        OrderDTO order = orderService.cancelOrder(orderId, reason);
+        return ResponseEntity.ok(order);
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteOrder(@PathVariable Long id) {
         orderService.deleteOrder(id);

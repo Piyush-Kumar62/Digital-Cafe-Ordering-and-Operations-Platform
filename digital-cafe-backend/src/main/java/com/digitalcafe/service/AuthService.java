@@ -79,9 +79,10 @@ public class AuthService {
         createEmailVerificationToken(user);
 
         // Generate JWT token
-        String token = jwtUtil.generateToken(user.getUsername(), user.getRole().name());
+        String token = jwtUtil.generateToken(user.getUsername(), user.getRole().name(), user.getId());
 
         return AuthResponse.builder()
+                .id(user.getId())
                 .token(token)
                 .username(user.getUsername())
                 .email(user.getEmail())
@@ -114,9 +115,10 @@ public class AuthService {
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         // Generate JWT token
-        String token = jwtUtil.generateToken(user.getUsername(), user.getRole().name());
+        String token = jwtUtil.generateToken(user.getUsername(), user.getRole().name(), user.getId());
 
         return AuthResponse.builder()
+                .id(user.getId())
                 .token(token)
                 .username(user.getUsername())
                 .email(user.getEmail())
@@ -187,12 +189,8 @@ public class AuthService {
         user.setTempPassword(false);
         userRepository.save(user);
 
-        // Send confirmation email (with error handling)
-        try {
-            emailService.sendPasswordResetEmail(user.getEmail(), user.getUsername());
-        } catch (Exception e) {
-            log.warn("Failed to send password reset confirmation email to: {}", user.getEmail());
-        }
+        // Password reset confirmation email can be added later if needed
+        log.info("Password reset successfully for user: {}", user.getEmail());
 
         return new MessageResponse("Password reset successfully!");
     }

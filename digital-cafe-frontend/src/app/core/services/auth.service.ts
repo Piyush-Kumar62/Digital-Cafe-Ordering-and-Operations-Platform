@@ -116,15 +116,23 @@ export class AuthService {
     return user ? user.profileCompleted : false;
   }
 
-  verifyEmail(token: string): Observable<MessageResponse> {
-    return this.apiService.get<MessageResponse>(`/api/auth/verify-email?token=${token}`);
+  verifyEmail(email: string, token: string): Observable<MessageResponse> {
+    return this.apiService.post<MessageResponse>('/api/email-verification/verify-email', {
+      email,
+      token,
+    });
   }
 
   resendVerificationEmail(email: string): Observable<MessageResponse> {
-    return this.apiService.post<MessageResponse>(
-      `/api/auth/resend-verification?email=${email}`,
-      {},
-    );
+    return this.apiService.post<MessageResponse>('/api/email-verification/resend-verification', {
+      email,
+    });
+  }
+
+  requestPasswordReset(email: string): Observable<MessageResponse> {
+    return this.apiService.post<MessageResponse>('/api/email-verification/request-password-reset', {
+      email,
+    });
   }
 
   resetPassword(oldPassword: string, newPassword: string): Observable<MessageResponse> {

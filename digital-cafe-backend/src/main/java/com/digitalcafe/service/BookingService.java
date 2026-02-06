@@ -4,11 +4,9 @@ import com.digitalcafe.dto.BookingDTO;
 import com.digitalcafe.dto.BookingRequestDTO;
 import com.digitalcafe.exception.BadRequestException;
 import com.digitalcafe.exception.ResourceNotFoundException;
-import com.digitalcafe.model.Cafe;
 import com.digitalcafe.model.CafeTable;
 import com.digitalcafe.model.TableBooking;
 import com.digitalcafe.model.User;
-import com.digitalcafe.repository.CafeRepository;
 import com.digitalcafe.repository.CafeTableRepository;
 import com.digitalcafe.repository.TableBookingRepository;
 import com.digitalcafe.repository.UserRepository;
@@ -31,7 +29,6 @@ public class BookingService {
     private final TableBookingRepository bookingRepository;
     private final UserRepository userRepository;
     private final CafeTableRepository tableRepository;
-    private final CafeRepository cafeRepository;
 
     @Transactional
     public BookingDTO createBooking(String username, BookingRequestDTO request) {

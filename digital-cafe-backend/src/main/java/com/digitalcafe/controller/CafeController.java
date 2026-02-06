@@ -1,5 +1,6 @@
 package com.digitalcafe.controller;
 
+import com.digitalcafe.dto.CreateCafeRequest;
 import com.digitalcafe.model.Cafe;
 import com.digitalcafe.service.CafeService;
 import lombok.RequiredArgsConstructor;
@@ -42,8 +43,8 @@ public class CafeController {
     }
 
     @PostMapping
-    public ResponseEntity<Cafe> createCafe(@RequestBody Cafe cafe) {
-        Cafe createdCafe = cafeService.createCafe(cafe);
+    public ResponseEntity<Cafe> createCafe(@RequestBody CreateCafeRequest request) {
+        Cafe createdCafe = cafeService.createCafe(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdCafe);
     }
 

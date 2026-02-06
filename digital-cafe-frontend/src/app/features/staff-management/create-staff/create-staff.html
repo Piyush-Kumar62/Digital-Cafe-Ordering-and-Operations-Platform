@@ -1,0 +1,184 @@
+<section class="create-staff section">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-6 col-md-8">
+        <div class="card shadow-lg">
+          <div class="card-body">
+            <div class="text-center mb-4">
+              <h2 class="fw-bold">{{ getPageTitle() }}</h2>
+              <p class="text-muted" *ngIf="currentUserRole === 'ADMIN'">
+                Create café owner accounts to manage their cafés
+              </p>
+              <p class="text-muted" *ngIf="currentUserRole === 'CAFE_OWNER'">
+                Create chef and waiter accounts for your café
+              </p>
+            </div>
+
+            <!-- Success Message -->
+            <div *ngIf="successMessage" class="alert alert-success" role="alert">
+              <h5 class="alert-heading">
+                <i class="bi bi-check-circle me-2"></i>Account Created Successfully!
+              </h5>
+              <hr />
+              <pre
+                style="
+                  white-space: pre-wrap;
+                  font-family: monospace;
+                  background: #f0f0f0;
+                  padding: 10px;
+                  border-radius: 5px;
+                  margin: 10px 0;
+                "
+                >{{ successMessage }}</pre
+              >
+            </div>
+
+            <!-- Error Message -->
+            <div *ngIf="errorMessage" class="alert alert-danger" role="alert">
+              <i class="bi bi-exclamation-triangle me-2"></i>{{ errorMessage }}
+            </div>
+
+            <form (ngSubmit)="onSubmit()">
+              <!-- Role Selection -->
+              <div class="mb-3" *ngIf="getRoleOptions().length > 1">
+                <label for="role" class="form-label">Role</label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="bi bi-person-badge"></i></span>
+                  <select
+                    class="form-control"
+                    id="role"
+                    [(ngModel)]="role"
+                    name="role"
+                    (change)="onRoleChange()"
+                    required
+                  >
+                    <option *ngFor="let option of getRoleOptions()" [value]="option.value">
+                      {{ option.label }}
+                    </option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- First Name and Last Name -->
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label for="firstName" class="form-label">First Name</label>
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-person"></i></span>
+                    <input
+                      type="text"
+                      class="form-control"
+                      id="firstName"
+                      [(ngModel)]="firstName"
+                      name="firstName"
+                      placeholder="First name"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                  <label for="lastName" class="form-label">Last Name</label>
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-person"></i></span>
+                    <input
+                      type="text"
+                      class="form-control"
+                      id="lastName"
+                      [(ngModel)]="lastName"
+                      name="lastName"
+                      placeholder="Last name"
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <!-- Email -->
+              <div class="mb-3">
+                <label for="email" class="form-label">Email Address</label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                  <input
+                    type="email"
+                    class="form-control"
+                    id="email"
+                    [(ngModel)]="email"
+                    name="email"
+                    placeholder="Enter email address"
+                    required
+                  />
+                </div>
+                <small class="text-muted">Temporary credentials will be sent to this email</small>
+              </div>
+
+              <!-- Phone Number -->
+              <div class="mb-3">
+                <label for="phoneNumber" class="form-label">Phone Number</label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="bi bi-telephone"></i></span>
+                  <input
+                    type="tel"
+                    class="form-control"
+                    id="phoneNumber"
+                    [(ngModel)]="phoneNumber"
+                    name="phoneNumber"
+                    placeholder="Enter phone number"
+                    required
+                  />
+                </div>
+              </div>
+
+              <!-- Cafe ID (for Chef and Waiter only) -->
+              <div class="mb-3" *ngIf="showCafeIdField">
+                <label for="cafeId" class="form-label">Café ID</label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="bi bi-shop"></i></span>
+                  <input
+                    type="number"
+                    class="form-control"
+                    id="cafeId"
+                    [(ngModel)]="cafeId"
+                    name="cafeId"
+                    placeholder="Enter café ID"
+                    required
+                  />
+                </div>
+                <small class="text-muted"
+                  >The café this {{ role.toLowerCase() }} will work at</small
+                >
+              </div>
+
+              <!-- Submit Button -->
+              <div class="d-grid mb-3">
+                <button type="submit" class="btn btn-primary btn-lg" [disabled]="isLoading">
+                  <span *ngIf="!isLoading">
+                    <i class="bi bi-person-plus me-2"></i>Create Account
+                  </span>
+                  <span *ngIf="isLoading">
+                    <span class="spinner-border spinner-border-sm me-2"></span>
+                    Creating...
+                  </span>
+                </button>
+              </div>
+
+              <!-- Info Box -->
+              <div class="alert alert-info mb-0">
+                <i class="bi bi-info-circle me-2"></i>
+                <strong>Note:</strong> A temporary password will be generated and sent via email.
+                The user must change it on first login.
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Back Button -->
+        <div class="text-center mt-3">
+          <button class="btn btn-link" routerLink="..">
+            <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -67,5 +68,44 @@ public class UserController {
     public ResponseEntity<UserDTO> deactivateUser(@PathVariable Long id) {
         UserDTO deactivatedUser = userService.deactivateUser(id);
         return ResponseEntity.ok(deactivatedUser);
+    }
+
+    /**
+     * Admin creates Café Owner account
+     * POST /api/users/create-cafe-owner
+     */
+    @PostMapping("/create-cafe-owner")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<com.digitalcafe.dto.StaffCreationResponse> createCafeOwner(
+            @Valid @RequestBody com.digitalcafe.dto.CreateStaffRequest request,
+            @RequestHeader("Authorization") String authHeader) {
+        com.digitalcafe.dto.StaffCreationResponse createdOwner = userService.createCafeOwner(request, authHeader);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdOwner);
+    }
+
+    /**
+     * Café Owner creates Chef account
+     * POST /api/users/create-chef
+     */
+    @PostMapping("/create-chef")
+    @PreAuthorize("hasRole('CAFE_OWNER')")
+    public ResponseEntity<com.digitalcafe.dto.StaffCreationResponse> createChef(
+            @Valid @RequestBody com.digitalcafe.dto.CreateStaffRequest request,
+            @RequestHeader("Authorization") String authHeader) {
+        com.digitalcafe.dto.StaffCreationResponse createdChef = userService.createChef(request, authHeader);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdChef);
+    }
+
+    /**
+     * Café Owner creates Waiter account
+     * POST /api/users/create-waiter
+     */
+    @PostMapping("/create-waiter")
+    @PreAuthorize("hasRole('CAFE_OWNER')")
+    public ResponseEntity<com.digitalcafe.dto.StaffCreationResponse> createWaiter(
+            @Valid @RequestBody com.digitalcafe.dto.CreateStaffRequest request,
+            @RequestHeader("Authorization") String authHeader) {
+        com.digitalcafe.dto.StaffCreationResponse createdWaiter = userService.createWaiter(request, authHeader);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdWaiter);
     }
 }

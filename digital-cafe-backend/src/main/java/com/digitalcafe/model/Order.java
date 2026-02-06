@@ -71,6 +71,9 @@ public class Order {
     @Column(name = "served_at")
     private LocalDateTime servedAt;
 
+    @Column(name = "completed_at")
+    private LocalDateTime completedAt;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

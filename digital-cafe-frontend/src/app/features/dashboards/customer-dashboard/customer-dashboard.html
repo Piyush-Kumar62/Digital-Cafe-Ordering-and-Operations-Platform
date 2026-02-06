@@ -1,0 +1,327 @@
+<div class="customer-dashboard">
+  <div class="container">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h2 class="mb-0">My Dashboard</h2>
+      <button class="btn btn-primary" (click)="loadDashboard()" [disabled]="isLoading">
+        <i class="bi bi-arrow-clockwise"></i> Refresh
+      </button>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div *ngIf="isLoading" class="text-center my-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+
+    <!-- Alerts -->
+    <div *ngIf="errorMessage" class="alert alert-danger alert-dismissible fade show" role="alert">
+      <i class="bi bi-exclamation-triangle me-2"></i>{{ errorMessage }}
+      <button
+        type="button"
+        class="btn-close"
+        (click)="errorMessage = ''"
+        aria-label="Close"
+      ></button>
+    </div>
+
+    <div
+      *ngIf="successMessage"
+      class="alert alert-success alert-dismissible fade show"
+      role="alert"
+    >
+      <i class="bi bi-check-circle me-2"></i>{{ successMessage }}
+      <button
+        type="button"
+        class="btn-close"
+        (click)="successMessage = ''"
+        aria-label="Close"
+      ></button>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+      <div class="col-md-3 mb-3">
+        <div class="stat-card">
+          <div class="stat-icon bg-primary">
+            <i class="bi bi-calendar-check"></i>
+          </div>
+          <div class="stat-content">
+            <h3>{{ totalBookings }}</h3>
+            <p>Total Bookings</p>
+            <div class="stat-footer text-muted">All time</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-3 mb-3">
+        <div class="stat-card">
+          <div class="stat-icon bg-success">
+            <i class="bi bi-receipt"></i>
+          </div>
+          <div class="stat-content">
+            <h3>{{ totalOrders }}</h3>
+            <p>Total Orders</p>
+            <div class="stat-footer text-muted">All time</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-3 mb-3">
+        <div class="stat-card">
+          <div class="stat-icon bg-warning">
+            <i class="bi bi-wallet2"></i>
+          </div>
+          <div class="stat-content">
+            <h3>{{ formatCurrency(totalSpent) }}</h3>
+            <p>Total Spent</p>
+            <div class="stat-footer text-muted">Completed orders</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-3 mb-3">
+        <div class="stat-card">
+          <div class="stat-icon bg-info">
+            <i class="bi bi-person-check"></i>
+          </div>
+          <div class="stat-content">
+            <h3>{{ profileCompletion }}%</h3>
+            <p>Profile Complete</p>
+            <div
+              class="stat-footer"
+              [class.text-success]="profileCompletion === 100"
+              [class.text-warning]="profileCompletion < 100"
+            >
+              {{ profileCompletion === 100 ? 'Complete!' : 'Keep going!' }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Order Tracking -->
+    <div *ngIf="activeOrder" class="card shadow-sm mb-4">
+      <div class="card-header bg-gradient-primary text-white">
+        <h5 class="mb-0">
+          <i class="bi bi-truck me-2"></i>Active Order - #ORD-{{ activeOrder.id }}
+        </h5>
+      </div>
+      <div class="card-body">
+        <div class="order-tracking">
+          <div class="status-timeline">
+            <div
+              class="status-step"
+              *ngFor="let step of orderStatusSteps"
+              [ngClass]="getStatusStepClass(step.status)"
+            >
+              <div class="step-icon">
+                <i [class]="step.icon"></i>
+              </div>
+              <div class="step-label">{{ step.label }}</div>
+            </div>
+          </div>
+
+          <div class="row mt-4">
+            <div class="col-md-6">
+              <div class="order-info-item">
+                <i class="bi bi-shop"></i>
+                <span>Café #{{ activeOrder.cafeId }}</span>
+              </div>
+              <div class="order-info-item">
+                <i class="bi bi-cash"></i>
+                <span>{{ formatCurrency(activeOrder.totalAmount) }}</span>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="order-info-item">
+                <i class="bi bi-calendar3"></i>
+                <span>{{ formatDate(activeOrder.createdAt || '') }}</span>
+              </div>
+              <div class="order-info-item">
+                <i class="bi bi-clock"></i>
+                <span>{{ formatTime(activeOrder.createdAt || '') }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="order-items mt-3">
+            <h6>Order Items:</h6>
+            <div class="item-list">
+              <div class="item" *ngFor="let item of activeOrder.items">
+                <span class="item-name">{{ item.menuItemName || 'Item #' + item.menuItemId }}</span>
+                <span class="item-quantity">x{{ item.quantity }}</span>
+                <span class="item-price">{{
+                  formatCurrency(item.subtotal || item.price * item.quantity)
+                }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <!-- Upcoming Bookings -->
+      <div class="col-lg-6 mb-4">
+        <div class="card shadow-sm">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-calendar-event me-2"></i>Upcoming Bookings</h5>
+            <span class="badge bg-primary">{{ upcomingBookings.length }}</span>
+          </div>
+          <div class="card-body">
+            <div *ngIf="upcomingBookings.length === 0" class="empty-state">
+              <i class="bi bi-calendar-x"></i>
+              <p>No upcoming bookings</p>
+              <a href="/cafes" class="btn btn-sm btn-primary">Browse Cafés</a>
+            </div>
+
+            <div *ngIf="upcomingBookings.length > 0" class="booking-list">
+              <div class="booking-card" *ngFor="let booking of upcomingBookings">
+                <div class="booking-header">
+                  <div class="booking-cafe">
+                    <i class="bi bi-shop"></i>
+                    <span>{{ booking.cafeName || 'Café #' + booking.cafeId }}</span>
+                  </div>
+                  <span class="badge" [ngClass]="getBookingStatusBadgeClass(booking.status)">
+                    {{ booking.status }}
+                  </span>
+                </div>
+
+                <div class="booking-details">
+                  <div class="detail-item">
+                    <i class="bi bi-calendar3"></i>
+                    <span>{{ formatDate(booking.bookingDate) }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <i class="bi bi-clock"></i>
+                    <span>{{ booking.bookingTime }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <i class="bi bi-people"></i>
+                    <span>{{ booking.numberOfGuests }} guests</span>
+                  </div>
+                  <div class="detail-item">
+                    <i class="bi bi-grid-3x2"></i>
+                    <span>Table {{ booking.tableId }}</span>
+                  </div>
+                </div>
+
+                <div *ngIf="booking.specialRequests" class="booking-notes">
+                  <i class="bi bi-chat-left-text"></i>
+                  <span>{{ booking.specialRequests }}</span>
+                </div>
+
+                <div class="booking-actions">
+                  <button class="btn btn-sm btn-outline-danger" (click)="cancelBooking(booking.id)">
+                    <i class="bi bi-x-circle"></i> Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Orders -->
+      <div class="col-lg-6 mb-4">
+        <div class="card shadow-sm">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-receipt-cutoff me-2"></i>Recent Orders</h5>
+            <span class="badge bg-success">{{ recentOrders.length }}</span>
+          </div>
+          <div class="card-body">
+            <div *ngIf="recentOrders.length === 0" class="empty-state">
+              <i class="bi bi-cart-x"></i>
+              <p>No orders yet</p>
+              <a href="/menu" class="btn btn-sm btn-primary">Order Now</a>
+            </div>
+
+            <div *ngIf="recentOrders.length > 0" class="order-list">
+              <div class="order-card" *ngFor="let order of recentOrders">
+                <div class="order-header">
+                  <div class="order-number">
+                    <i class="bi bi-receipt"></i>
+                    <span>ORD-{{ order.id }}</span>
+                  </div>
+                  <span class="badge" [ngClass]="getStatusBadgeClass(order.status)">
+                    {{ order.status }}
+                  </span>
+                </div>
+
+                <div class="order-info">
+                  <div class="info-item">
+                    <i class="bi bi-shop"></i>
+                    <span>Café #{{ order.cafeId }}</span>
+                  </div>
+                  <div class="info-item">
+                    <i class="bi bi-calendar3"></i>
+                    <span>{{ formatDate(order.createdAt || '') }}</span>
+                  </div>
+                  <div class="info-item">
+                    <i class="bi bi-clock"></i>
+                    <span>{{ formatTime(order.createdAt || '') }}</span>
+                  </div>
+                </div>
+
+                <div class="order-summary">
+                  <div class="item-count">{{ order.items.length }} item(s)</div>
+                  <div class="order-total">
+                    {{ formatCurrency(order.totalAmount) }}
+                  </div>
+                </div>
+
+                <div
+                  class="order-actions"
+                  *ngIf="!['COMPLETED', 'CANCELLED'].includes(order.status)"
+                >
+                  <button
+                    class="btn btn-sm btn-primary"
+                    (click)="trackOrder(order.id || 0)"
+                    *ngIf="order.id"
+                  >
+                    <i class="bi bi-geo-alt"></i> Track Order
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="card shadow-sm bg-gradient-primary text-white">
+      <div class="card-body">
+        <h5 class="mb-4"><i class="bi bi-lightning me-2"></i>Quick Actions</h5>
+        <div class="row">
+          <div class="col-md-3 mb-3">
+            <a href="/cafes" class="quick-action-btn">
+              <i class="bi bi-shop"></i>
+              <span>Browse Cafés</span>
+            </a>
+          </div>
+          <div class="col-md-3 mb-3">
+            <a href="/booking/new" class="quick-action-btn">
+              <i class="bi bi-calendar-plus"></i>
+              <span>Book a Table</span>
+            </a>
+          </div>
+          <div class="col-md-3 mb-3">
+            <a href="/menu" class="quick-action-btn">
+              <i class="bi bi-file-earmark-text"></i>
+              <span>View Menu</span>
+            </a>
+          </div>
+          <div class="col-md-3 mb-3">
+            <a href="/profile" class="quick-action-btn">
+              <i class="bi bi-person-gear"></i>
+              <span>Edit Profile</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

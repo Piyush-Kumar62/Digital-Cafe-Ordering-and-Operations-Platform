@@ -1,8 +1,11 @@
 package com.digitalcafe.service;
 
+import com.digitalcafe.dto.CreateCafeRequest;
 import com.digitalcafe.exception.ResourceNotFoundException;
 import com.digitalcafe.model.Cafe;
+import com.digitalcafe.model.User;
 import com.digitalcafe.repository.CafeRepository;
+import com.digitalcafe.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,6 +17,7 @@ import java.util.List;
 public class CafeService {
     
     private final CafeRepository cafeRepository;
+    private final UserRepository userRepository;
     
     @Transactional(readOnly = true)
     public List<Cafe> getAllCafes() {
@@ -37,8 +41,25 @@ public class CafeService {
     }
     
     @Transactional
-    public Cafe createCafe(Cafe cafe) {
-        cafe.setActive(true);
+    public Cafe createCafe(CreateCafeRequest request) {
+        User owner = userRepository.findById(request.getOwnerId())
+                .orElseThrow(() -> new ResourceNotFoundException("Owner", "id", request.getOwnerId()));
+        
+        Cafe cafe = new Cafe();
+        cafe.setName(request.getName());
+        cafe.setDescription(request.getDescription());
+        cafe.setAddress(request.getAddress());
+        cafe.setCity(request.getCity());
+        cafe.setState(request.getState());
+        cafe.setPincode(request.getPincode());
+        cafe.setPhone(request.getPhone());
+        cafe.setEmail(request.getEmail());
+        cafe.setOpeningTime(request.getOpeningTime());
+        cafe.setClosingTime(request.getClosingTime());
+        cafe.setImageUrl(request.getImageUrl());
+        cafe.setOwner(owner);
+        cafe.setActive(request.getActive() != null ? request.getActive() : true);
+        
         return cafeRepository.save(cafe);
     }
     

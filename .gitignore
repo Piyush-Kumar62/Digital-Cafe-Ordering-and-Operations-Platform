@@ -51,6 +51,8 @@ Project Materials/
 GITHUB_PUSH_GUIDE.md
 QUICK_GIT_COMMANDS.md
 PROJECT_EXPLANATION.md
+ROLES_SUMMARY.md
+**/ROLES_SUMMARY.md
 
 application.properties
 /src/environments/environment.prod.ts
@@ -58,3 +60,5 @@ application.properties
 .env.local
 .env.*.local
 /.angular/cache
+
+Project Materials

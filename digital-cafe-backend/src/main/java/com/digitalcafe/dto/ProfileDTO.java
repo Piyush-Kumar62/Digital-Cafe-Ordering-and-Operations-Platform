@@ -17,9 +17,8 @@ public class ProfileDTO {
     private String lastName;
     private LocalDate dateOfBirth;
     private String gender;
-    private String phone;
+    private String phoneNumber;
     private String profilePictureUrl;
-    private Integer completionPercentage;
     private List<AcademicInfoDTO> academicInfo;
     private List<WorkExperienceDTO> workExperience;
     private AddressDTO address;

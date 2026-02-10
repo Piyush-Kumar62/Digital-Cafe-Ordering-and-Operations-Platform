@@ -1,78 +1,79 @@
 package com.digitalcafe.controller;
 
-import com.digitalcafe.dto.MenuItemDTO;
-import com.digitalcafe.dto.MenuItemRequestDTO;
+import com.digitalcafe.dto.request.MenuItemRequest;
+import com.digitalcafe.dto.response.ApiResponse;
+import com.digitalcafe.dto.response.MenuItemResponse;
 import com.digitalcafe.service.MenuItemService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * REST controller for menu item management operations.
+ */
 @RestController
 @RequestMapping("/api/menu-items")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 public class MenuItemController {
 
     private final MenuItemService menuItemService;
 
-    @GetMapping
-    public ResponseEntity<List<MenuItemDTO>> getAllMenuItems() {
-        List<MenuItemDTO> menuItems = menuItemService.getAllMenuItems();
-        return ResponseEntity.ok(menuItems);
+    @PostMapping("/cafe/{cafeId}")
+    @PreAuthorize("hasRole('CAFE_OWNER')")
+    public ResponseEntity<ApiResponse<MenuItemResponse>> createMenuItem(
+            @PathVariable Long cafeId,
+            @Valid @RequestBody MenuItemRequest request) {
+        MenuItemResponse response = menuItemService.createMenuItem(cafeId, request);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success("Menu item created successfully", response));
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<MenuItemDTO> getMenuItemById(@PathVariable Long id) {
-        MenuItemDTO menuItem = menuItemService.getMenuItemById(id);
-        return ResponseEntity.ok(menuItem);
+    @PutMapping("/{menuItemId}")
+    @PreAuthorize("hasRole('CAFE_OWNER')")
+    public ResponseEntity<ApiResponse<MenuItemResponse>> updateMenuItem(
+            @PathVariable Long menuItemId,
+            @Valid @RequestBody MenuItemRequest request) {
+        MenuItemResponse response = menuItemService.updateMenuItem(menuItemId, request);
+        return ResponseEntity.ok(ApiResponse.success("Menu item updated successfully", response));
+    }
+
+    @GetMapping("/{menuItemId}")
+    public ResponseEntity<ApiResponse<MenuItemResponse>> getMenuItemById(@PathVariable Long menuItemId) {
+        MenuItemResponse response = menuItemService.getMenuItemById(menuItemId);
+        return ResponseEntity.ok(ApiResponse.success("Menu item retrieved successfully", response));
     }
 
     @GetMapping("/cafe/{cafeId}")
-    public ResponseEntity<List<MenuItemDTO>> getMenuItemsByCafe(@PathVariable Long cafeId) {
-        List<MenuItemDTO> menuItems = menuItemService.getMenuItemsByCafe(cafeId);
-        return ResponseEntity.ok(menuItems);
+    public ResponseEntity<ApiResponse<List<MenuItemResponse>>> getMenuItemsByCafeId(@PathVariable Long cafeId) {
+        List<MenuItemResponse> response = menuItemService.getMenuItemsByCafeId(cafeId);
+        return ResponseEntity.ok(ApiResponse.success("Menu items retrieved successfully", response));
     }
 
-    @GetMapping("/category/{categoryId}")
-    public ResponseEntity<List<MenuItemDTO>> getMenuItemsByCategory(@PathVariable Long categoryId) {
-        List<MenuItemDTO> menuItems = menuItemService.getMenuItemsByCategory(categoryId);
-        return ResponseEntity.ok(menuItems);
+    @GetMapping("/cafe/{cafeId}/available")
+    public ResponseEntity<ApiResponse<List<MenuItemResponse>>> getAvailableMenuItems(@PathVariable Long cafeId) {
+        List<MenuItemResponse> response = menuItemService.getAvailableMenuItemsByCafeId(cafeId);
+        return ResponseEntity.ok(ApiResponse.success("Available menu items retrieved successfully", response));
     }
 
-    @GetMapping("/available")
-    public ResponseEntity<List<MenuItemDTO>> getAvailableMenuItems() {
-        List<MenuItemDTO> menuItems = menuItemService.getAvailableMenuItems();
-        return ResponseEntity.ok(menuItems);
+    @DeleteMapping("/{menuItemId}")
+    @PreAuthorize("hasRole('CAFE_OWNER')")
+    public ResponseEntity<ApiResponse<Void>> deleteMenuItem(@PathVariable Long menuItemId) {
+        menuItemService.deleteMenuItem(menuItemId);
+        return ResponseEntity.ok(ApiResponse.success("Menu item deleted successfully", null));
     }
 
-    @PostMapping
-    public ResponseEntity<MenuItemDTO> createMenuItem(
-            @Valid @RequestBody MenuItemRequestDTO menuItemRequestDTO) {
-        MenuItemDTO createdMenuItem = menuItemService.createMenuItem(menuItemRequestDTO);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdMenuItem);
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<MenuItemDTO> updateMenuItem(
-            @PathVariable Long id,
-            @Valid @RequestBody MenuItemRequestDTO menuItemRequestDTO) {
-        MenuItemDTO updatedMenuItem = menuItemService.updateMenuItem(id, menuItemRequestDTO);
-        return ResponseEntity.ok(updatedMenuItem);
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteMenuItem(@PathVariable Long id) {
-        menuItemService.deleteMenuItem(id);
-        return ResponseEntity.noContent().build();
-    }
-
-    @PatchMapping("/{id}/toggle-availability")
-    public ResponseEntity<MenuItemDTO> toggleAvailability(@PathVariable Long id) {
-        MenuItemDTO menuItem = menuItemService.toggleAvailability(id);
-        return ResponseEntity.ok(menuItem);
+    @PatchMapping("/{menuItemId}/availability")
+    @PreAuthorize("hasRole('CAFE_OWNER')")
+    public ResponseEntity<ApiResponse<MenuItemResponse>> toggleAvailability(
+            @PathVariable Long menuItemId,
+            @RequestParam boolean isAvailable) {
+        MenuItemResponse response = menuItemService.toggleAvailability(menuItemId, isAvailable);
+        return ResponseEntity.ok(ApiResponse.success("Menu item availability updated successfully", response));
     }
 }
+

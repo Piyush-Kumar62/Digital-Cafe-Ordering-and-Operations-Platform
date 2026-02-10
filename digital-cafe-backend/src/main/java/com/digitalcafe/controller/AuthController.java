@@ -1,6 +1,12 @@
 package com.digitalcafe.controller;
 
-import com.digitalcafe.dto.*;
+import com.digitalcafe.dto.request.ChangePasswordRequest;
+import com.digitalcafe.dto.request.LoginRequest;
+import com.digitalcafe.dto.request.SimpleRegisterRequest;
+import com.digitalcafe.dto.request.RegisterRequest;
+import com.digitalcafe.dto.request.ResetPasswordRequest;
+import com.digitalcafe.dto.response.AuthResponse;
+import com.digitalcafe.dto.response.RegisterResponse;
 import com.digitalcafe.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -10,76 +16,77 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 public class AuthController {
 
     private final AuthService authService;
 
-    /**
-     * Register a new customer user
-     * POST /api/auth/register
-     */
-    @PostMapping("/register")
-    public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
+    @PostMapping("/simple-register")
+    public ResponseEntity<AuthResponse> simpleRegister(@Valid @RequestBody SimpleRegisterRequest request) {
         AuthResponse response = authService.register(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    /**
-     * Login endpoint for all users
-     * POST /api/auth/login
-     */
+    @PostMapping("/register")
+    public ResponseEntity<RegisterResponse> register(@Valid @RequestBody RegisterRequest request) {
+        RegisterResponse response = authService.comprehensiveRegister(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         AuthResponse response = authService.login(request);
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * Verify email using token from email
-     * GET /api/auth/verify-email?token={token}
-     */
     @GetMapping("/verify-email")
-    public ResponseEntity<MessageResponse> verifyEmail(@RequestParam String token) {
-        MessageResponse response = authService.verifyEmail(token);
-        return ResponseEntity.ok(response);
+    public ResponseEntity<Map<String, String>> verifyEmail(@RequestParam String token) {
+        authService.verifyEmail(token);
+        return ResponseEntity.ok(Map.of("message", "Email verified successfully"));
     }
 
-    /**
-     * Resend verification email
-     * POST /api/auth/resend-verification
-     */
     @PostMapping("/resend-verification")
-    public ResponseEntity<MessageResponse> resendVerificationEmail(@RequestParam String email) {
-        MessageResponse response = authService.resendVerificationEmail(email);
-        return ResponseEntity.ok(response);
+    public ResponseEntity<Map<String, String>> resendVerification(@RequestParam String email) {
+        authService.resendVerificationEmail(email);
+        return ResponseEntity.ok(Map.of("message", "Verification email sent"));
     }
 
-    /**
-     * Reset password (requires authentication)
-     * POST /api/auth/reset-password
-     */
+    @PostMapping("/forgot-password")
+    public ResponseEntity<Map<String, String>> forgotPassword(@RequestParam String email) {
+        authService.forgotPassword(email);
+        return ResponseEntity.ok(Map.of("message", "Password reset link sent to your email"));
+    }
+
     @PostMapping("/reset-password")
-    public ResponseEntity<MessageResponse> resetPassword(@Valid @RequestBody PasswordResetRequest request) {
+    public ResponseEntity<Map<String, String>> resetPassword(
+            @RequestParam String token,
+            @Valid @RequestBody ResetPasswordRequest request) {
+        authService.resetPassword(token, request);
+        return ResponseEntity.ok(Map.of("message", "Password reset successfully"));
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<Map<String, String>> changePassword(@Valid @RequestBody ChangePasswordRequest request) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
-        MessageResponse response = authService.resetPassword(username, request);
+        authService.changePassword(username, request.getOldPassword(), request.getNewPassword());
+        return ResponseEntity.ok(Map.of("message", "Password changed successfully"));
+    }
+
+    @PostMapping("/refresh-token")
+    public ResponseEntity<AuthResponse> refreshToken(@RequestParam String refreshToken) {
+        AuthResponse response = authService.refreshToken(refreshToken);
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * Check authentication status
-     * GET /api/auth/me
-     */
-    @GetMapping("/me")
-    public ResponseEntity<MessageResponse> getCurrentUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.isAuthenticated()) {
-            return ResponseEntity.ok(new MessageResponse("Authenticated as: " + authentication.getName()));
-        }
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new MessageResponse("Not authenticated"));
+    @PostMapping("/logout")
+    public ResponseEntity<Map<String, String>> logout() {
+        SecurityContextHolder.clearContext();
+        return ResponseEntity.ok(Map.of("message", "Logged out successfully"));
     }
 }
+

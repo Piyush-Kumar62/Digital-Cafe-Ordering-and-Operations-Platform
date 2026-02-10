@@ -1,127 +1,68 @@
 package com.digitalcafe.controller;
 
-import com.digitalcafe.dto.*;
+import com.digitalcafe.dto.request.ProfileRequest;
+import com.digitalcafe.dto.response.ApiResponse;
+import com.digitalcafe.dto.response.ProfileResponse;
 import com.digitalcafe.service.ProfileService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.Map;
-
+/**
+ * REST controller for user profile management operations.
+ */
 @RestController
-@RequestMapping("/api/profile")
-@CrossOrigin(origins = "*")
+@RequestMapping("/api/profiles")
+@RequiredArgsConstructor
 public class ProfileController {
 
-    @Autowired
-    private ProfileService profileService;
+    private final ProfileService profileService;
+
+    @PostMapping
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<ProfileResponse>> createOrUpdateProfile(
+            @Valid @RequestBody ProfileRequest request) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Long userId = getUserIdFromAuthentication(authentication);
+
+        ProfileResponse response = profileService.createOrUpdateProfile(userId, request);
+        return ResponseEntity.ok(ApiResponse.success("Profile updated successfully", response));
+    }
+
+    @GetMapping("/me")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<ProfileResponse>> getMyProfile() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Long userId = getUserIdFromAuthentication(authentication);
+
+        ProfileResponse response = profileService.getProfileByUserId(userId);
+        return ResponseEntity.ok(ApiResponse.success("Profile retrieved successfully", response));
+    }
 
     @GetMapping("/{userId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'CUSTOMER', 'CAFE_OWNER', 'CHEF', 'WAITER')")
-    public ResponseEntity<?> getProfile(@PathVariable Long userId) {
-        try {
-            ProfileDTO profile = profileService.getProfileByUserId(userId);
-            Map<String, Object> response = new HashMap<>();
-            response.put("status", "success");
-            response.put("data", profile);
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("status", "error");
-            response.put("message", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-        }
+    @PreAuthorize("hasAnyRole('ADMIN', 'CAFE_OWNER')")
+    public ResponseEntity<ApiResponse<ProfileResponse>> getProfileByUserId(@PathVariable Long userId) {
+        ProfileResponse response = profileService.getProfileByUserId(userId);
+        return ResponseEntity.ok(ApiResponse.success("Profile retrieved successfully", response));
     }
 
-    @PutMapping("/{userId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'CUSTOMER', 'CAFE_OWNER', 'CHEF', 'WAITER')")
-    public ResponseEntity<?> updateProfile(@PathVariable Long userId, @RequestBody ProfileDTO profileDTO) {
-        try {
-            ProfileDTO profile = profileService.updateProfile(userId, profileDTO);
-            Map<String, Object> response = new HashMap<>();
-            response.put("status", "success");
-            response.put("message", "Profile updated successfully");
-            response.put("data", profile);
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("status", "error");
-            response.put("message", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-        }
+    @GetMapping("/me/completion")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<Integer>> getProfileCompletion() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Long userId = getUserIdFromAuthentication(authentication);
+
+        int completion = profileService.calculateProfileCompletion(userId);
+        return ResponseEntity.ok(ApiResponse.success("Profile completion retrieved successfully", completion));
     }
 
-    @PostMapping("/{userId}/academic")
-    @PreAuthorize("hasAnyRole('ADMIN', 'CUSTOMER', 'CAFE_OWNER', 'CHEF', 'WAITER')")
-    public ResponseEntity<?> addAcademicInfo(@PathVariable Long userId, @RequestBody AcademicInfoDTO academicInfoDTO) {
-        try {
-            AcademicInfoDTO academicInfo = profileService.addAcademicInfo(userId, academicInfoDTO);
-            Map<String, Object> response = new HashMap<>();
-            response.put("status", "success");
-            response.put("message", "Academic info added successfully");
-            response.put("data", academicInfo);
-            return ResponseEntity.status(HttpStatus.CREATED).body(response);
-        } catch (Exception e) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("status", "error");
-            response.put("message", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-        }
-    }
-
-    @PostMapping("/{userId}/work-experience")
-    @PreAuthorize("hasAnyRole('ADMIN', 'CUSTOMER', 'CAFE_OWNER', 'CHEF', 'WAITER')")
-    public ResponseEntity<?> addWorkExperience(@PathVariable Long userId, @RequestBody WorkExperienceDTO workExperienceDTO) {
-        try {
-            WorkExperienceDTO workExp = profileService.addWorkExperience(userId, workExperienceDTO);
-            Map<String, Object> response = new HashMap<>();
-            response.put("status", "success");
-            response.put("message", "Work experience added successfully");
-            response.put("data", workExp);
-            return ResponseEntity.status(HttpStatus.CREATED).body(response);
-        } catch (Exception e) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("status", "error");
-            response.put("message", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-        }
-    }
-
-    @PutMapping("/{userId}/address")
-    @PreAuthorize("hasAnyRole('ADMIN', 'CUSTOMER', 'CAFE_OWNER', 'CHEF', 'WAITER')")
-    public ResponseEntity<?> updateAddress(@PathVariable Long userId, @RequestBody AddressDTO addressDTO) {
-        try {
-            AddressDTO address = profileService.updateAddress(userId, addressDTO);
-            Map<String, Object> response = new HashMap<>();
-            response.put("status", "success");
-            response.put("message", "Address updated successfully");
-            response.put("data", address);
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("status", "error");
-            response.put("message", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-        }
-    }
-
-    @GetMapping("/{userId}/completion")
-    @PreAuthorize("hasAnyRole('ADMIN', 'CUSTOMER', 'CAFE_OWNER', 'CHEF', 'WAITER')")
-    public ResponseEntity<?> getCompletionPercentage(@PathVariable Long userId) {
-        try {
-            Integer percentage = profileService.getCompletionPercentage(userId);
-            Map<String, Object> response = new HashMap<>();
-            response.put("status", "success");
-            response.put("data", Map.of("completionPercentage", percentage));
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("status", "error");
-            response.put("message", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-        }
+    private Long getUserIdFromAuthentication(Authentication authentication) {
+        // TODO: Extract user ID from authentication
+        return 1L;
     }
 }
+

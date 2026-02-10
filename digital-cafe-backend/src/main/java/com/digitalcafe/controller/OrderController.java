@@ -1,119 +1,124 @@
 package com.digitalcafe.controller;
 
-import com.digitalcafe.dto.OrderDTO;
-import com.digitalcafe.dto.OrderRequestDTO;
+import com.digitalcafe.dto.request.OrderRequest;
+import com.digitalcafe.dto.request.OrderStatusUpdateRequest;
+import com.digitalcafe.dto.response.ApiResponse;
+import com.digitalcafe.dto.response.OrderResponse;
+import com.digitalcafe.dto.response.PageResponse;
+import com.digitalcafe.entity.Order;
 import com.digitalcafe.service.OrderService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
+/**
+ * REST controller for order management operations.
+ */
 @RestController
 @RequestMapping("/api/orders")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 public class OrderController {
 
     private final OrderService orderService;
 
-    @GetMapping
-    public ResponseEntity<List<OrderDTO>> getAllOrders() {
-        List<OrderDTO> orders = orderService.getAllOrders();
-        return ResponseEntity.ok(orders);
+    @PostMapping
+    @PreAuthorize("hasRole('CUSTOMER')")
+    public ResponseEntity<ApiResponse<OrderResponse>> createOrder(@Valid @RequestBody OrderRequest request) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Long customerId = getUserIdFromAuthentication(authentication);
+
+        OrderResponse response = orderService.createOrder(customerId, request);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success("Order created successfully", response));
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<OrderDTO> getOrderById(@PathVariable Long id) {
-        OrderDTO order = orderService.getOrderById(id);
-        return ResponseEntity.ok(order);
+    @GetMapping("/{orderId}")
+    @PreAuthorize("hasAnyRole('CUSTOMER', 'CAFE_OWNER', 'CHEF', 'WAITER')")
+    public ResponseEntity<ApiResponse<OrderResponse>> getOrderById(@PathVariable Long orderId) {
+        OrderResponse response = orderService.getOrderById(orderId);
+        return ResponseEntity.ok(ApiResponse.success("Order retrieved successfully", response));
     }
 
-    @GetMapping("/customer/{customerId}")
-    public ResponseEntity<List<OrderDTO>> getOrdersByCustomer(@PathVariable Long customerId) {
-        List<OrderDTO> orders = orderService.getOrdersByCustomer(customerId);
-        return ResponseEntity.ok(orders);
+    @GetMapping("/my-orders")
+    @PreAuthorize("hasRole('CUSTOMER')")
+    public ResponseEntity<ApiResponse<List<OrderResponse>>> getMyOrders() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Long customerId = getUserIdFromAuthentication(authentication);
+
+        List<OrderResponse> response = orderService.getOrdersByCustomerId(customerId);
+        return ResponseEntity.ok(ApiResponse.success("Orders retrieved successfully", response));
     }
 
     @GetMapping("/cafe/{cafeId}")
-    public ResponseEntity<List<OrderDTO>> getOrdersByCafe(@PathVariable Long cafeId) {
-        List<OrderDTO> orders = orderService.getOrdersByCafe(cafeId);
-        return ResponseEntity.ok(orders);
+    @PreAuthorize("hasAnyRole('CAFE_OWNER', 'CHEF', 'WAITER')")
+    public ResponseEntity<ApiResponse<PageResponse<OrderResponse>>> getOrdersByCafeId(
+            @PathVariable Long cafeId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "DESC") String sortDirection) {
+
+        Sort.Direction direction = Sort.Direction.fromString(sortDirection);
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+
+        PageResponse<OrderResponse> response = orderService.getOrdersByCafeId(cafeId, pageable);
+        return ResponseEntity.ok(ApiResponse.success("Orders retrieved successfully", response));
     }
 
-    @GetMapping("/status/{status}")
-    public ResponseEntity<List<OrderDTO>> getOrdersByStatus(@PathVariable String status) {
-        List<OrderDTO> orders = orderService.getOrdersByStatus(status);
-        return ResponseEntity.ok(orders);
+    @GetMapping("/chef/pending")
+    @PreAuthorize("hasRole('CHEF')")
+    public ResponseEntity<ApiResponse<List<OrderResponse>>> getPendingOrdersForChef() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Long cafeId = getCafeIdFromAuthentication(authentication);
+
+        List<OrderResponse> response = orderService.getPendingOrdersForChef(cafeId);
+        return ResponseEntity.ok(ApiResponse.success("Pending orders retrieved successfully", response));
     }
 
-    @PostMapping
-    public ResponseEntity<OrderDTO> createOrder(@Valid @RequestBody OrderRequestDTO orderRequestDTO) {
-        OrderDTO createdOrder = orderService.createOrder(orderRequestDTO);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdOrder);
+    @GetMapping("/waiter/ready")
+    @PreAuthorize("hasRole('WAITER')")
+    public ResponseEntity<ApiResponse<List<OrderResponse>>> getReadyOrdersForWaiter() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Long cafeId = getCafeIdFromAuthentication(authentication);
+
+        List<OrderResponse> response = orderService.getReadyOrdersForWaiter(cafeId);
+        return ResponseEntity.ok(ApiResponse.success("Ready orders retrieved successfully", response));
     }
 
-    @PatchMapping("/{id}/status")
-    public ResponseEntity<OrderDTO> updateOrderStatus(
-            @PathVariable Long id,
-            @RequestBody Map<String, String> statusUpdate) {
-        String status = statusUpdate.get("status");
-        OrderDTO updatedOrder = orderService.updateOrderStatus(id, status);
-        return ResponseEntity.ok(updatedOrder);
+    @PatchMapping("/{orderId}/status")
+    @PreAuthorize("hasAnyRole('CHEF', 'WAITER')")
+    public ResponseEntity<ApiResponse<OrderResponse>> updateOrderStatus(
+            @PathVariable Long orderId,
+            @Valid @RequestBody OrderStatusUpdateRequest request) {
+        OrderResponse response = orderService.updateOrderStatus(orderId, request);
+        return ResponseEntity.ok(ApiResponse.success("Order status updated successfully", response));
     }
 
-    @PostMapping("/{orderId}/confirm")
-    public ResponseEntity<OrderDTO> confirmOrder(@PathVariable Long orderId,
-                                                 @RequestBody Map<String, Long> request) {
-        Long ownerId = request.get("ownerId");
-        OrderDTO confirmedOrder = orderService.confirmOrder(orderId, ownerId);
-        return ResponseEntity.ok(confirmedOrder);
+    @PatchMapping("/{orderId}/cancel")
+    @PreAuthorize("hasRole('CUSTOMER')")
+    public ResponseEntity<ApiResponse<OrderResponse>> cancelOrder(@PathVariable Long orderId) {
+        OrderResponse response = orderService.cancelOrder(orderId);
+        return ResponseEntity.ok(ApiResponse.success("Order cancelled successfully", response));
     }
 
-    @PostMapping("/{orderId}/start-preparing")
-    public ResponseEntity<OrderDTO> startPreparing(@PathVariable Long orderId,
-                                                   @RequestBody Map<String, Long> request) {
-        Long chefId = request.get("chefId");
-        OrderDTO order = orderService.startPreparing(orderId, chefId);
-        return ResponseEntity.ok(order);
+    private Long getUserIdFromAuthentication(Authentication authentication) {
+        // TODO: Extract user ID from authentication
+        return 1L;
     }
 
-    @PostMapping("/{orderId}/mark-ready")
-    public ResponseEntity<OrderDTO> markReady(@PathVariable Long orderId,
-                                              @RequestBody Map<String, Long> request) {
-        Long chefId = request.get("chefId");
-        OrderDTO order = orderService.markReady(orderId, chefId);
-        return ResponseEntity.ok(order);
-    }
-
-    @PostMapping("/{orderId}/mark-served")
-    public ResponseEntity<OrderDTO> markServed(@PathVariable Long orderId,
-                                               @RequestBody Map<String, Long> request) {
-        Long waiterId = request.get("waiterId");
-        OrderDTO order = orderService.markServed(orderId, waiterId);
-        return ResponseEntity.ok(order);
-    }
-
-    @PostMapping("/{orderId}/complete")
-    public ResponseEntity<OrderDTO> completeOrder(@PathVariable Long orderId) {
-        OrderDTO order = orderService.completeOrder(orderId);
-        return ResponseEntity.ok(order);
-    }
-
-    @PostMapping("/{orderId}/cancel")
-    public ResponseEntity<OrderDTO> cancelOrder(@PathVariable Long orderId,
-                                               @RequestBody Map<String, String> request) {
-        String reason = request.getOrDefault("reason", "Cancelled by user");
-        OrderDTO order = orderService.cancelOrder(orderId, reason);
-        return ResponseEntity.ok(order);
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteOrder(@PathVariable Long id) {
-        orderService.deleteOrder(id);
-        return ResponseEntity.noContent().build();
+    private Long getCafeIdFromAuthentication(Authentication authentication) {
+        // TODO: Extract cafe ID from authentication
+        return 1L;
     }
 }
+

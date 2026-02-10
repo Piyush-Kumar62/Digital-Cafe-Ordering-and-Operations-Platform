@@ -8,7 +8,8 @@ public class DigitalCafeBackendApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(DigitalCafeBackendApplication.class, args);
-    System.out.println("Digital Cafe Backend is running...");
-	}
+		System.out.println("==========================================");
+		System.out.println("Digital Cafe Backend is running...");
 
+	}
 }

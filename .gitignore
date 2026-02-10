@@ -48,11 +48,7 @@ secrets.json
 Project Materials/
 
 # Personal guide files (keep local, don't push to GitHub)
-GITHUB_PUSH_GUIDE.md
-QUICK_GIT_COMMANDS.md
-PROJECT_EXPLANATION.md
-ROLES_SUMMARY.md
-**/ROLES_SUMMARY.md
+
 
 application.properties
 /src/environments/environment.prod.ts

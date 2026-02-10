@@ -1,58 +1,42 @@
 {
   "name": "digital-cafe-frontend",
-  "version": "0.0.0",
+  "version": "1.0.0",
+  "description": "Digital Café Ordering and Operations Platform - Angular Frontend",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
-  },
-  "prettier": {
-    "printWidth": 100,
-    "singleQuote": true,
-    "overrides": [
-      {
-        "files": "*.html",
-        "options": {
-          "parser": "angular"
-        }
-      }
-    ]
+    "test": "ng test",
+    "lint": "ng lint",
+    "serve:prod": "ng serve --configuration production"
   },
   "private": true,
   "dependencies": {
-    "@angular/cdk": "^20.2.14",
-    "@angular/common": "^20.3.0",
-    "@angular/compiler": "^20.3.0",
-    "@angular/core": "^20.3.0",
-    "@angular/forms": "^20.3.0",
-    "@angular/platform-browser": "^20.3.0",
-    "@angular/router": "^20.3.0",
-    "aos": "^3.0.0-beta.6",
-    "bootstrap": "^5.3.3",
-    "bootstrap-icons": "^1.13.1",
-    "chart.js": "^4.5.1",
-    "glightbox": "^3.3.1",
-    "imagesloaded": "^5.0.0",
-    "isotope-layout": "^3.0.6",
-    "ng2-charts": "^8.0.0",
-    "rxjs": "~7.8.0",
-    "swiper": "^12.1.0",
-    "tslib": "^2.3.0",
-    "zone.js": "~0.15.0"
+    "@angular/animations": "^20.0.0",
+    "@angular/cdk": "^20.0.0",
+    "@angular/common": "^20.0.0",
+    "@angular/compiler": "^20.0.0",
+    "@angular/core": "^20.0.0",
+    "@angular/forms": "^20.0.0",
+    "@angular/material": "^20.0.0",
+    "@angular/platform-browser": "^20.0.0",
+    "@angular/platform-browser-dynamic": "^20.0.0",
+    "@angular/router": "^20.0.0",
+    "rxjs": "~7.8.1",
+    "tslib": "^2.6.0",
+    "zone.js": "~0.15.0",
+    "@stomp/stompjs": "^7.0.0",
+    "sockjs-client": "^1.6.1"
   },
   "devDependencies": {
-    "@angular/build": "^20.3.14",
-    "@angular/cli": "^20.3.14",
-    "@angular/compiler-cli": "^20.3.0",
-    "@types/jasmine": "~5.1.0",
-    "jasmine-core": "~5.9.0",
-    "karma": "~6.4.0",
-    "karma-chrome-launcher": "~3.2.0",
-    "karma-coverage": "~2.2.0",
-    "karma-jasmine": "~5.1.0",
-    "karma-jasmine-html-reporter": "~2.1.0",
-    "typescript": "~5.9.2"
+    "@angular-devkit/build-angular": "^20.0.0",
+    "@angular/cli": "^20.0.0",
+    "@angular/compiler-cli": "^20.0.0",
+    "@types/sockjs-client": "^1.5.4",
+    "typescript": "^5.8.2",
+    "tailwindcss": "^3.4.0",
+    "autoprefixer": "^10.4.0",
+    "postcss": "^8.4.0"
   }
 }

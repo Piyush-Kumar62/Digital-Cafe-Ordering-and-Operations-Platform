@@ -1,0 +1,539 @@
+<section class="comprehensive-register section">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-8 col-md-10">
+        <div class="card shadow-lg">
+          <div class="card-header">
+            <div class="text-center">
+              <h2 class="mb-1"><i class="bi bi-person-plus me-2"></i>Create Your Account</h2>
+              <p class="mb-0">Complete your registration in 5 simple steps</p>
+            </div>
+          </div>
+
+          <div class="card-body">
+            <!-- Progress Indicator -->
+            <div class="row mb-4">
+              <div class="col-12">
+                <div class="progress-step-bar">
+                  <div class="step-indicators">
+                    <div
+                      *ngFor="let step of [1, 2, 3, 4, 5]; let i = index"
+                      class="step-indicator"
+                      [class]="getStepClass(step)"
+                      [class.clickable]="isStepAccessible(step)"
+                      (click)="isStepAccessible(step) ? goToStep(step) : null"
+                    >
+                      <div class="step-number">
+                        <i [class]="getStepIcon(step)"></i>
+                      </div>
+                      <div class="step-label">
+                        <span *ngIf="step === 1">Basic Info</span>
+                        <span *ngIf="step === 2">Personal</span>
+                        <span *ngIf="step === 3">Address</span>
+                        <span *ngIf="step === 4">Academic</span>
+                        <span *ngIf="step === 5">Experience</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Error/Success Messages -->
+            <div *ngIf="errorMessage" class="alert alert-danger" role="alert">
+              <i class="bi bi-exclamation-circle me-2"></i>{{ errorMessage }}
+            </div>
+
+            <div *ngIf="successMessage" class="alert alert-success" role="alert">
+              <i class="bi bi-check-circle me-2"></i>{{ successMessage }}
+            </div>
+
+            <!-- Form Steps -->
+            <form (ngSubmit)="currentStep === totalSteps ? onSubmit() : nextStep()">
+              <!-- Step 1: Basic Information -->
+              <div *ngIf="currentStep === 1" class="step-content">
+                <h4 class="mb-3"><i class="bi bi-info-circle me-2"></i>Basic Information</h4>
+
+                <div class="row">
+                  <div class="col-md-6 mb-3">
+                    <label for="username" class="form-label">Username *</label>
+                    <div class="input-group">
+                      <span class="input-group-text"><i class="bi bi-person"></i></span>
+                      <input
+                        type="text"
+                        class="form-control"
+                        id="username"
+                        [(ngModel)]="username"
+                        name="username"
+                        placeholder="Enter username"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div class="col-md-6 mb-3">
+                    <label for="role" class="form-label">Role *</label>
+                    <div class="input-group">
+                      <span class="input-group-text"><i class="bi bi-shield"></i></span>
+                      <select class="form-control" id="role" [(ngModel)]="role" name="role" required>
+                        <option value="" disabled>Select role</option>
+                        <option *ngFor="let roleOption of roleOptions" [value]="roleOption">
+                          {{ roleOption.replace("_", " ") | titlecase }}
+                        </option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="row">
+                  <div class="col-md-6 mb-3">
+                    <label for="password" class="form-label">Password *</label>
+                    <div class="input-group">
+                      <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                      <input
+                        type="password"
+                        class="form-control"
+                        id="password"
+                        [(ngModel)]="password"
+                        name="password"
+                        placeholder="Enter password"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div class="col-md-6 mb-3">
+                    <label for="confirmPassword" class="form-label">Confirm Password *</label>
+                    <div class="input-group">
+                      <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
+                      <input
+                        type="password"
+                        class="form-control"
+                        id="confirmPassword"
+                        [(ngModel)]="confirmPassword"
+                        name="confirmPassword"
+                        placeholder="Confirm password"
+                        required
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Step 2: Personal Details -->
+              <div *ngIf="currentStep === 2" class="step-content">
+                <h4 class="mb-3"><i class="bi bi-person-badge me-2"></i>Personal Details</h4>
+
+                <div class="row">
+                  <div class="col-md-6 mb-3">
+                    <label for="firstName" class="form-label">First Name *</label>
+                    <div class="input-group">
+                      <span class="input-group-text"><i class="bi bi-person"></i></span>
+                      <input
+                        type="text"
+                        class="form-control"
+                        id="firstName"
+                        [(ngModel)]="personalDetails.firstName"
+                        name="firstName"
+                        placeholder="Enter first name"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div class="col-md-6 mb-3">
+                    <label for="lastName" class="form-label">Last Name *</label>
+                    <div class="input-group">
+                      <span class="input-group-text"><i class="bi bi-person"></i></span>
+                      <input
+                        type="text"
+                        class="form-control"
+                        id="lastName"
+                        [(ngModel)]="personalDetails.lastName"
+                        name="lastName"
+                        placeholder="Enter last name"
+                        required
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="row">
+                  <div class="col-md-6 mb-3">
+                    <label for="email" class="form-label">Email Address *</label>
+                    <div class="input-group">
+                      <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                      <input
+                        type="email"
+                        class="form-control"
+                        id="email"
+                        [(ngModel)]="personalDetails.email"
+                        name="email"
+                        placeholder="Enter email address"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div class="col-md-6 mb-3">
+                    <label for="phone" class="form-label">Phone Number *</label>
+                    <div class="input-group">
+                      <span class="input-group-text"><i class="bi bi-telephone"></i></span>
+                      <input
+                        type="tel"
+                        class="form-control"
+                        id="phone"
+                        [(ngModel)]="personalDetails.phone"
+                        name="phone"
+                        placeholder="Enter phone number"
+                        required
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="row">
+                  <div class="col-md-6 mb-3">
+                    <label for="gender" class="form-label">Gender *</label>
+                    <div class="input-group">
+                      <span class="input-group-text"><i class="bi bi-gender-ambiguous"></i></span>
+                      <select class="form-control" id="gender" [(ngModel)]="personalDetails.gender" name="gender" required>
+                        <option value="" disabled>Select gender</option>
+                        <option *ngFor="let genderOption of genderOptions" [value]="genderOption">
+                          {{ genderOption.replace("_", " ") | titlecase }}
+                        </option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div class="col-md-6 mb-3">
+                    <label for="maritalStatus" class="form-label">Marital Status</label>
+                    <div class="input-group">
+                      <span class="input-group-text"><i class="bi bi-heart"></i></span>
+                      <select class="form-control" id="maritalStatus" [(ngModel)]="personalDetails.maritalStatus" name="maritalStatus">
+                        <option *ngFor="let statusOption of maritalStatusOptions" [value]="statusOption">
+                          {{ statusOption.replace("_", " ") | titlecase }}
+                        </option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Step 3: Address -->
+              <div *ngIf="currentStep === 3" class="step-content">
+                <h4 class="mb-3"><i class="bi bi-geo-alt me-2"></i>Address Information</h4>
+
+                <div class="mb-3">
+                  <label for="street" class="form-label">Street Address *</label>
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-house"></i></span>
+                    <input
+                      type="text"
+                      class="form-control"
+                      id="street"
+                      [(ngModel)]="address.street"
+                      name="street"
+                      placeholder="Enter street address"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div class="row">
+                  <div class="col-md-6 mb-3">
+                    <label for="city" class="form-label">City *</label>
+                    <div class="input-group">
+                      <span class="input-group-text"><i class="bi bi-building"></i></span>
+                      <input
+                        type="text"
+                        class="form-control"
+                        id="city"
+                        [(ngModel)]="address.city"
+                        name="city"
+                        placeholder="Enter city"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div class="col-md-6 mb-3">
+                    <label for="state" class="form-label">State *</label>
+                    <div class="input-group">
+                      <span class="input-group-text"><i class="bi bi-geo"></i></span>
+                      <input
+                        type="text"
+                        class="form-control"
+                        id="state"
+                        [(ngModel)]="address.state"
+                        name="state"
+                        placeholder="Enter state"
+                        required
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="row">
+                  <div class="col-md-6 mb-3">
+                    <label for="pincode" class="form-label">Pincode *</label>
+                    <div class="input-group">
+                      <span class="input-group-text"><i class="bi bi-mailbox"></i></span>
+                      <input
+                        type="text"
+                        class="form-control"
+                        id="pincode"
+                        [(ngModel)]="address.pincode"
+                        name="pincode"
+                        placeholder="Enter pincode"
+                        required
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Step 4: Academic Information -->
+              <div *ngIf="currentStep === 4" class="step-content">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <h4 class="mb-0"><i class="bi bi-mortarboard me-2"></i>Academic Information</h4>
+                  <button type="button" class="btn btn-outline-primary btn-sm" (click)="addAcademic()">
+                    <i class="bi bi-plus-circle me-1"></i>Add Qualification
+                  </button>
+                </div>
+
+                <div *ngFor="let academic of academicInfoList; let i = index" class="academic-item mb-4">
+                  <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                      <h6 class="mb-0">Qualification {{ i + 1 }}</h6>
+                      <button
+                        type="button"
+                        class="btn btn-outline-danger btn-sm"
+                        (click)="removeAcademic(i)"
+                        [disabled]="academicInfoList.length === 1"
+                      >
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </div>
+                    <div class="card-body">
+                      <div class="row">
+                        <div class="col-md-6 mb-3">
+                          <label class="form-label">Institution Name *</label>
+                          <input
+                            type="text"
+                            class="form-control"
+                            [(ngModel)]="academic.institutionName"
+                            [name]="'institutionName_' + i"
+                            placeholder="Enter institution name"
+                            required
+                          />
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                          <label class="form-label">Degree *</label>
+                          <input
+                            type="text"
+                            class="form-control"
+                            [(ngModel)]="academic.degree"
+                            [name]="'degree_' + i"
+                            placeholder="Enter degree"
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      <div class="row">
+                        <div class="col-md-4 mb-3">
+                          <label class="form-label">Passing Year *</label>
+                          <input
+                            type="number"
+                            class="form-control"
+                            [(ngModel)]="academic.passingYear"
+                            [name]="'passingYear_' + i"
+                            [min]="1980"
+                            [max]="currentYear"
+                            required
+                          />
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                          <label class="form-label">Grade *</label>
+                          <input
+                            type="text"
+                            class="form-control"
+                            [(ngModel)]="academic.grade"
+                            [name]="'grade_' + i"
+                            placeholder="e.g., A, First Class"
+                            required
+                          />
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                          <label class="form-label">Percentage *</label>
+                          <input
+                            type="number"
+                            class="form-control"
+                            [(ngModel)]="academic.gradeInPercentage"
+                            [name]="'gradeInPercentage_' + i"
+                            min="0"
+                            max="100"
+                            step="0.1"
+                            placeholder="e.g., 85.5"
+                            required
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Step 5: Work Experience -->
+              <div *ngIf="currentStep === 5" class="step-content">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <div>
+                    <h4 class="mb-0"><i class="bi bi-briefcase me-2"></i>Work Experience</h4>
+                    <small class="text-muted">Optional - You can skip this step if you're fresh graduate</small>
+                  </div>
+                  <button type="button" class="btn btn-outline-primary btn-sm" (click)="addWorkExperience()">
+                    <i class="bi bi-plus-circle me-1"></i>Add Experience
+                  </button>
+                </div>
+
+                <div *ngFor="let work of workExperienceList; let i = index" class="work-item mb-4">
+                  <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                      <h6 class="mb-0">Experience {{ i + 1 }}</h6>
+                      <button type="button" class="btn btn-outline-danger btn-sm" (click)="removeWorkExperience(i)">
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </div>
+                    <div class="card-body">
+                      <div class="row">
+                        <div class="col-md-6 mb-3">
+                          <label class="form-label">Company Name</label>
+                          <input
+                            type="text"
+                            class="form-control"
+                            [(ngModel)]="work.companyName"
+                            [name]="'companyName_' + i"
+                            placeholder="Enter company name"
+                          />
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                          <label class="form-label">Designation</label>
+                          <input
+                            type="text"
+                            class="form-control"
+                            [(ngModel)]="work.designation"
+                            [name]="'designation_' + i"
+                            placeholder="Enter designation"
+                          />
+                        </div>
+                      </div>
+
+                      <div class="row">
+                        <div class="col-md-6 mb-3">
+                          <label class="form-label">Start Date</label>
+                          <input type="date" class="form-control" [(ngModel)]="work.startDate" [name]="'startDate_' + i" />
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                          <div class="form-check mb-2">
+                            <input
+                              class="form-check-input"
+                              type="checkbox"
+                              [(ngModel)]="work.currentlyWorking"
+                              [name]="'currentlyWorking_' + i"
+                              (change)="onCurrentlyWorkingChange(i)"
+                            />
+                            <label class="form-check-label"> Currently Working Here </label>
+                          </div>
+                          <label class="form-label">End Date</label>
+                          <input
+                            type="date"
+                            class="form-control"
+                            [(ngModel)]="work.endDate"
+                            [name]="'endDate_' + i"
+                            [disabled]="work.currentlyWorking"
+                          />
+                        </div>
+                      </div>
+
+                      <div class="row">
+                        <div class="col-md-6 mb-3">
+                          <label class="form-label">CTC Amount</label>
+                          <div class="input-group">
+                            <input
+                              type="number"
+                              class="form-control"
+                              [(ngModel)]="work.ctc!.amount"
+                              [name]="'ctcAmount_' + i"
+                              placeholder="Enter amount"
+                              step="0.1"
+                            />
+                            <select
+                              class="form-select"
+                              style="max-width: 100px"
+                              [(ngModel)]="work.ctc!.currency"
+                              [name]="'ctcCurrency_' + i"
+                            >
+                              <option value="LPA">LPA</option>
+                              <option value="CTC">CTC</option>
+                              <option value="Per Month">Per Month</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <div class="col-md-6 mb-3" *ngIf="!work.currentlyWorking">
+                          <label class="form-label">Reason for Leaving</label>
+                          <input
+                            type="text"
+                            class="form-control"
+                            [(ngModel)]="work.reasonForLeaving"
+                            [name]="'reasonForLeaving_' + i"
+                            placeholder="Enter reason for leaving"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Navigation Buttons -->
+              <div class="d-flex justify-content-between mt-4">
+                <button type="button" class="btn btn-outline-secondary" (click)="previousStep()" [disabled]="currentStep === 1">
+                  <i class="bi bi-arrow-left me-2"></i>Previous
+                </button>
+
+                <div class="step-info">Step {{ currentStep }} of {{ totalSteps }}</div>
+
+                <button type="submit" class="btn btn-primary" [disabled]="isLoading">
+                  <span *ngIf="currentStep < totalSteps"> Next<i class="bi bi-arrow-right ms-2"></i> </span>
+                  <span *ngIf="currentStep === totalSteps && !isLoading">
+                    <i class="bi bi-check-circle me-2"></i>Complete Registration
+                  </span>
+                  <span *ngIf="isLoading">
+                    <span class="spinner-border spinner-border-sm me-2"></span>
+                    Submitting...
+                  </span>
+                </button>
+              </div>
+            </form>
+
+            <hr class="my-4" />
+
+            <div class="text-center">
+              <p class="mb-0">
+                Already have an account?
+                <a routerLink="/auth/login" class="fw-bold">Login here</a>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,112 @@
+<app-navbar></app-navbar>
+
+<!-- Hero Section -->
+<section class="hero-section">
+  <div class="hero-container">
+    <div class="hero-content">
+      <h1 class="hero-title">
+        Welcome to<br />
+        <span class="hero-highlight">Digital Café Platform</span>
+      </h1>
+      <p class="hero-subtitle">
+        Experience seamless café ordering, table booking, and real-time operations management. Transform the way you enjoy your favorite
+        café.
+      </p>
+      <div class="hero-actions">
+        <button class="btn-primary" routerLink="/auth/register">Get Started</button>
+        <button class="btn-outline" (click)="scrollToSection('features')">Learn More</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Features Section -->
+<section id="features" class="features-section">
+  <div class="container-custom">
+    <div class="section-header">
+      <h2 class="section-title">Why Choose Digital Café?</h2>
+      <p class="section-subtitle">Everything you need for a modern café experience</p>
+    </div>
+
+    <div class="features-grid">
+      <div *ngFor="let feature of features" class="feature-card">
+        <div class="feature-icon-wrapper">
+          <div class="feature-icon-bg">{{ feature.icon }}</div>
+        </div>
+        <h3 class="feature-title">{{ feature.title }}</h3>
+        <p class="feature-description">{{ feature.description }}</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Cafes Section -->
+<section id="cafes" class="cafes-section">
+  <div class="container-custom">
+    <div class="section-header">
+      <h2 class="section-title">Featured Cafés</h2>
+      <p class="section-subtitle">Discover amazing cafés near you</p>
+    </div>
+
+    <div *ngIf="loading" class="loading-grid">
+      <div *ngFor="let i of [1, 2, 3, 4, 5, 6]" class="skeleton-card"></div>
+    </div>
+
+    <div *ngIf="!loading && featuredCafes.length > 0" class="cafes-grid">
+      <div *ngFor="let cafe of featuredCafes" class="cafe-card" (click)="navigateToCafe(cafe.id)">
+        <div class="cafe-image">
+          <img [src]="getCafeImage(cafe)" [alt]="cafe.name" />
+          <div class="cafe-rating">
+            <span>⭐ {{ cafe.rating.toFixed(1) }}</span>
+          </div>
+        </div>
+        <div class="cafe-info">
+          <h3 class="cafe-name">{{ cafe.name }}</h3>
+          <p class="cafe-location">📍 {{ cafe.city }}, {{ cafe.state }}</p>
+          <p class="cafe-description">{{ cafe.description }}</p>
+          <div class="cafe-hours">
+            <span>🕐 {{ cafe.openingTime }} - {{ cafe.closingTime }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="!loading && featuredCafes.length === 0" class="empty-state">
+      <p>No cafés available at the moment. Check back soon!</p>
+    </div>
+  </div>
+</section>
+
+<!-- Testimonials Section -->
+<section id="testimonials" class="testimonials-section">
+  <div class="container-custom">
+    <div class="section-header">
+      <h2 class="section-title">What People Say</h2>
+      <p class="section-subtitle">Trusted by café owners and customers alike</p>
+    </div>
+
+    <div class="testimonials-grid">
+      <div *ngFor="let testimonial of testimonials" class="testimonial-card">
+        <div class="testimonial-avatar">{{ testimonial.image }}</div>
+        <p class="testimonial-text">"{{ testimonial.text }}"</p>
+        <div class="testimonial-author">
+          <p class="author-name">{{ testimonial.name }}</p>
+          <p class="author-role">{{ testimonial.role }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta-section">
+  <div class="container-custom">
+    <div class="cta-content">
+      <h2 class="cta-title">Ready to Get Started?</h2>
+      <p class="cta-subtitle">Join thousands of happy customers and café owners today</p>
+      <button class="btn-primary btn-large" routerLink="/auth/register">Create Free Account</button>
+    </div>
+  </div>
+</section>
+
+<app-footer></app-footer>

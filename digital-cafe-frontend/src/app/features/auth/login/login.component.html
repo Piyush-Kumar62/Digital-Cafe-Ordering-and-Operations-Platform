@@ -1,0 +1,57 @@
+<div class="auth-container">
+  <div class="auth-card">
+    <div class="auth-header">
+      <h1 class="auth-title">Welcome Back</h1>
+      <p class="auth-subtitle">Sign in to your account to continue</p>
+    </div>
+
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="auth-form">
+      <div class="form-group">
+        <label for="username" class="form-label">Username</label>
+        <input
+          type="text"
+          id="username"
+          formControlName="username"
+          class="form-input"
+          [class.error]="f['username'].invalid && f['username'].touched"
+          placeholder="Enter your username"
+        />
+        <div *ngIf="f['username'].invalid && f['username'].touched" class="error-message">
+          <span *ngIf="f['username'].errors?.['required']">Username is required</span>
+          <span *ngIf="f['username'].errors?.['minlength']">Username must be at least 3 characters</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="password" class="form-label">Password</label>
+        <div class="password-input-wrapper">
+          <input
+            [type]="showPassword ? 'text' : 'password'"
+            id="password"
+            formControlName="password"
+            class="form-input"
+            [class.error]="f['password'].invalid && f['password'].touched"
+            placeholder="Enter your password"
+          />
+          <button type="button" class="password-toggle" (click)="togglePasswordVisibility()">
+            {{ showPassword ? "👁️" : "👁️‍🗨️" }}
+          </button>
+        </div>
+        <div *ngIf="f['password'].invalid && f['password'].touched" class="error-message">
+          <span *ngIf="f['password'].errors?.['required']">Password is required</span>
+          <span *ngIf="f['password'].errors?.['minlength']">Password must be at least 8 characters</span>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-submit" [disabled]="loading">
+        <span *ngIf="!loading">Sign In</span>
+        <span *ngIf="loading" class="loading-spinner"></span>
+      </button>
+    </form>
+
+    <div class="auth-footer">
+      <p>Don't have an account? <a routerLink="/auth/register" class="auth-link">Register here</a></p>
+      <p><a routerLink="/" class="auth-link">← Back to Home</a></p>
+    </div>
+  </div>
+</div>

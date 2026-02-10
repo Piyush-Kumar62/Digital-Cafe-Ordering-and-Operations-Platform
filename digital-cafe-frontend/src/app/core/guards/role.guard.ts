@@ -1,26 +1,35 @@
+import { CanActivateFn, Router } from '@angular/router';
 import { inject } from '@angular/core';
-import { Router, CanActivateFn } from '@angular/router';
-import { AuthService } from '../services/auth.service';
-import { map } from 'rxjs/operators';
+import { AuthService } from '@core/auth/auth.service';
+import { UserRole } from '@shared/models/auth.model';
 
 export const roleGuard: CanActivateFn = (route, state) => {
   const authService = inject(AuthService);
   const router = inject(Router);
-  const expectedRoles = route.data['roles'] as string[];
 
-  return authService.currentUser$.pipe(
-    map(user => {
-      if (!user) {
-        router.navigate(['/auth/login']);
-        return false;
-      }
+  // Check if user is authenticated
+  if (!authService.isAuthenticated) {
+    router.navigate(['/auth/login']);
+    return false;
+  }
 
-      if (expectedRoles && !expectedRoles.includes(user.role)) {
-        router.navigate(['/unauthorized']);
-        return false;
-      }
+  // Get required roles from route data
+  const requiredRoles = route.data['roles'] as UserRole[];
 
-      return true;
-    })
-  );
+  if (!requiredRoles || requiredRoles.length === 0) {
+    return true;
+  }
+
+  // Check if user has any of the required roles
+  const userRoles = authService.userRoles;
+  const hasRequiredRole = requiredRoles.some((role) => userRoles.includes(role));
+
+  if (hasRequiredRole) {
+    return true;
+  }
+
+  // User doesn't have required role - redirect to their dashboard
+  const dashboardRoute = authService.getRoleDashboardRoute();
+  router.navigate([dashboardRoute]);
+  return false;
 };

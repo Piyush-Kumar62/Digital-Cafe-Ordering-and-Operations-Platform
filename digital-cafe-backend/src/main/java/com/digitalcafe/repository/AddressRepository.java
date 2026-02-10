@@ -1,6 +1,6 @@
 package com.digitalcafe.repository;
 
-import com.digitalcafe.model.Address;
+import com.digitalcafe.entity.Address;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

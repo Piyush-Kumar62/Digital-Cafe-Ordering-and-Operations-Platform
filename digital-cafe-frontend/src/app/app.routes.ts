@@ -1,95 +1,118 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 import { roleGuard } from './core/guards/role.guard';
+import { emailVerificationGuard } from './core/guards/email-verification.guard';
+import { profileCompletionGuard } from './core/guards/profile-completion.guard';
+import { UserRole } from './shared/models/auth.model';
 
 export const routes: Routes = [
+  // Landing page
   {
     path: '',
-    loadComponent: () => import('./features/home/home').then((m) => m.Home),
+    loadComponent: () => import('./features/landing/landing.component').then((m) => m.LandingComponent),
   },
+
+  // Authentication routes
   {
-    path: 'menu',
-    loadComponent: () => import('./features/menu/menu').then((m) => m.Menu),
+    path: 'auth',
+    children: [
+      {
+        path: 'login',
+        loadComponent: () => import('./features/auth/login/login.component').then((m) => m.LoginComponent),
+      },
+      {
+        path: 'register',
+        loadComponent: () => import('./features/auth/register/register.component').then((m) => m.RegisterComponent),
+      },
+      {
+        path: 'verify-email',
+        loadComponent: () =>
+          import('./features/auth/verify-email/verify-email.component').then((m) => m.VerifyEmailComponent),
+      },
+    ],
   },
+
+  // Admin routes
   {
-    path: 'cart',
-    loadComponent: () => import('./features/cart/cart').then((m) => m.Cart),
+    path: 'admin',
+    canActivate: [authGuard, emailVerificationGuard, roleGuard],
+    data: { roles: [UserRole.ADMIN] },
+    children: [
+      {
+        path: 'dashboard',
+        loadComponent: () =>
+          import('./features/admin/admin-dashboard/admin-dashboard.component').then((m) => m.AdminDashboardComponent),
+      },
+      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+    ],
   },
+
+  // Café Owner routes
   {
-    path: 'auth/login',
-    loadComponent: () => import('./features/auth/login/login').then((m) => m.Login),
+    path: 'cafe-owner',
+    canActivate: [authGuard, emailVerificationGuard, roleGuard],
+    data: { roles: [UserRole.CAFE_OWNER] },
+    children: [
+      {
+        path: 'dashboard',
+        loadComponent: () =>
+          import('./features/cafe-owner/owner-dashboard/owner-dashboard.component').then(
+            (m) => m.OwnerDashboardComponent,
+          ),
+      },
+      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+    ],
   },
+
+  // Chef routes
   {
-    path: 'auth/register',
-    loadComponent: () => import('./features/auth/register/register').then((m) => m.Register),
+    path: 'chef',
+    canActivate: [authGuard, emailVerificationGuard, roleGuard],
+    data: { roles: [UserRole.CHEF] },
+    children: [
+      {
+        path: 'dashboard',
+        loadComponent: () =>
+          import('./features/chef/chef-dashboard/chef-dashboard.component').then((m) => m.ChefDashboardComponent),
+      },
+      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+    ],
   },
+
+  // Waiter routes
   {
-    path: 'auth/verify-email',
-    loadComponent: () =>
-      import('./features/auth/verify-email/verify-email').then((m) => m.VerifyEmail),
+    path: 'waiter',
+    canActivate: [authGuard, emailVerificationGuard, roleGuard],
+    data: { roles: [UserRole.WAITER] },
+    children: [
+      {
+        path: 'dashboard',
+        loadComponent: () =>
+          import('./features/customer/customer-dashboard/customer-dashboard.component').then(
+            (m) => m.CustomerDashboardComponent,
+          ),
+      },
+      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+    ],
   },
+
+  // Customer routes
   {
-    path: 'auth/forgot-password',
-    loadComponent: () =>
-      import('./features/auth/forgot-password/forgot-password').then((m) => m.ForgotPassword),
+    path: 'customer',
+    canActivate: [authGuard, emailVerificationGuard, profileCompletionGuard, roleGuard],
+    data: { roles: [UserRole.CUSTOMER] },
+    children: [
+      {
+        path: 'dashboard',
+        loadComponent: () =>
+          import('./features/customer/customer-dashboard/customer-dashboard.component').then(
+            (m) => m.CustomerDashboardComponent,
+          ),
+      },
+      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+    ],
   },
-  // Dashboard Routes (Role-based)
-  {
-    path: 'dashboard/admin',
-    loadComponent: () =>
-      import('./features/dashboards/admin-dashboard/admin-dashboard').then(
-        (m) => m.AdminDashboardComponent,
-      ),
-    canActivate: [authGuard, roleGuard],
-    data: { roles: ['ADMIN'] },
-  },
-  {
-    path: 'dashboard/owner',
-    loadComponent: () =>
-      import('./features/dashboards/owner-dashboard/owner-dashboard').then(
-        (m) => m.OwnerDashboardComponent,
-      ),
-    canActivate: [authGuard, roleGuard],
-    data: { roles: ['CAFE_OWNER'] },
-  },
-  {
-    path: 'dashboard/chef',
-    loadComponent: () =>
-      import('./features/dashboards/chef-dashboard/chef-dashboard').then(
-        (m) => m.ChefDashboardComponent,
-      ),
-    canActivate: [authGuard, roleGuard],
-    data: { roles: ['CHEF'] },
-  },
-  {
-    path: 'dashboard/waiter',
-    loadComponent: () =>
-      import('./features/dashboards/waiter-dashboard/waiter-dashboard').then(
-        (m) => m.WaiterDashboardComponent,
-      ),
-    canActivate: [authGuard, roleGuard],
-    data: { roles: ['WAITER'] },
-  },
-  {
-    path: 'dashboard/customer',
-    loadComponent: () =>
-      import('./features/dashboards/customer-dashboard/customer-dashboard').then(
-        (m) => m.CustomerDashboardComponent,
-      ),
-    canActivate: [authGuard, roleGuard],
-    data: { roles: ['CUSTOMER'] },
-  },
-  {
-    path: 'create-staff',
-    loadComponent: () =>
-      import('./features/staff-management/create-staff/create-staff').then(
-        (m) => m.CreateStaffComponent,
-      ),
-    canActivate: [authGuard, roleGuard],
-    data: { roles: ['ADMIN', 'CAFE_OWNER'] },
-  },
-  {
-    path: '**',
-    redirectTo: '',
-  },
+
+  // Fallback route
+  { path: '**', redirectTo: '' },
 ];

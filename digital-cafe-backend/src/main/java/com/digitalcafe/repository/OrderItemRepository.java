@@ -1,6 +1,6 @@
 package com.digitalcafe.repository;
 
-import com.digitalcafe.model.OrderItem;
+import com.digitalcafe.entity.OrderItem;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

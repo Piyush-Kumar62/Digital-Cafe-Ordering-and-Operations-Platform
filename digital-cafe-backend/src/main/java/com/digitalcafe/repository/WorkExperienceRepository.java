@@ -1,6 +1,6 @@
 package com.digitalcafe.repository;
 
-import com.digitalcafe.model.WorkExperience;
+import com.digitalcafe.entity.WorkExperience;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

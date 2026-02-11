@@ -1,22 +1,28 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { Router, RouterModule, ActivatedRoute } from '@angular/router';
-import { AuthService } from '@core/auth/auth.service';
-import { NotificationService } from '@core/services/notification.service';
+import { Component, OnInit } from "@angular/core";
+import { CommonModule } from "@angular/common";
+import {
+  FormBuilder,
+  FormGroup,
+  Validators,
+  ReactiveFormsModule,
+} from "@angular/forms";
+import { Router, RouterModule, ActivatedRoute } from "@angular/router";
+import { AuthService } from "@core/auth/auth.service";
+import { NotificationService } from "@core/services/notification.service";
+import { NavbarComponent } from "@shared/components/navbar/navbar.component";
 
 @Component({
-  selector: 'app-login',
+  selector: "app-login",
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule],
-  templateUrl: './login.component.html',
-  styleUrls: ['./login.component.scss'],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule, NavbarComponent],
+  templateUrl: "./login.component.html",
+  styleUrls: ["./login.component.scss"],
 })
 export class LoginComponent implements OnInit {
   loginForm!: FormGroup;
   loading = false;
   showPassword = false;
-  returnUrl: string = '/';
+  returnUrl: string = "/";
 
   constructor(
     private fb: FormBuilder,
@@ -34,11 +40,11 @@ export class LoginComponent implements OnInit {
     }
 
     // Get return URL from route parameters or default to role dashboard
-    this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/';
+    this.returnUrl = this.route.snapshot.queryParams["returnUrl"] || "/";
 
     this.loginForm = this.fb.group({
-      username: ['', [Validators.required, Validators.minLength(3)]],
-      password: ['', [Validators.required, Validators.minLength(8)]],
+      username: ["", [Validators.required, Validators.minLength(3)]],
+      password: ["", [Validators.required, Validators.minLength(8)]],
     });
   }
 
@@ -62,23 +68,23 @@ export class LoginComponent implements OnInit {
 
     this.authService.login(this.loginForm.value).subscribe({
       next: (response) => {
-        this.notificationService.success('Login successful!');
+        this.notificationService.success("Login successful!");
 
         // Check if user must reset password
         if (response.mustResetPassword) {
-          this.router.navigate(['/auth/reset-password']);
+          this.router.navigate(["/auth/reset-password"]);
           return;
         }
 
         // Check if email is verified
         if (!response.isEmailVerified) {
-          this.router.navigate(['/auth/verify-email']);
+          this.router.navigate(["/auth/verify-email"]);
           return;
         }
 
         // Check if profile is complete (for customers)
         if (this.authService.isCustomer() && !response.isProfileComplete) {
-          this.router.navigate(['/customer/complete-profile']);
+          this.router.navigate(["/customer/complete-profile"]);
           return;
         }
 
@@ -88,7 +94,9 @@ export class LoginComponent implements OnInit {
       },
       error: (error) => {
         this.loading = false;
-        this.notificationService.error(error.message || 'Login failed. Please check your credentials.');
+        this.notificationService.error(
+          error.message || "Login failed. Please check your credentials.",
+        );
       },
     });
   }

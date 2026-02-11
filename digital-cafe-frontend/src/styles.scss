@@ -20,8 +20,8 @@ body {
 
 body {
   font-family: "Inter", sans-serif;
-  color: #1c1917;
-  background-color: #fafaf9;
+  color: #ffffff;
+  background-color: #1f2937;
 }
 
 h1,
@@ -195,4 +195,151 @@ h6 {
 
 .skeleton-avatar {
   @apply w-12 h-12 bg-gray-200 animate-pulse rounded-full;
+}
+
+/* Dark Mode Styles */
+.dark-mode {
+  body {
+    background-color: #1a1a1a;
+    color: #e5e5e5;
+  }
+
+  .navbar {
+    background: #2d2d2d !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+  }
+
+  .brand-link {
+    color: #ef4444 !important;
+  }
+
+  .nav-link {
+    color: #d1d5db !important;
+  }
+
+  .nav-link:hover {
+    color: #ef4444 !important;
+    background-color: #3f3f3f !important;
+  }
+
+  .nav-link.active {
+    color: #ef4444 !important;
+    background-color: #3f3f3f !important;
+  }
+
+  .user-name {
+    color: #e5e5e5 !important;
+  }
+
+  .menu-toggle span {
+    background-color: #e5e5e5 !important;
+  }
+
+  .theme-toggle {
+    border-color: #4b5563 !important;
+  }
+
+  .theme-toggle:hover {
+    border-color: #ef4444 !important;
+    background-color: #3f3f3f !important;
+  }
+
+  /* Hero Section */
+  .hero-section {
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%) !important;
+  }
+
+  .hero-title {
+    color: #e5e5e5 !important;
+  }
+
+  .hero-subtitle {
+    color: #9ca3af !important;
+  }
+
+  /* Features, Cafes, Testimonials Sections */
+  .features-section,
+  .cafes-section,
+  .testimonials-section {
+    background-color: #1a1a1a !important;
+  }
+
+  .section-title {
+    color: #e5e5e5 !important;
+  }
+
+  .section-subtitle {
+    color: #9ca3af !important;
+  }
+
+  .feature-card,
+  .cafe-card,
+  .testimonial-card {
+    background-color: #2d2d2d !important;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3) !important;
+  }
+
+  .feature-card:hover,
+  .cafe-card:hover,
+  .testimonial-card:hover {
+    box-shadow: 0 8px 12px rgba(0, 0, 0, 0.4) !important;
+  }
+
+  .feature-title,
+  .cafe-name,
+  .author-name {
+    color: #e5e5e5 !important;
+  }
+
+  .feature-description,
+  .cafe-description,
+  .testimonial-text,
+  .author-role {
+    color: #9ca3af !important;
+  }
+
+  .cafe-location,
+  .cafe-hours {
+    color: #a1a1a1 !important;
+  }
+
+  /* Cards */
+  .card {
+    background-color: #2d2d2d !important;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3) !important;
+  }
+
+  /* Input Fields */
+  .input-field {
+    background-color: #3f3f3f !important;
+    border-color: #4b5563 !important;
+    color: #e5e5e5 !important;
+  }
+
+  .input-field:focus {
+    background-color: #2d2d2d !important;
+  }
+
+  /* Scrollbar Dark Mode */
+  ::-webkit-scrollbar-track {
+    background: #2d2d2d;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #4b5563;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #6b7280;
+  }
+
+  /* Skeleton Loading Dark Mode */
+  .skeleton,
+  .skeleton-text {
+    background-color: #3f3f3f !important;
+  }
+
+  .skeleton-card {
+    background-color: #2d2d2d !important;
+  }
 }

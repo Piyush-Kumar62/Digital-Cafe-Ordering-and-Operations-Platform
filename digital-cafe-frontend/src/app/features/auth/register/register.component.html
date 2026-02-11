@@ -1,3 +1,4 @@
+<app-navbar></app-navbar>
 <section class="register section">
   <div class="container">
     <div class="row justify-content-center">
@@ -5,7 +6,9 @@
         <div class="card shadow-lg">
           <div class="card-header">
             <div class="text-center">
-              <h2 class="mb-1"><i class="bi bi-person-plus me-2"></i>Create Your Account</h2>
+              <h2 class="mb-1">
+                <i class="bi bi-person-plus me-2"></i>Create Your Account
+              </h2>
               <p class="mb-0">Complete your registration in 5 simple steps</p>
             </div>
           </div>
@@ -44,21 +47,31 @@
               <i class="bi bi-exclamation-circle me-2"></i>{{ errorMessage }}
             </div>
 
-            <div *ngIf="successMessage" class="alert alert-success" role="alert">
+            <div
+              *ngIf="successMessage"
+              class="alert alert-success"
+              role="alert"
+            >
               <i class="bi bi-check-circle me-2"></i>{{ successMessage }}
             </div>
 
             <!-- Form Steps -->
-            <form (ngSubmit)="currentStep === totalSteps ? onSubmit() : nextStep()">
+            <form
+              (ngSubmit)="currentStep === totalSteps ? onSubmit() : nextStep()"
+            >
               <!-- Step 1: Basic Information -->
               <div *ngIf="currentStep === 1" class="step-content">
-                <h4 class="mb-3"><i class="bi bi-info-circle me-2"></i>Basic Information</h4>
+                <h4 class="mb-3">
+                  <i class="bi bi-info-circle me-2"></i>Basic Information
+                </h4>
 
                 <div class="row">
                   <div class="col-md-6 mb-3">
                     <label for="username" class="form-label">Username *</label>
                     <div class="input-group">
-                      <span class="input-group-text"><i class="bi bi-person"></i></span>
+                      <span class="input-group-text"
+                        ><i class="bi bi-person"></i
+                      ></span>
                       <input
                         type="text"
                         class="form-control"
@@ -74,10 +87,21 @@
                   <div class="col-md-6 mb-3">
                     <label for="role" class="form-label">Role *</label>
                     <div class="input-group">
-                      <span class="input-group-text"><i class="bi bi-shield"></i></span>
-                      <select class="form-control" id="role" [(ngModel)]="role" name="role" required>
+                      <span class="input-group-text"
+                        ><i class="bi bi-shield"></i
+                      ></span>
+                      <select
+                        class="form-control"
+                        id="role"
+                        [(ngModel)]="role"
+                        name="role"
+                        required
+                      >
                         <option value="" disabled>Select role</option>
-                        <option *ngFor="let roleOption of roleOptions" [value]="roleOption">
+                        <option
+                          *ngFor="let roleOption of roleOptions"
+                          [value]="roleOption"
+                        >
                           {{ roleOption.replace("_", " ") | titlecase }}
                         </option>
                       </select>
@@ -89,7 +113,9 @@
                   <div class="col-md-6 mb-3">
                     <label for="password" class="form-label">Password *</label>
                     <div class="input-group">
-                      <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                      <span class="input-group-text"
+                        ><i class="bi bi-lock"></i
+                      ></span>
                       <input
                         type="password"
                         class="form-control"
@@ -103,9 +129,13 @@
                   </div>
 
                   <div class="col-md-6 mb-3">
-                    <label for="confirmPassword" class="form-label">Confirm Password *</label>
+                    <label for="confirmPassword" class="form-label"
+                      >Confirm Password *</label
+                    >
                     <div class="input-group">
-                      <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
+                      <span class="input-group-text"
+                        ><i class="bi bi-lock-fill"></i
+                      ></span>
                       <input
                         type="password"
                         class="form-control"
@@ -122,13 +152,19 @@
 
               <!-- Step 2: Personal Details -->
               <div *ngIf="currentStep === 2" class="step-content">
-                <h4 class="mb-3"><i class="bi bi-person-badge me-2"></i>Personal Details</h4>
+                <h4 class="mb-3">
+                  <i class="bi bi-person-badge me-2"></i>Personal Details
+                </h4>
 
                 <div class="row">
                   <div class="col-md-6 mb-3">
-                    <label for="firstName" class="form-label">First Name *</label>
+                    <label for="firstName" class="form-label"
+                      >First Name *</label
+                    >
                     <div class="input-group">
-                      <span class="input-group-text"><i class="bi bi-person"></i></span>
+                      <span class="input-group-text"
+                        ><i class="bi bi-person"></i
+                      ></span>
                       <input
                         type="text"
                         class="form-control"
@@ -144,7 +180,9 @@
                   <div class="col-md-6 mb-3">
                     <label for="lastName" class="form-label">Last Name *</label>
                     <div class="input-group">
-                      <span class="input-group-text"><i class="bi bi-person"></i></span>
+                      <span class="input-group-text"
+                        ><i class="bi bi-person"></i
+                      ></span>
                       <input
                         type="text"
                         class="form-control"
@@ -160,9 +198,13 @@
 
                 <div class="row">
                   <div class="col-md-6 mb-3">
-                    <label for="email" class="form-label">Email Address *</label>
+                    <label for="email" class="form-label"
+                      >Email Address *</label
+                    >
                     <div class="input-group">
-                      <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                      <span class="input-group-text"
+                        ><i class="bi bi-envelope"></i
+                      ></span>
                       <input
                         type="email"
                         class="form-control"
@@ -178,7 +220,9 @@
                   <div class="col-md-6 mb-3">
                     <label for="phone" class="form-label">Phone Number *</label>
                     <div class="input-group">
-                      <span class="input-group-text"><i class="bi bi-telephone"></i></span>
+                      <span class="input-group-text"
+                        ><i class="bi bi-telephone"></i
+                      ></span>
                       <input
                         type="tel"
                         class="form-control"
@@ -196,10 +240,21 @@
                   <div class="col-md-6 mb-3">
                     <label for="gender" class="form-label">Gender *</label>
                     <div class="input-group">
-                      <span class="input-group-text"><i class="bi bi-gender-ambiguous"></i></span>
-                      <select class="form-control" id="gender" [(ngModel)]="personalDetails.gender" name="gender" required>
+                      <span class="input-group-text"
+                        ><i class="bi bi-gender-ambiguous"></i
+                      ></span>
+                      <select
+                        class="form-control"
+                        id="gender"
+                        [(ngModel)]="personalDetails.gender"
+                        name="gender"
+                        required
+                      >
                         <option value="" disabled>Select gender</option>
-                        <option *ngFor="let genderOption of genderOptions" [value]="genderOption">
+                        <option
+                          *ngFor="let genderOption of genderOptions"
+                          [value]="genderOption"
+                        >
                           {{ genderOption.replace("_", " ") | titlecase }}
                         </option>
                       </select>
@@ -207,11 +262,23 @@
                   </div>
 
                   <div class="col-md-6 mb-3">
-                    <label for="maritalStatus" class="form-label">Marital Status</label>
+                    <label for="maritalStatus" class="form-label"
+                      >Marital Status</label
+                    >
                     <div class="input-group">
-                      <span class="input-group-text"><i class="bi bi-heart"></i></span>
-                      <select class="form-control" id="maritalStatus" [(ngModel)]="personalDetails.maritalStatus" name="maritalStatus">
-                        <option *ngFor="let statusOption of maritalStatusOptions" [value]="statusOption">
+                      <span class="input-group-text"
+                        ><i class="bi bi-heart"></i
+                      ></span>
+                      <select
+                        class="form-control"
+                        id="maritalStatus"
+                        [(ngModel)]="personalDetails.maritalStatus"
+                        name="maritalStatus"
+                      >
+                        <option
+                          *ngFor="let statusOption of maritalStatusOptions"
+                          [value]="statusOption"
+                        >
                           {{ statusOption.replace("_", " ") | titlecase }}
                         </option>
                       </select>
@@ -222,12 +289,18 @@
 
               <!-- Step 3: Address -->
               <div *ngIf="currentStep === 3" class="step-content">
-                <h4 class="mb-3"><i class="bi bi-geo-alt me-2"></i>Address Information</h4>
+                <h4 class="mb-3">
+                  <i class="bi bi-geo-alt me-2"></i>Address Information
+                </h4>
 
                 <div class="mb-3">
-                  <label for="street" class="form-label">Street Address *</label>
+                  <label for="street" class="form-label"
+                    >Street Address *</label
+                  >
                   <div class="input-group">
-                    <span class="input-group-text"><i class="bi bi-house"></i></span>
+                    <span class="input-group-text"
+                      ><i class="bi bi-house"></i
+                    ></span>
                     <input
                       type="text"
                       class="form-control"
@@ -244,7 +317,9 @@
                   <div class="col-md-6 mb-3">
                     <label for="city" class="form-label">City *</label>
                     <div class="input-group">
-                      <span class="input-group-text"><i class="bi bi-building"></i></span>
+                      <span class="input-group-text"
+                        ><i class="bi bi-building"></i
+                      ></span>
                       <input
                         type="text"
                         class="form-control"
@@ -260,7 +335,9 @@
                   <div class="col-md-6 mb-3">
                     <label for="state" class="form-label">State *</label>
                     <div class="input-group">
-                      <span class="input-group-text"><i class="bi bi-geo"></i></span>
+                      <span class="input-group-text"
+                        ><i class="bi bi-geo"></i
+                      ></span>
                       <input
                         type="text"
                         class="form-control"
@@ -278,7 +355,9 @@
                   <div class="col-md-6 mb-3">
                     <label for="pincode" class="form-label">Pincode *</label>
                     <div class="input-group">
-                      <span class="input-group-text"><i class="bi bi-mailbox"></i></span>
+                      <span class="input-group-text"
+                        ><i class="bi bi-mailbox"></i
+                      ></span>
                       <input
                         type="text"
                         class="form-control"
@@ -295,16 +374,29 @@
 
               <!-- Step 4: Academic Information -->
               <div *ngIf="currentStep === 4" class="step-content">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                  <h4 class="mb-0"><i class="bi bi-mortarboard me-2"></i>Academic Information</h4>
-                  <button type="button" class="btn btn-outline-primary btn-sm" (click)="addAcademic()">
+                <div
+                  class="d-flex justify-content-between align-items-center mb-3"
+                >
+                  <h4 class="mb-0">
+                    <i class="bi bi-mortarboard me-2"></i>Academic Information
+                  </h4>
+                  <button
+                    type="button"
+                    class="btn btn-outline-primary btn-sm"
+                    (click)="addAcademic()"
+                  >
                     <i class="bi bi-plus-circle me-1"></i>Add Qualification
                   </button>
                 </div>
 
-                <div *ngFor="let academic of academicInfoList; let i = index" class="academic-item mb-4">
+                <div
+                  *ngFor="let academic of academicInfoList; let i = index"
+                  class="academic-item mb-4"
+                >
                   <div class="card">
-                    <div class="card-header d-flex justify-content-between align-items-center">
+                    <div
+                      class="card-header d-flex justify-content-between align-items-center"
+                    >
                       <h6 class="mb-0">Qualification {{ i + 1 }}</h6>
                       <button
                         type="button"
@@ -390,21 +482,41 @@
 
               <!-- Step 5: Work Experience -->
               <div *ngIf="currentStep === 5" class="step-content">
-                <div class="d-flex justify-content-between align-items-center mb-3">
+                <div
+                  class="d-flex justify-content-between align-items-center mb-3"
+                >
                   <div>
-                    <h4 class="mb-0"><i class="bi bi-briefcase me-2"></i>Work Experience</h4>
-                    <small class="text-muted">Optional - You can skip this step if you're fresh graduate</small>
+                    <h4 class="mb-0">
+                      <i class="bi bi-briefcase me-2"></i>Work Experience
+                    </h4>
+                    <small class="text-muted"
+                      >Optional - You can skip this step if you're fresh
+                      graduate</small
+                    >
                   </div>
-                  <button type="button" class="btn btn-outline-primary btn-sm" (click)="addWorkExperience()">
+                  <button
+                    type="button"
+                    class="btn btn-outline-primary btn-sm"
+                    (click)="addWorkExperience()"
+                  >
                     <i class="bi bi-plus-circle me-1"></i>Add Experience
                   </button>
                 </div>
 
-                <div *ngFor="let work of workExperienceList; let i = index" class="work-item mb-4">
+                <div
+                  *ngFor="let work of workExperienceList; let i = index"
+                  class="work-item mb-4"
+                >
                   <div class="card">
-                    <div class="card-header d-flex justify-content-between align-items-center">
+                    <div
+                      class="card-header d-flex justify-content-between align-items-center"
+                    >
                       <h6 class="mb-0">Experience {{ i + 1 }}</h6>
-                      <button type="button" class="btn btn-outline-danger btn-sm" (click)="removeWorkExperience(i)">
+                      <button
+                        type="button"
+                        class="btn btn-outline-danger btn-sm"
+                        (click)="removeWorkExperience(i)"
+                      >
                         <i class="bi bi-trash"></i>
                       </button>
                     </div>
@@ -436,7 +548,12 @@
                       <div class="row">
                         <div class="col-md-6 mb-3">
                           <label class="form-label">Start Date</label>
-                          <input type="date" class="form-control" [(ngModel)]="work.startDate" [name]="'startDate_' + i" />
+                          <input
+                            type="date"
+                            class="form-control"
+                            [(ngModel)]="work.startDate"
+                            [name]="'startDate_' + i"
+                          />
                         </div>
 
                         <div class="col-md-6 mb-3">
@@ -448,7 +565,9 @@
                               [name]="'currentlyWorking_' + i"
                               (change)="onCurrentlyWorkingChange(i)"
                             />
-                            <label class="form-check-label"> Currently Working Here </label>
+                            <label class="form-check-label">
+                              Currently Working Here
+                            </label>
                           </div>
                           <label class="form-label">End Date</label>
                           <input
@@ -486,7 +605,10 @@
                           </div>
                         </div>
 
-                        <div class="col-md-6 mb-3" *ngIf="!work.currentlyWorking">
+                        <div
+                          class="col-md-6 mb-3"
+                          *ngIf="!work.currentlyWorking"
+                        >
                           <label class="form-label">Reason for Leaving</label>
                           <input
                             type="text"
@@ -504,14 +626,27 @@
 
               <!-- Navigation Buttons -->
               <div class="d-flex justify-content-between mt-4">
-                <button type="button" class="btn btn-outline-secondary" (click)="previousStep()" [disabled]="currentStep === 1">
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary"
+                  (click)="previousStep()"
+                  [disabled]="currentStep === 1"
+                >
                   <i class="bi bi-arrow-left me-2"></i>Previous
                 </button>
 
-                <div class="step-info">Step {{ currentStep }} of {{ totalSteps }}</div>
+                <div class="step-info">
+                  Step {{ currentStep }} of {{ totalSteps }}
+                </div>
 
-                <button type="submit" class="btn btn-primary" [disabled]="isLoading">
-                  <span *ngIf="currentStep < totalSteps"> Next<i class="bi bi-arrow-right ms-2"></i> </span>
+                <button
+                  type="submit"
+                  class="btn btn-primary"
+                  [disabled]="isLoading"
+                >
+                  <span *ngIf="currentStep < totalSteps">
+                    Next<i class="bi bi-arrow-right ms-2"></i>
+                  </span>
                   <span *ngIf="currentStep === totalSteps && !isLoading">
                     <i class="bi bi-check-circle me-2"></i>Complete Registration
                   </span>
@@ -525,7 +660,7 @@
 
             <hr class="my-4" />
 
-            <div class="text-center">
+            <div class="text-center account-cta">
               <p class="mb-0">
                 Already have an account?
                 <a routerLink="/auth/login" class="fw-bold">Login here</a>

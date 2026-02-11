@@ -1,3 +1,4 @@
+<app-navbar></app-navbar>
 <div class="auth-container">
   <div class="auth-card">
     <div class="auth-header">
@@ -16,9 +17,16 @@
           [class.error]="f['username'].invalid && f['username'].touched"
           placeholder="Enter your username"
         />
-        <div *ngIf="f['username'].invalid && f['username'].touched" class="error-message">
-          <span *ngIf="f['username'].errors?.['required']">Username is required</span>
-          <span *ngIf="f['username'].errors?.['minlength']">Username must be at least 3 characters</span>
+        <div
+          *ngIf="f['username'].invalid && f['username'].touched"
+          class="error-message"
+        >
+          <span *ngIf="f['username'].errors?.['required']"
+            >Username is required</span
+          >
+          <span *ngIf="f['username'].errors?.['minlength']"
+            >Username must be at least 3 characters</span
+          >
         </div>
       </div>
 
@@ -33,13 +41,24 @@
             [class.error]="f['password'].invalid && f['password'].touched"
             placeholder="Enter your password"
           />
-          <button type="button" class="password-toggle" (click)="togglePasswordVisibility()">
+          <button
+            type="button"
+            class="password-toggle"
+            (click)="togglePasswordVisibility()"
+          >
             {{ showPassword ? "👁️" : "👁️‍🗨️" }}
           </button>
         </div>
-        <div *ngIf="f['password'].invalid && f['password'].touched" class="error-message">
-          <span *ngIf="f['password'].errors?.['required']">Password is required</span>
-          <span *ngIf="f['password'].errors?.['minlength']">Password must be at least 8 characters</span>
+        <div
+          *ngIf="f['password'].invalid && f['password'].touched"
+          class="error-message"
+        >
+          <span *ngIf="f['password'].errors?.['required']"
+            >Password is required</span
+          >
+          <span *ngIf="f['password'].errors?.['minlength']"
+            >Password must be at least 8 characters</span
+          >
         </div>
       </div>
 
@@ -50,7 +69,10 @@
     </form>
 
     <div class="auth-footer">
-      <p>Don't have an account? <a routerLink="/auth/register" class="auth-link">Register here</a></p>
+      <p>
+        Don't have an account?
+        <a routerLink="/auth/register" class="auth-link">Register here</a>
+      </p>
       <p><a routerLink="/" class="auth-link">← Back to Home</a></p>
     </div>
   </div>

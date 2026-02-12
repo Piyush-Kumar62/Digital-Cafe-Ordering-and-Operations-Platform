@@ -21,4 +21,7 @@ public interface CafeRepository extends JpaRepository<Cafe, Long> {
     Page<Cafe> findByCity(String city, Pageable pageable);
     Page<Cafe> findByOwnerId(Long ownerId, Pageable pageable);
     Page<Cafe> findByIsActive(Boolean active, Pageable pageable);
+    
+    // Dashboard queries
+    Long countByIsActive(Boolean active);
 }

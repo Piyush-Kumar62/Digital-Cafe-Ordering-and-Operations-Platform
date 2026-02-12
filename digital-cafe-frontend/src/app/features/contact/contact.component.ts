@@ -311,11 +311,29 @@ import { NotificationService } from "@core/services/notification.service";
         border-radius: 8px;
         font-size: 1rem;
         transition: border-color 0.3s;
+        color: #1f2937;
+        background-color: #ffffff;
+        font-weight: 500;
       }
 
       .form-input:focus {
         outline: none;
         border-color: #dc2626;
+        box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+      }
+
+      .form-input::placeholder {
+        color: #9ca3af;
+      }
+
+      // Fix for autofill background
+      .form-input:-webkit-autofill,
+      .form-input:-webkit-autofill:hover,
+      .form-input:-webkit-autofill:focus,
+      .form-input:-webkit-autofill:active {
+        -webkit-box-shadow: 0 0 0 30px white inset !important;
+        -webkit-text-fill-color: #1f2937 !important;
+        transition: background-color 5000s ease-in-out 0s;
       }
 
       textarea.form-input {

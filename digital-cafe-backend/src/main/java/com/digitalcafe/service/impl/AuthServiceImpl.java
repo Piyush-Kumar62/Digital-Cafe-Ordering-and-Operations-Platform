@@ -194,7 +194,11 @@ public class AuthServiceImpl implements AuthService {
       throw new BadRequestException("Account is deactivated");
     }
 
-    if (!user.getIsEmailVerified()) {
+    // Allow admin users to bypass email verification
+    boolean isAdmin = user.getRoles().stream()
+        .anyMatch(role -> role.getName() == Role.RoleName.ADMIN);
+    
+    if (!isAdmin && !user.getIsEmailVerified()) {
       throw new BadRequestException("Please verify your email before logging in");
     }
 
@@ -211,10 +215,14 @@ public class AuthServiceImpl implements AuthService {
         .token(accessToken)
         .refreshToken(refreshToken)
         .tokenType("Bearer")
+        .userId(user.getId())
+        .username(user.getUsername())
         .email(user.getEmail())
-        .roles(user.getRoles().stream().map(r -> r.getName().name()).toList())
+        .roles(user.getRoles().stream().map(r -> "ROLE_" + r.getName().name()).toList())
+        .isEmailVerified(user.getIsEmailVerified())
         .mustResetPassword(user.getMustResetPassword())
         .isProfileComplete(user.getIsProfileComplete())
+        .profileCompletionPercentage(user.getProfileCompletionPercentage())
         .message("Login successful")
         .build();
   }

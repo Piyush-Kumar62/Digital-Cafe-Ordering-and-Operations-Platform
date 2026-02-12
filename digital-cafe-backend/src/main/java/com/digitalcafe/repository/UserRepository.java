@@ -52,4 +52,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Long countByRoleNameAndCreatedBy(Role.RoleName roleName, User createdBy);
 
     List<User> findTop10ByOrderByCreatedAtDesc();
+    List<User> findTop5ByOrderByCreatedAtDesc();
+    
+    // Additional dashboard queries
+    Long countByMustResetPassword(Boolean mustResetPassword);
 }

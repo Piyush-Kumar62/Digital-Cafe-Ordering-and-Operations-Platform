@@ -1,11 +1,69 @@
 export interface AdminDashboard {
+  // User Statistics
   totalUsers: number;
+  activeUsers: number;
+  inactiveUsers: number;
+  unverifiedEmailUsers: number;
+  usersWithoutPasswordReset: number;
+  todayNewRegistrations: number;
+
+  // Cafe Statistics
   totalCafes: number;
+  activeCafes: number;
+  inactiveCafes: number;
+
+  // Booking Statistics
+  totalBookings: number;
+  todayBookings: number;
+  thisWeekBookings: number;
+  thisMonthBookings: number;
+
+  // Order Statistics
   totalOrders: number;
+  todayOrders: number;
+  thisWeekOrders: number;
+  thisMonthOrders: number;
+  pendingOrders: number;
+  processingOrders: number;
+  readyOrders: number;
+  completedOrders: number;
+  cancelledOrders: number;
+
+  // Revenue Statistics
   totalRevenue: number;
-  recentUsers: RecentUser[];
-  activeOwners: number;
-  pendingVerifications: number;
+  todayRevenue: number;
+  thisWeekRevenue: number;
+  thisMonthRevenue: number;
+
+  // Chart Data
+  usersByRole: { [key: string]: number };
+  weeklyGrowth: WeeklyGrowthData[];
+  recentActivities: ActivityData[];
+
+  // Legacy fields (keep for backward compatibility)
+  recentUsers?: RecentUser[];
+  activeOwners?: number;
+  pendingVerifications?: number;
+}
+
+export interface WeeklyGrowthData {
+  date: string;
+  usersCount?: number;
+  ordersCount?: number;
+  bookingsCount?: number;
+  revenue?: number;
+  // Backend response fields
+  newUsers?: number;
+  newOrders?: number;
+  newBookings?: number;
+}
+
+export interface ActivityData {
+  type?: string; // For backward compatibility
+  activityType?: string; // Backend uses this field
+  description: string;
+  timestamp: string;
+  userRole?: string; // Additional field from backend
 }
 
 export interface OwnerDashboard {

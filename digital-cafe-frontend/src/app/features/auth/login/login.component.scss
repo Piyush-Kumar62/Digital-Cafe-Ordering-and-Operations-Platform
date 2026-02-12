@@ -73,6 +73,8 @@
   font-size: 1rem;
   transition: all 0.3s;
   outline: none;
+  color: #1f2937;
+  background-color: #ffffff;
 
   &:focus {
     border-color: #667eea;
@@ -85,6 +87,16 @@
 
   &::placeholder {
     color: #9ca3af;
+  }
+
+  // Fix for autofill background
+  &:-webkit-autofill,
+  &:-webkit-autofill:hover,
+  &:-webkit-autofill:focus,
+  &:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px white inset !important;
+    -webkit-text-fill-color: #1f2937 !important;
+    transition: background-color 5000s ease-in-out 0s;
   }
 }
 

@@ -57,4 +57,9 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     List<Order> findByCafeIdAndCreatedAtAfter(Long cafeId, LocalDateTime date);
     List<Order> findByCafeIdAndStatusInOrderByCreatedAtAsc(Long cafeId, List<Order.OrderStatus> statuses);
     List<Order> findByCafeIdAndStatusOrderByCreatedAtAsc(Long cafeId, Order.OrderStatus status);
+    
+    // Additional dashboard queries
+    Long countByCreatedAtAfter(LocalDateTime date);
+    Long countByCreatedAtBetween(LocalDateTime start, LocalDateTime end);
+    Long countByStatus(Order.OrderStatus status);
 }

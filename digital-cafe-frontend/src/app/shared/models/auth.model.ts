@@ -29,7 +29,7 @@ export interface AuthResponse {
 }
 
 export interface LoginRequest {
-  username: string;
+  email: string;
   password: string;
 }
 
@@ -112,9 +112,9 @@ export interface RegisterResponse {
 }
 
 export enum UserRole {
-  ADMIN = 'ROLE_ADMIN',
-  CAFE_OWNER = 'ROLE_CAFE_OWNER',
-  CHEF = 'ROLE_CHEF',
-  WAITER = 'ROLE_WAITER',
-  CUSTOMER = 'ROLE_CUSTOMER',
+  ADMIN = "ROLE_ADMIN",
+  CAFE_OWNER = "ROLE_CAFE_OWNER",
+  CHEF = "ROLE_CHEF",
+  WAITER = "ROLE_WAITER",
+  CUSTOMER = "ROLE_CUSTOMER",
 }

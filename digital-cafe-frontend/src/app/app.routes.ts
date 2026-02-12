@@ -57,10 +57,14 @@ export const routes: Routes = [
     ],
   },
 
-  // Admin routes
+  // Admin routes with layout
   {
     path: "admin",
-    canActivate: [authGuard, emailVerificationGuard, roleGuard],
+    loadComponent: () =>
+      import("./features/admin/admin-layout/admin-layout.component").then(
+        (m) => m.AdminLayoutComponent,
+      ),
+    canActivate: [authGuard, roleGuard],
     data: { roles: [UserRole.ADMIN] },
     children: [
       {
@@ -68,6 +72,62 @@ export const routes: Routes = [
         loadComponent: () =>
           import("./features/admin/admin-dashboard/admin-dashboard.component").then(
             (m) => m.AdminDashboardComponent,
+          ),
+      },
+      {
+        path: "users",
+        loadComponent: () =>
+          import("./features/admin/users/user-management.component").then(
+            (m) => m.UserManagementComponent,
+          ),
+      },
+      {
+        path: "cafes",
+        loadComponent: () =>
+          import("./features/admin/cafes/cafe-management.component").then(
+            (m) => m.CafeManagementComponent,
+          ),
+      },
+      {
+        path: "orders",
+        loadComponent: () =>
+          import("./features/admin/orders/order-management.component").then(
+            (m) => m.OrderManagementComponent,
+          ),
+      },
+      {
+        path: "bookings",
+        loadComponent: () =>
+          import("./features/admin/bookings/booking-management.component").then(
+            (m) => m.BookingManagementComponent,
+          ),
+      },
+      {
+        path: "analytics",
+        loadComponent: () =>
+          import("./features/admin/analytics/analytics.component").then(
+            (m) => m.AnalyticsComponent,
+          ),
+      },
+      {
+        path: "reports",
+        loadComponent: () =>
+          import("./features/admin/reports/reports.component").then(
+            (m) => m.ReportsComponent,
+          ),
+      },
+      {
+        path: "logs",
+        loadComponent: () =>
+          import("./features/admin/logs/logs.component").then(
+            (m) => m.LogsComponent,
+          ),
+      },
+      {
+        path: "settings",
+        loadComponent: () =>
+          import("./features/admin/settings/settings.component").then(
+            (m) => m.SettingsComponent,
           ),
       },
       { path: "", redirectTo: "dashboard", pathMatch: "full" },

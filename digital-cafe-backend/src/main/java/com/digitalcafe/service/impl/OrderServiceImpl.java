@@ -166,6 +166,11 @@ public class OrderServiceImpl implements OrderService {
 
         // Update timestamps and assign staff based on status
         switch (newStatus) {
+            case PLACED:
+                // Order is placed, no additional action needed
+                sendOrderNotification(order, "ORDER_PLACED", "/topic/cafe/" + order.getCafe().getId());
+                break;
+
             case PREPARING:
                 if (order.getPreparingAt() == null) {
                     order.setPreparingAt(LocalDateTime.now());

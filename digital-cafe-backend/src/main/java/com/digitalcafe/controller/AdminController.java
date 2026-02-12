@@ -1,7 +1,9 @@
 package com.digitalcafe.controller;
 
 import com.digitalcafe.dto.request.CreateUserRequest;
+import com.digitalcafe.dto.response.AdminDashboardStats;
 import com.digitalcafe.dto.response.UserResponse;
+import com.digitalcafe.service.AdminDashboardService;
 import com.digitalcafe.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +28,13 @@ import java.util.Map;
 public class AdminController {
 
     private final UserService userService;
+    private final AdminDashboardService adminDashboardService;
+
+    @GetMapping("/dashboard/stats")
+    public ResponseEntity<AdminDashboardStats> getDashboardStats() {
+        AdminDashboardStats stats = adminDashboardService.getDashboardStats();
+        return ResponseEntity.ok(stats);
+    }
 
     @PostMapping("/cafe-owners")
     public ResponseEntity<UserResponse> createCafeOwner(@Valid @RequestBody CreateUserRequest request) {

@@ -6,26 +6,31 @@
       <p class="auth-subtitle">Sign in to your account to continue</p>
     </div>
 
-    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="auth-form">
+    <form
+      *ngIf="loginForm"
+      [formGroup]="loginForm"
+      (ngSubmit)="onSubmit()"
+      class="auth-form"
+    >
       <div class="form-group">
-        <label for="username" class="form-label">Username</label>
+        <label for="email" class="form-label">Email</label>
         <input
-          type="text"
-          id="username"
-          formControlName="username"
+          type="email"
+          id="email"
+          formControlName="email"
           class="form-input"
-          [class.error]="f['username'].invalid && f['username'].touched"
-          placeholder="Enter your username"
+          [class.error]="f['email']?.invalid && f['email']?.touched"
+          placeholder="example@gmail.com"
         />
         <div
-          *ngIf="f['username'].invalid && f['username'].touched"
+          *ngIf="f['email']?.invalid && f['email']?.touched"
           class="error-message"
         >
-          <span *ngIf="f['username'].errors?.['required']"
-            >Username is required</span
+          <span *ngIf="f['email']?.errors?.['required']"
+            >Email is required</span
           >
-          <span *ngIf="f['username'].errors?.['minlength']"
-            >Username must be at least 3 characters</span
+          <span *ngIf="f['email']?.errors?.['email']"
+            >Please enter a valid email address</span
           >
         </div>
       </div>
@@ -38,7 +43,7 @@
             id="password"
             formControlName="password"
             class="form-input"
-            [class.error]="f['password'].invalid && f['password'].touched"
+            [class.error]="f['password']?.invalid && f['password']?.touched"
             placeholder="Enter your password"
           />
           <button
@@ -50,13 +55,13 @@
           </button>
         </div>
         <div
-          *ngIf="f['password'].invalid && f['password'].touched"
+          *ngIf="f['password']?.invalid && f['password']?.touched"
           class="error-message"
         >
-          <span *ngIf="f['password'].errors?.['required']"
+          <span *ngIf="f['password']?.errors?.['required']"
             >Password is required</span
           >
-          <span *ngIf="f['password'].errors?.['minlength']"
+          <span *ngIf="f['password']?.errors?.['minlength']"
             >Password must be at least 8 characters</span
           >
         </div>

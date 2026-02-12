@@ -121,4 +121,10 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
      * Counts bookings for a specific date, cafe, and status.
      */
     long countByCafeIdAndBookingDateAndStatus(Long cafeId, LocalDate bookingDate, Booking.BookingStatus status);
+    
+    // Dashboard queries
+    Long countByCreatedAtAfter(java.time.LocalDateTime date);
+    Long countByCreatedAtBetween(java.time.LocalDateTime start, java.time.LocalDateTime end);
+    Long countByStatus(Booking.BookingStatus status);
+    List<Booking> findTop5ByOrderByCreatedAtDesc();
 }

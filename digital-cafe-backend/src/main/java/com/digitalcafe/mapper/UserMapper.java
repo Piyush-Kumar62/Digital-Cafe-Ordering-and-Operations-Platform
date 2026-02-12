@@ -40,7 +40,7 @@ public interface UserMapper {
             return List.of();
         }
         return roles.stream()
-                .map(role -> role.getName().name())
+                .map(role -> "ROLE_" + role.getName().name())
                 .collect(Collectors.toList());
     }
 
@@ -48,7 +48,7 @@ public interface UserMapper {
         if (roles == null || roles.isEmpty()) {
             return null;
         }
-        return roles.iterator().next().getName().name();
+        return "ROLE_" + roles.iterator().next().getName().name();
     }
 
     default String[] mapRolesToStringArray(java.util.Set<Role> roles) {
@@ -56,7 +56,7 @@ public interface UserMapper {
             return new String[0];
         }
         return roles.stream()
-                .map(role -> role.getName().name())
+                .map(role -> "ROLE_" + role.getName().name())
                 .toArray(String[]::new);
     }
 }

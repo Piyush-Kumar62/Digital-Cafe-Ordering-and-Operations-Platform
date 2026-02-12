@@ -1,10 +1,10 @@
-import { HttpInterceptorFn } from '@angular/common/http';
-import { inject } from '@angular/core';
-import { AuthService } from '@core/auth/auth.service';
-import { LoadingService } from '@core/services/loading.service';
-import { NotificationService } from '@core/services/notification.service';
-import { catchError, finalize, throwError } from 'rxjs';
-import { Router } from '@angular/router';
+import { HttpInterceptorFn } from "@angular/common/http";
+import { inject } from "@angular/core";
+import { AuthService } from "@core/auth/auth.service";
+import { LoadingService } from "@core/services/loading.service";
+import { NotificationService } from "@core/services/notification.service";
+import { catchError, finalize, throwError } from "rxjs";
+import { Router } from "@angular/router";
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
@@ -17,29 +17,44 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   // Get token
   const token = authService.getToken();
+  console.log("[Auth Interceptor] Request URL:", req.url);
+  console.log("[Auth Interceptor] Token exists:", !!token);
+  if (token) {
+    console.log(
+      "[Auth Interceptor] Token preview:",
+      token.substring(0, 20) + "...",
+    );
+  }
 
   // Define public endpoints that don't need authentication
   const publicEndpoints = [
-    '/auth/login',
-    '/auth/register',
-    '/auth/verify-email',
-    '/auth/resend-verification',
-    '/auth/reset-password',
-    '/cafes/active',
-    '/cafes/city',
+    "/auth/login",
+    "/auth/register",
+    "/auth/verify-email",
+    "/auth/resend-verification",
+    "/auth/reset-password",
+    "/cafes/active",
+    "/cafes/city",
   ];
 
   // Check if current request is to a public endpoint
-  const isPublicEndpoint = publicEndpoints.some((endpoint) => req.url.includes(endpoint));
+  const isPublicEndpoint = publicEndpoints.some((endpoint) =>
+    req.url.includes(endpoint),
+  );
 
   // Clone request and add authorization header if token exists and not a public endpoint
   let authReq = req;
   if (token && !isPublicEndpoint) {
+    console.log("[Auth Interceptor] Adding Authorization header to request");
     authReq = req.clone({
       setHeaders: {
         Authorization: `Bearer ${token}`,
       },
     });
+  } else if (!token) {
+    console.log("[Auth Interceptor] No token available - skipping auth header");
+  } else if (isPublicEndpoint) {
+    console.log("[Auth Interceptor] Public endpoint - skipping auth header");
   }
 
   // Handle request
@@ -53,33 +68,43 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         // Unauthorized - token expired or invalid
         // Only redirect to login if not already on a public page
         const currentUrl = router.url;
-        const isPublicRoute = currentUrl === '/' || currentUrl.startsWith('/auth');
+        const isPublicRoute =
+          currentUrl === "/" || currentUrl.startsWith("/auth");
 
         if (!isPublicRoute) {
-          notificationService.error('Your session has expired. Please login again.');
+          notificationService.error(
+            "Your session has expired. Please login again.",
+          );
         }
 
         authService.logout();
 
         // Only navigate if not already on auth pages
-        if (!currentUrl.startsWith('/auth')) {
-          router.navigate(['/auth/login']);
+        if (!currentUrl.startsWith("/auth")) {
+          router.navigate(["/auth/login"]);
         }
       } else if (error.status === 403) {
         // Forbidden - insufficient permissions
-        notificationService.error('You do not have permission to access this resource.');
+        notificationService.error(
+          "You do not have permission to access this resource.",
+        );
       } else if (error.status === 404) {
         // Not found
-        notificationService.error('The requested resource was not found.');
+        notificationService.error("The requested resource was not found.");
       } else if (error.status === 500) {
         // Server error
-        notificationService.error('A server error occurred. Please try again later.');
+        notificationService.error(
+          "A server error occurred. Please try again later.",
+        );
       } else if (error.status === 0) {
         // Network error
-        notificationService.error('Network error. Please check your connection.');
+        notificationService.error(
+          "Network error. Please check your connection.",
+        );
       } else {
         // Other errors
-        const message = error.error?.message || error.message || 'An error occurred';
+        const message =
+          error.error?.message || error.message || "An error occurred";
         notificationService.error(message);
       }
 

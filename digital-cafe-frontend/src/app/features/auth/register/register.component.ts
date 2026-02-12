@@ -31,7 +31,7 @@ export class RegisterComponent implements OnInit {
   username = "";
   password = "";
   confirmPassword = "";
-  role = "CUSTOMER";
+  role = "";
 
   // Step 2: Personal Details
   personalDetails: PersonalDetails = {

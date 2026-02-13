@@ -13,6 +13,13 @@ import { User } from "@shared/models/auth.model";
       <div class="navbar-container">
         <div class="navbar-brand">
           <a routerLink="/" class="brand-link">
+            <span class="brand-logo">
+              <img
+                src="assets/digital-cafe-logo.png"
+                alt="Digital Café Logo"
+                class="logo-img"
+              />
+            </span>
             <span class="brand-name">Digital Café</span>
           </a>
         </div>
@@ -25,8 +32,29 @@ import { User } from "@shared/models/auth.model";
               class="nav-link"
               routerLinkActive="active"
               [routerLinkActiveOptions]="{ exact: true }"
-              (click)="closeMenu()"
+              (click)="closeMenu(); scrollToTop()"
               >Home</a
+            >
+            <a
+              routerLink="/"
+              fragment="features"
+              class="nav-link"
+              (click)="closeMenu(); scrollToFragment('features')"
+              >Features</a
+            >
+            <a
+              routerLink="/"
+              fragment="how-it-works"
+              class="nav-link"
+              (click)="closeMenu(); scrollToFragment('how-it-works')"
+              >How It Works</a
+            >
+            <a
+              routerLink="/"
+              fragment="cafes"
+              class="nav-link"
+              (click)="closeMenu(); scrollToFragment('cafes')"
+              >Cafés</a
             >
             <a
               routerLink="/about"
@@ -114,16 +142,55 @@ import { User } from "@shared/models/auth.model";
 
       .brand-link {
         text-decoration: none;
-        color: #dc2626;
-        transition: color 0.3s;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: transform 0.3s;
       }
 
       .brand-link:hover {
-        color: #ef4444;
+        transform: translateY(-2px);
+      }
+
+      .brand-logo {
+        display: flex;
+        align-items: center;
+        padding-right: 0.3rem;
+      }
+      .brand-logo .logo-img {
+        height: 2.5rem;
+        width: auto;
+        max-width: 70px;
+        min-width: 36px;
+        display: block;
+        filter: drop-shadow(0 2px 4px rgba(251, 191, 36, 0.3));
+        object-fit: contain;
+        // background: black;
+        border-radius: 0.6rem;
+        padding: 0.1rem 0.2rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
       }
 
       .brand-name {
         font-family: "Poppins", sans-serif;
+        background: linear-gradient(
+          135deg,
+          #fbbf24 0%,
+          #f59e0b 50%,
+          #fbbf24 100%
+        );
+        background-size: 200% auto;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-weight: 700;
+        animation: shimmer 3s linear infinite;
+      }
+
+      @keyframes shimmer {
+        to {
+          background-position: 200% center;
+        }
       }
 
       .navbar-right {
@@ -136,7 +203,7 @@ import { User } from "@shared/models/auth.model";
       .navbar-menu {
         display: flex;
         align-items: center;
-        gap: 2rem;
+        gap: 1rem;
       }
 
       .nav-link {
@@ -144,7 +211,7 @@ import { User } from "@shared/models/auth.model";
         color: #d1d5db;
         font-weight: 500;
         transition: color 0.3s;
-        padding: 0.5rem 1rem;
+        padding: 0.5rem 0.75rem;
         border-radius: 6px;
       }
 
@@ -228,6 +295,18 @@ import { User } from "@shared/models/auth.model";
       }
 
       @media (max-width: 768px) {
+        .navbar-brand {
+          padding-left: 0.75rem;
+        }
+
+        .brand-logo {
+          font-size: 1.5rem;
+        }
+
+        .brand-name {
+          font-size: 1.2rem;
+        }
+
         .navbar-right {
           gap: 0.5rem;
         }
@@ -294,6 +373,21 @@ export class NavbarComponent implements OnInit {
 
   closeMenu(): void {
     this.menuOpen = false;
+  }
+
+  scrollToTop(): void {
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }, 100);
+  }
+
+  scrollToFragment(fragment: string): void {
+    setTimeout(() => {
+      const element = document.getElementById(fragment);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }, 100);
   }
 
   logout(): void {

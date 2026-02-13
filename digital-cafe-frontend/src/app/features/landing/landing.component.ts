@@ -56,6 +56,180 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
     },
   ];
 
+  howItWorks = [
+    {
+      step: "1",
+      icon: "📝",
+      title: "Register & Verify",
+      description:
+        "Create your account and verify your email to get started securely.",
+    },
+    {
+      step: "2",
+      icon: "🏪",
+      title: "Select Café & Book",
+      description:
+        "Browse cafés, check availability, and book your table in advance.",
+    },
+    {
+      step: "3",
+      icon: "🍕",
+      title: "Pre-Order & Pay",
+      description:
+        "Choose from the menu, place your order, and pay securely online.",
+    },
+    {
+      step: "4",
+      icon: "👨‍🍳",
+      title: "Chef Prepares",
+      description: "Kitchen receives your order and prepares it fresh and hot.",
+    },
+    {
+      step: "5",
+      icon: "✅",
+      title: "Waiter Serves",
+      description: "Your order is ready and served at your reserved table.",
+    },
+  ];
+
+  roles = [
+    {
+      icon: "👤",
+      title: "Customer",
+      color: "from-blue-500 to-indigo-600",
+      features: [
+        "Book tables in advance",
+        "Pre-order food & beverages",
+        "Track order status real-time",
+        "Secure online payments",
+        "View order history",
+      ],
+      cta: "Start Ordering",
+      route: "/auth/register",
+    },
+    {
+      icon: "🏢",
+      title: "Café Owner",
+      color: "from-purple-500 to-pink-600",
+      features: [
+        "Manage multiple cafés",
+        "Add & edit menu items",
+        "Create staff accounts",
+        "View analytics & reports",
+        "Configure table layouts",
+      ],
+      cta: "Manage Café",
+      route: "/auth/register",
+    },
+    {
+      icon: "👨‍🍳",
+      title: "Chef",
+      color: "from-orange-500 to-red-600",
+      features: [
+        "Real-time order notifications",
+        "Update order status",
+        "View kitchen queue",
+        "Manage preparation time",
+        "Coordinate with team",
+      ],
+      cta: "Join as Chef",
+      route: "/auth/register",
+    },
+    {
+      icon: "🍽️",
+      title: "Waiter",
+      color: "from-green-500 to-teal-600",
+      features: [
+        "View assigned tables",
+        "Check order status",
+        "Serve ready orders",
+        "Handle customer requests",
+        "Update table status",
+      ],
+      cta: "Join as Waiter",
+      route: "/auth/register",
+    },
+    {
+      icon: "⚙️",
+      title: "Admin",
+      color: "from-gray-700 to-gray-900",
+      features: [
+        "Platform-wide management",
+        "User & role administration",
+        "System monitoring",
+        "Analytics dashboard",
+        "Security & compliance",
+      ],
+      cta: "Admin Access",
+      route: "/auth/login",
+    },
+  ];
+
+  workflowSteps = [
+    {
+      status: "Placed",
+      icon: "📋",
+      color: "#3b82f6",
+      description: "Order received",
+    },
+    {
+      status: "Preparing",
+      icon: "👨‍🍳",
+      color: "#f59e0b",
+      description: "Chef cooking",
+    },
+    {
+      status: "Ready",
+      icon: "✓",
+      color: "#10b981",
+      description: "Ready to serve",
+    },
+    {
+      status: "Served",
+      icon: "🍽️",
+      color: "#8b5cf6",
+      description: "Delivered to table",
+    },
+  ];
+
+  securityFeatures = [
+    {
+      icon: "🔐",
+      title: "JWT Authentication",
+      description:
+        "Industry-standard token-based authentication for secure sessions.",
+    },
+    {
+      icon: "🛡️",
+      title: "Role-Based Access",
+      description:
+        "Strict access control ensuring users only see what they're authorized for.",
+    },
+    {
+      icon: "✉️",
+      title: "Email Verification",
+      description:
+        "Mandatory email confirmation to prevent unauthorized access.",
+    },
+    {
+      icon: "💳",
+      title: "Secure Payments",
+      description: "Bank-grade encryption for all payment transactions.",
+    },
+    {
+      icon: "📝",
+      title: "Profile Validation",
+      description:
+        "Required profile completion for enhanced security and personalization.",
+    },
+    {
+      icon: "🔒",
+      title: "Data Encryption",
+      description:
+        "End-to-end encryption protecting your sensitive information.",
+    },
+  ];
+
   testimonials = [
     {
       name: "Sarah Johnson",
@@ -116,7 +290,7 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // Observe all animatable elements
     const elements = document.querySelectorAll(
-      ".feature-card, .cafe-card, .testimonial-card, .section-header, .cta-content",
+      ".feature-card, .cafe-card, .testimonial-card, .section-header, .cta-content, .timeline-step, .role-card, .workflow-step, .security-card",
     );
     elements.forEach((el) => this.observer?.observe(el));
   }

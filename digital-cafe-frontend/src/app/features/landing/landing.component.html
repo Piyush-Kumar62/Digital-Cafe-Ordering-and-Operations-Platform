@@ -10,12 +10,15 @@
           <span class="badge-text">Premium Café Experience</span>
         </div>
         <h1 class="hero-title">
-          Welcome to
-          <span class="hero-highlight">Digital Café Platform</span>
+          Transform Your Café Experience
+          <span class="hero-highlight"
+            >Book, Order & Pay Before You Arrive</span
+          >
         </h1>
         <p class="hero-subtitle">
-          Experience seamless café ordering, table booking, and real-time
-          operations management. Transform the way you enjoy your favorite café.
+          Skip the wait. Pre-book tables, order meals ahead, and enjoy seamless
+          dining with our complete digital café management platform. Perfect for
+          customers, café owners, chefs, and staff.
         </p>
         <div class="hero-actions">
           <button class="btn-primary" routerLink="/auth/register">
@@ -201,6 +204,10 @@
             <div class="card-icon">⭐</div>
             <div class="card-text">5-Star Rating</div>
           </div>
+          <div class="floating-card card-4">
+            <div class="card-icon">📱</div>
+            <div class="card-text">Easy Online Booking</div>
+          </div>
         </div>
       </div>
     </div>
@@ -224,6 +231,149 @@
         </div>
         <h3 class="feature-title">{{ feature.title }}</h3>
         <p class="feature-description">{{ feature.description }}</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- How It Works Section -->
+<section id="how-it-works" class="how-it-works-section">
+  <div class="container-custom">
+    <div class="section-header">
+      <h2 class="section-title">How It Works</h2>
+      <p class="section-subtitle">
+        Simple steps from booking to enjoying your meal
+      </p>
+    </div>
+
+    <div class="timeline-wrapper">
+      <div
+        *ngFor="let step of howItWorks; let i = index"
+        class="timeline-step"
+        [attr.data-step]="step.step"
+      >
+        <div class="step-number">{{ step.step }}</div>
+        <div class="step-icon">{{ step.icon }}</div>
+        <h3 class="step-title">{{ step.title }}</h3>
+        <p class="step-description">{{ step.description }}</p>
+        <div *ngIf="i < howItWorks.length - 1" class="step-connector"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Roles Section -->
+<section id="roles" class="roles-section">
+  <div class="container-custom">
+    <div class="section-header">
+      <h2 class="section-title">Built For Everyone</h2>
+      <p class="section-subtitle">
+        Tailored experiences for each user role in the café ecosystem
+      </p>
+    </div>
+
+    <div class="roles-grid">
+      <div *ngFor="let role of roles" class="role-card">
+        <div class="role-header bg-gradient-to-br" [ngClass]="role.color">
+          <div class="role-icon">{{ role.icon }}</div>
+          <h3 class="role-title">{{ role.title }}</h3>
+        </div>
+        <div class="role-body">
+          <ul class="role-features">
+            <li *ngFor="let feature of role.features">
+              <span class="feature-check">✓</span>
+              <span>{{ feature }}</span>
+            </li>
+          </ul>
+          <button class="role-cta-btn" [routerLink]="role.route">
+            {{ role.cta }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Workflow Visualization Section -->
+<section id="workflow" class="workflow-section">
+  <div class="container-custom">
+    <div class="section-header">
+      <h2 class="section-title">Real-Time Order Tracking</h2>
+      <p class="section-subtitle">
+        Watch your order progress from placement to delivery
+      </p>
+    </div>
+
+    <div class="workflow-container">
+      <div
+        *ngFor="let step of workflowSteps; let i = index"
+        class="workflow-step"
+      >
+        <div class="workflow-icon" [style.background-color]="step.color">
+          <span>{{ step.icon }}</span>
+        </div>
+        <div class="workflow-label">
+          <h4>{{ step.status }}</h4>
+          <p>{{ step.description }}</p>
+        </div>
+        <div *ngIf="i < workflowSteps.length - 1" class="workflow-arrow">
+          <svg width="40" height="20" viewBox="0 0 40 20" fill="none">
+            <path
+              d="M0 10 L35 10 M25 3 L35 10 L25 17"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="workflow-demo">
+      <p class="demo-text">
+        <strong>Try it yourself:</strong> Experience the complete journey from
+        ordering to serving with our intuitive interface
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- Security & Trust Section -->
+<section id="security" class="security-section">
+  <div class="container-custom">
+    <div class="section-header">
+      <h2 class="section-title">Enterprise-Grade Security</h2>
+      <p class="section-subtitle">
+        Your data and transactions are protected with industry-leading security
+        measures
+      </p>
+    </div>
+
+    <div class="security-grid">
+      <div *ngFor="let security of securityFeatures" class="security-card">
+        <div class="security-icon">{{ security.icon }}</div>
+        <h3 class="security-title">{{ security.title }}</h3>
+        <p class="security-description">{{ security.description }}</p>
+      </div>
+    </div>
+
+    <div class="trust-badges">
+      <div class="badge-item">
+        <div class="badge-icon">🔐</div>
+        <div class="badge-text">HTTPS Secured</div>
+      </div>
+      <div class="badge-item">
+        <div class="badge-icon">🛡️</div>
+        <div class="badge-text">Role-Based Authorization</div>
+      </div>
+      <div class="badge-item">
+        <div class="badge-icon">💳</div>
+        <div class="badge-text">Trusted Payment Gateway</div>
+      </div>
+      <div class="badge-item">
+        <div class="badge-icon">🔑</div>
+        <div class="badge-text">JWT Secured APIs</div>
       </div>
     </div>
   </div>
@@ -295,13 +445,41 @@
 <section class="cta-section">
   <div class="container-custom">
     <div class="cta-content">
-      <h2 class="cta-title">Ready to Get Started?</h2>
+      <h2 class="cta-title">Ready to Transform Café Operations?</h2>
       <p class="cta-subtitle">
         Join thousands of happy customers and café owners today
       </p>
-      <button class="btn-primary btn-large" routerLink="/auth/register">
-        Create Free Account
-      </button>
+
+      <div class="cta-buttons">
+        <button class="btn-cta btn-customer" routerLink="/auth/register">
+          <span class="btn-icon">🍽️</span>
+          <div class="btn-text">
+            <div class="btn-label">For Customers</div>
+            <div class="btn-sublabel">Book & Order Now</div>
+          </div>
+        </button>
+
+        <button class="btn-cta btn-owner" routerLink="/auth/register">
+          <span class="btn-icon">🏢</span>
+          <div class="btn-text">
+            <div class="btn-label">For Café Owners</div>
+            <div class="btn-sublabel">Manage Your Café</div>
+          </div>
+        </button>
+
+        <button class="btn-cta btn-staff" routerLink="/auth/register">
+          <span class="btn-icon">👨‍🍳</span>
+          <div class="btn-text">
+            <div class="btn-label">For Staff</div>
+            <div class="btn-sublabel">Join as Chef/Waiter</div>
+          </div>
+        </button>
+      </div>
+
+      <p class="cta-note">
+        Already have an account?
+        <a routerLink="/auth/login" class="cta-link">Sign In</a>
+      </p>
     </div>
   </div>
 </section>

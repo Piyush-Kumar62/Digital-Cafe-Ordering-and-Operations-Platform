@@ -56,7 +56,6 @@ LOGIN_*.md
 QUICK_START_ADMIN.md
 check_admin_user.sql
 test-admin-login.html
-application.properties
 /src/environments/environment.prod.ts
 .env
 .env.local

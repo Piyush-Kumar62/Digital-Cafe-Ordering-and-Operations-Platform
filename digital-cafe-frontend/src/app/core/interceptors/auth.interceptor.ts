@@ -17,14 +17,6 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   // Get token
   const token = authService.getToken();
-  console.log("[Auth Interceptor] Request URL:", req.url);
-  console.log("[Auth Interceptor] Token exists:", !!token);
-  if (token) {
-    console.log(
-      "[Auth Interceptor] Token preview:",
-      token.substring(0, 20) + "...",
-    );
-  }
 
   // Define public endpoints that don't need authentication
   const publicEndpoints = [
@@ -45,16 +37,11 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   // Clone request and add authorization header if token exists and not a public endpoint
   let authReq = req;
   if (token && !isPublicEndpoint) {
-    console.log("[Auth Interceptor] Adding Authorization header to request");
     authReq = req.clone({
       setHeaders: {
         Authorization: `Bearer ${token}`,
       },
     });
-  } else if (!token) {
-    console.log("[Auth Interceptor] No token available - skipping auth header");
-  } else if (isPublicEndpoint) {
-    console.log("[Auth Interceptor] Public endpoint - skipping auth header");
   }
 
   // Handle request

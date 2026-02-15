@@ -1,11 +1,15 @@
 package com.digitalcafe.config;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.servers.Server;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -13,6 +17,8 @@ import java.util.List;
 
 @Configuration
 public class OpenAPIConfig {
+
+    private static final Logger logger = LoggerFactory.getLogger(OpenAPIConfig.class);
 
     @Bean
     public OpenAPI defineOpenAPI() {
@@ -27,7 +33,7 @@ public class OpenAPIConfig {
 
         final String securitySchemeName = "bearerAuth";
 
-        return new OpenAPI()
+        OpenAPI openAPI = new OpenAPI()
                 .info(info)
                 .servers(List.of(server))
                 .addSecurityItem(new SecurityRequirement().addList(securitySchemeName))
@@ -41,5 +47,14 @@ public class OpenAPIConfig {
                                                 .bearerFormat("JWT")
                                 )
                 );
+
+        try {
+            String json = new ObjectMapper().writeValueAsString(openAPI);
+            logger.info("Generated OpenAPI spec: {}", json);
+        } catch (JsonProcessingException e) {
+            logger.error("Could not serialize OpenAPI spec", e);
+        }
+
+        return openAPI;
     }
 }

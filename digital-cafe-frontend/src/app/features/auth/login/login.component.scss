@@ -3,20 +3,45 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+
+  /* ✅ MATCH NAVBAR COLOR */
+  background: linear-gradient(
+          180deg,
+          #0f172a 0%,
+          #1e293b 100%
+  );
+
   padding: 2rem;
   padding-top: 90px;
 }
 
 .auth-card {
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+
+  /* Glass dark modern background */
+  background: rgba(30, 41, 59, 0.75);
+
+  backdrop-filter: blur(20px);
+
+  -webkit-backdrop-filter: blur(20px);
+
+  border-radius: 20px;
+
+  border: 1px solid rgba(255,255,255,0.08);
+
+  box-shadow:
+      0 10px 40px rgba(0,0,0,0.6),
+      inset 0 0 0 1px rgba(255,255,255,0.03);
+
   width: 100%;
+
   max-width: 440px;
+
   padding: 2.5rem;
+
   animation: slideUp 0.4s ease-out;
+
 }
+
 
 @keyframes slideUp {
   from {
@@ -37,13 +62,13 @@
 .auth-title {
   font-size: 2rem;
   font-weight: 700;
-  color: #1f2937;
+  color: #ffffff;
   margin-bottom: 0.5rem;
   font-family: "Poppins", sans-serif;
 }
 
 .auth-subtitle {
-  color: #6b7280;
+  color: #cbd5e1;
   font-size: 0.95rem;
 }
 
@@ -61,20 +86,20 @@
 
 .form-label {
   font-weight: 600;
-  color: #374151;
+  color: #e2e8f0;
   font-size: 0.875rem;
 }
 
 .form-input {
   width: 100%;
   padding: 0.75rem 1rem;
-  border: 2px solid #e5e7eb;
+  border: 1px solid rgba(255,255,255,0.15);
   border-radius: 8px;
   font-size: 1rem;
   transition: all 0.3s;
   outline: none;
-  color: #1f2937;
-  background-color: #ffffff;
+  color: #ffffff;
+  background-color: rgba(255,255,255,0.05);
 
   &:focus {
     border-color: #667eea;
@@ -86,7 +111,7 @@
   }
 
   &::placeholder {
-    color: #9ca3af;
+    color: #94a3b8;
   }
 
   // Fix for autofill background

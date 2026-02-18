@@ -417,7 +417,7 @@
         <div class="ml-4 flex-1">
           <p class="text-sm font-medium text-gray-600">Today's Bookings</p>
           <p class="text-3xl font-bold text-gray-900">
-            {{ dashboard.todayBookings | number }}
+            {{ dashboard.todayBookings || 0 | number }}
           </p>
           <p class="text-sm text-cyan-600">Today performance</p>
         </div>
@@ -450,7 +450,7 @@
         <div class="ml-4 flex-1">
           <p class="text-sm font-medium text-gray-600">This Week Bookings</p>
           <p class="text-3xl font-bold text-gray-900">
-            {{ dashboard.thisWeekBookings | number }}
+            {{ dashboard.thisWeekBookings || 0 | number }}
           </p>
           <p class="text-sm text-indigo-600">Weekly performance</p>
         </div>
@@ -484,7 +484,7 @@
         <div class="ml-4 flex-1">
           <p class="text-sm font-medium text-gray-600">This Month Bookings</p>
           <p class="text-3xl font-bold text-gray-900">
-            {{ dashboard.thisMonthBookings | number }}
+            {{ dashboard.thisMonthBookings || 0 | number }}
           </p>
           <p class="text-sm text-emerald-600">Monthly performance</p>
         </div>

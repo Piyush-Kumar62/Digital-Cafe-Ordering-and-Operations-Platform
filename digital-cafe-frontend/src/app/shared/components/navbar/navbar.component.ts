@@ -91,7 +91,14 @@ import { User } from "@shared/models/auth.model";
                 >Dashboard</a
               >
               <div class="user-menu">
-                <span class="user-name">{{ user.username }}</span>
+                <div class="user-avatar">
+                  {{ getDisplayName().charAt(0) }}
+                </div>
+
+                <span class="user-name">
+                  {{ getDisplayName() }}
+                </span>
+
                 <button class="btn-logout" (click)="logout()">Logout</button>
               </div>
             </ng-container>
@@ -191,6 +198,30 @@ import { User } from "@shared/models/auth.model";
         to {
           background-position: 200% center;
         }
+      }
+
+      .user-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #dc2626, #ef4444);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 14px;
+      }
+
+      .user-menu {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+      }
+
+      .user-name {
+        color: #e5e7eb;
+        font-weight: 500;
       }
 
       .navbar-right {
@@ -409,5 +440,21 @@ export class NavbarComponent implements OnInit {
       document.documentElement.classList.remove("dark-mode");
       localStorage.setItem("theme", "light");
     }
+  }
+  getDisplayName(): string {
+    if (!this.user) return "";
+
+    const username = this.user.username;
+
+    // If email → extract name
+    if (username.includes("@")) {
+      const namePart = username.split("@")[0];
+
+      return namePart
+        .replace(/[._]/g, " ")
+        .replace(/\b\w/g, (char) => char.toUpperCase());
+    }
+
+    return username;
   }
 }

@@ -1,6 +1,15 @@
-import { Component, OnInit } from "@angular/core";
+import {
+  Component,
+  OnInit,
+  HostListener,
+  ElementRef,
+  ViewChild,
+} from "@angular/core";
+
 import { CommonModule } from "@angular/common";
+
 import { RouterModule, Router } from "@angular/router";
+
 import { AuthService } from "@core/auth/auth.service";
 
 interface NavigationItem {
@@ -26,6 +35,9 @@ export class AdminLayoutComponent implements OnInit {
   isSidebarCollapsed = false;
   currentUser: any;
   isDarkMode = false;
+  profileDropdownOpen = false;
+  @ViewChild("profileContainer", { static: false })
+  profileContainer!: ElementRef;
 
   navigationItems: NavigationItem[] = [
     {
@@ -96,6 +108,12 @@ export class AdminLayoutComponent implements OnInit {
   toggleSubmenu(item: NavigationItem): void {
     item.expanded = !item.expanded;
   }
+  toggleProfileDropdown(): void {
+    this.profileDropdownOpen = !this.profileDropdownOpen;
+  }
+  goToLanding(): void {
+    this.router.navigate(["/"]);
+  }
 
   logout(): void {
     console.log("Logging out...");
@@ -105,6 +123,23 @@ export class AdminLayoutComponent implements OnInit {
       (success) => console.log("Logout navigation successful:", success),
       (error) => console.error("Logout navigation error:", error),
     );
+  }
+  @HostListener("document:click", ["$event"])
+  onDocumentClick(event: MouseEvent): void {
+    if (!this.profileContainer) return;
+
+    const clickedInside = this.profileContainer.nativeElement.contains(
+      event.target,
+    );
+
+    if (!clickedInside) {
+      this.profileDropdownOpen = false;
+    }
+  }
+
+  @HostListener("document:keydown.escape")
+  closeDropdown() {
+    this.profileDropdownOpen = false;
   }
 
   toggleTheme(): void {

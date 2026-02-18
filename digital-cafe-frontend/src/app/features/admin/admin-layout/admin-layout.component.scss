@@ -91,3 +91,170 @@ header {
 .animate-pulse-slow {
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
+/* ===============================
+   MODERN PROFILE DROPDOWN
+================================ */
+
+.profile-dropdown-container {
+  position: relative;
+
+  display: flex;
+
+  align-items: center;
+}
+
+/* Avatar */
+
+.profile-avatar {
+  cursor: pointer;
+
+  transition: all 0.25s ease;
+}
+
+.profile-avatar:hover {
+  transform: scale(1.08);
+
+  box-shadow: 0 10px 20px rgba(99, 102, 241, 0.4);
+}
+
+/* Dropdown */
+
+.profile-dropdown {
+  position: absolute;
+
+  right: 0;
+
+  top: 120%;
+
+  width: 220px;
+
+  background-color: #ffffff !important;
+
+  color: #111827;
+
+  border-radius: 14px;
+
+  border: 1px solid #e5e7eb;
+
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+
+  overflow: hidden;
+
+  z-index: 9999;
+
+  animation: dropdownAnimation 0.2s ease;
+}
+:host-context(.dark) .profile-dropdown {
+  background-color: #1f2937 !important;
+
+  color: #f9fafb;
+
+  border: 1px solid #374151;
+}
+.profile-dropdown button {
+  background: transparent;
+
+  color: inherit;
+}
+
+.profile-dropdown button:hover {
+  background-color: #f3f4f6;
+}
+
+:host-context(.dark) .profile-dropdown button:hover {
+  background-color: #374151;
+}
+
+/* Dark mode */
+
+:host-context(.dark) .profile-dropdown {
+  background: #1f2937;
+
+  border: 1px solid #374151;
+
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+}
+
+/* Buttons */
+
+.profile-dropdown button {
+  width: 100%;
+
+  padding: 14px 18px;
+
+  text-align: left;
+
+  font-weight: 500;
+
+  font-size: 14px;
+
+  background: transparent;
+
+  border: none;
+
+  cursor: pointer;
+
+  transition: all 0.2s ease;
+}
+
+/* Hover */
+
+.profile-dropdown button:hover {
+  background: #f3f4f6;
+}
+
+:host-context(.dark) .profile-dropdown button:hover {
+  background: #374151;
+}
+
+/* Logout */
+
+.logout-btn {
+  color: #ef4444;
+
+  font-weight: 600;
+}
+
+.logout-btn:hover {
+  background: #fee2e2;
+}
+
+:host-context(.dark) .logout-btn:hover {
+  background: rgba(239, 68, 68, 0.18);
+}
+
+/* Animation */
+
+@keyframes dropdownAnimation {
+  from {
+    opacity: 0;
+
+    transform: translateY(-12px) scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Responsive */
+
+@media (max-width: 640px) {
+  .profile-dropdown {
+    width: 180px;
+
+    right: -10px;
+  }
+}
+
+/* Fix overflow */
+
+header {
+  overflow: visible !important;
+}
+
+.animate-dropdown {
+  animation: dropdownAnimation 0.2s ease;
+}

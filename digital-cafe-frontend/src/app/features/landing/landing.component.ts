@@ -195,38 +195,39 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
   securityFeatures = [
     {
       icon: "🔐",
-      title: "JWT Authentication",
+      title: "Secure Loginn",
       description:
-        "Industry-standard token-based authentication for secure sessions.",
+        "You can safely log in to your account, and no one else can access it without your permission.",
     },
     {
       icon: "🛡️",
-      title: "Role-Based Access",
+      title: "Limited Access for Safety",
       description:
-        "Strict access control ensuring users only see what they're authorized for.",
+        "Each person can only see and use the features they are allowed to. This prevents misuse.",
     },
     {
       icon: "✉️",
       title: "Email Verification",
       description:
-        "Mandatory email confirmation to prevent unauthorized access.",
+        "We verify your email address to ensure it's really you and to protect your account.",
     },
     {
       icon: "💳",
       title: "Secure Payments",
-      description: "Bank-grade encryption for all payment transactions.",
+      description:
+        "All payment information is encrypted and processed securely to protect your financial data.",
     },
     {
       icon: "📝",
-      title: "Profile Validation",
+      title: "Profile Completion",
       description:
-        "Required profile completion for enhanced security and personalization.",
+        "We require complete profiles to ensure accountability and enhance security for all users.",
     },
     {
       icon: "🔒",
       title: "Data Encryption",
       description:
-        "End-to-end encryption protecting your sensitive information.",
+        "Your personal information is kept private and safe from unauthorized access.",
     },
   ];
 

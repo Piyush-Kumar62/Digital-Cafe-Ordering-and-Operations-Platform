@@ -103,10 +103,11 @@ import { RouterModule } from "@angular/router";
         </div>
 
         <div class="footer-bottom">
-          <p>
-            &copy; {{ currentYear }} Digital Café Platform. All rights reserved.
+          <p class="footer-inline">
+            &copy; {{ currentYear }} Digital Café Platform. All rights reserved
+            <span class="divider">|</span>
+            <span class="powered-by">Built with ❤️ for the café community</span>
           </p>
-          <p class="powered-by">Built with ❤️ for the café community</p>
         </div>
       </div>
     </footer>
@@ -131,28 +132,25 @@ import { RouterModule } from "@angular/router";
         display: grid;
         grid-template-columns: 2fr 1fr 1fr 1.5fr;
         gap: 3rem;
-        margin-bottom: 3rem;
+        margin-bottom: 1rem;
       }
 
-      .footer-brand {
-        .brand-name {
-          color: #ffffff;
-          font-size: 1.75rem;
-          font-weight: 700;
-          margin-bottom: 1rem;
-          font-family: "Poppins", sans-serif;
-          background: linear-gradient(120deg, #fbbf24 0%, #f59e0b 100%);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
-        }
+      .footer-brand .brand-name {
+        color: #ffffff;
+        font-size: 1.75rem;
+        font-weight: 700;
+        margin-bottom: 0.75rem;
+        font-family: "Poppins", sans-serif;
+        background: linear-gradient(120deg, #fbbf24 0%, #f59e0b 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
 
-        .brand-tagline {
-          color: #cbd5e1;
-          font-size: 0.9rem;
-          line-height: 1.6;
-          margin-bottom: 1.5rem;
-        }
+      .footer-brand .brand-tagline {
+        color: #cbd5e1;
+        font-size: 0.9rem;
+        line-height: 1.6;
+        margin-bottom: 1rem;
       }
 
       .social-icons {
@@ -215,29 +213,26 @@ import { RouterModule } from "@angular/router";
         box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
       }
 
-      .link-group {
-        h4 {
-          color: #ffffff;
-          font-size: 1.1rem;
-          font-weight: 600;
-          margin-bottom: 1.25rem;
-          letter-spacing: 0.5px;
-        }
+      .link-group h4 {
+        color: #ffffff;
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+      }
 
-        a {
-          display: block;
-          color: #94a3b8;
-          text-decoration: none;
-          margin-bottom: 0.75rem;
-          font-size: 0.95rem;
-          transition: all 0.2s ease;
-          padding-left: 0;
+      .link-group a {
+        display: inline-block; /* FIX: only text clickable */
+        width: fit-content; /* prevent full width */
+        display: block;
+        color: #94a3b8;
+        text-decoration: none;
+        margin-bottom: 0.5rem;
+        font-size: 0.95rem;
+      }
 
-          &:hover {
-            color: #fbbf24;
-            padding-left: 5px;
-          }
-        }
+      .link-group a:hover {
+        color: #fbbf24;
+        padding-left: 5px;
       }
 
       .legal-links {
@@ -247,20 +242,33 @@ import { RouterModule } from "@angular/router";
       }
 
       .footer-bottom {
-        padding-top: 2rem;
+        padding-top: 1.5rem; /* reduced space */
         border-top: 1px solid #1e293b;
         text-align: center;
+        margin-top: 1rem;
+      }
+      .footer-bottom p {
+        margin: 0;
+      }
 
-        p {
-          margin: 0.25rem 0;
-          font-size: 0.875rem;
-          color: #64748b;
+      .footer-inline {
+        margin: 0; /* remove extra space */
+        font-size: 0.875rem;
+        color: #64748b;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 0.4rem; /* tight spacing */
+        flex-wrap: wrap;
+      }
 
-          &.powered-by {
-            font-size: 0.8rem;
-            margin-top: 0.5rem;
-          }
-        }
+      .footer-inline .powered-by {
+        font-size: 0.875rem;
+        margin: 0;
+      }
+
+      .footer-inline .divider {
+        opacity: 0.6;
       }
 
       @media (max-width: 1024px) {
@@ -282,6 +290,7 @@ import { RouterModule } from "@angular/router";
         .footer-content {
           grid-template-columns: 1fr;
           gap: 2rem;
+          margin-bottom: 0.75rem;
         }
 
         .footer-brand {

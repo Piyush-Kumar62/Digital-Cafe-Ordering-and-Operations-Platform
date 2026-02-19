@@ -83,6 +83,18 @@ export class AdminLayoutComponent implements OnInit {
     },
   ];
 
+  private readonly iconClassMap: Record<string, string> = {
+    dashboard: "bi bi-speedometer2 w-6 h-6 text-lg",
+    users: "bi bi-people w-6 h-6 text-lg",
+    store: "bi bi-shop w-6 h-6 text-lg",
+    "shopping-cart": "bi bi-cart3 w-6 h-6 text-lg",
+    calendar: "bi bi-calendar-event w-6 h-6 text-lg",
+    "chart-bar": "bi bi-bar-chart-line w-6 h-6 text-lg",
+    document: "bi bi-file-earmark-text w-6 h-6 text-lg",
+    "clipboard-list": "bi bi-card-checklist w-6 h-6 text-lg",
+    cog: "bi bi-gear w-6 h-6 text-lg",
+  };
+
   constructor(
     private authService: AuthService,
     private router: Router,
@@ -155,6 +167,10 @@ export class AdminLayoutComponent implements OnInit {
     } else {
       document.documentElement.classList.remove("dark");
     }
+  }
+
+  getIconClass(iconName: string): string {
+    return this.iconClassMap[iconName] || "bi bi-circle w-6 h-6 text-lg";
   }
 
   getIconSVG(iconName: string): string {

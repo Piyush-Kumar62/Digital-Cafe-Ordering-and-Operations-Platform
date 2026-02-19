@@ -6,15 +6,19 @@ import {
   Cafe,
   CreateCafeRequest,
   Table,
+} from "@shared/models/cafe.model";
+import {
   MenuItem,
   MenuItemRequest,
-} from "@shared/models/cafe.model";
+} from "@shared/models/menu.model";
 import {
   Order,
   OrderRequest,
+} from "@shared/models/order.model";
+import {
   Booking,
   BookingRequest,
-} from "@shared/models/order.model";
+} from "@shared/models/booking.model";
 import { Payment, PaymentRequest } from "@shared/models/payment.model";
 import {
   Profile,
@@ -298,16 +302,34 @@ export class ApiService {
   }
 
   // ============ User Management APIs ============
-  getAllUsers(): Observable<User[]> {
-    return this.http.get<User[]>(`${this.baseUrl}/users`);
+  getAllUsers(
+    page: number = 0,
+    size: number = 20,
+  ): Observable<{
+    content: User[];
+    totalElements: number;
+    totalPages: number;
+    number: number;
+    size: number;
+  }> {
+    const params = new HttpParams()
+      .set("page", page.toString())
+      .set("size", size.toString());
+    return this.http.get<{
+      content: User[];
+      totalElements: number;
+      totalPages: number;
+      number: number;
+      size: number;
+    }>(`${this.baseUrl}/admin/users`, { params });
   }
 
   getUserById(id: number): Observable<User> {
-    return this.http.get<User>(`${this.baseUrl}/users/${id}`);
+    return this.http.get<User>(`${this.baseUrl}/admin/users/${id}`);
   }
 
   getUsersByRole(role: string): Observable<User[]> {
-    return this.http.get<User[]>(`${this.baseUrl}/users/role/${role}`);
+    return this.http.get<User[]>(`${this.baseUrl}/admin/users/role/${role}`);
   }
 
   createCafeOwner(request: any): Observable<any> {
@@ -330,16 +352,41 @@ export class ApiService {
   }
 
   updateUser(id: number, user: Partial<User>): Observable<User> {
-    return this.http.put<User>(`${this.baseUrl}/users/${id}`, user);
+    return this.http.put<User>(`${this.baseUrl}/admin/users/${id}`, user);
   }
 
   deleteUser(id: number): Observable<MessageResponse> {
-    return this.http.delete<MessageResponse>(`${this.baseUrl}/users/${id}`);
+    return this.http.delete<MessageResponse>(`${this.baseUrl}/admin/users/${id}`);
   }
 
-  toggleUserStatus(id: number): Observable<MessageResponse> {
+  activateUser(id: number): Observable<MessageResponse> {
+    return this.http.patch<MessageResponse>(
+      `${this.baseUrl}/admin/users/${id}/activate`,
+      null,
+    );
+  }
+
+  deactivateUser(id: number): Observable<MessageResponse> {
+    return this.http.patch<MessageResponse>(
+      `${this.baseUrl}/admin/users/${id}/deactivate`,
+      null,
+    );
+  }
+
+  getPendingUsers(): Observable<User[]> {
+    return this.http.get<User[]>(`${this.baseUrl}/admin/pending-users`);
+  }
+
+  approveUser(userId: number): Observable<MessageResponse> {
     return this.http.put<MessageResponse>(
-      `${this.baseUrl}/users/${id}/toggle-status`,
+      `${this.baseUrl}/admin/approve/${userId}`,
+      null,
+    );
+  }
+
+  rejectUser(userId: number): Observable<MessageResponse> {
+    return this.http.put<MessageResponse>(
+      `${this.baseUrl}/admin/reject/${userId}`,
       null,
     );
   }

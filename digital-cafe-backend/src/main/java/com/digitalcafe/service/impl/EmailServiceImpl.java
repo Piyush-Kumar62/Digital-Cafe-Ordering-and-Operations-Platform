@@ -70,6 +70,28 @@ public class EmailServiceImpl implements EmailService {
     }
 
     @Override
+    public void sendApprovalConfirmationEmail(String to) {
+        String subject = "Digital Cafe - Registration Approved";
+        String body = "Hello,\n\n" +
+                "Your registration has been approved by the admin.\n" +
+                "You can now log in to your account.\n\n" +
+                "Best regards,\nDigital Cafe Team";
+
+        sendEmail(to, subject, body);
+    }
+
+    @Override
+    public void sendRejectionEmail(String to) {
+        String subject = "Digital Cafe - Registration Rejected";
+        String body = "Hello,\n\n" +
+                "Your registration request was rejected by the admin.\n" +
+                "Please contact support for more details.\n\n" +
+                "Best regards,\nDigital Cafe Team";
+
+        sendEmail(to, subject, body);
+    }
+
+    @Override
     public void sendWelcomeEmail(String to, String username, String tempPassword) {
         String subject = "Welcome to Digital Cafe";
         String body = "Hello " + username + ",\n\n" +

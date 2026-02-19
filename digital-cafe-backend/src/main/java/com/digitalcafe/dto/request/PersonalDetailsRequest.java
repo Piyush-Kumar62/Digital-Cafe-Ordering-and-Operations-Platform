@@ -1,9 +1,12 @@
 package com.digitalcafe.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.time.LocalDate;
 
 @Data
 @NoArgsConstructor
@@ -21,6 +24,9 @@ public class PersonalDetailsRequest {
 
     @NotBlank(message = "Phone number is required")
     private String phone;
+
+    @NotNull(message = "Date of birth is required")
+    private LocalDate dateOfBirth;
 
     @NotBlank(message = "Gender is required")
     private String gender; // MALE, FEMALE, OTHER, PREFER_NOT_TO_SAY

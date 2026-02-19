@@ -25,7 +25,7 @@ public class BookingRequest {
     private Long tableId;
 
     @NotNull(message = "Booking date is required")
-    @Future(message = "Booking date must be in the future")
+    @FutureOrPresent(message = "Booking date cannot be in the past")
     private LocalDate bookingDate;
 
     @NotNull(message = "Booking time is required")

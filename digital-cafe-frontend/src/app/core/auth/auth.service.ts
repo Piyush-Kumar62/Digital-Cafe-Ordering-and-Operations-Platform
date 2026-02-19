@@ -6,6 +6,7 @@ import { Router } from '@angular/router';
 import { environment } from '@environments/environment';
 import {
   AuthResponse,
+  ChangePasswordRequest,
   LoginRequest,
   SimpleRegisterRequest,
   RegisterRequest,
@@ -101,8 +102,20 @@ export class AuthService {
       .pipe(catchError(this.handleError));
   }
 
-  resetPassword(request: PasswordResetRequest): Observable<MessageResponse> {
-    return this.http.post<MessageResponse>(`${this.apiUrl}/reset-password`, request).pipe(catchError(this.handleError));
+  forgotPassword(email: string): Observable<MessageResponse> {
+    return this.http
+      .post<MessageResponse>(`${this.apiUrl}/forgot-password`, null, { params: { email } })
+      .pipe(catchError(this.handleError));
+  }
+
+  resetPassword(token: string, request: PasswordResetRequest): Observable<MessageResponse> {
+    return this.http
+      .post<MessageResponse>(`${this.apiUrl}/reset-password`, request, { params: { token } })
+      .pipe(catchError(this.handleError));
+  }
+
+  changePassword(request: ChangePasswordRequest): Observable<MessageResponse> {
+    return this.http.post<MessageResponse>(`${this.apiUrl}/change-password`, request).pipe(catchError(this.handleError));
   }
 
   getCurrentUser(): Observable<MessageResponse> {
@@ -170,7 +183,7 @@ export class AuthService {
     if (this.isAdmin()) {
       return '/admin/dashboard';
     } else if (this.isCafeOwner()) {
-      return '/cafe-owner/dashboard';
+      return '/owner/dashboard';
     } else if (this.isChef()) {
       return '/chef/dashboard';
     } else if (this.isWaiter()) {

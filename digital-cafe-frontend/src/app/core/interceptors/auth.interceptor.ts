@@ -24,6 +24,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     "/auth/register",
     "/auth/verify-email",
     "/auth/resend-verification",
+    "/auth/forgot-password",
     "/auth/reset-password",
     "/cafes/active",
     "/cafes/city",

@@ -9,6 +9,8 @@ export interface User {
   isProfileComplete: boolean;
   profileCompletionPercentage: number;
   isActive: boolean;
+  mustResetPassword?: boolean;
+  registrationStatus?: string;
   cafeId?: number;
   createdAt?: string;
 }
@@ -42,9 +44,13 @@ export interface SimpleRegisterRequest {
 }
 
 export interface PasswordResetRequest {
-  oldPassword: string;
   newPassword: string;
   confirmPassword: string;
+}
+
+export interface ChangePasswordRequest {
+  oldPassword: string;
+  newPassword: string;
 }
 
 export interface MessageResponse {
@@ -56,6 +62,7 @@ export interface PersonalDetails {
   lastName: string;
   email: string;
   phone: string;
+  dateOfBirth: string;
   gender: string;
   maritalStatus?: string;
 }
@@ -92,7 +99,6 @@ export interface WorkExperience {
 
 export interface RegisterRequest {
   username: string;
-  password: string;
   role: string;
   personalDetails: PersonalDetails;
   address: AddressInfo;

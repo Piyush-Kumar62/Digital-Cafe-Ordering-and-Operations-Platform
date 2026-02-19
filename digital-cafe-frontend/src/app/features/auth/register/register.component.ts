@@ -3,6 +3,7 @@ import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
 import { Router, RouterModule } from "@angular/router";
 import { AuthService } from "../../../core/auth/auth.service";
+import { NotificationService } from "@core/services/notification.service";
 import { NavbarComponent } from "../../../shared/components/navbar/navbar.component";
 import {
   PersonalDetails,
@@ -29,9 +30,10 @@ export class RegisterComponent implements OnInit {
 
   // Step 1: Basic Info
   username = "";
-  password = "";
-  confirmPassword = "";
   role = "";
+  govtIdType = "";
+  govtIdProof: File | null = null;
+  govtIdTypes = ["Aadhaar", "PAN Card", "Driving License", "Passport"];
 
   // Step 2: Personal Details
   personalDetails: PersonalDetails = {
@@ -39,6 +41,7 @@ export class RegisterComponent implements OnInit {
     lastName: "",
     email: "",
     phone: "",
+    dateOfBirth: "",
     gender: "",
     maritalStatus: "SINGLE",
   };
@@ -80,16 +83,25 @@ export class RegisterComponent implements OnInit {
 
   genderOptions = ["MALE", "FEMALE", "OTHER", "PREFER_NOT_TO_SAY"];
   maritalStatusOptions = ["SINGLE", "MARRIED", "DIVORCED", "WIDOWED"];
-  roleOptions = ["CUSTOMER", "ADMIN", "CAFE_OWNER", "CHEF", "WAITER"];
+  roleOptions = ["CUSTOMER", "CAFE_OWNER", "CHEF", "WAITER"];
   currentYear = new Date().getFullYear();
 
   constructor(
     private authService: AuthService,
     private router: Router,
+    private notificationService: NotificationService,
   ) {}
 
   ngOnInit() {
     // Any initialization logic
+  }
+
+  onFileSelect(event: Event) {
+    const element = event.currentTarget as HTMLInputElement;
+    let fileList: FileList | null = element.files;
+    if (fileList) {
+      this.govtIdProof = fileList[0];
+    }
   }
 
   // Navigation methods
@@ -139,16 +151,16 @@ export class RegisterComponent implements OnInit {
       this.errorMessage = "Username is required";
       return false;
     }
-    if (!this.password || this.password.length < 8) {
-      this.errorMessage = "Password must be at least 8 characters";
-      return false;
-    }
-    if (this.password !== this.confirmPassword) {
-      this.errorMessage = "Passwords do not match";
-      return false;
-    }
     if (!this.role) {
       this.errorMessage = "Please select a role";
+      return false;
+    }
+    if (!this.govtIdType) {
+      this.errorMessage = "Please select a Government ID type";
+      return false;
+    }
+    if (!this.govtIdProof) {
+      this.errorMessage = "Please upload your Government ID proof";
       return false;
     }
     return true;
@@ -167,6 +179,10 @@ export class RegisterComponent implements OnInit {
     }
     if (!pd.phone.trim()) {
       this.errorMessage = "Phone number is required";
+      return false;
+    }
+    if (!pd.dateOfBirth) {
+      this.errorMessage = "Date of birth is required";
       return false;
     }
     if (!pd.gender) {
@@ -308,9 +324,8 @@ export class RegisterComponent implements OnInit {
       (work) => work.companyName.trim() && work.designation.trim(),
     );
 
-    const request: RegisterRequest = {
+    const payload: RegisterRequest = {
       username: this.username.trim(),
-      password: this.password,
       role: this.role,
       personalDetails: this.personalDetails,
       address: this.address,
@@ -319,18 +334,21 @@ export class RegisterComponent implements OnInit {
         filteredWorkExperience.length > 0 ? filteredWorkExperience : undefined,
     };
 
-    this.authService.register(request).subscribe({
+    this.authService.register(payload).subscribe({
       next: (response) => {
         this.isLoading = false;
-        this.successMessage = response.message;
+        this.successMessage =
+          response.message || "Registration successful. Awaiting admin approval.";
+        this.notificationService.success(
+          "Registration successful. Awaiting admin approval.",
+        );
         setTimeout(() => {
           this.router.navigate(["/auth/login"]);
         }, 2000);
       },
       error: (error) => {
         this.isLoading = false;
-        this.errorMessage =
-          error.error?.message || "Registration failed. Please try again.";
+        this.errorMessage = error.message || "Registration failed. Please try again.";
       },
     });
   }

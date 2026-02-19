@@ -1,0 +1,71 @@
+<div class="container mx-auto px-4 py-8 max-w-4xl">
+  <div *ngIf="order$ | async as order; else loadingOrError">
+    <h1 class="text-4xl font-extrabold text-gray-800 mb-4 text-center">Order #{{ order.orderNumber }}</h1>
+    <p class="text-center text-gray-500 mb-8">Track the status of your order below.</p>
+
+    <!-- Status Progress Bar -->
+    <div class="w-full px-4 sm:px-0">
+      <div class="flex justify-between items-center">
+        <ng-container *ngFor="let step of orderStatusSteps; let i = index">
+          <div class="flex-1 text-center">
+            <div class="relative mb-2">
+              <div *ngIf="i > 0" class="absolute w-full h-1 bg-gray-200" style="top: 50%; right: 50%;"></div>
+              <div *ngIf="getStepStatus(step, order.status) === 'completed'" class="absolute w-full h-1 bg-indigo-600" style="top: 50%; right: 50%;"></div>
+              <div class="w-8 h-8 mx-auto rounded-full text-lg flex items-center justify-center transition-colors duration-500"
+                   [ngClass]="{
+                     'bg-indigo-600 text-white': getStepStatus(step, order.status) === 'completed' || getStepStatus(step, order.status) === 'current',
+                     'bg-white border-2 border-gray-300': getStepStatus(step, order.status) === 'upcoming'
+                   }">
+                <span *ngIf="getStepStatus(step, order.status) !== 'completed'">{{ i + 1 }}</span>
+                <span *ngIf="getStepStatus(step, order.status) === 'completed'">&#10003;</span>
+              </div>
+            </div>
+            <div class="text-xs sm:text-sm capitalize transition-colors duration-500"
+                 [ngClass]="{
+                   'text-indigo-600 font-bold': getStepStatus(step, order.status) === 'current',
+                   'text-gray-500': getStepStatus(step, order.status) !== 'current'
+                 }">
+              {{ step.toLowerCase().replace('_', ' ') }}
+            </div>
+          </div>
+        </ng-container>
+      </div>
+    </div>
+
+
+    <!-- Order Details -->
+    <div class="mt-12 bg-white rounded-lg shadow-lg p-8">
+      <h2 class="text-2xl font-bold text-gray-800 mb-6">Order Summary</h2>
+      <div class="space-y-4">
+        <div *ngFor="let item of order.items" class="flex justify-between items-start border-b border-gray-100 pb-2">
+          <div>
+            <p class="font-semibold">{{ item.menuItemName }}</p>
+            <p class="text-sm text-gray-600">Qty: {{ item.quantity }}</p>
+          </div>
+          <p class="font-semibold">${{ item.subtotal | number:'1.2-2' }}</p>
+        </div>
+      </div>
+      <div class="mt-6 pt-4 border-t-2 border-dashed">
+        <div class="flex justify-between items-center text-xl font-extrabold text-indigo-600">
+          <span>Total:</span>
+          <span>${{ order.totalAmount | number:'1.2-2' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="order.status === OrderStatus.CANCELLED" class="mt-8 bg-red-100 border-l-4 border-red-500 text-red-700 p-4" role="alert">
+        <p class="font-bold">Order Cancelled</p>
+    </div>
+
+     <div class="text-center mt-8">
+        <a routerLink="/customer/menu" class="text-indigo-600 hover:text-indigo-800 font-semibold">Place another order</a>
+    </div>
+
+  </div>
+
+  <ng-template #loadingOrError>
+    <div class="text-center py-16">
+      <p class="text-lg text-gray-500">Loading order details...</p>
+    </div>
+  </ng-template>
+</div>

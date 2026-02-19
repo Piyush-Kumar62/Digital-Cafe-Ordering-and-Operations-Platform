@@ -6,6 +6,8 @@ import com.digitalcafe.dto.response.ApiResponse;
 import com.digitalcafe.dto.response.OrderResponse;
 import com.digitalcafe.dto.response.PageResponse;
 import com.digitalcafe.entity.Order;
+import com.digitalcafe.entity.User;
+import com.digitalcafe.repository.UserRepository;
 import com.digitalcafe.service.OrderService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +32,7 @@ import java.util.List;
 public class OrderController {
 
     private final OrderService orderService;
+    private final UserRepository userRepository;
 
     @PostMapping
     @PreAuthorize("hasRole('CUSTOMER')")
@@ -104,6 +107,48 @@ public class OrderController {
         return ResponseEntity.ok(ApiResponse.success("Order status updated successfully", response));
     }
 
+    @PutMapping("/{orderId}/status")
+    @PreAuthorize("hasAnyRole('CHEF', 'WAITER')")
+    public ResponseEntity<ApiResponse<OrderResponse>> updateOrderStatusByParam(
+            @PathVariable Long orderId,
+            @RequestParam String status) {
+        OrderStatusUpdateRequest request = OrderStatusUpdateRequest.builder()
+                .status(status)
+                .build();
+        OrderResponse response = orderService.updateOrderStatus(orderId, request);
+        return ResponseEntity.ok(ApiResponse.success("Order status updated successfully", response));
+    }
+
+    @PutMapping("/{orderId}/prepare")
+    @PreAuthorize("hasRole('CHEF')")
+    public ResponseEntity<ApiResponse<OrderResponse>> markOrderPreparing(@PathVariable Long orderId) {
+        OrderStatusUpdateRequest request = OrderStatusUpdateRequest.builder()
+                .status(Order.OrderStatus.PREPARING.name())
+                .build();
+        OrderResponse response = orderService.updateOrderStatus(orderId, request);
+        return ResponseEntity.ok(ApiResponse.success("Order marked as PREPARING", response));
+    }
+
+    @PutMapping("/{orderId}/ready")
+    @PreAuthorize("hasRole('CHEF')")
+    public ResponseEntity<ApiResponse<OrderResponse>> markOrderReady(@PathVariable Long orderId) {
+        OrderStatusUpdateRequest request = OrderStatusUpdateRequest.builder()
+                .status(Order.OrderStatus.READY.name())
+                .build();
+        OrderResponse response = orderService.updateOrderStatus(orderId, request);
+        return ResponseEntity.ok(ApiResponse.success("Order marked as READY", response));
+    }
+
+    @PutMapping("/{orderId}/served")
+    @PreAuthorize("hasRole('WAITER')")
+    public ResponseEntity<ApiResponse<OrderResponse>> markOrderServed(@PathVariable Long orderId) {
+        OrderStatusUpdateRequest request = OrderStatusUpdateRequest.builder()
+                .status(Order.OrderStatus.SERVED.name())
+                .build();
+        OrderResponse response = orderService.updateOrderStatus(orderId, request);
+        return ResponseEntity.ok(ApiResponse.success("Order marked as SERVED", response));
+    }
+
     @PatchMapping("/{orderId}/cancel")
     @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<ApiResponse<OrderResponse>> cancelOrder(@PathVariable Long orderId) {
@@ -111,14 +156,25 @@ public class OrderController {
         return ResponseEntity.ok(ApiResponse.success("Order cancelled successfully", response));
     }
 
+    @DeleteMapping("/{orderId}")
+    @PreAuthorize("hasRole('CUSTOMER')")
+    public ResponseEntity<ApiResponse<OrderResponse>> cancelOrderByDelete(@PathVariable Long orderId) {
+        OrderResponse response = orderService.cancelOrder(orderId);
+        return ResponseEntity.ok(ApiResponse.success("Order cancelled successfully", response));
+    }
+
     private Long getUserIdFromAuthentication(Authentication authentication) {
-        // TODO: Extract user ID from authentication
-        return 1L;
+        return userRepository.findByEmail(authentication.getName())
+                .orElseThrow(() -> new IllegalArgumentException("Authenticated user not found"))
+                .getId();
     }
 
     private Long getCafeIdFromAuthentication(Authentication authentication) {
-        // TODO: Extract cafe ID from authentication
-        return 1L;
+        User user = userRepository.findByEmail(authentication.getName())
+                .orElseThrow(() -> new IllegalArgumentException("Authenticated user not found"));
+        if (user.getCafe() == null) {
+            throw new IllegalArgumentException("Authenticated user is not assigned to any cafe");
+        }
+        return user.getCafe().getId();
     }
 }
-

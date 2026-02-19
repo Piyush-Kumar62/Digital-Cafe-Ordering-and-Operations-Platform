@@ -54,6 +54,20 @@ export const routes: Routes = [
             (m) => m.VerifyEmailComponent,
           ),
       },
+      {
+        path: "forgot-password",
+        loadComponent: () =>
+          import("./features/auth/forgot-password/forgot-password.component").then(
+            (m) => m.ForgotPasswordComponent,
+          ),
+      },
+      {
+        path: "reset-password",
+        loadComponent: () =>
+          import("./features/auth/reset-password/reset-password.component").then(
+            (m) => m.ResetPasswordComponent,
+          ),
+      },
     ],
   },
 
@@ -150,6 +164,21 @@ export const routes: Routes = [
       { path: "", redirectTo: "dashboard", pathMatch: "full" },
     ],
   },
+  {
+    path: "owner",
+    canActivate: [authGuard, emailVerificationGuard, roleGuard],
+    data: { roles: [UserRole.CAFE_OWNER] },
+    children: [
+      {
+        path: "dashboard",
+        loadComponent: () =>
+          import("./features/cafe-owner/owner-dashboard/owner-dashboard.component").then(
+            (m) => m.OwnerDashboardComponent,
+          ),
+      },
+      { path: "", redirectTo: "dashboard", pathMatch: "full" },
+    ],
+  },
 
   // Chef routes
   {
@@ -203,8 +232,51 @@ export const routes: Routes = [
             (m) => m.CustomerDashboardComponent,
           ),
       },
+      {
+        path: "menu",
+        loadComponent: () =>
+          import("./features/customer/menu/menu.component").then(
+            (m) => m.MenuComponent,
+          ),
+      },
+      {
+        path: "cart",
+        loadComponent: () =>
+          import("./features/customer/cart/cart.component").then(
+            (m) => m.CartComponent,
+          ),
+      },
+      {
+        path: "booking",
+        loadComponent: () =>
+          import("./features/customer/booking/booking.component").then(
+            (m) => m.BookingComponent,
+          ),
+      },
+      {
+        path: "order-tracking",
+        loadComponent: () =>
+          import("./features/customer/order-tracking/order-tracking.component").then(
+            (m) => m.OrderTrackingComponent,
+          ),
+      },
       { path: "", redirectTo: "dashboard", pathMatch: "full" },
     ],
+  },
+
+  {
+    path: "menu",
+    canActivate: [
+      authGuard,
+      emailVerificationGuard,
+      profileCompletionGuard,
+      roleGuard,
+    ],
+    data: { roles: [UserRole.CUSTOMER] },
+    loadComponent: () =>
+      import("./features/customer/menu/menu.component").then(
+        (m) => m.MenuComponent,
+      ),
   },
 
   // Fallback route

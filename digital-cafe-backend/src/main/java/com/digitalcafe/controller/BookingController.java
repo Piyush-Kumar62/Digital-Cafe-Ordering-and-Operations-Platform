@@ -5,6 +5,7 @@ import com.digitalcafe.dto.response.ApiResponse;
 import com.digitalcafe.dto.response.BookingResponse;
 import com.digitalcafe.dto.response.PageResponse;
 import com.digitalcafe.entity.Booking;
+import com.digitalcafe.repository.UserRepository;
 import com.digitalcafe.service.BookingService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,7 @@ import java.util.List;
 public class BookingController {
 
     private final BookingService bookingService;
+    private final UserRepository userRepository;
 
     @PostMapping
     @PreAuthorize("hasRole('CUSTOMER')")
@@ -59,6 +61,12 @@ public class BookingController {
         return ResponseEntity.ok(ApiResponse.success("Bookings retrieved successfully", response));
     }
 
+    @GetMapping("/my")
+    @PreAuthorize("hasRole('CUSTOMER')")
+    public ResponseEntity<ApiResponse<List<BookingResponse>>> getMyBookingsAlias() {
+        return getMyBookings();
+    }
+
     @GetMapping("/cafe/{cafeId}")
     @PreAuthorize("hasAnyRole('CAFE_OWNER', 'CHEF', 'WAITER')")
     public ResponseEntity<ApiResponse<PageResponse<BookingResponse>>> getBookingsByCafeId(
@@ -82,6 +90,13 @@ public class BookingController {
         return ResponseEntity.ok(ApiResponse.success("Booking cancelled successfully", response));
     }
 
+    @DeleteMapping("/{bookingId}")
+    @PreAuthorize("hasRole('CUSTOMER')")
+    public ResponseEntity<ApiResponse<BookingResponse>> cancelBookingByDelete(@PathVariable Long bookingId) {
+        BookingResponse response = bookingService.cancelBooking(bookingId);
+        return ResponseEntity.ok(ApiResponse.success("Booking cancelled successfully", response));
+    }
+
     @PatchMapping("/{bookingId}/status")
     @PreAuthorize("hasAnyRole('CAFE_OWNER', 'WAITER')")
     public ResponseEntity<ApiResponse<BookingResponse>> updateBookingStatus(
@@ -91,10 +106,18 @@ public class BookingController {
         return ResponseEntity.ok(ApiResponse.success("Booking status updated successfully", response));
     }
 
+    @PutMapping("/{bookingId}/status")
+    @PreAuthorize("hasAnyRole('CAFE_OWNER', 'WAITER')")
+    public ResponseEntity<ApiResponse<BookingResponse>> updateBookingStatusByPut(
+            @PathVariable Long bookingId,
+            @RequestParam Booking.BookingStatus status) {
+        BookingResponse response = bookingService.updateBookingStatus(bookingId, status);
+        return ResponseEntity.ok(ApiResponse.success("Booking status updated successfully", response));
+    }
+
     private Long getUserIdFromAuthentication(Authentication authentication) {
-        // This will be implemented based on your security context structure
-        // For now, returning a placeholder
-        return 1L; // TODO: Extract user ID from authentication
+        return userRepository.findByEmail(authentication.getName())
+                .orElseThrow(() -> new IllegalArgumentException("Authenticated user not found"))
+                .getId();
     }
 }
-

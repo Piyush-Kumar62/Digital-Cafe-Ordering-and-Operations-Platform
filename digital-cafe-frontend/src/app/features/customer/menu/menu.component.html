@@ -1,0 +1,31 @@
+<div class="container mx-auto px-4 py-8">
+  <h1 class="text-4xl font-extrabold text-gray-800 mb-8 text-center">Our Menu</h1>
+
+  <div *ngIf="menuItems$ | async as menuItems; else loading" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+    <div *ngFor="let item of menuItems" class="bg-white rounded-lg shadow-lg overflow-hidden transform hover:scale-105 transition-transform duration-300 ease-in-out">
+      <img [src]="item.imageUrl || 'https://via.placeholder.com/300'" alt="{{ item.name }}" class="w-full h-48 object-cover">
+      <div class="p-6">
+        <h2 class="text-2xl font-bold text-gray-900 mb-2 truncate">{{ item.name }}</h2>
+        <p class="text-gray-600 mb-4 h-20 overflow-y-auto">{{ item.description }}</p>
+        <div class="flex justify-between items-center mb-4">
+          <span class="text-2xl font-bold text-indigo-600">${{ item.price | number:'1.2-2' }}</span>
+          <span class="text-sm text-gray-500">{{ item.preparationTime }} mins</span>
+        </div>
+        <button (click)="addToCart(item)" class="w-full bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 transition-colors duration-300">
+          Add to Cart
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <ng-template #loading>
+    <div class="text-center py-16">
+      <p class="text-lg text-gray-500">Loading menu...</p>
+      <!-- You can add a spinner here -->
+    </div>
+  </ng-template>
+
+  <div *ngIf="(menuItems$ | async)?.length === 0" class="text-center py-16">
+      <p class="text-lg text-gray-500">No menu items available at the moment.</p>
+  </div>
+</div>

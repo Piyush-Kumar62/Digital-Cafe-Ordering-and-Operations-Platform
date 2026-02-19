@@ -13,6 +13,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 
 /**
@@ -59,7 +61,18 @@ public class TableController {
     @GetMapping("/cafe/{cafeId}/available")
     public ResponseEntity<ApiResponse<List<TableResponse>>> getAvailableTables(
             @PathVariable Long cafeId,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime bookingTime) {
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime bookingTime) {
+        LocalDateTime effectiveBookingTime = bookingTime != null ? bookingTime : LocalDateTime.now();
+        List<TableResponse> response = tableService.getAvailableTables(cafeId, effectiveBookingTime);
+        return ResponseEntity.ok(ApiResponse.success("Available tables retrieved successfully", response));
+    }
+
+    @GetMapping("/available")
+    public ResponseEntity<ApiResponse<List<TableResponse>>> getAvailableTablesBySlot(
+            @RequestParam Long cafeId,
+            @RequestParam LocalDate date,
+            @RequestParam LocalTime timeSlot) {
+        LocalDateTime bookingTime = LocalDateTime.of(date, timeSlot);
         List<TableResponse> response = tableService.getAvailableTables(cafeId, bookingTime);
         return ResponseEntity.ok(ApiResponse.success("Available tables retrieved successfully", response));
     }
@@ -80,4 +93,3 @@ public class TableController {
         return ResponseEntity.ok(ApiResponse.success("Table availability updated successfully", response));
     }
 }
-

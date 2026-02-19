@@ -43,6 +43,11 @@ public class BookingServiceImpl implements BookingService {
     public BookingResponse createBooking(Long customerId, BookingRequest request) {
         log.info("Creating booking for customer: {}, cafe: {}, table: {}", customerId, request.getCafeId(), request.getTableId());
 
+        LocalDateTime requestedDateTime = LocalDateTime.of(request.getBookingDate(), request.getBookingTime());
+        if (requestedDateTime.isBefore(LocalDateTime.now())) {
+            throw new IllegalArgumentException("Booking time slot cannot be in the past");
+        }
+
         // Validate customer
         User customer = userRepository.findById(customerId)
                 .orElseThrow(() -> new ResourceNotFoundException("Customer not found"));

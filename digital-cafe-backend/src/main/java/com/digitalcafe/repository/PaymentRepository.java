@@ -17,4 +17,8 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
     List<Payment> findByCustomerId(Long customerId);
 
     List<Payment> findByStatus(Payment.PaymentStatus status);
+    
+    // Dashboard queries
+    List<Payment> findByStatusAndCreatedAtAfter(Payment.PaymentStatus status, java.time.LocalDateTime date);
+    List<Payment> findByStatusAndCreatedAtBetween(Payment.PaymentStatus status, java.time.LocalDateTime start, java.time.LocalDateTime end);
 }

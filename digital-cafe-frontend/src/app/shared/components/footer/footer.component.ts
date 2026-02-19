@@ -90,8 +90,8 @@ import { RouterModule } from "@angular/router";
 
           <div class="link-group">
             <h4>Contact & Legal</h4>
-            <a href="owner@digitalcafe.com"
-              >📧 owner@digitalcafe.com</a
+            <a href="mailto:piyushkumar30066@gmail.com"
+              >📧 piyushkumar30066@gmail.com</a
             >
             <a href="tel:+916202079747">📞 +91 6202079747</a>
             <a href="#">📍 Bihar, India</a>

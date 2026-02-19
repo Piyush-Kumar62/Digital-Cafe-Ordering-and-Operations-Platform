@@ -10,7 +10,10 @@ import java.util.List;
 
 /**
  * DTO for user response.
+<<<<<<< HEAD
  * Used in all user-related APIs.
+=======
+>>>>>>> origin/main
  */
 @Data
 @Builder
@@ -21,14 +24,18 @@ public class UserResponse {
     private Long id;
     private String username;
     private String email;
+<<<<<<< HEAD
 
     // ================= STATUS =================
 
+=======
+>>>>>>> origin/main
     private Boolean isActive;
     private Boolean isEmailVerified;
     private Boolean isProfileComplete;
     private Integer profileCompletionPercentage;
     private Boolean mustResetPassword;
+<<<<<<< HEAD
 
     /**
      * NEW FIELD → approval lifecycle status
@@ -47,6 +54,11 @@ public class UserResponse {
 
     // ================= CAFE =================
 
+=======
+    private List<String> roles;
+    private LocalDateTime createdAt;
+    private LocalDateTime lastLogin;
+>>>>>>> origin/main
     private Long cafeId;
     private String cafeName;
 }

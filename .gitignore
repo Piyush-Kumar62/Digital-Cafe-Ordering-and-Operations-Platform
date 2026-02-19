@@ -49,8 +49,13 @@ Project Materials/
 
 # Personal guide files (keep local, don't push to GitHub)
 
-
-application.properties
+# Documentation & temp admin files
+ADMIN_*.md
+IMPLEMENTATION_STATUS_REPORT.md
+LOGIN_*.md
+QUICK_START_ADMIN.md
+check_admin_user.sql
+test-admin-login.html
 /src/environments/environment.prod.ts
 .env
 .env.local

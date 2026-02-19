@@ -17,6 +17,7 @@ public class ApiResponse<T> {
     private Boolean success;
     private String message;
     private T data;
+<<<<<<< HEAD
 
     // added for validation + exception details
     private Object errors;
@@ -28,6 +29,10 @@ public class ApiResponse<T> {
 
     // ================= SUCCESS =================
 
+=======
+    private Long timestamp;
+
+>>>>>>> origin/main
     public static <T> ApiResponse<T> success(T data) {
         return ApiResponse.<T>builder()
                 .success(true)
@@ -45,8 +50,11 @@ public class ApiResponse<T> {
                 .build();
     }
 
+<<<<<<< HEAD
     // ================= ERROR =================
 
+=======
+>>>>>>> origin/main
     public static <T> ApiResponse<T> error(String message) {
         return ApiResponse.<T>builder()
                 .success(false)
@@ -54,6 +62,7 @@ public class ApiResponse<T> {
                 .timestamp(System.currentTimeMillis())
                 .build();
     }
+<<<<<<< HEAD
 
     public static <T> ApiResponse<T> error(String message, Object errors) {
         return ApiResponse.<T>builder()
@@ -63,4 +72,6 @@ public class ApiResponse<T> {
                 .timestamp(System.currentTimeMillis())
                 .build();
     }
+=======
+>>>>>>> origin/main
 }

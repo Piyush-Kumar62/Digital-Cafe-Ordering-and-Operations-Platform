@@ -40,17 +40,19 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/api/auth/**",
-                                "/api/public/**",
-                                "/api/cafes/active",
-                                "/",
-                                "/health",
-                                "/actuator/**",
-                                "/swagger-ui/**",
-                                "/v3/api-docs/**",
-                                "/ws/**"
-                        ).permitAll()
+                    .requestMatchers(
+                        "/api/auth/**",
+                        "/api/public/**",
+                        "/api/cafes/active",
+                        "/",
+                        "/health",
+                        "/actuator/**",
+                        "/swagger-ui/**",
+                        "/swagger-ui.html",
+                        "/v3/api-docs/**",
+                        "/v3/api-docs",
+                        "/ws/**"
+                    ).permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/owner/**").hasRole("CAFE_OWNER")
                         .requestMatchers("/api/chef/**").hasRole("CHEF")
@@ -71,7 +73,11 @@ public class SecurityConfig {
     }
 
     @Bean
+    @SuppressWarnings("deprecation")
     public AuthenticationProvider authenticationProvider() {
+        // Note: DaoAuthenticationProvider methods are deprecated in Spring Security 6.4+
+        // but are still functional. Migration to AuthenticationManagerBuilder recommended
+        // for future versions.
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
         authProvider.setUserDetailsService(userDetailsService);
         authProvider.setPasswordEncoder(passwordEncoder());
@@ -90,33 +96,16 @@ public class SecurityConfig {
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-
         CorsConfiguration configuration = new CorsConfiguration();
-
-        // ✅ Allow Angular running on ANY localhost port (4200, 56060, etc.)
-        configuration.setAllowedOriginPatterns(Arrays.asList("http://localhost:*"));
-
-        // ✅ Allow all HTTP methods
-        configuration.setAllowedMethods(Arrays.asList(
-                "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"
-        ));
-
-        // ✅ Allow all headers
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200", "http://localhost:3000"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
-
-        // ✅ Allow cookies / authorization headers
         configuration.setAllowCredentials(true);
-
-        // ✅ Expose JWT header if needed
         configuration.setExposedHeaders(Arrays.asList("Authorization"));
-
         configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
-
         return source;
     }
-
 }
-

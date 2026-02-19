@@ -16,23 +16,15 @@ import java.util.List;
 @AllArgsConstructor
 public class AuthResponse {
 
-<<<<<<< HEAD
     @Builder.Default
     private String tokenType = "Bearer";
 
     // ================= ACCOUNT STATUS =================
 
-=======
-    private String token;
-    private String refreshToken;
-    @Builder.Default
-    private String tokenType = "Bearer";
->>>>>>> origin/main
     private Long userId;
     private String username;
     private String email;
     private List<String> roles;
-<<<<<<< HEAD
     private String status;
     private Boolean isEmailVerified;
     private Boolean isProfileComplete;
@@ -41,11 +33,4 @@ public class AuthResponse {
     private String refreshToken;
     private String message;
 
-=======
-    private Boolean isEmailVerified;
-    private Boolean isProfileComplete;
-    private Integer profileCompletionPercentage;
-    private Boolean mustResetPassword;
-    private String message;
->>>>>>> origin/main
 }

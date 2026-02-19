@@ -10,10 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserRequestDTO {
-<<<<<<< HEAD
 
-=======
->>>>>>> origin/main
     @NotBlank(message = "Username is required")
     private String username;
 
@@ -21,16 +18,11 @@ public class UserRequestDTO {
     @Email(message = "Email should be valid")
     private String email;
 
-<<<<<<< HEAD
+
     // Password removed validation (set later via email link)
     private String password;
 
-=======
-    @NotBlank(message = "Password is required")
-    private String password;
 
-
->>>>>>> origin/main
     @NotBlank(message = "Role is required")
     private String role;
 }

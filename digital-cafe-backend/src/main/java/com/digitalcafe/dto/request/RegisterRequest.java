@@ -1,6 +1,5 @@
 package com.digitalcafe.dto.request;
 
-<<<<<<< HEAD
 import com.digitalcafe.dto.request.AcademicInfoRequest;
 import com.digitalcafe.dto.request.AddressRequest;
 import com.digitalcafe.dto.request.PersonalDetailsRequest;
@@ -8,19 +7,19 @@ import com.digitalcafe.dto.request.WorkExperienceRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
-=======
+
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
->>>>>>> origin/main
+
 
 import java.util.List;
 
 @Data
-<<<<<<< HEAD
+
 public class RegisterRequest {
 
     @NotNull(message = "Username is required")
@@ -34,20 +33,6 @@ public class RegisterRequest {
     private String governmentIdType;
     @NotNull(message = "Government Id Number is Required")
     private String governmentIdNumber;
-=======
-@NoArgsConstructor
-@AllArgsConstructor
-public class RegisterRequest {
-
-    @NotBlank(message = "Username is required")
-    private String username;
-
-    @NotBlank(message = "Password is required")
-    private String password;
-
-    @NotBlank(message = "Role is required")
-    private String role; // ADMIN, CAFE_OWNER, CHEF, WAITER, CUSTOMER
->>>>>>> origin/main
 
     @Valid
     @NotNull(message = "Personal details are required")
@@ -61,10 +46,5 @@ public class RegisterRequest {
     @NotNull(message = "Academic information is required")
     private List<AcademicInfoRequest> academicInfoList;
 
-<<<<<<< HEAD
     private List<WorkExperienceRequest> workExperienceList;
-=======
-    @Valid
-    private List<WorkExperienceRequest> workExperienceList; // Optional
->>>>>>> origin/main
 }

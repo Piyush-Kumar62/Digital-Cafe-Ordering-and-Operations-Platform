@@ -52,7 +52,10 @@ export class SetPasswordComponent implements OnInit {
         this.successMessage = "Password set successfully! Redirecting to login...";
         this.isLoading = false;
 
-        setTimeout(() => this.router.navigate(["/auth/login"]), 2000);
+        //clear old user session 
+        this.authService.clearAuthState();
+
+        setTimeout(() => this.router.navigate(["/auth/login"]), 1000);
       },
       error: (err) => {
         this.errorMessage = err.error?.message || "Failed to set password";

@@ -111,6 +111,7 @@ public class EmailServiceImpl implements EmailService {
                 "Hello " + username
                         + ",\n\nYour account is now active."
                         + "\nYou can log in using your email and password."
+                        + "\n click the below link to login: http://localhost:4200/auth/login"
         );
     }
 

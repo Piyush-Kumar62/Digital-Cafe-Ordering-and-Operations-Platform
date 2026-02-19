@@ -2,6 +2,7 @@ package com.digitalcafe.config;
 
 import com.digitalcafe.entity.Role;
 import com.digitalcafe.entity.User;
+import com.digitalcafe.entity.UserStatus;
 import com.digitalcafe.repository.RoleRepository;
 import com.digitalcafe.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -74,6 +75,7 @@ public class DataInitializationConfig {
                     .isProfileComplete(true)
                     .mustResetPassword(false)
                     .profileCompletionPercentage(100)
+                    .status(UserStatus.ACTIVE)
                     .roles(Collections.singleton(adminRole))
                     .build();
 

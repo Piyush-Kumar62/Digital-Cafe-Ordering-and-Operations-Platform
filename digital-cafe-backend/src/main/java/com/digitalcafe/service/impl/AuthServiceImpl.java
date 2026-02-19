@@ -190,6 +190,7 @@ public class AuthServiceImpl implements AuthService {
         }
 
         user.setPassword(passwordEncoder.encode(password));
+        user.setIsEmailVerified(true);
         user.setStatus(UserStatus.ACTIVE);
         user.setIsActive(true);
         user.setMustResetPassword(false);

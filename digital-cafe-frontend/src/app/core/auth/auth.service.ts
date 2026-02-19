@@ -211,6 +211,14 @@ setPassword(token: string, password: string) {
   });
 }
 
+clearAuthState(): void {
+  localStorage.removeItem('currentUser');
+  localStorage.removeItem('token');
+  sessionStorage.clear();
+
+  // If you are using BehaviorSubject
+  this.currentUserSubject?.next(null);
+}
   private handleError(error: any): Observable<never> {
     let errorMessage = 'An error occurred';
 
@@ -225,4 +233,5 @@ setPassword(token: string, password: string) {
     console.error('Auth Error:', errorMessage);
     return throwError(() => new Error(errorMessage));
   }
+
 }

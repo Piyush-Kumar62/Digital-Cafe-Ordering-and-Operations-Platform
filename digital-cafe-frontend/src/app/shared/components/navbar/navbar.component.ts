@@ -1,8 +1,5 @@
 import { Component, OnInit } from "@angular/core";
 import { ProfileComponent } from '@features/profile/profile.component';
-
-
-
 import { CommonModule } from "@angular/common";
 import { RouterModule, Router } from "@angular/router";
 import { AuthService } from "@core/auth/auth.service";

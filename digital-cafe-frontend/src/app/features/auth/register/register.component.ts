@@ -50,6 +50,7 @@ export class RegisterComponent implements OnInit {
   // ================= STEP 3 =================
   address: AddressInfo = {
     street: "",
+    landmark: "",
     city: "",
     state: "",
     pincode: "",

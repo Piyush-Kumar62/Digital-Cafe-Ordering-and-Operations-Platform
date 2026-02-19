@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 public class AddressDTO {
     private Long id;
     private String street;
-    private String plotNumber;
+    private String landmark;
     private String city;
     private String state;
     private String pincode;

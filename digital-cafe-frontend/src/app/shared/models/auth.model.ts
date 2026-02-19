@@ -62,6 +62,7 @@ export interface PersonalDetails {
 
 export interface AddressInfo {
   street: string;
+  landmark: string;
   city: string;
   state: string;
   pincode: string;

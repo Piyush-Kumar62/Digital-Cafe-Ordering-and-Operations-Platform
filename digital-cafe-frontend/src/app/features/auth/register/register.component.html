@@ -255,6 +255,24 @@
                 </div>
                 <div class="row">
                   <div class="col-md-6 mb-3">
+                    <label for="landmark" class="form-label">Landmark*</label>
+                    <div class="input-group">
+                      <span class="input-group-text"
+                        ><i class="bi bi-building"></i
+                      ></span>
+                      <input
+                        type="text"
+                        class="form-control"
+                        id="city"
+                        [(ngModel)]="address.landmark"
+                        name="landmark"
+                        placeholder="Enter Landmark"
+                        required
+                      />
+                    </div>
+                  </div>
+                
+                  <div class="col-md-6 mb-3">
                     <label for="city" class="form-label">City*</label>
                     <div class="input-group">
                       <span class="input-group-text"
@@ -271,11 +289,13 @@
                       />
                     </div>
                   </div>
+                  </div>
+                <div class="row">
                   <div class="col-md-6 mb-3">
-                    <label for="state" class="form-label">State *</label>
+                    <label for="state" class="form-label">State*</label>
                     <div class="input-group">
                       <span class="input-group-text"
-                        ><i class="bi bi-geo"></i
+                        ><i class="bi bi-building"></i
                       ></span>
                       <input
                         type="text"
@@ -288,13 +308,12 @@
                       />
                     </div>
                   </div>
-                </div>
-                <div class="row">
+                
                   <div class="col-md-6 mb-3">
-                    <label for="pincode" class="form-label">Pincode *</label>
+                    <label for="pincode" class="form-label">Pincode*</label>
                     <div class="input-group">
                       <span class="input-group-text"
-                        ><i class="bi bi-mailbox"></i
+                        ><i class="bi bi-building"></i
                       ></span>
                       <input
                         type="text"
@@ -309,6 +328,8 @@
                   </div>
                 </div>
               </div>
+             
+            
               <!-- Step 4: Academic Information -->
               <div *ngIf="currentStep === 4" class="step-content">
                 <div

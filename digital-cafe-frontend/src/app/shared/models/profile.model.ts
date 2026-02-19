@@ -13,6 +13,7 @@ export interface Profile {
 
 export interface Address {
   street?: string;
+  landmark?: string;
   city?: string;
   state?: string;
   zipCode?: string;

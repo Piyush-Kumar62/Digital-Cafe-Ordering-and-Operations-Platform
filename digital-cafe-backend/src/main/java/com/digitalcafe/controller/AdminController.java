@@ -60,6 +60,23 @@ public class AdminController {
         return ResponseEntity.ok(users);
     }
 
+    @GetMapping("/pending-users")
+    public ResponseEntity<List<UserResponse>> getPendingUsers() {
+        return ResponseEntity.ok(userService.getPendingApprovalUsers());
+    }
+
+    @PutMapping("/approve/{userId}")
+    public ResponseEntity<Map<String, String>> approveUser(@PathVariable Long userId) {
+        userService.approveUser(userId);
+        return ResponseEntity.ok(Map.of("message", "User approved successfully"));
+    }
+
+    @PutMapping("/reject/{userId}")
+    public ResponseEntity<Map<String, String>> rejectUser(@PathVariable Long userId) {
+        userService.rejectUser(userId);
+        return ResponseEntity.ok(Map.of("message", "User rejected successfully"));
+    }
+
     @PatchMapping("/users/{id}/activate")
     public ResponseEntity<Map<String, String>> activateUser(@PathVariable Long id) {
         userService.activateUser(id);

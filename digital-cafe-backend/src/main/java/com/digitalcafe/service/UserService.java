@@ -24,6 +24,9 @@ public interface UserService {
     List<UserResponse> getStaffByCafeId(Long cafeId);
     List<UserResponse> getChefsByCafeId(Long cafeId);
     List<UserResponse> getWaitersByCafeId(Long cafeId);
+    List<UserResponse> getPendingApprovalUsers();
+    void approveUser(Long userId);
+    void rejectUser(Long userId);
     void deleteUser(Long id);
     UserResponse getCurrentUser();
 }

@@ -62,6 +62,7 @@ public class AuthServiceImpl implements AuthService {
     user.setIsEmailVerified(false);
     user.setIsProfileComplete(false);
     user.setMustResetPassword(true);
+    user.setIsTempPassword(true);
 
     // ✅ FIX: mutable collection
     user.getRoles().add(customerRole);
@@ -94,17 +95,24 @@ public class AuthServiceImpl implements AuthService {
     }
 
     Role.RoleName roleName = Role.RoleName.valueOf(request.getRole());
+    if (roleName == Role.RoleName.ADMIN) {
+      throw new BadRequestException("Admin self-registration is not allowed");
+    }
     Role role = roleRepository.findByName(roleName)
         .orElseThrow(() -> new ResourceNotFoundException("Role", "name", request.getRole()));
+
+    String tempPassword = UUID.randomUUID().toString().replace("-", "").substring(0, 12) + "Aa1!";
 
     User user = new User();
     user.setUsername(request.getUsername());
     user.setEmail(request.getPersonalDetails().getEmail());
-    user.setPassword(passwordEncoder.encode(request.getPassword()));
-    user.setIsActive(true);
-    user.setIsEmailVerified(true);
+    user.setPassword(passwordEncoder.encode(tempPassword));
+    user.setIsActive(false);
+    user.setIsEmailVerified(false);
     user.setIsProfileComplete(true);
-    user.setMustResetPassword(false);
+    user.setMustResetPassword(true);
+    user.setIsTempPassword(true);
+    user.setRegistrationStatus(User.RegistrationStatus.PENDING_APPROVAL);
 
     // ✅ FIX: mutable collection
     user.getRoles().add(role);
@@ -115,6 +123,7 @@ public class AuthServiceImpl implements AuthService {
     profile.setUser(user);
     profile.setFirstName(request.getPersonalDetails().getFirstName());
     profile.setLastName(request.getPersonalDetails().getLastName());
+    profile.setDateOfBirth(request.getPersonalDetails().getDateOfBirth());
     profile.setPhoneNumber(request.getPersonalDetails().getPhone());
     profile.setGender(Profile.Gender.valueOf(request.getPersonalDetails().getGender()));
 
@@ -165,19 +174,34 @@ public class AuthServiceImpl implements AuthService {
     }
 
     user.setProfile(profile);
+    user.setProfileCompletionPercentage(profile.calculateCompletionPercentage());
     userRepository.save(user);
 
-    emailService.sendComprehensiveRegistrationSuccess(user.getEmail(), user.getUsername());
+    EmailVerificationToken verificationToken = new EmailVerificationToken();
+    verificationToken.setToken(UUID.randomUUID().toString());
+    verificationToken.setUser(user);
+    verificationToken.setExpiresAt(LocalDateTime.now().plusHours(24));
+    emailVerificationTokenRepository.save(verificationToken);
+
+    PasswordResetToken passwordResetToken = new PasswordResetToken();
+    passwordResetToken.setToken(UUID.randomUUID().toString());
+    passwordResetToken.setUser(user);
+    passwordResetToken.setExpiresAt(LocalDateTime.now().plusHours(24));
+    passwordResetTokenRepository.save(passwordResetToken);
+
+    emailService.sendVerificationEmail(user.getEmail(), verificationToken.getToken(), tempPassword);
+    emailService.sendWelcomeEmail(user.getEmail(), user.getUsername(), tempPassword);
+    emailService.sendPasswordResetEmail(user.getEmail(), passwordResetToken.getToken());
 
     return RegisterResponse.builder()
-        .message("User registered successfully with complete profile!")
+        .message("Registration successful. Awaiting admin approval.")
         .userId(user.getId())
         .username(user.getUsername())
         .email(user.getEmail())
         .role(request.getRole())
-        .emailVerified(true)
+        .emailVerified(false)
         .profileCompleted(true)
-        .profileCompletionPercentage(100)
+        .profileCompletionPercentage(user.getProfileCompletionPercentage())
         .build();
   }
 
@@ -191,14 +215,15 @@ public class AuthServiceImpl implements AuthService {
         .orElseThrow(() -> new BadRequestException("Invalid credentials"));
 
     if (!user.getIsActive()) {
-      throw new BadRequestException("Account is deactivated");
+      throw new BadRequestException("Account is disabled. Awaiting admin approval");
     }
 
-    // Allow admin users to bypass email verification
-    boolean isAdmin = user.getRoles().stream()
-        .anyMatch(role -> role.getName() == Role.RoleName.ADMIN);
-    
-    if (!isAdmin && !user.getIsEmailVerified()) {
+    // Backward compatibility: existing users created before approval workflow may have null status.
+    if (user.getRegistrationStatus() != null && user.getRegistrationStatus() != User.RegistrationStatus.APPROVED) {
+      throw new BadRequestException("Registration is not approved yet");
+    }
+
+    if (!user.getIsEmailVerified()) {
       throw new BadRequestException("Please verify your email before logging in");
     }
 
@@ -302,12 +327,18 @@ public class AuthServiceImpl implements AuthService {
       throw new BadRequestException("Reset token expired");
     }
 
+    if (!request.getNewPassword().equals(request.getConfirmPassword())) {
+      throw new BadRequestException("New password and confirm password do not match");
+    }
+
     User user = resetToken.getUser();
     user.setPassword(passwordEncoder.encode(request.getNewPassword()));
     user.setMustResetPassword(false);
+    user.setIsTempPassword(false);
     userRepository.save(user);
 
     passwordResetTokenRepository.delete(resetToken);
+    emailService.sendPasswordChangedNotification(user.getEmail());
   }
 
   // ================= CHANGE PASSWORD =================
@@ -323,9 +354,15 @@ public class AuthServiceImpl implements AuthService {
       throw new BadRequestException("Current password is incorrect");
     }
 
+    if (passwordEncoder.matches(newPassword, user.getPassword())) {
+      throw new BadRequestException("New password must be different from current password");
+    }
+
     user.setPassword(passwordEncoder.encode(newPassword));
     user.setMustResetPassword(false);
+    user.setIsTempPassword(false);
     userRepository.save(user);
+    emailService.sendPasswordChangedNotification(user.getEmail());
   }
 
   // ================= REFRESH TOKEN =================

@@ -30,4 +30,5 @@ public class UserResponse {
     private LocalDateTime lastLogin;
     private Long cafeId;
     private String cafeName;
+    private String registrationStatus;
 }

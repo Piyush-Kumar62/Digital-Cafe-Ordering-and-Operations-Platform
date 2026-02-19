@@ -61,6 +61,11 @@ public class User extends BaseEntity {
     @Builder.Default
     private Boolean mustResetPassword = false;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "registration_status", nullable = false, length = 30)
+    @Builder.Default
+    private RegistrationStatus registrationStatus = RegistrationStatus.APPROVED;
+
     @Column(name = "last_login")
     private LocalDateTime lastLogin;
 
@@ -91,7 +96,13 @@ public class User extends BaseEntity {
      * Access is blocked if profile is incomplete or email is not verified.
      */
     public boolean canAccessSystem() {
-        return isActive && isEmailVerified && isProfileComplete;
+        return isActive && isEmailVerified && isProfileComplete && registrationStatus == RegistrationStatus.APPROVED;
+    }
+
+    public enum RegistrationStatus {
+        PENDING_APPROVAL,
+        APPROVED,
+        REJECTED
     }
 
     /**

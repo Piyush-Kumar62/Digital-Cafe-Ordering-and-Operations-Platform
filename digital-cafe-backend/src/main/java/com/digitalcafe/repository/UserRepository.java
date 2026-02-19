@@ -35,6 +35,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     List<User> findByIsActive(Boolean isActive);
     List<User> findByCreatedByUserId(Long createdByUserId);
+    List<User> findByRegistrationStatus(User.RegistrationStatus registrationStatus);
     boolean existsByEmail(String email);
     boolean existsByUsername(String username);
 

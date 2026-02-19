@@ -60,6 +60,7 @@ public class UserServiceImpl implements UserService {
                 .isEmailVerified(true) // Admin creates, so verified by default
                 .isProfileComplete(false)
                 .mustResetPassword(true)
+                .registrationStatus(User.RegistrationStatus.APPROVED)
                 .profileCompletionPercentage(0)
                 .build();
 
@@ -110,6 +111,7 @@ public class UserServiceImpl implements UserService {
                 .isEmailVerified(true)
                 .isProfileComplete(false)
                 .mustResetPassword(true)
+                .registrationStatus(User.RegistrationStatus.APPROVED)
                 .profileCompletionPercentage(0)
                 .build();
 
@@ -226,6 +228,7 @@ public class UserServiceImpl implements UserService {
                 .isEmailVerified(true)
                 .isProfileComplete(false)
                 .mustResetPassword(true)
+                .registrationStatus(User.RegistrationStatus.APPROVED)
                 .profileCompletionPercentage(0)
                 .build();
 
@@ -278,6 +281,36 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<UserResponse> getPendingApprovalUsers() {
+        return userRepository.findByRegistrationStatus(User.RegistrationStatus.PENDING_APPROVAL).stream()
+                .map(this::mapToUserResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public void approveUser(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
+        user.setRegistrationStatus(User.RegistrationStatus.APPROVED);
+        user.setIsActive(true);
+        userRepository.save(user);
+        emailService.sendApprovalConfirmationEmail(user.getEmail());
+    }
+
+    @Override
+    @Transactional
+    public void rejectUser(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
+        user.setRegistrationStatus(User.RegistrationStatus.REJECTED);
+        user.setIsActive(false);
+        userRepository.save(user);
+        emailService.sendRejectionEmail(user.getEmail());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public UserResponse getCurrentUser() {
         User user = getCurrentUserEntity();
         return mapToUserResponse(user);
@@ -304,6 +337,9 @@ public class UserServiceImpl implements UserService {
                         .map(role -> role.getName().name())
                         .collect(Collectors.toList()))
                 .cafeName(user.getCafe() != null ? user.getCafe().getName() : null)
+                .registrationStatus(user.getRegistrationStatus() != null
+                        ? user.getRegistrationStatus().name()
+                        : User.RegistrationStatus.APPROVED.name())
                 .cafeId(user.getCafe() != null ? user.getCafe().getId() : null)
                 .createdAt(user.getCreatedAt())
                 .lastLogin(user.getLastLogin())

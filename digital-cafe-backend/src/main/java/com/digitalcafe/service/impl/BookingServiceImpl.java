@@ -16,6 +16,7 @@ import com.digitalcafe.repository.UserRepository;
 import com.digitalcafe.service.BookingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -24,7 +25,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Slf4j
@@ -37,6 +40,7 @@ public class BookingServiceImpl implements BookingService {
     private final CafeRepository cafeRepository;
     private final CafeTableRepository tableRepository;
     private final BookingMapper bookingMapper;
+    private final SimpMessagingTemplate messagingTemplate;
 
     @Override
     @Transactional
@@ -91,6 +95,7 @@ public class BookingServiceImpl implements BookingService {
 
         booking = bookingRepository.save(booking);
         log.info("Booking created successfully: {}", booking.getBookingNumber());
+        notifyTableAvailabilityChanged(booking, "BOOKING_CREATED");
 
         return bookingMapper.toResponse(booking);
     }
@@ -146,6 +151,7 @@ public class BookingServiceImpl implements BookingService {
 
         booking = bookingRepository.save(booking);
         log.info("Booking cancelled: {}", booking.getBookingNumber());
+        notifyTableAvailabilityChanged(booking, "BOOKING_CANCELLED");
 
         return bookingMapper.toResponse(booking);
     }
@@ -164,6 +170,7 @@ public class BookingServiceImpl implements BookingService {
 
         booking = bookingRepository.save(booking);
         log.info("Booking {} status updated to {}", booking.getBookingNumber(), status);
+        notifyTableAvailabilityChanged(booking, "BOOKING_STATUS_UPDATED");
 
         return bookingMapper.toResponse(booking);
     }
@@ -205,5 +212,23 @@ public class BookingServiceImpl implements BookingService {
                     LocalTime existingEnd = existingStart.plusHours(2);
                     return timeOverlaps(startTime, endTime, existingStart, existingEnd);
                 });
+    }
+
+    private void notifyTableAvailabilityChanged(Booking booking, String eventType) {
+        try {
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("eventType", eventType);
+            payload.put("bookingId", booking.getId());
+            payload.put("cafeId", booking.getCafe().getId());
+            payload.put("tableId", booking.getTable().getId());
+            payload.put("bookingDate", booking.getBookingDate().toString());
+            payload.put("bookingTime", booking.getBookingTime().toString());
+            payload.put("status", booking.getStatus().name());
+            payload.put("timestamp", LocalDateTime.now().toString());
+
+            messagingTemplate.convertAndSend("/topic/cafe/" + booking.getCafe().getId() + "/tables", payload);
+        } catch (Exception e) {
+            log.warn("Failed to publish table availability update for booking {}", booking.getId(), e);
+        }
     }
 }

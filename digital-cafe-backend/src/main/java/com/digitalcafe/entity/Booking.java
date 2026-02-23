@@ -19,6 +19,8 @@ import java.time.LocalTime;
         @Index(name = "idx_cafe_booking", columnList = "cafe_id"),
         @Index(name = "idx_table_booking", columnList = "table_id"),
         @Index(name = "idx_booking_date_time", columnList = "booking_date, booking_time")
+}, uniqueConstraints = {
+        @UniqueConstraint(name = "uk_booking_table_date_time", columnNames = {"table_id", "booking_date", "booking_time"})
 })
 @Getter
 @Setter

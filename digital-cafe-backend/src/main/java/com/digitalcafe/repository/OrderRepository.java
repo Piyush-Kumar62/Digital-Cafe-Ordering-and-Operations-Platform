@@ -25,9 +25,9 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     List<Order> findByBookingId(Long bookingId);
     boolean existsByBookingId(Long bookingId);
 
-    // Orders for Chef (PLACED, CONFIRMED orders that need to be prepared)
+    // Orders for Chef (newly placed orders that need to be prepared)
     @Query("SELECT o FROM Order o WHERE o.cafe.id = :cafeId " +
-           "AND o.status IN ('PLACED', 'CONFIRMED') " +
+           "AND o.status = 'PLACED' " +
            "ORDER BY o.createdAt ASC")
     List<Order> findPendingOrdersForChef(Long cafeId);
 

@@ -46,7 +46,7 @@ public class OrderController {
     }
 
     @GetMapping("/{orderId}")
-    @PreAuthorize("hasAnyRole('CUSTOMER', 'CAFE_OWNER', 'CHEF', 'WAITER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CUSTOMER', 'CAFE_OWNER', 'CHEF', 'WAITER')")
     public ResponseEntity<ApiResponse<OrderResponse>> getOrderById(@PathVariable Long orderId) {
         OrderResponse response = orderService.getOrderById(orderId);
         return ResponseEntity.ok(ApiResponse.success("Order retrieved successfully", response));
@@ -63,7 +63,7 @@ public class OrderController {
     }
 
     @GetMapping("/cafe/{cafeId}")
-    @PreAuthorize("hasAnyRole('CAFE_OWNER', 'CHEF', 'WAITER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CAFE_OWNER', 'CHEF', 'WAITER')")
     public ResponseEntity<ApiResponse<PageResponse<OrderResponse>>> getOrdersByCafeId(
             @PathVariable Long cafeId,
             @RequestParam(defaultValue = "0") int page,
@@ -99,7 +99,7 @@ public class OrderController {
     }
 
     @PatchMapping("/{orderId}/status")
-    @PreAuthorize("hasAnyRole('CHEF', 'WAITER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CHEF', 'WAITER')")
     public ResponseEntity<ApiResponse<OrderResponse>> updateOrderStatus(
             @PathVariable Long orderId,
             @Valid @RequestBody OrderStatusUpdateRequest request) {
@@ -108,7 +108,7 @@ public class OrderController {
     }
 
     @PutMapping("/{orderId}/status")
-    @PreAuthorize("hasAnyRole('CHEF', 'WAITER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CHEF', 'WAITER')")
     public ResponseEntity<ApiResponse<OrderResponse>> updateOrderStatusByParam(
             @PathVariable Long orderId,
             @RequestParam String status) {

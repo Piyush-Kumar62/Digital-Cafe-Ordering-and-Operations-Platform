@@ -45,7 +45,7 @@ public class BookingController {
     }
 
     @GetMapping("/{bookingId}")
-    @PreAuthorize("hasAnyRole('CUSTOMER', 'CAFE_OWNER', 'CHEF', 'WAITER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CUSTOMER', 'CAFE_OWNER', 'CHEF', 'WAITER')")
     public ResponseEntity<ApiResponse<BookingResponse>> getBookingById(@PathVariable Long bookingId) {
         BookingResponse response = bookingService.getBookingById(bookingId);
         return ResponseEntity.ok(ApiResponse.success("Booking retrieved successfully", response));
@@ -68,7 +68,7 @@ public class BookingController {
     }
 
     @GetMapping("/cafe/{cafeId}")
-    @PreAuthorize("hasAnyRole('CAFE_OWNER', 'CHEF', 'WAITER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CAFE_OWNER', 'CHEF', 'WAITER')")
     public ResponseEntity<ApiResponse<PageResponse<BookingResponse>>> getBookingsByCafeId(
             @PathVariable Long cafeId,
             @RequestParam(defaultValue = "0") int page,
@@ -98,7 +98,7 @@ public class BookingController {
     }
 
     @PatchMapping("/{bookingId}/status")
-    @PreAuthorize("hasAnyRole('CAFE_OWNER', 'WAITER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CAFE_OWNER', 'WAITER')")
     public ResponseEntity<ApiResponse<BookingResponse>> updateBookingStatus(
             @PathVariable Long bookingId,
             @RequestParam Booking.BookingStatus status) {
@@ -107,7 +107,7 @@ public class BookingController {
     }
 
     @PutMapping("/{bookingId}/status")
-    @PreAuthorize("hasAnyRole('CAFE_OWNER', 'WAITER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CAFE_OWNER', 'WAITER')")
     public ResponseEntity<ApiResponse<BookingResponse>> updateBookingStatusByPut(
             @PathVariable Long bookingId,
             @RequestParam Booking.BookingStatus status) {

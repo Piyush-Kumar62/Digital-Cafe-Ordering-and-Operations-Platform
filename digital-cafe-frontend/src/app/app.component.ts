@@ -29,6 +29,8 @@ export class AppComponent implements OnInit {
 
   ngOnInit(): void {
     try {
+      this.initializeTheme();
+
       // If we're on the landing page and have a stored user but no valid token,
       // silently clear the auth state without redirecting
       const currentUrl = this.router.url;
@@ -71,6 +73,23 @@ export class AppComponent implements OnInit {
       });
     } catch (error) {
       console.error('Error initializing app:', error);
+    }
+  }
+
+  private initializeTheme(): void {
+    const storedTheme = localStorage.getItem("cafe_theme") || localStorage.getItem("theme");
+    const isDark = storedTheme === "dark";
+
+    if (isDark) {
+      document.documentElement.classList.add("dark");
+      document.documentElement.classList.add("dark-mode");
+      localStorage.setItem("cafe_theme", "dark");
+      localStorage.setItem("theme", "dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+      document.documentElement.classList.remove("dark-mode");
+      localStorage.setItem("cafe_theme", "light");
+      localStorage.setItem("theme", "light");
     }
   }
 }

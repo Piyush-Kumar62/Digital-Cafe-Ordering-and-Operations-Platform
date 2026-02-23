@@ -8,6 +8,10 @@ export const profileCompletionGuard: CanActivateFn = (route, state) => {
 
   const user = authService.currentUserValue;
 
+  if (state.url.startsWith('/customer/complete-profile')) {
+    return true;
+  }
+
   if (!user) {
     router.navigate(['/auth/login']);
     return false;
@@ -21,3 +25,4 @@ export const profileCompletionGuard: CanActivateFn = (route, state) => {
 
   return true;
 };
+

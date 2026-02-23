@@ -28,6 +28,20 @@ export const routes: Routes = [
         (m) => m.ContactComponent,
       ),
   },
+  {
+    path: "privacy",
+    loadComponent: () =>
+      import("./features/legal/privacy-policy.component").then(
+        (m) => m.PrivacyPolicyComponent,
+      ),
+  },
+  {
+    path: "terms",
+    loadComponent: () =>
+      import("./features/legal/terms-conditions.component").then(
+        (m) => m.TermsConditionsComponent,
+      ),
+  },
 
   // Authentication routes
   {
@@ -144,6 +158,13 @@ export const routes: Routes = [
             (m) => m.SettingsComponent,
           ),
       },
+      {
+        path: "profile",
+        loadComponent: () =>
+          import("./features/admin/profile/admin-profile.component").then(
+            (m) => m.AdminProfileComponent,
+          ),
+      },
       { path: "", redirectTo: "dashboard", pathMatch: "full" },
     ],
   },
@@ -161,6 +182,34 @@ export const routes: Routes = [
             (m) => m.OwnerDashboardComponent,
           ),
       },
+      {
+        path: "menu",
+        loadComponent: () =>
+          import("./features/cafe-owner/owner-menu/owner-menu.component").then(
+            (m) => m.OwnerMenuComponent,
+          ),
+      },
+      {
+        path: "tables",
+        loadComponent: () =>
+          import("./features/cafe-owner/owner-tables/owner-tables.component").then(
+            (m) => m.OwnerTablesComponent,
+          ),
+      },
+      {
+        path: "staff",
+        loadComponent: () =>
+          import("./features/cafe-owner/owner-staff/owner-staff.component").then(
+            (m) => m.OwnerStaffComponent,
+          ),
+      },
+      {
+        path: "orders",
+        loadComponent: () =>
+          import("./features/cafe-owner/owner-orders/owner-orders.component").then(
+            (m) => m.OwnerOrdersComponent,
+          ),
+      },
       { path: "", redirectTo: "dashboard", pathMatch: "full" },
     ],
   },
@@ -174,6 +223,34 @@ export const routes: Routes = [
         loadComponent: () =>
           import("./features/cafe-owner/owner-dashboard/owner-dashboard.component").then(
             (m) => m.OwnerDashboardComponent,
+          ),
+      },
+      {
+        path: "menu",
+        loadComponent: () =>
+          import("./features/cafe-owner/owner-menu/owner-menu.component").then(
+            (m) => m.OwnerMenuComponent,
+          ),
+      },
+      {
+        path: "tables",
+        loadComponent: () =>
+          import("./features/cafe-owner/owner-tables/owner-tables.component").then(
+            (m) => m.OwnerTablesComponent,
+          ),
+      },
+      {
+        path: "staff",
+        loadComponent: () =>
+          import("./features/cafe-owner/owner-staff/owner-staff.component").then(
+            (m) => m.OwnerStaffComponent,
+          ),
+      },
+      {
+        path: "orders",
+        loadComponent: () =>
+          import("./features/cafe-owner/owner-orders/owner-orders.component").then(
+            (m) => m.OwnerOrdersComponent,
           ),
       },
       { path: "", redirectTo: "dashboard", pathMatch: "full" },
@@ -206,14 +283,23 @@ export const routes: Routes = [
       {
         path: "dashboard",
         loadComponent: () =>
-          import("./features/customer/customer-dashboard/customer-dashboard.component").then(
-            (m) => m.CustomerDashboardComponent,
+          import("./features/waiter/waiter-dashboard/waiter-dashboard.component").then(
+            (m) => m.WaiterDashboardComponent,
           ),
       },
       { path: "", redirectTo: "dashboard", pathMatch: "full" },
     ],
   },
 
+    {
+    path: "customer/complete-profile",
+    canActivate: [authGuard, emailVerificationGuard, roleGuard],
+    data: { roles: [UserRole.CUSTOMER] },
+    loadComponent: () =>
+      import("./features/customer/complete-profile/complete-profile.component").then(
+        (m) => m.CompleteProfileComponent,
+      ),
+  },
   // Customer routes
   {
     path: "customer",
@@ -260,6 +346,13 @@ export const routes: Routes = [
             (m) => m.OrderTrackingComponent,
           ),
       },
+      {
+        path: "order-tracking/:id",
+        loadComponent: () =>
+          import("./features/customer/order-tracking/order-tracking.component").then(
+            (m) => m.OrderTrackingComponent,
+          ),
+      },
       { path: "", redirectTo: "dashboard", pathMatch: "full" },
     ],
   },
@@ -279,6 +372,15 @@ export const routes: Routes = [
       ),
   },
 
+  {
+    path: "not-found",
+    loadComponent: () =>
+      import("./features/not-found/not-found.component").then(
+        (m) => m.NotFoundComponent,
+      ),
+  },
+
   // Fallback route
-  { path: "**", redirectTo: "" },
+  { path: "**", redirectTo: "not-found" },
 ];
+

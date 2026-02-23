@@ -1,9 +1,40 @@
-// Admin Layout Component Styles - TailAdmin Inspired
+:host {
+  --admin-bg: radial-gradient(circle at top right, #eff6ff 0%, #f8fafc 45%, #ecfeff 100%);
+  --surface: #ffffff;
+  --surface-2: #f8fafc;
+  --text: #0f172a;
+  --muted: #475569;
+  --border: #dbe4f0;
+  --focus: #3b82f6;
+  --shadow: 0 14px 30px rgba(15, 23, 42, 0.1);
+  --shadow-strong: 0 22px 42px rgba(15, 23, 42, 0.14);
+}
 
-/* Custom Scrollbar for Sidebar */
+:host-context(.dark) {
+  --admin-bg: radial-gradient(circle at top right, #0f172a 0%, #020617 58%, #111827 100%);
+  --surface: #0f172a;
+  --surface-2: #111827;
+  --text: #e2e8f0;
+  --muted: #94a3b8;
+  --border: #334155;
+  --focus: #60a5fa;
+  --shadow: 0 18px 34px rgba(2, 6, 23, 0.5);
+  --shadow-strong: 0 24px 46px rgba(2, 6, 23, 0.6);
+}
+
+.admin-shell {
+  background: var(--admin-bg);
+}
+
+.admin-shell main {
+  background: transparent;
+  position: relative;
+  z-index: 1;
+}
+
 .scrollbar-thin {
   scrollbar-width: thin;
-  scrollbar-color: #4b5563 #1f2937;
+  scrollbar-color: #475569 #0f172a;
 }
 
 .scrollbar-thin::-webkit-scrollbar {
@@ -11,250 +42,344 @@
 }
 
 .scrollbar-thin::-webkit-scrollbar-track {
-  background: #1f2937;
+  background: #0f172a;
   border-radius: 10px;
 }
 
 .scrollbar-thin::-webkit-scrollbar-thumb {
-  background: #4b5563;
+  background: #475569;
   border-radius: 10px;
-
-  &:hover {
-    background: #6b7280;
-  }
 }
 
-/* Smooth Animations */
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
 aside {
   will-change: width;
+}
+
+.app-top-header {
+  position: relative;
+  z-index: 200;
+  overflow: visible !important;
+}
+
+.profile-dropdown-menu {
+  z-index: 1300 !important;
 }
 
 nav a {
   position: relative;
   overflow: hidden;
-
-  &::before {
-    content: "";
-    position: absolute;
-    left: 0;
-    top: 0;
-    height: 100%;
-    width: 3px;
-    background: linear-gradient(to bottom, #6366f1, #8b5cf6);
-    transform: scaleY(0);
-    transition: transform 0.3s ease;
-  }
-
-  &.router-link-active::before {
-    transform: scaleY(1);
-  }
 }
 
-/* Header Shadow on Scroll */
-header {
-  transition: all 0.3s ease;
-}
-
-/* Backdrop Blur Effect */
-.backdrop-blur-sm {
-  backdrop-filter: blur(8px);
-}
-
-/* Gradient Text */
-.gradient-text {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-/* Hover Effects */
-.hover-lift {
-  transition: transform 0.2s ease;
-
-  &:hover {
-    transform: translateY(-2px);
-  }
-}
-
-/* Pulse Animation for Notification Badge */
-@keyframes pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
-}
-
-.animate-pulse-slow {
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-/* ===============================
-   MODERN PROFILE DROPDOWN
-================================ */
-
-.profile-dropdown-container {
-  position: relative;
-
-  display: flex;
-
-  align-items: center;
-}
-
-/* Avatar */
-
-.profile-avatar {
-  cursor: pointer;
-
-  transition: all 0.25s ease;
-}
-
-.profile-avatar:hover {
-  transform: scale(1.08);
-
-  box-shadow: 0 10px 20px rgba(99, 102, 241, 0.4);
-}
-
-/* Dropdown */
-
-.profile-dropdown {
+nav a::before {
+  content: "";
   position: absolute;
-
-  right: 0;
-
-  top: 120%;
-
-  width: 220px;
-
-  background-color: #ffffff !important;
-
-  color: #111827;
-
-  border-radius: 14px;
-
-  border: 1px solid #e5e7eb;
-
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-
-  overflow: hidden;
-
-  z-index: 9999;
-
-  animation: dropdownAnimation 0.2s ease;
-}
-:host-context(.dark) .profile-dropdown {
-  background-color: #1f2937 !important;
-
-  color: #f9fafb;
-
-  border: 1px solid #374151;
-}
-.profile-dropdown button {
-  background: transparent;
-
-  color: inherit;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 3px;
+  background: linear-gradient(to bottom, #38bdf8, #6366f1);
+  transform: scaleY(0);
+  transition: transform 0.22s ease;
 }
 
-.profile-dropdown button:hover {
-  background-color: #f3f4f6;
+nav a.router-link-active::before {
+  transform: scaleY(1);
 }
-
-:host-context(.dark) .profile-dropdown button:hover {
-  background-color: #374151;
-}
-
-/* Dark mode */
-
-:host-context(.dark) .profile-dropdown {
-  background: #1f2937;
-
-  border: 1px solid #374151;
-
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
-}
-
-/* Buttons */
-
-.profile-dropdown button {
-  width: 100%;
-
-  padding: 14px 18px;
-
-  text-align: left;
-
-  font-weight: 500;
-
-  font-size: 14px;
-
-  background: transparent;
-
-  border: none;
-
-  cursor: pointer;
-
-  transition: all 0.2s ease;
-}
-
-/* Hover */
-
-.profile-dropdown button:hover {
-  background: #f3f4f6;
-}
-
-:host-context(.dark) .profile-dropdown button:hover {
-  background: #374151;
-}
-
-/* Logout */
-
-.logout-btn {
-  color: #ef4444;
-
-  font-weight: 600;
-}
-
-.logout-btn:hover {
-  background: #fee2e2;
-}
-
-:host-context(.dark) .logout-btn:hover {
-  background: rgba(239, 68, 68, 0.18);
-}
-
-/* Animation */
 
 @keyframes dropdownAnimation {
   from {
     opacity: 0;
-
-    transform: translateY(-12px) scale(0.96);
+    transform: translateY(-8px) scale(0.98);
   }
-
   to {
     opacity: 1;
-
     transform: translateY(0) scale(1);
   }
 }
 
-/* Responsive */
-
-@media (max-width: 640px) {
-  .profile-dropdown {
-    width: 180px;
-
-    right: -10px;
+@keyframes sectionIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-/* Fix overflow */
-
-header {
-  overflow: visible !important;
-}
-
 .animate-dropdown {
-  animation: dropdownAnimation 0.2s ease;
+  animation: dropdownAnimation 0.22s ease;
 }
+
+/* Shared module layout and readability */
+:host ::ng-deep .management-container,
+:host ::ng-deep .container {
+  max-width: 1420px;
+  margin: 0 auto;
+  padding: 1rem 1.1rem 1.5rem;
+  color: var(--text);
+  animation: sectionIn 0.28s ease;
+}
+
+:host ::ng-deep .toolbar,
+:host ::ng-deep .card,
+:host ::ng-deep .panel,
+:host ::ng-deep .content-card,
+:host ::ng-deep .filter-card,
+:host ::ng-deep .owner-card,
+:host ::ng-deep .actions {
+  background: linear-gradient(165deg, var(--surface) 0%, var(--surface-2) 100%) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: var(--shadow) !important;
+}
+
+:host ::ng-deep .toolbar,
+:host ::ng-deep .card,
+:host ::ng-deep .panel,
+:host ::ng-deep .content-card,
+:host ::ng-deep .filter-card,
+:host ::ng-deep .owner-card {
+  border-radius: 16px !important;
+}
+
+:host ::ng-deep .toolbar:hover,
+:host ::ng-deep .card:hover,
+:host ::ng-deep .panel:hover,
+:host ::ng-deep .content-card:hover,
+:host ::ng-deep .filter-card:hover,
+:host ::ng-deep .owner-card:hover {
+  box-shadow: var(--shadow-strong) !important;
+}
+
+:host ::ng-deep .meta,
+:host ::ng-deep .line,
+:host ::ng-deep .empty,
+:host ::ng-deep p,
+:host ::ng-deep label,
+:host ::ng-deep th,
+:host ::ng-deep td,
+:host ::ng-deep .name,
+:host ::ng-deep .email,
+:host ::ng-deep .card h2,
+:host ::ng-deep .card h3,
+:host ::ng-deep .panel h2,
+:host ::ng-deep .panel h3 {
+  color: var(--text) !important;
+}
+
+:host ::ng-deep .page-subtitle,
+:host ::ng-deep .owner-create-header p,
+:host ::ng-deep .empty-state p,
+:host ::ng-deep .loading-text {
+  color: var(--muted) !important;
+}
+
+:host ::ng-deep input,
+:host ::ng-deep select,
+:host ::ng-deep textarea {
+  color: var(--text) !important;
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+}
+
+:host ::ng-deep input::placeholder,
+:host ::ng-deep textarea::placeholder {
+  color: var(--muted) !important;
+}
+
+:host ::ng-deep input:focus,
+:host ::ng-deep select:focus,
+:host ::ng-deep textarea:focus {
+  border-color: var(--focus) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus) 26%, transparent) !important;
+}
+
+:host ::ng-deep table {
+  width: 100%;
+}
+
+:host ::ng-deep table thead th {
+  font-size: 0.76rem !important;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+:host ::ng-deep table tbody tr {
+  transition: background-color 0.16s ease;
+}
+
+:host ::ng-deep table tbody tr:hover {
+  background: color-mix(in srgb, var(--focus) 10%, transparent) !important;
+}
+
+:host ::ng-deep button {
+  transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+}
+
+:host ::ng-deep button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+@media (max-width: 1280px) {
+  :host ::ng-deep .management-container,
+  :host ::ng-deep .container {
+    padding: 0.9rem 0.9rem 1.2rem;
+  }
+}
+
+@media (max-width: 1024px) {
+  :host ::ng-deep .management-container,
+  :host ::ng-deep .container {
+    padding: 0.8rem;
+  }
+
+  :host ::ng-deep .toolbar,
+  :host ::ng-deep .actions {
+    gap: 0.65rem !important;
+  }
+
+  :host ::ng-deep .toolbar input,
+  :host ::ng-deep .toolbar select,
+  :host ::ng-deep .filter-card input,
+  :host ::ng-deep .filter-card select,
+  :host ::ng-deep .owner-card input,
+  :host ::ng-deep .owner-card select {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-shell header {
+    height: auto;
+    min-height: 4.2rem;
+    padding: 0.7rem 0.9rem !important;
+  }
+
+  .admin-shell header h2 {
+    font-size: 1rem;
+    line-height: 1.2;
+  }
+
+  .admin-shell header p {
+    display: none;
+  }
+
+  :host ::ng-deep .management-container,
+  :host ::ng-deep .container {
+    padding: 0.65rem;
+  }
+
+  :host ::ng-deep .toolbar,
+  :host ::ng-deep .actions,
+  :host ::ng-deep .filter-card,
+  :host ::ng-deep .owner-create-grid {
+    flex-direction: column !important;
+    grid-template-columns: 1fr !important;
+    align-items: stretch !important;
+  }
+
+  :host ::ng-deep table {
+    min-width: 560px;
+  }
+
+  :host ::ng-deep th,
+  :host ::ng-deep td {
+    white-space: nowrap;
+    font-size: 0.82rem !important;
+    padding: 0.52rem !important;
+  }
+}
+
+@media (max-width: 480px) {
+  :host ::ng-deep .toolbar,
+  :host ::ng-deep .card,
+  :host ::ng-deep .panel,
+  :host ::ng-deep .content-card,
+  :host ::ng-deep .filter-card,
+  :host ::ng-deep .owner-card {
+    border-radius: 12px !important;
+    padding: 0.75rem !important;
+  }
+
+  :host ::ng-deep .actions button,
+  :host ::ng-deep .btn-primary,
+  :host ::ng-deep .create-owner-btn {
+    width: 100%;
+  }
+}
+
+/* Enhanced visuals for all admin modules except /admin/dashboard */
+.admin-shell.enhanced-modules {
+  --module-accent-a: #2563eb;
+  --module-accent-b: #0ea5e9;
+}
+
+.admin-shell.enhanced-modules :is(main) {
+  background:
+    radial-gradient(circle at 0% 0%, rgba(37, 99, 235, 0.08), transparent 32%),
+    radial-gradient(circle at 100% 100%, rgba(14, 165, 233, 0.08), transparent 34%),
+    transparent;
+}
+
+:host ::ng-deep .admin-shell.enhanced-modules .management-container,
+:host ::ng-deep .admin-shell.enhanced-modules .container,
+:host ::ng-deep .admin-shell.enhanced-modules .profile-container {
+  animation: sectionIn 0.32s ease;
+}
+
+:host ::ng-deep .admin-shell.enhanced-modules .toolbar,
+:host ::ng-deep .admin-shell.enhanced-modules .filter-card,
+:host ::ng-deep .admin-shell.enhanced-modules .owner-card {
+  border-radius: 16px !important;
+  border: 1px solid color-mix(in srgb, var(--module-accent-a) 22%, var(--border)) !important;
+  background:
+    linear-gradient(155deg, var(--surface) 0%, var(--surface-2) 80%),
+    linear-gradient(90deg, rgba(37, 99, 235, 0.16), rgba(14, 165, 233, 0.12)) !important;
+  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.12) !important;
+}
+
+:host ::ng-deep .admin-shell.enhanced-modules .card,
+:host ::ng-deep .admin-shell.enhanced-modules .panel,
+:host ::ng-deep .admin-shell.enhanced-modules .content-card {
+  border-radius: 16px !important;
+}
+
+:host ::ng-deep .admin-shell.enhanced-modules .card:hover,
+:host ::ng-deep .admin-shell.enhanced-modules .panel:hover,
+:host ::ng-deep .admin-shell.enhanced-modules .content-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 20px 36px rgba(15, 23, 42, 0.16) !important;
+}
+
+:host ::ng-deep .admin-shell.enhanced-modules th {
+  color: color-mix(in srgb, var(--text) 70%, #334155) !important;
+}
+
+:host ::ng-deep .admin-shell.enhanced-modules .badge,
+:host ::ng-deep .admin-shell.enhanced-modules .metric-chip {
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.28), 0 4px 10px rgba(15, 23, 42, 0.12);
+}
+
+:host ::ng-deep .admin-shell.enhanced-modules .create-owner-btn,
+:host ::ng-deep .admin-shell.enhanced-modules .primary {
+  background: linear-gradient(135deg, var(--module-accent-a), #1d4ed8) !important;
+}
+
+:host ::ng-deep .admin-shell.enhanced-modules .actions button.btn-danger,
+:host ::ng-deep .admin-shell.enhanced-modules .remove-btn,
+:host ::ng-deep .admin-shell.enhanced-modules .reject,
+:host ::ng-deep .admin-shell.enhanced-modules .deactivate {
+  background: linear-gradient(135deg, #dc2626, #b91c1c) !important;
+}
+
+:host ::ng-deep .admin-shell.enhanced-modules .table-wrap,
+:host ::ng-deep .admin-shell.enhanced-modules .table-wrapper {
+  border-radius: 12px;
+}
+

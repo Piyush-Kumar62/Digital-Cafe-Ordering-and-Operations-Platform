@@ -1,5 +1,8 @@
 <!-- Enhanced TailAdmin-style Layout -->
-<div class="flex h-screen overflow-hidden bg-gray-50 dark:bg-gray-900">
+<div
+  class="admin-shell flex h-screen overflow-hidden bg-gray-50 dark:bg-gray-900"
+  [class.enhanced-modules]="!isDashboardRoute"
+>
   <!-- Mobile Overlay -->
   <div
     *ngIf="!isSidebarCollapsed"
@@ -9,12 +12,12 @@
 
   <!-- Sidebar -->
   <aside
-    class="fixed inset-y-0 left-0 z-50 flex flex-col bg-gradient-to-b from-gray-900 to-gray-800 border-r border-gray-700 transition-all duration-300 shadow-2xl"
+    class="fixed inset-y-0 left-0 z-50 flex flex-col bg-gradient-to-b from-slate-950 via-slate-900 to-slate-800 border-r border-slate-700 transition-all duration-300 shadow-2xl"
     [class.w-64]="!isSidebarCollapsed"
     [class.w-20]="isSidebarCollapsed"
     [class.-translate-x-full]="isSidebarCollapsed"
     [class.translate-x-0]="!isSidebarCollapsed"
-    [class.lg:translate-x-0]="true"
+        [class.lg:translate-x-0]="true"
   >
     <!-- Sidebar Header with Logo -->
     <div
@@ -53,10 +56,7 @@
           <p class="text-xs text-gray-400">Admin Portal</p>
         </div>
       </div>
-      <div
-        *ngIf="isSidebarCollapsed"
-        class="flex items-center justify-center w-full"
-      >
+        <div *ngIf="isSidebarCollapsed" class="flex items-center justify-center w-full">
         <div
           class="flex items-center justify-center h-12 w-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl"
         >
@@ -128,7 +128,7 @@
     <!-- Toggle Button -->
     <button
       (click)="isSidebarCollapsed = !isSidebarCollapsed"
-      class="absolute -right-3 top-24 bg-gradient-to-br from-indigo-500 to-purple-600 text-white p-1.5 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110 z-50"
+      class="absolute -right-3 top-24 bg-gradient-to-br from-sky-500 to-indigo-600 text-white p-1.5 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110 z-50 hidden lg:block"
     >
       <svg
         class="w-4 h-4 transition-transform"
@@ -149,14 +149,12 @@
 
   <!-- Main Content Area -->
   <div
-    class="flex-1 flex flex-col overflow-hidden transition-all duration-300 lg:ml-64"
+    class="flex-1 flex min-w-0 flex-col overflow-hidden transition-all duration-300"
     [class.lg:ml-64]="!isSidebarCollapsed"
     [class.lg:ml-20]="isSidebarCollapsed"
   >
     <!-- Top Header Bar -->
-    <header
-      class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 h-20 flex items-center justify-between px-4 sm:px-8 shadow-sm"
-    >
+    <header class="app-top-header bg-white/95 dark:bg-slate-900/95 backdrop-blur border-b border-gray-200 dark:border-gray-700 h-20 flex items-center justify-between px-4 sm:px-8 shadow-sm">
       <div class="flex items-center gap-4">
         <button
           (click)="isSidebarCollapsed = !isSidebarCollapsed"
@@ -268,9 +266,15 @@
             </div>
 
             <div
-              class="h-10 w-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold shadow-md transition-all duration-300 hover:scale-105 hover:shadow-lg"
+              class="h-10 w-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold shadow-md transition-all duration-300 hover:scale-105 hover:shadow-lg overflow-hidden"
             >
-              {{ currentUser?.username?.charAt(0)?.toUpperCase() || "A" }}
+              <img
+                *ngIf="adminProfileImage"
+                [src]="adminProfileImage"
+                alt="Admin Avatar"
+                class="h-full w-full object-cover"
+              />
+              <span *ngIf="!adminProfileImage">{{ getAvatarText() }}</span>
             </div>
           </button>
 
@@ -278,7 +282,7 @@
 
           <div
             *ngIf="profileDropdownOpen"
-            class="absolute right-0 top-full mt-2 w-56 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl overflow-hidden animate-dropdown z-50"
+            class="profile-dropdown-menu absolute right-0 top-full mt-2 w-56 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl overflow-hidden animate-dropdown z-50"
           >
             <!-- Profile -->
 
@@ -290,6 +294,15 @@
               <span>👤</span>
 
               Profile
+            </button>
+
+            <button
+              routerLink="/admin/settings"
+              (click)="profileDropdownOpen = false"
+              class="flex items-center gap-3 w-full px-4 py-3 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+            >
+              <span>⚙️</span>
+              Settings
             </button>
 
             <!-- Divider -->

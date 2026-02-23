@@ -1,6 +1,7 @@
 import {
   Component,
   OnInit,
+  OnDestroy,
   HostListener,
   ElementRef,
   ViewChild,
@@ -9,6 +10,9 @@ import {
 import { CommonModule } from "@angular/common";
 
 import { RouterModule, Router } from "@angular/router";
+import { NavigationEnd } from "@angular/router";
+import { Subscription } from "rxjs";
+import { filter } from "rxjs/operators";
 
 import { AuthService } from "@core/auth/auth.service";
 
@@ -33,9 +37,13 @@ interface NavigationItem {
 })
 export class AdminLayoutComponent implements OnInit {
   isSidebarCollapsed = false;
+  private isMobileView = false;
   currentUser: any;
   isDarkMode = false;
   profileDropdownOpen = false;
+  adminProfileImage = "";
+  isDashboardRoute = false;
+  private routerEventsSub?: Subscription;
   @ViewChild("profileContainer", { static: false })
   profileContainer!: ElementRef;
 
@@ -105,12 +113,25 @@ export class AdminLayoutComponent implements OnInit {
     this.applyTheme();
     // Check if we're on mobile and collapse sidebar
     if (typeof window !== "undefined") {
-      this.isSidebarCollapsed = window.innerWidth < 1024; // lg breakpoint
+      this.isMobileView = window.innerWidth < 1024; // lg breakpoint
+      this.isSidebarCollapsed = this.isMobileView;
     }
   }
 
   ngOnInit(): void {
-    this.currentUser = this.authService.getCurrentUser();
+    this.currentUser = this.authService.currentUserValue;
+    this.adminProfileImage = localStorage.getItem("admin_profile_image") || "";
+    this.updateRouteState(this.router.url);
+    this.routerEventsSub = this.router.events
+      .pipe(filter((event) => event instanceof NavigationEnd))
+      .subscribe((event) => {
+        const nav = event as NavigationEnd;
+        this.updateRouteState(nav.urlAfterRedirects || nav.url);
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.routerEventsSub?.unsubscribe();
   }
 
   toggleSidebar(): void {
@@ -128,13 +149,10 @@ export class AdminLayoutComponent implements OnInit {
   }
 
   logout(): void {
-    console.log("Logging out...");
     this.authService.logout();
-    console.log("Navigating to login page...");
-    this.router.navigate(["/auth/login"]).then(
-      (success) => console.log("Logout navigation successful:", success),
-      (error) => console.error("Logout navigation error:", error),
-    );
+    this.router.navigate(["/auth/login"]).catch((error) => {
+      console.error("Logout navigation error:", error);
+    });
   }
   @HostListener("document:click", ["$event"])
   onDocumentClick(event: MouseEvent): void {
@@ -154,23 +172,39 @@ export class AdminLayoutComponent implements OnInit {
     this.profileDropdownOpen = false;
   }
 
+  @HostListener("window:resize")
+  onWindowResize(): void {
+    const mobile = window.innerWidth < 1024;
+    if (mobile !== this.isMobileView) {
+      this.isMobileView = mobile;
+      this.isSidebarCollapsed = mobile;
+      this.profileDropdownOpen = false;
+    }
+  }
+
   toggleTheme(): void {
     this.isDarkMode = !this.isDarkMode;
     this.applyTheme();
+    localStorage.setItem("theme", this.isDarkMode ? "dark" : "light");
     localStorage.setItem("cafe_theme", this.isDarkMode ? "dark" : "light");
-    console.log("Theme toggled to:", this.isDarkMode ? "dark" : "light");
   }
 
   private applyTheme(): void {
     if (this.isDarkMode) {
+      document.documentElement.classList.add("dark-mode");
       document.documentElement.classList.add("dark");
     } else {
+      document.documentElement.classList.remove("dark-mode");
       document.documentElement.classList.remove("dark");
     }
   }
 
   getIconClass(iconName: string): string {
     return this.iconClassMap[iconName] || "bi bi-circle w-6 h-6 text-lg";
+  }
+
+  getAvatarText(): string {
+    return this.currentUser?.username?.charAt(0)?.toUpperCase() || "A";
   }
 
   getIconSVG(iconName: string): string {
@@ -205,5 +239,9 @@ export class AdminLayoutComponent implements OnInit {
       </svg>`,
     };
     return icons[iconName] || "";
+  }
+
+  private updateRouteState(url: string): void {
+    this.isDashboardRoute = /^\/admin\/dashboard(?:\?|$|\/)?/.test(url);
   }
 }

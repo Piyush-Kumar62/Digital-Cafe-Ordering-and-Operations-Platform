@@ -11,18 +11,6 @@ import { User } from "@shared/models/auth.model";
   imports: [CommonModule, FormsModule],
   template: `
     <div class="management-container">
-      <div class="page-header">
-        <div>
-          <h1 class="page-title">User Management</h1>
-          <p class="page-subtitle">
-            Manage registered users, approvals, and role-based access
-          </p>
-        </div>
-        <button class="refresh-btn" (click)="refresh()" [disabled]="loading">
-          {{ loading ? "Refreshing..." : "Refresh" }}
-        </button>
-      </div>
-
       <div class="filter-card">
         <div class="filter-item">
           <label>Status</label>
@@ -55,6 +43,54 @@ import { User } from "@shared/models/auth.model";
         </div>
       </div>
 
+      <div class="owner-card">
+        <div class="owner-create-header">
+          <h3>Create Cafe Owner</h3>
+          <p>
+            Admin can create cafe owner accounts. Login credentials are emailed
+            automatically.
+          </p>
+        </div>
+        <div class="owner-create-grid">
+          <div class="filter-item">
+            <label for="ownerFirstName">First Name</label>
+            <input
+              id="ownerFirstName"
+              type="text"
+              [(ngModel)]="ownerFirstName"
+              placeholder="Enter first name"
+            />
+          </div>
+          <div class="filter-item">
+            <label for="ownerLastName">Last Name</label>
+            <input
+              id="ownerLastName"
+              type="text"
+              [(ngModel)]="ownerLastName"
+              placeholder="Enter last name"
+            />
+          </div>
+          <div class="filter-item">
+            <label for="ownerEmail">Email</label>
+            <input
+              id="ownerEmail"
+              type="email"
+              [(ngModel)]="ownerEmail"
+              placeholder="owner@example.com"
+            />
+          </div>
+          <div class="owner-create-action">
+            <button
+              class="create-owner-btn"
+              (click)="createCafeOwner()"
+              [disabled]="creatingOwner"
+            >
+              {{ creatingOwner ? "Creating..." : "Create Cafe Owner" }}
+            </button>
+          </div>
+        </div>
+      </div>
+
       <div class="content-card">
         <div class="table-wrapper" *ngIf="filteredUsers.length > 0; else emptyState">
           <table>
@@ -80,7 +116,7 @@ import { User } from "@shared/models/auth.model";
                     </div>
                   </div>
                 </td>
-                <td>{{ (user.roles || []).join(", ") || "-" }}</td>
+                <td><div class="roles">{{ (user.roles || []).join(", ") || "-" }}</div></td>
                 <td>
                   <span [class.ok]="user.isEmailVerified" [class.bad]="!user.isEmailVerified">
                     {{ user.isEmailVerified ? "Yes" : "No" }}
@@ -98,7 +134,7 @@ import { User } from "@shared/models/auth.model";
                 </td>
                 <td>{{ user.isActive ? "Active" : "Inactive" }}</td>
                 <td>
-                  <div class="actions">
+                  <div class="actions action-group">
                     <button
                       *ngIf="getStatus(user) === 'PENDING_APPROVAL'"
                       class="approve"
@@ -136,7 +172,7 @@ import { User } from "@shared/models/auth.model";
         <ng-template #emptyState>
           <div class="empty-state">
             <h2>No users found</h2>
-            <p>Try changing filters or refresh data.</p>
+            <p>Try changing filters and search criteria.</p>
           </div>
         </ng-template>
       </div>
@@ -149,69 +185,91 @@ import { User } from "@shared/models/auth.model";
         color: #111827;
       }
 
-      .page-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        background: linear-gradient(135deg, #111827, #1f2937);
-        border: 1px solid #374151;
-        padding: 1.25rem 1.5rem;
+      .filter-card {
+        background: #ffffff;
+        border: 1px solid #dbe4f0;
+        padding: 1rem;
         border-radius: 14px;
-        margin-bottom: 1.25rem;
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+        margin-bottom: 1rem;
+        box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+        display: grid;
+        gap: 1rem;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
       }
 
-      .page-title {
-        font-size: 2rem;
-        font-weight: 700;
-        color: #f9fafb;
+      .filter-card:focus-within,
+      .filter-card:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 12px 26px rgba(15, 23, 42, 0.1);
+      }
+
+      .owner-card {
+        background: #ffffff;
+        border: 1px solid #dbe4f0;
+        padding: 1rem;
+        border-radius: 14px;
+        margin-bottom: 1rem;
+        box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      .owner-card:focus-within,
+      .owner-card:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 12px 26px rgba(15, 23, 42, 0.1);
+      }
+
+      .owner-create-header {
+        margin-bottom: 1rem;
+      }
+
+      .owner-create-header h3 {
         margin: 0 0 0.35rem 0;
-        line-height: 1.2;
+        color: #0f172a;
+        font-size: 1rem;
+        font-weight: 700;
       }
 
-      .page-subtitle {
-        color: #cbd5e1;
+      .owner-create-header p {
         margin: 0;
-        font-size: 0.95rem;
+        color: #64748b;
+        font-size: 0.83rem;
       }
 
-      .refresh-btn {
-        background: linear-gradient(135deg, #2563eb, #1d4ed8);
-        color: #ffffff;
+      .owner-create-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 1rem;
+        align-items: end;
+      }
+
+      .owner-create-action {
+        display: flex;
+        align-items: flex-end;
+      }
+
+      .create-owner-btn {
+        width: 100%;
         border: 1px solid #60a5fa;
         border-radius: 10px;
-        padding: 0.6rem 1rem;
-        font-weight: 600;
+        padding: 0.55rem 0.75rem;
+        background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        color: #ffffff;
         font-size: 0.9rem;
+        font-weight: 600;
         cursor: pointer;
         transition: transform 0.2s ease, box-shadow 0.2s ease;
       }
 
-      .refresh-btn:hover:not(:disabled) {
+      .create-owner-btn:hover:not(:disabled) {
         transform: translateY(-1px);
         box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
       }
 
-      .refresh-btn:focus-visible {
-        outline: 2px solid #93c5fd;
-        outline-offset: 2px;
-      }
-
-      .refresh-btn:disabled {
+      .create-owner-btn:disabled {
         opacity: 0.6;
         cursor: not-allowed;
-      }
-
-      .filter-card {
-        background: #111827;
-        border: 1px solid #374151;
-        padding: 1rem;
-        border-radius: 14px;
-        margin-bottom: 1rem;
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-        display: grid;
-        gap: 1rem;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
       }
 
       .filter-item {
@@ -221,7 +279,7 @@ import { User } from "@shared/models/auth.model";
       }
 
       .filter-item label {
-        color: #e2e8f0;
+        color: #334155;
         font-size: 0.85rem;
         font-weight: 600;
       }
@@ -229,9 +287,9 @@ import { User } from "@shared/models/auth.model";
       .filter-item select,
       .filter-item input {
         width: 100%;
-        border: 1px solid #4b5563;
-        background: #1f2937;
-        color: #f9fafb;
+        border: 1px solid #cbd5e1;
+        background: #ffffff;
+        color: #0f172a;
         border-radius: 10px;
         padding: 0.55rem 0.75rem;
         font-size: 0.9rem;
@@ -239,12 +297,12 @@ import { User } from "@shared/models/auth.model";
       }
 
       .filter-item select option {
-        background: #111827;
-        color: #f9fafb;
+        background: #ffffff;
+        color: #0f172a;
       }
 
       .filter-item input::placeholder {
-        color: #94a3b8;
+        color: #64748b;
       }
 
       .filter-item select:focus,
@@ -256,6 +314,7 @@ import { User } from "@shared/models/auth.model";
 
       .table-wrapper {
         overflow-x: auto;
+        border-radius: 12px;
       }
 
       table {
@@ -282,6 +341,10 @@ import { User } from "@shared/models/auth.model";
         display: flex;
         align-items: center;
         gap: 0.8rem;
+      }
+      .roles {
+        font-weight: 600;
+        color: #334155;
       }
 
       .avatar {
@@ -339,29 +402,33 @@ import { User } from "@shared/models/auth.model";
 
       .actions {
         display: flex;
-        gap: 0.4rem;
         flex-wrap: wrap;
+        gap: 0.35rem;
+        align-items: center;
+        min-width: 0;
       }
 
       .actions button {
         border: none;
-        border-radius: 6px;
-        padding: 0.35rem 0.65rem;
+        border-radius: 8px;
+        padding: 0.4rem 0.68rem;
         color: white;
-        font-size: 0.75rem;
+        font-size: 0.76rem;
         font-weight: 600;
         cursor: pointer;
+        transition: transform 0.18s ease, box-shadow 0.18s ease;
+        white-space: nowrap;
+        min-width: 84px;
+      }
+      .actions button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 16px rgba(15, 23, 42, 0.14);
       }
 
-      .actions .approve,
-      .actions .activate {
-        background: #16a34a;
-      }
-
-      .actions .reject,
-      .actions .deactivate {
-        background: #dc2626;
-      }
+      .actions .approve { background: linear-gradient(135deg, #0ea5e9, #0284c7) !important; }
+      .actions .reject { background: linear-gradient(135deg, #8b5cf6, #7c3aed) !important; }
+      .actions .activate { background: linear-gradient(135deg, #16a34a, #15803d) !important; }
+      .actions .deactivate { background: linear-gradient(135deg, #dc2626, #b91c1c) !important; }
 
       .content-card {
         background: #ffffff;
@@ -369,6 +436,12 @@ import { User } from "@shared/models/auth.model";
         padding: 1rem;
         border-radius: 14px;
         box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      .content-card:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 12px 26px rgba(15, 23, 42, 0.1);
       }
 
       .empty-state {
@@ -377,14 +450,25 @@ import { User } from "@shared/models/auth.model";
       }
 
       @media (max-width: 960px) {
-        .page-header {
-          flex-direction: column;
-          align-items: flex-start;
-          gap: 0.9rem;
-        }
-
         .filter-card {
           grid-template-columns: 1fr;
+        }
+
+        .owner-create-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .action-group {
+          display: flex;
+          flex-direction: column;
+          min-width: 120px;
+        }
+
+        .action-group button {
+          width: 100%;
+          justify-content: center;
         }
       }
     `,
@@ -394,10 +478,14 @@ export class UserManagementComponent implements OnInit {
   users: User[] = [];
   filteredUsers: User[] = [];
   loading = false;
+  creatingOwner = false;
 
   statusFilter = "ALL";
   roleFilter = "ALL";
   searchText = "";
+  ownerFirstName = "";
+  ownerLastName = "";
+  ownerEmail = "";
 
   constructor(
     private apiService: ApiService,
@@ -419,6 +507,44 @@ export class UserManagementComponent implements OnInit {
       error: (error) => {
         this.loading = false;
         this.notificationService.error(error?.message || "Failed to load users");
+      },
+    });
+  }
+
+  createCafeOwner(): void {
+    const email = this.ownerEmail.trim();
+    const firstName = this.ownerFirstName.trim();
+    const lastName = this.ownerLastName.trim();
+
+    if (!firstName || !lastName || !email) {
+      this.notificationService.error(
+        "First name, last name, and email are required to create a cafe owner.",
+      );
+      return;
+    }
+
+    this.creatingOwner = true;
+    this.apiService.createCafeOwner({
+      firstName,
+      lastName,
+      email,
+    }).subscribe({
+      next: () => {
+        this.creatingOwner = false;
+        this.ownerFirstName = "";
+        this.ownerLastName = "";
+        this.ownerEmail = "";
+        this.notificationService.success(
+          "Cafe owner created successfully. Credentials sent via email.",
+        );
+        this.roleFilter = "CAFE_OWNER";
+        this.refresh();
+      },
+      error: (error) => {
+        this.creatingOwner = false;
+        this.notificationService.error(
+          error?.message || "Failed to create cafe owner",
+        );
       },
     });
   }

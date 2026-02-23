@@ -1,6 +1,7 @@
 import { Injectable } from "@angular/core";
 import { HttpClient, HttpParams } from "@angular/common/http";
 import { Observable } from "rxjs";
+import { map } from "rxjs/operators";
 import { environment } from "@environments/environment";
 import {
   Cafe,
@@ -52,7 +53,9 @@ export class ApiService {
   }
 
   getActiveCafes(): Observable<Cafe[]> {
-    return this.http.get<Cafe[]>(`${this.baseUrl}/cafes/active`);
+    return this.http
+      .get<{ data?: Cafe[] }>(`${this.baseUrl}/cafes/active`)
+      .pipe(map((res: any) => res?.data || []));
   }
 
   getCafesByCity(city: string): Observable<Cafe[]> {
@@ -73,80 +76,106 @@ export class ApiService {
 
   // ============ Table APIs ============
   getAllTables(): Observable<Table[]> {
-    return this.http.get<Table[]>(`${this.baseUrl}/tables`);
+    return this.http
+      .get<any>(`${this.baseUrl}/tables`)
+      .pipe(map((res: any) => res?.data || res || []));
   }
 
   getTableById(id: number): Observable<Table> {
-    return this.http.get<Table>(`${this.baseUrl}/tables/${id}`);
+    return this.http
+      .get<any>(`${this.baseUrl}/tables/${id}`)
+      .pipe(map((res: any) => res?.data || res));
   }
 
   getTablesByCafe(cafeId: number): Observable<Table[]> {
-    return this.http.get<Table[]>(`${this.baseUrl}/tables/cafe/${cafeId}`);
+    return this.http
+      .get<any>(`${this.baseUrl}/tables/cafe/${cafeId}`)
+      .pipe(map((res: any) => res?.data || res || []));
   }
 
   getAvailableTablesByCafe(cafeId: number): Observable<Table[]> {
-    return this.http.get<Table[]>(
-      `${this.baseUrl}/tables/cafe/${cafeId}/available`,
-    );
+    return this.http
+      .get<any>(`${this.baseUrl}/tables/cafe/${cafeId}/available`)
+      .pipe(map((res: any) => res?.data || res || []));
   }
 
   createTable(cafeId: number, table: Partial<Table>): Observable<Table> {
-    return this.http.post<Table>(
-      `${this.baseUrl}/tables/cafe/${cafeId}`,
-      table,
-    );
+    return this.http
+      .post<any>(`${this.baseUrl}/tables/cafe/${cafeId}`, table)
+      .pipe(map((res: any) => res?.data || res));
   }
 
   updateTable(id: number, table: Partial<Table>): Observable<Table> {
-    return this.http.put<Table>(`${this.baseUrl}/tables/${id}`, table);
+    return this.http
+      .put<any>(`${this.baseUrl}/tables/${id}`, table)
+      .pipe(map((res: any) => res?.data || res));
   }
 
   deleteTable(id: number): Observable<MessageResponse> {
     return this.http.delete<MessageResponse>(`${this.baseUrl}/tables/${id}`);
   }
 
+  toggleTableStatus(id: number, isAvailable: boolean): Observable<Table> {
+    const params = new HttpParams().set("isAvailable", String(isAvailable));
+    return this.http
+      .patch<any>(`${this.baseUrl}/tables/${id}/availability`, null, { params })
+      .pipe(map((res: any) => res?.data || res));
+  }
+
   // ============ Menu Item APIs ============
   getAllMenuItems(): Observable<MenuItem[]> {
-    return this.http.get<MenuItem[]>(`${this.baseUrl}/menu-items`);
+    return this.http
+      .get<any>(`${this.baseUrl}/menu-items`)
+      .pipe(map((res: any) => res?.data || res || []));
   }
 
   getMenuItemById(id: number): Observable<MenuItem> {
-    return this.http.get<MenuItem>(`${this.baseUrl}/menu-items/${id}`);
+    return this.http
+      .get<any>(`${this.baseUrl}/menu-items/${id}`)
+      .pipe(map((res: any) => res?.data || res));
   }
 
   getMenuItemsByCafe(cafeId: number): Observable<MenuItem[]> {
-    return this.http.get<MenuItem[]>(
-      `${this.baseUrl}/menu-items/cafe/${cafeId}`,
-    );
+    return this.http
+      .get<any>(`${this.baseUrl}/menu-items/cafe/${cafeId}`)
+      .pipe(map((res: any) => res?.data || res || []));
   }
 
   getAvailableMenuItemsByCafe(cafeId: number): Observable<MenuItem[]> {
-    return this.http.get<MenuItem[]>(
-      `${this.baseUrl}/menu-items/cafe/${cafeId}/available`,
-    );
+    return this.http
+      .get<any>(`${this.baseUrl}/menu-items/cafe/${cafeId}/available`)
+      .pipe(map((res: any) => res?.data || res || []));
   }
 
   getMenuItemsByCategory(
     cafeId: number,
     category: string,
   ): Observable<MenuItem[]> {
-    return this.http.get<MenuItem[]>(
-      `${this.baseUrl}/menu-items/cafe/${cafeId}/category/${category}`,
-    );
+    return this.http
+      .get<any>(`${this.baseUrl}/menu-items/cafe/${cafeId}/category/${category}`)
+      .pipe(map((res: any) => res?.data || res || []));
   }
 
   createMenuItem(
     cafeId: number,
     request: MenuItemRequest,
   ): Observable<MenuItem> {
-    return this.http.post<MenuItem>(
-      `${this.baseUrl}/menu-items/cafe/${cafeId}`,
-      request,
-    );
+    return this.http
+      .post<any>(`${this.baseUrl}/menu-items/cafe/${cafeId}`, request)
+      .pipe(map((res: any) => res?.data || res));
   }
 
   updateMenuItem(id: number, request: MenuItemRequest): Observable<MenuItem> {
-    return this.http.put<MenuItem>(`${this.baseUrl}/menu-items/${id}`, request);
+    return this.http
+      .put<any>(`${this.baseUrl}/menu-items/${id}`, request)
+      .pipe(map((res: any) => res?.data || res));
+  }
+
+  toggleMenuItemAvailability(id: number, isAvailable: boolean): Observable<MenuItem> {
+    const params = new HttpParams().set("isAvailable", String(isAvailable));
+    return this.http
+      .patch<any>(`${this.baseUrl}/menu-items/${id}/availability`, null, { params })
+      .pipe(map((res: any) => res?.data || res));
   }
 
   deleteMenuItem(id: number): Observable<MessageResponse> {
@@ -157,7 +186,9 @@ export class ApiService {
 
   // ============ Order APIs ============
   getAllOrders(): Observable<Order[]> {
-    return this.http.get<Order[]>(`${this.baseUrl}/orders`);
+    return this.http
+      .get<any>(`${this.baseUrl}/orders`)
+      .pipe(map((res: any) => res?.data?.content || res?.data || res || []));
   }
 
   getOrderById(id: number): Observable<Order> {
@@ -165,13 +196,27 @@ export class ApiService {
   }
 
   getOrdersByCafe(cafeId: number): Observable<Order[]> {
-    return this.http.get<Order[]>(`${this.baseUrl}/orders/cafe/${cafeId}`);
+    return this.http
+      .get<any>(`${this.baseUrl}/orders/cafe/${cafeId}`)
+      .pipe(map((res: any) => res?.data?.content || res?.data || res || []));
   }
 
   getOrdersByCustomer(customerId: number): Observable<Order[]> {
     return this.http.get<Order[]>(
       `${this.baseUrl}/orders/customer/${customerId}`,
     );
+  }
+
+  getMyOrders(): Observable<Order[]> {
+    return this.http
+      .get<any>(`${this.baseUrl}/orders/my-orders`)
+      .pipe(map((res: any) => res?.data || []));
+  }
+
+  getReadyOrdersForWaiter(): Observable<Order[]> {
+    return this.http
+      .get<any>(`${this.baseUrl}/orders/waiter/ready`)
+      .pipe(map((res: any) => res?.data || []));
   }
 
   getOrdersByStatus(cafeId: number, status: string): Observable<Order[]> {
@@ -196,7 +241,9 @@ export class ApiService {
 
   // ============ Booking APIs ============
   getAllBookings(): Observable<Booking[]> {
-    return this.http.get<Booking[]>(`${this.baseUrl}/bookings`);
+    return this.http
+      .get<any>(`${this.baseUrl}/bookings`)
+      .pipe(map((res: any) => res?.data?.content || res?.data || res || []));
   }
 
   getBookingById(id: number): Observable<Booking> {
@@ -204,13 +251,21 @@ export class ApiService {
   }
 
   getBookingsByCafe(cafeId: number): Observable<Booking[]> {
-    return this.http.get<Booking[]>(`${this.baseUrl}/bookings/cafe/${cafeId}`);
+    return this.http
+      .get<any>(`${this.baseUrl}/bookings/cafe/${cafeId}`)
+      .pipe(map((res: any) => res?.data?.content || res?.data || res || []));
   }
 
   getBookingsByCustomer(customerId: number): Observable<Booking[]> {
     return this.http.get<Booking[]>(
       `${this.baseUrl}/bookings/customer/${customerId}`,
     );
+  }
+
+  getMyBookings(): Observable<Booking[]> {
+    return this.http
+      .get<any>(`${this.baseUrl}/bookings/my-bookings`)
+      .pipe(map((res: any) => res?.data || []));
   }
 
   createBooking(request: BookingRequest): Observable<Booking> {
@@ -283,6 +338,108 @@ export class ApiService {
     );
   }
 
+  getAdminCafes(
+    page: number = 0,
+    size: number = 100,
+    sortBy: string = "name",
+    sortDirection: "ASC" | "DESC" = "ASC",
+  ): Observable<{
+    content: Cafe[];
+    totalElements: number;
+    totalPages: number;
+    pageNumber: number;
+    pageSize: number;
+  }> {
+    const params = new HttpParams()
+      .set("page", page.toString())
+      .set("size", size.toString())
+      .set("sortBy", sortBy)
+      .set("sortDirection", sortDirection);
+
+    return this.http
+      .get<{ data?: any }>(`${this.baseUrl}/cafes`, { params })
+      .pipe(
+        map((res: any) => res?.data || { content: [], totalElements: 0, totalPages: 0, pageNumber: 0, pageSize: size }),
+      );
+  }
+
+  toggleCafeStatus(cafeId: number, isActive: boolean): Observable<Cafe> {
+    const params = new HttpParams().set("isActive", String(isActive));
+    return this.http
+      .patch<{ data?: Cafe }>(`${this.baseUrl}/cafes/${cafeId}/status`, null, { params })
+      .pipe(map((res: any) => res?.data));
+  }
+
+  deleteCafeByAdmin(cafeId: number): Observable<void> {
+    return this.http
+      .delete<{ data?: void }>(`${this.baseUrl}/cafes/${cafeId}`)
+      .pipe(map(() => void 0));
+  }
+
+  getCafeOrdersForAdmin(
+    cafeId: number,
+    page: number = 0,
+    size: number = 100,
+    sortBy: string = "createdAt",
+    sortDirection: "ASC" | "DESC" = "DESC",
+  ): Observable<{
+    content: Order[];
+    totalElements: number;
+    totalPages: number;
+    pageNumber: number;
+    pageSize: number;
+  }> {
+    const params = new HttpParams()
+      .set("page", page.toString())
+      .set("size", size.toString())
+      .set("sortBy", sortBy)
+      .set("sortDirection", sortDirection);
+    return this.http
+      .get<{ data?: any }>(`${this.baseUrl}/orders/cafe/${cafeId}`, { params })
+      .pipe(
+        map((res: any) => res?.data || { content: [], totalElements: 0, totalPages: 0, pageNumber: 0, pageSize: size }),
+      );
+  }
+
+  getCafeBookingsForAdmin(
+    cafeId: number,
+    page: number = 0,
+    size: number = 100,
+    sortBy: string = "bookingTime",
+    sortDirection: "ASC" | "DESC" = "DESC",
+  ): Observable<{
+    content: Booking[];
+    totalElements: number;
+    totalPages: number;
+    pageNumber: number;
+    pageSize: number;
+  }> {
+    const params = new HttpParams()
+      .set("page", page.toString())
+      .set("size", size.toString())
+      .set("sortBy", sortBy)
+      .set("sortDirection", sortDirection);
+    return this.http
+      .get<{ data?: any }>(`${this.baseUrl}/bookings/cafe/${cafeId}`, { params })
+      .pipe(
+        map((res: any) => res?.data || { content: [], totalElements: 0, totalPages: 0, pageNumber: 0, pageSize: size }),
+      );
+  }
+
+  updateOrderStatusForAdmin(orderId: number, status: string): Observable<Order> {
+    const params = new HttpParams().set("status", status);
+    return this.http
+      .put<{ data?: Order }>(`${this.baseUrl}/orders/${orderId}/status`, null, { params })
+      .pipe(map((res: any) => res?.data));
+  }
+
+  updateBookingStatusForAdmin(bookingId: number, status: string): Observable<Booking> {
+    const params = new HttpParams().set("status", status);
+    return this.http
+      .put<{ data?: Booking }>(`${this.baseUrl}/bookings/${bookingId}/status`, null, { params })
+      .pipe(map((res: any) => res?.data));
+  }
+
   getOwnerDashboard(cafeId: number): Observable<OwnerDashboard> {
     return this.http.get<OwnerDashboard>(
       `${this.baseUrl}/dashboard/owner/${cafeId}`,
@@ -334,21 +491,41 @@ export class ApiService {
 
   createCafeOwner(request: any): Observable<any> {
     return this.http.post<any>(
-      `${this.baseUrl}/users/create-cafe-owner`,
+      `${this.baseUrl}/admin/cafe-owners`,
       request,
     );
   }
 
   createChef(cafeId: number, request: any): Observable<any> {
-    return this.http.post<any>(`${this.baseUrl}/users/create-chef`, request, {
-      params: { cafeId: cafeId.toString() },
+    return this.http.post<any>(`${this.baseUrl}/staff/chef`, {
+      ...request,
+      cafeId,
     });
   }
 
   createWaiter(cafeId: number, request: any): Observable<any> {
-    return this.http.post<any>(`${this.baseUrl}/users/create-waiter`, request, {
-      params: { cafeId: cafeId.toString() },
+    return this.http.post<any>(`${this.baseUrl}/staff/waiter`, {
+      ...request,
+      cafeId,
     });
+  }
+
+  getStaffByCafe(cafeId: number): Observable<User[]> {
+    return this.http
+      .get<{ data?: User[] }>(`${this.baseUrl}/staff/cafe/${cafeId}`)
+      .pipe(map((res: any) => res?.data || []));
+  }
+
+  activateStaff(staffId: number): Observable<User> {
+    return this.http
+      .patch<{ data?: User }>(`${this.baseUrl}/staff/${staffId}/activate`, null)
+      .pipe(map((res: any) => res?.data));
+  }
+
+  deactivateStaff(staffId: number): Observable<User> {
+    return this.http
+      .patch<{ data?: User }>(`${this.baseUrl}/staff/${staffId}/deactivate`, null)
+      .pipe(map((res: any) => res?.data));
   }
 
   updateUser(id: number, user: Partial<User>): Observable<User> {

@@ -28,11 +28,14 @@ export class WebSocketService {
   private orderStatusUpdates = new BehaviorSubject<any>(null);
   public orderStatusUpdates$ = this.orderStatusUpdates.asObservable();
 
+  private tableAvailabilityUpdates = new BehaviorSubject<any>(null);
+  public tableAvailabilityUpdates$ = this.tableAvailabilityUpdates.asObservable();
+  private tableAvailabilityDestination: string | null = null;
+
   constructor(private authService: AuthService) {}
 
   connect(): void {
     if (this.client?.connected) {
-      console.log('WebSocket already connected');
       return;
     }
 
@@ -47,19 +50,15 @@ export class WebSocketService {
       connectHeaders: {
         Authorization: `Bearer ${token}`,
       },
-      debug: (str) => {
-        console.log('STOMP Debug:', str);
-      },
+      debug: () => {},
       reconnectDelay: 5000,
       heartbeatIncoming: 4000,
       heartbeatOutgoing: 4000,
       onConnect: (_frame) => {
-        console.log('WebSocket connected');
         this.connectionStatus.next(true);
         this.setupDefaultSubscriptions();
       },
       onDisconnect: () => {
-        console.log('WebSocket disconnected');
         this.connectionStatus.next(false);
       },
       onStompError: (frame) => {
@@ -78,7 +77,6 @@ export class WebSocketService {
       this.client.deactivate();
       this.client = null;
       this.connectionStatus.next(false);
-      console.log('WebSocket disconnected');
     }
   }
 
@@ -91,45 +89,57 @@ export class WebSocketService {
     if (!user) return;
 
     // Subscribe to user-specific notifications
+    this.subscribe(`/user/queue/notifications`, (message) => {
+      this.handleNotification(message);
+    });
+    // Backward-compatible path in case server uses explicit user-id queue naming
     this.subscribe(`/user/${user.id}/queue/notifications`, (message) => {
-      console.log('User notification:', message);
       this.handleNotification(message);
     });
 
     // Subscribe to role-based channels
-    if (user.roles.includes('ROLE_CHEF')) {
-      this.subscribeToChefOrders(user.cafeId!);
+    if (user.roles.includes('ROLE_CHEF') && user.cafeId) {
+      this.subscribeToChefOrders(user.cafeId);
     }
 
-    if (user.roles.includes('ROLE_WAITER')) {
-      this.subscribeToWaiterOrders(user.cafeId!);
+    if (user.roles.includes('ROLE_WAITER') && user.cafeId) {
+      this.subscribeToWaiterOrders(user.cafeId);
     }
 
-    if (user.roles.includes('ROLE_CAFE_OWNER')) {
-      this.subscribeToCafeOrders(user.cafeId!);
+    if (user.roles.includes('ROLE_CAFE_OWNER') && user.cafeId) {
+      this.subscribeToCafeOrders(user.cafeId);
+    }
+
+    if (user.roles.includes('ROLE_CUSTOMER')) {
+      this.subscribeToCustomerOrders(user.id);
     }
   }
 
   subscribeToChefOrders(cafeId: number): void {
-    const destination = `/topic/orders/cafe/${cafeId}/chef`;
+    const destination = `/topic/chef/${cafeId}`;
     this.subscribe(destination, (message) => {
-      console.log('Chef order update:', message);
       this.orderNotifications.next(message);
     });
   }
 
   subscribeToWaiterOrders(cafeId: number): void {
-    const destination = `/topic/orders/cafe/${cafeId}/waiter`;
+    const destination = `/topic/waiter/${cafeId}`;
     this.subscribe(destination, (message) => {
-      console.log('Waiter order update:', message);
       this.orderNotifications.next(message);
     });
   }
 
   subscribeToCafeOrders(cafeId: number): void {
-    const destination = `/topic/orders/cafe/${cafeId}`;
+    const destination = `/topic/cafe/${cafeId}`;
     this.subscribe(destination, (message) => {
-      console.log('Cafe order update:', message);
+      this.orderNotifications.next(message);
+    });
+  }
+
+  subscribeToCustomerOrders(customerId: number): void {
+    const destination = `/topic/customer/${customerId}`;
+    this.subscribe(destination, (message) => {
+      this.orderStatusUpdates.next(message);
       this.orderNotifications.next(message);
     });
   }
@@ -137,8 +147,18 @@ export class WebSocketService {
   subscribeToOrderStatus(orderId: number): void {
     const destination = `/topic/orders/${orderId}/status`;
     this.subscribe(destination, (message) => {
-      console.log('Order status update:', message);
       this.orderStatusUpdates.next(message);
+    });
+  }
+
+  subscribeToTableAvailability(cafeId: number): void {
+    const destination = `/topic/cafe/${cafeId}/tables`;
+    if (this.tableAvailabilityDestination && this.tableAvailabilityDestination !== destination) {
+      this.unsubscribe(this.tableAvailabilityDestination);
+    }
+    this.tableAvailabilityDestination = destination;
+    this.subscribe(destination, (message) => {
+      this.tableAvailabilityUpdates.next(message);
     });
   }
 
@@ -150,7 +170,6 @@ export class WebSocketService {
 
     // Avoid duplicate subscriptions
     if (this.subscriptions.has(destination)) {
-      console.log('Already subscribed to:', destination);
       return;
     }
 
@@ -164,7 +183,6 @@ export class WebSocketService {
     });
 
     this.subscriptions.set(destination, subscription);
-    console.log('Subscribed to:', destination);
   }
 
   unsubscribe(destination: string): void {
@@ -172,7 +190,6 @@ export class WebSocketService {
     if (subscription) {
       subscription.unsubscribe();
       this.subscriptions.delete(destination);
-      console.log('Unsubscribed from:', destination);
     }
   }
 
@@ -198,7 +215,7 @@ export class WebSocketService {
         this.orderStatusUpdates.next(message.payload);
         break;
       default:
-        console.log('Unknown notification type:', message.type);
+        break;
     }
   }
 }

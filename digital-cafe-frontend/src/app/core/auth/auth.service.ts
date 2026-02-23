@@ -1,8 +1,7 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, throwError } from 'rxjs';
-import { map, catchError, tap } from 'rxjs/operators';
-import { Router } from '@angular/router';
+import { catchError, tap } from 'rxjs/operators';
 import { environment } from '@environments/environment';
 import {
   AuthResponse,
@@ -27,7 +26,6 @@ export class AuthService {
 
   constructor(
     private http: HttpClient,
-    private router: Router,
   ) {
     const storedUser = localStorage.getItem(environment.userKey);
     this.currentUserSubject = new BehaviorSubject<User | null>(storedUser ? JSON.parse(storedUser) : null);
@@ -123,15 +121,11 @@ export class AuthService {
   }
 
   logout(): void {
-    // Clear local storage
     localStorage.removeItem(environment.tokenKey);
     localStorage.removeItem(environment.refreshTokenKey);
     localStorage.removeItem(environment.userKey);
 
-    // Clear current user
     this.currentUserSubject.next(null);
-
-    // Don't navigate here - let the caller decide where to go
   }
 
   getToken(): string | null {
@@ -143,13 +137,11 @@ export class AuthService {
   }
 
   private handleAuthResponse(response: AuthResponse): void {
-    // Store tokens
     localStorage.setItem(environment.tokenKey, response.token);
     if (response.refreshToken) {
       localStorage.setItem(environment.refreshTokenKey, response.refreshToken);
     }
 
-    // Create user object
     const user: User = {
       id: response.userId,
       username: response.username,
@@ -163,7 +155,6 @@ export class AuthService {
       isActive: true,
     };
 
-    // Store user data
     localStorage.setItem(environment.userKey, JSON.stringify(user));
     this.currentUserSubject.next(user);
   }
@@ -179,7 +170,6 @@ export class AuthService {
       return '/auth/login';
     }
 
-    // Check roles in priority order
     if (this.isAdmin()) {
       return '/admin/dashboard';
     } else if (this.isCafeOwner()) {
@@ -199,10 +189,8 @@ export class AuthService {
     let errorMessage = 'An error occurred';
 
     if (error.error instanceof ErrorEvent) {
-      // Client-side error
       errorMessage = error.error.message;
     } else {
-      // Server-side error
       errorMessage = error.error?.message || error.message || errorMessage;
     }
 

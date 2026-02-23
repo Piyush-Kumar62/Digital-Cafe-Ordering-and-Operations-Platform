@@ -1,9 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
-import { Observable, switchMap, of } from 'rxjs';
+import { Subject, Subscription, catchError, of, switchMap, takeUntil, timer } from 'rxjs';
 import { Order, OrderStatus } from '@shared/models/order.model';
 import { OrderTrackingService } from './order-tracking.service';
+import { WebSocketService } from '@core/websocket/websocket.service';
 
 @Component({
   selector: 'app-order-tracking',
@@ -12,10 +13,16 @@ import { OrderTrackingService } from './order-tracking.service';
   templateUrl: './order-tracking.component.html',
   styleUrls: ['./order-tracking.component.scss']
 })
-export class OrderTrackingComponent implements OnInit {
-  order$!: Observable<Order | null>;
+export class OrderTrackingComponent implements OnInit, OnDestroy {
+  order: Order | null = null;
+  recentOrders: Order[] = [];
+  loading = true;
+  error = '';
+  private orderId: number | null = null;
+  private pollSub?: Subscription;
+  private destroy$ = new Subject<void>();
   orderStatusSteps: OrderStatus[] = [
-    OrderStatus.PENDING,
+    OrderStatus.PLACED,
     OrderStatus.PREPARING,
     OrderStatus.READY,
     OrderStatus.SERVED
@@ -24,20 +31,42 @@ export class OrderTrackingComponent implements OnInit {
 
   constructor(
     private route: ActivatedRoute,
-    private orderTrackingService: OrderTrackingService
+    private orderTrackingService: OrderTrackingService,
+    private webSocketService: WebSocketService
   ) { }
 
   ngOnInit(): void {
-    this.order$ = this.route.paramMap.pipe(
-      switchMap(params => {
-        const orderId = Number(params.get('id'));
-        if (orderId) {
-          // In a real app, you might want to add polling here to get live updates
-          return this.orderTrackingService.getOrderById(orderId);
+    this.route.paramMap.pipe(takeUntil(this.destroy$)).subscribe((params) => {
+      const id = Number(params.get('id'));
+      this.orderId = Number.isFinite(id) && id > 0 ? id : null;
+      this.error = '';
+      this.order = null;
+      this.recentOrders = [];
+
+      if (this.orderId) {
+        this.startLiveTracking(this.orderId);
+      } else {
+        this.stopPolling();
+        this.loadRecentOrders();
+      }
+    });
+
+    this.webSocketService.orderNotifications$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((notification: any) => {
+        if (!this.orderId || !notification) {
+          return;
         }
-        return of(null);
-      })
-    );
+        if (notification.orderId === this.orderId || notification.id === this.orderId) {
+          this.refreshCurrentOrder();
+        }
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.stopPolling();
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   getStepStatus(step: OrderStatus, currentStatus: OrderStatus): 'completed' | 'current' | 'upcoming' {
@@ -51,5 +80,66 @@ export class OrderTrackingComponent implements OnInit {
     } else {
       return 'upcoming';
     }
+  }
+
+  getItemTotal(item: any): number {
+    return item?.totalPrice ?? item?.subtotal ?? 0;
+  }
+
+  private startLiveTracking(orderId: number): void {
+    this.loading = true;
+    this.stopPolling();
+
+    this.pollSub = timer(0, 5000)
+      .pipe(
+        switchMap(() =>
+          this.orderTrackingService.getOrderById(orderId).pipe(
+            catchError(() => of(null)),
+          ),
+        ),
+      )
+      .subscribe((order) => {
+        if (!order) {
+          this.loading = false;
+          if (!this.order) {
+            this.error = 'Unable to load this order right now.';
+          }
+          return;
+        }
+        this.order = order;
+        this.loading = false;
+      });
+  }
+
+  private refreshCurrentOrder(): void {
+    if (!this.orderId) {
+      return;
+    }
+    this.orderTrackingService.getOrderById(this.orderId).subscribe({
+      next: (order) => {
+        this.order = order;
+      },
+    });
+  }
+
+  private loadRecentOrders(): void {
+    this.loading = true;
+    this.orderTrackingService.getMyOrders().subscribe({
+      next: (orders) => {
+        this.recentOrders = (orders || [])
+          .sort((a, b) => Date.parse(b.createdAt || '') - Date.parse(a.createdAt || ''))
+          .slice(0, 10);
+        this.loading = false;
+      },
+      error: () => {
+        this.error = 'Unable to load your orders.';
+        this.loading = false;
+      },
+    });
+  }
+
+  private stopPolling(): void {
+    this.pollSub?.unsubscribe();
+    this.pollSub = undefined;
   }
 }

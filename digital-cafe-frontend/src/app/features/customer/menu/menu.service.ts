@@ -1,20 +1,29 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { MenuItem } from '@shared/models/menu.model';
+import { Cafe } from '@shared/models/cafe.model';
 import { environment } from '@environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class MenuService {
-  private apiUrl = `${environment.apiUrl}/menu-items`;
+  private menuApiUrl = `${environment.apiUrl}/menu-items`;
+  private cafeApiUrl = `${environment.apiUrl}/cafes`;
 
   constructor(private http: HttpClient) { }
 
-  // Using a hardcoded cafeId for now as per plan.
-  // In a real app, this would come from user selection or context.
-  getMenuItems(cafeId: number = 1): Observable<MenuItem[]> {
-    return this.http.get<MenuItem[]>(`${this.apiUrl}/cafe/${cafeId}/available`);
+  getMenuItems(cafeId: number): Observable<MenuItem[]> {
+    return this.http
+      .get<{ data?: MenuItem[] }>(`${this.menuApiUrl}/cafe/${cafeId}/available`)
+      .pipe(map((res) => res?.data || []));
+  }
+
+  getActiveCafes(): Observable<Cafe[]> {
+    return this.http
+      .get<{ data?: Cafe[] }>(`${this.cafeApiUrl}/active`)
+      .pipe(map((res) => res?.data || []));
   }
 }

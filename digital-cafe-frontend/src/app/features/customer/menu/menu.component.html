@@ -1,31 +1,77 @@
-<div class="container mx-auto px-4 py-8">
-  <h1 class="text-4xl font-extrabold text-gray-800 mb-8 text-center">Our Menu</h1>
+<div class="menu-shell">
+  <div class="menu-header">
+    <h1>Browse Menu</h1>
+    <p>Select your cafe, filter by category, and add items to cart.</p>
+  </div>
 
-  <div *ngIf="menuItems$ | async as menuItems; else loading" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-    <div *ngFor="let item of menuItems" class="bg-white rounded-lg shadow-lg overflow-hidden transform hover:scale-105 transition-transform duration-300 ease-in-out">
-      <img [src]="item.imageUrl || 'https://via.placeholder.com/300'" alt="{{ item.name }}" class="w-full h-48 object-cover">
-      <div class="p-6">
-        <h2 class="text-2xl font-bold text-gray-900 mb-2 truncate">{{ item.name }}</h2>
-        <p class="text-gray-600 mb-4 h-20 overflow-y-auto">{{ item.description }}</p>
-        <div class="flex justify-between items-center mb-4">
-          <span class="text-2xl font-bold text-indigo-600">${{ item.price | number:'1.2-2' }}</span>
-          <span class="text-sm text-gray-500">{{ item.preparationTime }} mins</span>
-        </div>
-        <button (click)="addToCart(item)" class="w-full bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 transition-colors duration-300">
-          Add to Cart
-        </button>
-      </div>
+  <div class="toolbar">
+    <div class="field">
+      <label for="menuCafeId">Choose Café</label>
+      <select
+        id="menuCafeId"
+        [value]="selectedCafeId || ''"
+        (change)="onCafeChange($any($event.target).value)"
+      >
+        <option value="" disabled>Select a cafe</option>
+        <option *ngFor="let cafe of cafes" [value]="cafe.id">
+          {{ cafe.name }} - {{ cafe.city }}
+        </option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="searchText">Search</label>
+      <input
+        id="searchText"
+        type="text"
+        [(ngModel)]="searchText"
+        placeholder="Search by item name or description"
+      />
     </div>
   </div>
 
-  <ng-template #loading>
-    <div class="text-center py-16">
-      <p class="text-lg text-gray-500">Loading menu...</p>
-      <!-- You can add a spinner here -->
-    </div>
-  </ng-template>
+  <div class="category-strip" *ngIf="categories.length > 0">
+    <button
+      *ngFor="let category of categories"
+      [class.active]="selectedCategory === category"
+      (click)="onCategoryChange(category)"
+    >
+      {{ category === 'ALL' ? 'All' : category.replace('_', ' ') }}
+    </button>
+    <button class="clear-btn" (click)="clearFilters()">Clear Filters</button>
+  </div>
 
-  <div *ngIf="(menuItems$ | async)?.length === 0" class="text-center py-16">
-      <p class="text-lg text-gray-500">No menu items available at the moment.</p>
+  <div *ngIf="loading" class="state">Loading menu...</div>
+
+  <div *ngIf="!loading" class="grid">
+    <article *ngFor="let item of filteredMenuItems" class="card">
+      <div class="media">
+        <img
+          [src]="getMenuImage(item)"
+          [alt]="item.name"
+          loading="lazy"
+          decoding="async"
+          (error)="onImageError($event, item)"
+        />
+      </div>
+      <div class="card-body">
+        <div class="card-top">
+          <h2>{{ item.name }}</h2>
+          <span class="badge">{{ item.category }}</span>
+        </div>
+        <p class="desc">{{ item.description || 'No description available.' }}</p>
+        <div class="meta">
+          <strong>${{ item.price | number:'1.2-2' }}</strong>
+          <span>{{ item.preparationTime || 0 }} mins</span>
+        </div>
+        <button (click)="addToCart(item)" [class.added]="addedItemId === item.id">
+          {{ addedItemId === item.id ? 'Added' : 'Add to Cart' }}
+        </button>
+      </div>
+    </article>
+  </div>
+
+  <div *ngIf="!loading && filteredMenuItems.length === 0" class="state">
+    No menu items match the selected filters.
   </div>
 </div>

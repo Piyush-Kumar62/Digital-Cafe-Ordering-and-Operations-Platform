@@ -10,17 +10,33 @@
 
     <div *ngIf="bookingError" class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4" role="alert">
       <p class="font-bold">Error</p>
-      <p>There was a problem with your booking. Please try again.</p>
+      <p>{{ errorMessage || 'There was a problem with your booking. Please try again.' }}</p>
+    </div>
+
+    <div>
+      <label for="cafeId" class="block text-sm font-medium text-gray-700">Select Café</label>
+      <select formControlName="cafeId" id="cafeId" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+        <option value="" disabled>Choose a cafe</option>
+        <option *ngFor="let cafe of cafes" [value]="cafe.id">
+          {{ cafe.name }} - {{ cafe.city }}
+        </option>
+      </select>
     </div>
 
     <div>
       <label for="tableId" class="block text-sm font-medium text-gray-700">Select a Table</label>
       <select formControlName="tableId" id="tableId" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
-        <option value="" disabled>Choose a table</option>
-        <option *ngFor="let table of availableTables$ | async" [value]="table.id">
+        <option value="" disabled>{{ loadingTables ? 'Loading tables...' : 'Choose a table' }}</option>
+        <option *ngFor="let table of availableTables" [value]="table.id">
           {{ table.tableNumber }} (Capacity: {{ table.capacity }})
         </option>
       </select>
+      <div *ngIf="!loadingTables && availableTables.length === 0" class="text-amber-600 text-xs mt-1">
+        No tables available for the selected slot. Please choose another time.
+      </div>
+      <div *ngIf="bookingForm.get('bookingDate')?.value && bookingForm.get('bookingTime')?.value" class="text-indigo-600 text-xs mt-1">
+        Availability auto-refreshes every 10 seconds.
+      </div>
       <div *ngIf="bookingForm.get('tableId')?.touched && bookingForm.get('tableId')?.errors?.['required']" class="text-red-500 text-xs mt-1">
         Table selection is required.
       </div>

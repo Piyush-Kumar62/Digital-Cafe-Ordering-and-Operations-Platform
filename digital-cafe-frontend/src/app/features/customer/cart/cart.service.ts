@@ -62,11 +62,13 @@ export class CartService {
       items: currentCart.items.map(cartItem => ({
         menuItemId: cartItem.item.id,
         quantity: cartItem.quantity,
-        specialInstructions: '' // This could be enhanced in the future
+        specialInstructions: ''
       }))
     };
 
-    return this.http.post<Order>(this.apiUrl, fullOrderRequest);
+    return this.http
+      .post<{ data?: Order }>(this.apiUrl, fullOrderRequest)
+      .pipe(map((res) => res?.data as Order));
   }
 
   private updateCart(items: CartItem[]): void {

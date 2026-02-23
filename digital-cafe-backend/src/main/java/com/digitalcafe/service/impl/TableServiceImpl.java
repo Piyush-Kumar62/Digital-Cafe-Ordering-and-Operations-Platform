@@ -88,7 +88,6 @@ public class TableServiceImpl implements TableService {
         log.info("Fetching available tables for cafe ID: {} at time: {}", cafeId, bookingTime);
 
         List<CafeTable> tables = tableRepository.findByCafeIdAndIsAvailable(cafeId, true);
-        // TODO: Add logic to check booking conflicts
 
         return tables.stream()
                 .map(tableMapper::toResponse)
@@ -123,4 +122,3 @@ public class TableServiceImpl implements TableService {
         return tableMapper.toResponse(updatedTable);
     }
 }
-

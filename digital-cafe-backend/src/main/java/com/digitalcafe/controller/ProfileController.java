@@ -3,6 +3,7 @@ package com.digitalcafe.controller;
 import com.digitalcafe.dto.request.ProfileRequest;
 import com.digitalcafe.dto.response.ApiResponse;
 import com.digitalcafe.dto.response.ProfileResponse;
+import com.digitalcafe.repository.UserRepository;
 import com.digitalcafe.service.ProfileService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 public class ProfileController {
 
     private final ProfileService profileService;
+    private final UserRepository userRepository;
 
     @PostMapping
     @PreAuthorize("isAuthenticated()")
@@ -61,8 +63,8 @@ public class ProfileController {
     }
 
     private Long getUserIdFromAuthentication(Authentication authentication) {
-        // TODO: Extract user ID from authentication
-        return 1L;
+        return userRepository.findByEmail(authentication.getName())
+                .orElseThrow(() -> new IllegalArgumentException("Authenticated user not found"))
+                .getId();
     }
 }
-

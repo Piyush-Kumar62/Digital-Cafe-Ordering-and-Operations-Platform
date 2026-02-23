@@ -75,9 +75,6 @@ public class SecurityConfig {
     @Bean
     @SuppressWarnings("deprecation")
     public AuthenticationProvider authenticationProvider() {
-        // Note: DaoAuthenticationProvider methods are deprecated in Spring Security 6.4+
-        // but are still functional. Migration to AuthenticationManagerBuilder recommended
-        // for future versions.
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
         authProvider.setUserDetailsService(userDetailsService);
         authProvider.setPasswordEncoder(passwordEncoder());

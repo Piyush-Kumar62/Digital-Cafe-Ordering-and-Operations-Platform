@@ -39,8 +39,6 @@ public class AuthServiceImpl implements AuthService {
   private final JwtUtil jwtUtil;
   private final EmailService emailService;
 
-  // ================= SIMPLE REGISTER =================
-
   @Override
   @Transactional
   public AuthResponse register(SimpleRegisterRequest request) {
@@ -64,7 +62,6 @@ public class AuthServiceImpl implements AuthService {
     user.setMustResetPassword(true);
     user.setIsTempPassword(true);
 
-    // ✅ FIX: mutable collection
     user.getRoles().add(customerRole);
 
     user = userRepository.save(user);
@@ -83,8 +80,6 @@ public class AuthServiceImpl implements AuthService {
         .build();
   }
 
-  // ================= COMPREHENSIVE REGISTER =================
-
   @Override
   @Transactional
   public RegisterResponse comprehensiveRegister(RegisterRequest request) {
@@ -94,9 +89,14 @@ public class AuthServiceImpl implements AuthService {
       throw new BadRequestException("Username or email already exists");
     }
 
-    Role.RoleName roleName = Role.RoleName.valueOf(request.getRole());
-    if (roleName == Role.RoleName.ADMIN) {
-      throw new BadRequestException("Admin self-registration is not allowed");
+    Role.RoleName roleName;
+    try {
+      roleName = Role.RoleName.valueOf(request.getRole().trim().toUpperCase());
+    } catch (Exception ex) {
+      throw new BadRequestException("Only CUSTOMER role is allowed for public registration");
+    }
+    if (roleName != Role.RoleName.CUSTOMER) {
+      throw new BadRequestException("Only CUSTOMER role is allowed for public registration");
     }
     Role role = roleRepository.findByName(roleName)
         .orElseThrow(() -> new ResourceNotFoundException("Role", "name", request.getRole()));
@@ -114,7 +114,6 @@ public class AuthServiceImpl implements AuthService {
     user.setIsTempPassword(true);
     user.setRegistrationStatus(User.RegistrationStatus.PENDING_APPROVAL);
 
-    // ✅ FIX: mutable collection
     user.getRoles().add(role);
 
     user = userRepository.save(user);
@@ -205,8 +204,6 @@ public class AuthServiceImpl implements AuthService {
         .build();
   }
 
-  // ================= LOGIN =================
-
   @Override
   @Transactional
   public AuthResponse login(LoginRequest request) {
@@ -252,8 +249,6 @@ public class AuthServiceImpl implements AuthService {
         .build();
   }
 
-  // ================= EMAIL VERIFICATION =================
-
   @Override
   @Transactional
   public void verifyEmail(String token) {
@@ -294,8 +289,6 @@ public class AuthServiceImpl implements AuthService {
 
     emailService.sendVerificationEmail(user.getEmail(), token.getToken(), null);
   }
-
-  // ================= PASSWORD RESET =================
 
   @Override
   @Transactional
@@ -341,8 +334,6 @@ public class AuthServiceImpl implements AuthService {
     emailService.sendPasswordChangedNotification(user.getEmail());
   }
 
-  // ================= CHANGE PASSWORD =================
-
   @Override
   @Transactional
   public void changePassword(String username, String oldPassword, String newPassword) {
@@ -364,8 +355,6 @@ public class AuthServiceImpl implements AuthService {
     userRepository.save(user);
     emailService.sendPasswordChangedNotification(user.getEmail());
   }
-
-  // ================= REFRESH TOKEN =================
 
   @Override
   public AuthResponse refreshToken(String refreshToken) {

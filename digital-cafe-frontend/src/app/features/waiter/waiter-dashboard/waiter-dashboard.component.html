@@ -1,0 +1,41 @@
+<section class="waiter-dashboard">
+  <header class="hero">
+    <div>
+      <h1>Waiter Dashboard</h1>
+      <p>Serve ready orders quickly and keep table flow smooth.</p>
+    </div>
+    <div class="hero-stats">
+      <div>
+        <small>Ready Orders</small>
+        <strong>{{ readyOrders.length }}</strong>
+      </div>
+      <div>
+        <small>Served Today</small>
+        <strong>{{ servedToday }}</strong>
+      </div>
+    </div>
+  </header>
+
+  <div class="loading" *ngIf="loading">Loading ready orders...</div>
+
+  <div class="orders-grid" *ngIf="!loading">
+    <article class="order-card" *ngFor="let order of readyOrders">
+      <div class="head">
+        <h3>Order #{{ order.orderNumber || order.id }}</h3>
+        <span class="status">READY</span>
+      </div>
+      <p class="meta">
+        <strong>Table:</strong> {{ order.tableNumber || order.tableId }} |
+        <strong>Customer:</strong> {{ order.customerName || order.customerId }}
+      </p>
+      <ul>
+        <li *ngFor="let item of order.items">{{ item.quantity }}x {{ item.menuItemName }}</li>
+      </ul>
+      <button (click)="markServed(order.id)">Mark As Served</button>
+    </article>
+  </div>
+
+  <div class="empty" *ngIf="!loading && readyOrders.length === 0">
+    No ready orders right now.
+  </div>
+</section>

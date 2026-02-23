@@ -13,11 +13,19 @@ import { NotificationService } from "@core/services/notification.service";
     <app-navbar></app-navbar>
     <div class="contact-container">
       <div class="contact-content">
-        <h1 class="contact-title">Contact Us</h1>
-        <p class="contact-subtitle">
-          Have questions? We'd love to hear from you. Send us a message and
-          we'll respond as soon as possible.
-        </p>
+        <div class="contact-hero">
+          <span class="hero-chip">Support Team Online</span>
+          <h1 class="contact-title">Contact Us</h1>
+          <p class="contact-subtitle">
+            Have questions? We'd love to hear from you. Send us a message and
+            we'll respond as soon as possible.
+          </p>
+          <div class="hero-points">
+            <span>Fast Response</span>
+            <span>Role Onboarding Help</span>
+            <span>Account & Access Support</span>
+          </div>
+        </div>
 
         <div class="content-wrapper">
           <div class="contact-info">
@@ -65,16 +73,17 @@ import { NotificationService } from "@core/services/notification.service";
             <div class="social-links">
               <h3>Follow Us</h3>
               <div class="social-icons">
-                <a href="#" class="social-icon">📘</a>
-                <a href="#" class="social-icon">📸</a>
-                <a href="#" class="social-icon">🐦</a>
-                <a href="#" class="social-icon">💼</a>
+                <a href="https://www.linkedin.com" target="_blank" rel="noopener noreferrer" class="social-icon">💼</a>
+                <a href="https://x.com" target="_blank" rel="noopener noreferrer" class="social-icon">🐦</a>
+                <a href="https://www.instagram.com" target="_blank" rel="noopener noreferrer" class="social-icon">📸</a>
+                <a href="https://www.facebook.com" target="_blank" rel="noopener noreferrer" class="social-icon">📘</a>
               </div>
             </div>
           </div>
 
           <div class="contact-form-section">
             <h2>Send us a Message</h2>
+            <p class="form-caption">Share your query and our team will connect with you shortly.</p>
             <form
               class="contact-form"
               (ngSubmit)="submitForm()"
@@ -171,7 +180,10 @@ import { NotificationService } from "@core/services/notification.service";
     `
       .contact-container {
         min-height: calc(100vh - 140px);
-        background: linear-gradient(135deg, #fef2f2 0%, #fff 100%);
+        background:
+          radial-gradient(circle at 10% 10%, rgba(251, 191, 36, 0.14), transparent 32%),
+          radial-gradient(circle at 90% 15%, rgba(59, 130, 246, 0.14), transparent 34%),
+          linear-gradient(135deg, #fef2f2 0%, #fff 100%);
         padding: 3rem 1rem;
       }
 
@@ -180,22 +192,70 @@ import { NotificationService } from "@core/services/notification.service";
         margin: 0 auto;
       }
 
+      @keyframes riseIn {
+        from {
+          opacity: 0;
+          transform: translateY(16px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .contact-hero {
+        text-align: center;
+        margin-bottom: 2.5rem;
+      }
+
+      .hero-chip {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        padding: 0.38rem 0.8rem;
+        background: rgba(220, 38, 38, 0.12);
+        border: 1px solid rgba(220, 38, 38, 0.28);
+        color: #b91c1c;
+        font-size: 0.76rem;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+      }
+
       .contact-title {
         font-size: 3rem;
         color: #dc2626;
         text-align: center;
-        margin-bottom: 1rem;
+        margin: 0.75rem 0 0.8rem;
         font-weight: 800;
+        letter-spacing: -0.02em;
       }
 
       .contact-subtitle {
         text-align: center;
         font-size: 1.25rem;
         color: #4b5563;
-        margin-bottom: 3rem;
+        margin-bottom: 1rem;
         max-width: 700px;
         margin-left: auto;
         margin-right: auto;
+      }
+
+      .hero-points {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 1rem;
+
+        span {
+          border-radius: 999px;
+          padding: 0.3rem 0.7rem;
+          font-size: 0.75rem;
+          font-weight: 700;
+          color: #0f172a;
+          background: rgba(255, 255, 255, 0.8);
+          border: 1px solid rgba(148, 163, 184, 0.34);
+        }
       }
 
       .content-wrapper {
@@ -207,10 +267,16 @@ import { NotificationService } from "@core/services/notification.service";
 
       .contact-info,
       .contact-form-section {
-        background: white;
-        border-radius: 12px;
+        background: linear-gradient(160deg, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0.88));
+        border-radius: 18px;
         padding: 2.5rem;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(148, 163, 184, 0.26);
+        box-shadow: 0 18px 38px rgba(15, 23, 42, 0.14);
+        animation: riseIn 0.55s ease both;
+      }
+
+      .contact-form-section {
+        animation-delay: 0.08s;
       }
 
       .contact-info h2,
@@ -226,9 +292,15 @@ import { NotificationService } from "@core/services/notification.service";
         align-items: flex-start;
         padding: 1.5rem;
         margin-bottom: 1.5rem;
-        background: #fef2f2;
-        border-radius: 8px;
-        border-left: 4px solid #dc2626;
+        background: linear-gradient(140deg, #fff7ed, #fef2f2);
+        border-radius: 12px;
+        border: 1px solid rgba(248, 113, 113, 0.2);
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+      }
+
+      .info-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 14px 26px rgba(239, 68, 68, 0.12);
       }
 
       .info-icon {
@@ -278,14 +350,19 @@ import { NotificationService } from "@core/services/notification.service";
         border-radius: 50%;
         text-decoration: none;
         font-size: 1.5rem;
-        transition:
-          transform 0.3s,
-          background-color 0.3s;
+        transition: transform 0.25s, background-color 0.25s, box-shadow 0.25s;
       }
 
       .social-icon:hover {
-        transform: translateY(-5px);
+        transform: translateY(-4px) scale(1.04);
         background-color: #b91c1c;
+        box-shadow: 0 12px 22px rgba(185, 28, 28, 0.34);
+      }
+
+      .form-caption {
+        color: #64748b;
+        margin: -0.25rem 0 1rem 0;
+        font-size: 0.92rem;
       }
 
       .contact-form {
@@ -310,7 +387,7 @@ import { NotificationService } from "@core/services/notification.service";
         border: 2px solid #e5e7eb;
         border-radius: 8px;
         font-size: 1rem;
-        transition: border-color 0.3s;
+        transition: border-color 0.25s, box-shadow 0.25s, transform 0.2s;
         color: #1f2937;
         background-color: #ffffff;
         font-weight: 500;
@@ -320,6 +397,7 @@ import { NotificationService } from "@core/services/notification.service";
         outline: none;
         border-color: #dc2626;
         box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+        transform: translateY(-1px);
       }
 
       .form-input::placeholder {
@@ -352,12 +430,14 @@ import { NotificationService } from "@core/services/notification.service";
         cursor: pointer;
         transition:
           transform 0.3s,
-          box-shadow 0.3s;
+          box-shadow 0.3s,
+          filter 0.3s;
       }
 
       .submit-button:hover:not(:disabled) {
         transform: translateY(-2px);
         box-shadow: 0 8px 16px rgba(220, 38, 38, 0.3);
+        filter: brightness(1.05);
       }
 
       .submit-button:disabled {
@@ -366,10 +446,13 @@ import { NotificationService } from "@core/services/notification.service";
       }
 
       .map-section {
-        background: white;
-        border-radius: 12px;
+        background: linear-gradient(160deg, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0.9));
+        border-radius: 18px;
         padding: 2.5rem;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(148, 163, 184, 0.26);
+        box-shadow: 0 18px 38px rgba(15, 23, 42, 0.14);
+        animation: riseIn 0.62s ease both;
+        animation-delay: 0.14s;
       }
 
       .map-section h2 {
@@ -381,7 +464,7 @@ import { NotificationService } from "@core/services/notification.service";
 
       .map-placeholder {
         background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
-        border-radius: 8px;
+        border-radius: 12px;
         padding: 4rem;
         text-align: center;
         border: 2px dashed #dc2626;
@@ -406,10 +489,18 @@ import { NotificationService } from "@core/services/notification.service";
           font-size: 2rem;
         }
 
+        .contact-subtitle {
+          font-size: 1.05rem;
+        }
+
         .contact-info,
         .contact-form-section,
         .map-section {
           padding: 1.5rem;
+        }
+
+        .hero-points {
+          justify-content: center;
         }
       }
     `,

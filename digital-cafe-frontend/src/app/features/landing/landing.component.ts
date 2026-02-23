@@ -56,6 +56,42 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
     },
   ];
 
+  problemPoints = [
+    "Manual or unavailable table booking creates customer friction, especially during peak hours when seats are in demand.",
+    "Customers face long waits before food preparation starts, which increases drop-offs and lowers overall dining satisfaction.",
+    "Limited coordination between chef and waiter causes delays, resulting in missed handoffs and inconsistent service speed.",
+    "Manual payment handling slows operations and reporting, while increasing billing errors and closing-time workload.",
+    "No centralized visibility for multi-cafe operations makes it difficult to compare performance, staffing, and daily throughput.",
+    "Lack of real-time order status updates reduces service transparency, so guests and staff both struggle to track progress.",
+  ];
+
+  solutionSnapshots = [
+    {
+      title: "Centralized Multi-Café Platform",
+      description:
+        "Manage customers, staff workflows, and café operations from one unified system.",
+      icon: "🌐",
+    },
+    {
+      title: "Pre-Booking + Pre-Ordering",
+      description:
+        "Customers reserve tables and place orders in advance to reduce waiting time.",
+      icon: "📲",
+    },
+    {
+      title: "Role-Driven Operations",
+      description:
+        "Admin, Owner, Chef, Waiter, and Customer each get role-specific modules and actions.",
+      icon: "🧭",
+    },
+    {
+      title: "Secure Digital Transactions",
+      description:
+        "Online payment, controlled access, and verified user flow for safer operations.",
+      icon: "🔒",
+    },
+  ];
+
   howItWorks = [
     {
       step: "1",
@@ -119,7 +155,7 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
         "Configure table layouts",
       ],
       cta: "Manage Café",
-      route: "/auth/register",
+      route: "/contact",
     },
     {
       icon: "👨‍🍳",
@@ -133,7 +169,7 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
         "Coordinate with team",
       ],
       cta: "Join as Chef",
-      route: "/auth/register",
+      route: "/contact",
     },
     {
       icon: "🍽️",
@@ -147,7 +183,7 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
         "Update table status",
       ],
       cta: "Join as Waiter",
-      route: "/auth/register",
+      route: "/contact",
     },
     {
       icon: "⚙️",
@@ -163,6 +199,14 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
       cta: "Admin Access",
       route: "/auth/login",
     },
+  ];
+
+  roleMatrix = [
+    { role: "Admin", createdBy: "System Default", access: "Creates café owners, platform governance" },
+    { role: "Café Owner", createdBy: "Admin", access: "Manages café, tables, menu, chef, waiter" },
+    { role: "Chef", createdBy: "Café Owner", access: "Updates order status: Preparing → Ready" },
+    { role: "Waiter", createdBy: "Café Owner", access: "Serves ready orders and marks served" },
+    { role: "Customer", createdBy: "Self Registration", access: "Books table, orders food, tracks status, pays online" },
   ];
 
   workflowSteps = [
@@ -195,7 +239,7 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
   securityFeatures = [
     {
       icon: "🔐",
-      title: "Secure Loginn",
+      title: "Secure Login",
       description:
         "You can safely log in to your account, and no one else can access it without your permission.",
     },
@@ -252,6 +296,94 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
     },
   ];
 
+  platformMetrics = [
+    { label: "Avg Order Lead-Time Saved", value: "35%" },
+    { label: "Role-Based Workflow Coverage", value: "100%" },
+    { label: "Real-Time Status Stages", value: "4" },
+    { label: "Core Business Modules", value: "8+" },
+  ];
+
+  previewCards = [
+    {
+      title: "Table Booking Preview",
+      subtitle: "Choose café, date, and time slot",
+      points: ["Select café branch", "Pick table & guests", "Confirm schedule instantly"],
+      cta: "Start Booking",
+      route: "/auth/register",
+      icon: "🗓️",
+    },
+    {
+      title: "Menu Preview",
+      subtitle: "Browse categories and pre-order",
+      points: ["Filter menu by category", "Add items to cart", "Checkout before arrival"],
+      cta: "View Menu Flow",
+      route: "/auth/login",
+      icon: "🍔",
+    },
+    {
+      title: "Order Tracking Preview",
+      subtitle: "Follow every stage in real-time",
+      points: ["Track preparing status", "Get ready-to-serve updates", "See delivery confirmation"],
+      cta: "Track Order Flow",
+      route: "/auth/login",
+      icon: "📊",
+    },
+  ];
+
+  faqs = [
+    {
+      question: "Who can register from the public registration page?",
+      answer:
+        "Only Customer can self-register. Café Owner, Chef, and Waiter accounts are created by Admin or Café Owner based on role flow.",
+    },
+    {
+      question: "What should a new customer do first?",
+      answer:
+        "Start with Register, verify your email, complete your profile, then log in. After login, you can choose a café, book a table, and place your order.",
+    },
+    {
+      question: "Why do I need email verification?",
+      answer:
+        "Email verification protects your account and confirms that notifications, order updates, and password reset links go to the correct person.",
+    },
+    {
+      question: "How does table booking work?",
+      answer:
+        "Pick a café, select date and time slot, and choose an available table. The system checks availability in real time to avoid double booking.",
+    },
+    {
+      question: "Can I order food without booking a table?",
+      answer:
+        "For dine-in flow, booking first is recommended so your order is linked to your table and served faster.",
+    },
+    {
+      question: "How does order status update?",
+      answer:
+        "Your order moves through clear stages: Pending/Placed, Preparing, Ready, and Served. You can track progress from your dashboard.",
+    },
+    {
+      question: "What if I forget my password?",
+      answer:
+        "Use Forgot Password on login, enter your email, open the reset link, and set a new password. Then log in again with the new password.",
+    },
+    {
+      question: "Can one platform manage multiple cafés?",
+      answer:
+        "Yes. The system supports multi-café operations with centralized admin control and role-based dashboards for each actor.",
+    },
+    {
+      question: "Can I modify or cancel my booking after confirmation?",
+      answer:
+        "Yes. Customers can update or cancel bookings based on café policy and available time windows. Changes are reflected instantly in your dashboard.",
+    },
+    {
+      question: "How do I check my past bookings and orders?",
+      answer:
+        "Open your customer dashboard and go to booking history or order history. You can view past activity, status, and details for each record.",
+    },
+  ];
+  activeFaqIndex: number | null = 0;
+
   constructor(
     private apiService: ApiService,
     private router: Router,
@@ -291,7 +423,7 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // Observe all animatable elements
     const elements = document.querySelectorAll(
-      ".feature-card, .cafe-card, .testimonial-card, .section-header, .cta-content, .timeline-step, .role-card, .workflow-step, .security-card",
+      ".feature-card, .cafe-card, .testimonial-card, .section-header, .cta-content, .timeline-step, .role-card, .workflow-step, .security-card, .problem-card, .solution-card, .preview-card, .faq-item, .metric-box",
     );
     elements.forEach((el) => this.observer?.observe(el));
   }
@@ -397,7 +529,7 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   navigateToCafe(cafeId: number): void {
-    this.router.navigate(["/customer/cafes", cafeId]);
+    this.router.navigate(["/menu"], { queryParams: { cafeId } });
   }
 
   scrollToSection(sectionId: string): void {
@@ -406,4 +538,9 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
       element.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   }
+
+  toggleFaq(index: number): void {
+    this.activeFaqIndex = this.activeFaqIndex === index ? null : index;
+  }
 }
+

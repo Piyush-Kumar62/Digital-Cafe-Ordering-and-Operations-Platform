@@ -1,5 +1,6 @@
 export interface Booking {
   id: number;
+  bookingNumber?: string;
   customerId: number;
   customerName?: string;
   cafeId: number;
@@ -12,6 +13,8 @@ export interface Booking {
   status: BookingStatus;
   specialRequests?: string;
   createdAt: string;
+  canOrder?: boolean;
+  hasOrder?: boolean;
 }
 
 export interface BookingRequest {

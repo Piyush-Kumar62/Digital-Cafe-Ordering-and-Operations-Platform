@@ -30,7 +30,7 @@ export class RegisterComponent implements OnInit {
 
   // Step 1: Basic Info
   username = "";
-  role = "";
+  role = "CUSTOMER";
   govtIdType = "";
   govtIdProof: File | null = null;
   govtIdTypes = ["Aadhaar", "PAN Card", "Driving License", "Passport"];
@@ -83,7 +83,7 @@ export class RegisterComponent implements OnInit {
 
   genderOptions = ["MALE", "FEMALE", "OTHER", "PREFER_NOT_TO_SAY"];
   maritalStatusOptions = ["SINGLE", "MARRIED", "DIVORCED", "WIDOWED"];
-  roleOptions = ["CUSTOMER", "CAFE_OWNER", "CHEF", "WAITER"];
+  roleOptions = ["CUSTOMER"];
   currentYear = new Date().getFullYear();
 
   constructor(
@@ -93,7 +93,7 @@ export class RegisterComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    // Any initialization logic
+    this.role = "CUSTOMER";
   }
 
   onFileSelect(event: Event) {
@@ -151,8 +151,8 @@ export class RegisterComponent implements OnInit {
       this.errorMessage = "Username is required";
       return false;
     }
-    if (!this.role) {
-      this.errorMessage = "Please select a role";
+    if (this.role !== "CUSTOMER") {
+      this.errorMessage = "Only CUSTOMER role is allowed for public registration";
       return false;
     }
     if (!this.govtIdType) {
@@ -326,7 +326,7 @@ export class RegisterComponent implements OnInit {
 
     const payload: RegisterRequest = {
       username: this.username.trim(),
-      role: this.role,
+      role: "CUSTOMER",
       personalDetails: this.personalDetails,
       address: this.address,
       academicInfoList: this.academicInfoList,

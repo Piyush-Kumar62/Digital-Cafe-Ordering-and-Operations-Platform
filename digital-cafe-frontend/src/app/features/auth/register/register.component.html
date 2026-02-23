@@ -1,10 +1,10 @@
 <app-navbar></app-navbar>
 
 <div
-  class="h-screen flex items-center justify-center bg-slate-900 text-white overflow-hidden"
+  class="h-screen flex items-center justify-center register-auth-container text-white overflow-hidden"
 >
   <div
-    class="max-w-3xl w-full bg-slate-800/60 backdrop-blur-xl rounded-2xl shadow-2xl mx-4"
+    class="max-w-3xl w-full register-auth-card backdrop-blur-xl rounded-2xl shadow-2xl mx-4"
   >
     <div class="p-6 md:p-8">
       <!-- Card Header -->
@@ -86,21 +86,14 @@
                 <span class="input-group-text"
                   ><i class="bi bi-shield"></i
                 ></span>
-                <select
+                <input
+                  type="text"
                   class="form-control"
                   id="role"
-                  [(ngModel)]="role"
-                  name="role"
-                  required
-                >
-                  <option value="" disabled>Select role</option>
-                  <option
-                    *ngFor="let roleOption of roleOptions"
-                    [value]="roleOption"
-                  >
-                    {{ roleOption.replace("_", " ") | titlecase }}
-                  </option>
-                </select>
+                  value="Customer"
+                  readonly
+                />
+                <input type="hidden" [(ngModel)]="role" name="role" />
               </div>
             </div>
             <div>

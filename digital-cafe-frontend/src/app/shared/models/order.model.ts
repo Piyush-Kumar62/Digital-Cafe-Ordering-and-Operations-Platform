@@ -1,19 +1,34 @@
 export interface Order {
   id: number;
   orderNumber: string;
+  bookingId?: number;
+  bookingNumber?: string;
   customerId: number;
   customerName?: string;
   cafeId: number;
   cafeName?: string;
-  tableId: number;
+  tableId?: number;
   tableNumber?: string;
   items: OrderItem[];
+  subtotal?: number;
+  tax?: number;
+  discount?: number;
   totalAmount: number;
   status: OrderStatus;
-  orderType: OrderType;
+  orderType?: OrderType;
   specialInstructions?: string;
-  createdAt: string;
-  updatedAt: string;
+  placedAt?: string;
+  preparingAt?: string;
+  readyAt?: string;
+  servedAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  payment?: {
+    paymentId?: number;
+    status?: string;
+    transactionId?: string;
+    completedAt?: string;
+  };
 }
 
 export interface OrderItem {
@@ -21,16 +36,16 @@ export interface OrderItem {
   menuItemId: number;
   menuItemName: string;
   quantity: number;
-  price: number;
-  subtotal: number;
+  unitPrice?: number;
+  totalPrice?: number;
+  price?: number;
+  subtotal?: number;
   specialInstructions?: string;
 }
 
 export interface OrderRequest {
-  cafeId: number;
-  tableId: number;
+  bookingId: number;
   items: OrderItemRequest[];
-  orderType: OrderType;
   specialInstructions?: string;
 }
 
@@ -43,6 +58,7 @@ export interface OrderItemRequest {
 export enum OrderStatus {
   PENDING = 'PENDING',
   CONFIRMED = 'CONFIRMED',
+  PLACED = 'PLACED',
   PREPARING = 'PREPARING',
   READY = 'READY',
   SERVED = 'SERVED',

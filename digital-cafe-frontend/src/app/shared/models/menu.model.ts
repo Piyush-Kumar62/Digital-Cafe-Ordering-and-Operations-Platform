@@ -6,10 +6,11 @@ export interface MenuItem {
   category: string;
   imageUrl?: string;
   isAvailable: boolean;
-  preparationTime: number;
+  preparationTime?: number;
+  preparationTimeMinutes?: number;
   cafeId: number;
   cafeName?: string;
-  createdAt: string;
+  createdAt?: string;
 }
 
 export interface MenuItemRequest {
@@ -19,7 +20,8 @@ export interface MenuItemRequest {
   category: string;
   imageUrl?: string;
   isAvailable: boolean;
-  preparationTime: number;
+  preparationTime?: number;
+  preparationTimeMinutes?: number;
 }
 
 export enum MenuCategory {

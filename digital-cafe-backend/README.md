@@ -423,28 +423,37 @@ stompClient.connect({}, function (frame) {
 **Chef** (new orders):
 
 ```javascript
-stompClient.subscribe("/topic/cafe/{cafeId}/new-orders", function (notification) {
-  const order = JSON.parse(notification.body);
-  // Handle new order notification
-});
+stompClient.subscribe(
+  "/topic/cafe/{cafeId}/new-orders",
+  function (notification) {
+    const order = JSON.parse(notification.body);
+    // Handle new order notification
+  },
+);
 ```
 
 **Waiter** (ready orders):
 
 ```javascript
-stompClient.subscribe("/topic/cafe/{cafeId}/ready-orders", function (notification) {
-  const order = JSON.parse(notification.body);
-  // Handle ready order notification
-});
+stompClient.subscribe(
+  "/topic/cafe/{cafeId}/ready-orders",
+  function (notification) {
+    const order = JSON.parse(notification.body);
+    // Handle ready order notification
+  },
+);
 ```
 
 **Customer** (order status):
 
 ```javascript
-stompClient.subscribe("/topic/customer/{customerId}/orders", function (notification) {
-  const order = JSON.parse(notification.body);
-  // Handle order status update
-});
+stompClient.subscribe(
+  "/topic/customer/{customerId}/orders",
+  function (notification) {
+    const order = JSON.parse(notification.body);
+    // Handle order status update
+  },
+);
 ```
 
 ## 💳 Payment Flow

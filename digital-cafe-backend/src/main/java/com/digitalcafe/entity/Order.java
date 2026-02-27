@@ -11,7 +11,7 @@ import java.util.List;
 
 /**
  * Order entity representing food orders associated with bookings.
- * Tracks order status through the workflow: PLACED -> PREPARING -> READY -> SERVED
+ * Tracks order status through the workflow: PENDING -> PREPARING -> READY -> SERVED
  */
 @Entity
 @Table(name = "orders", indexes = {
@@ -67,7 +67,7 @@ public class Order extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
     @Builder.Default
-    private OrderStatus status = OrderStatus.PLACED;
+    private OrderStatus status = OrderStatus.PENDING;
 
     @Column(name = "special_instructions", columnDefinition = "TEXT")
     private String specialInstructions;
@@ -98,11 +98,11 @@ public class Order extends BaseEntity {
     @JoinColumn(name = "served_by_waiter_id")
     private User servedByWaiter;
 
-    @OneToOne(mappedBy = "order", cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private Payment payment;
 
     public enum OrderStatus {
-        PLACED,       // Order placed by customer
+        PENDING,      // Order created by customer and queued for kitchen
         PREPARING,    // Chef is preparing the food
         READY,        // Food is ready, waiter notified
         SERVED,       // Food served to customer

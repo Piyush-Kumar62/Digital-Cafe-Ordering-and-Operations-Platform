@@ -20,6 +20,8 @@ public class RegisterRequest {
     @NotBlank(message = "Role is required")
     private String role; // ADMIN, CAFE_OWNER, CHEF, WAITER, CUSTOMER
 
+    private String govtIdType;
+
     @Valid
     @NotNull(message = "Personal details are required")
     private PersonalDetailsRequest personalDetails;

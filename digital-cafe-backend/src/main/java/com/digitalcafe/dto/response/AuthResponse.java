@@ -23,6 +23,7 @@ public class AuthResponse {
     private Long userId;
     private String username;
     private String email;
+    private Long cafeId;
     private List<String> roles;
     private Boolean isEmailVerified;
     private Boolean isProfileComplete;

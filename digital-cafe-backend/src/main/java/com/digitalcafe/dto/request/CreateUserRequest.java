@@ -17,5 +17,16 @@ public class CreateUserRequest {
     private String lastName;
 
     private Long cafeId; // For chef and waiter
-}
 
+    // Optional cafe details for admin owner onboarding in a single step.
+    private String cafeName;
+    private String cafeDescription;
+    private String cafeAddress;
+    private String cafeCity;
+    private String cafeState;
+    private String cafePincode;
+    private String cafePhoneNumber;
+    private String cafeEmail;
+    private String openingTime;
+    private String closingTime;
+}

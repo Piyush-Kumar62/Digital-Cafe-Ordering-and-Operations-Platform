@@ -61,6 +61,7 @@ public class ProfileRequest {
         @Size(max = 200)
         private String street;
 
+        @NotBlank(message = "Plot number is required")
         @Size(max = 50)
         private String plotNumber;
 

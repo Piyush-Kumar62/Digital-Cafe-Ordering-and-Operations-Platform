@@ -1,5 +1,8 @@
 package com.digitalcafe.websocket;
 
+import com.digitalcafe.dto.response.AdminProfileResponseDTO;
+import com.digitalcafe.entity.Role;
+import com.digitalcafe.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -14,6 +17,7 @@ import org.springframework.stereotype.Service;
 public class WebSocketNotificationService {
 
     private final SimpMessagingTemplate messagingTemplate;
+    private final UserRepository userRepository;
 
     /**
      * Sends order notification to specific cafe channel.
@@ -59,11 +63,36 @@ public class WebSocketNotificationService {
      */
     public void notifyCustomer(Long customerId, OrderNotification notification) {
         try {
-            String destination = "/queue/user/" + customerId + "/notifications";
+            String destination = "/user/" + customerId + "/queue/notifications";
             messagingTemplate.convertAndSend(destination, notification);
             log.info("Notified customer {}", customerId);
         } catch (Exception e) {
             log.error("Failed to notify customer", e);
         }
+    }
+
+    public void sendProfileUpdate(Long userId, AdminProfileResponseDTO payload) {
+        try {
+            String destination = "/topic/profile/" + userId;
+            messagingTemplate.convertAndSend(destination, payload);
+            log.info("Broadcasted profile update for user {}", userId);
+        } catch (Exception e) {
+            log.error("Failed to broadcast profile update for user {}", userId, e);
+        }
+    }
+
+    public void notifyUser(Long userId, RealtimeNotification payload) {
+        try {
+            String destination = "/user/" + userId + "/queue/notifications";
+            messagingTemplate.convertAndSend(destination, payload);
+            log.info("Sent realtime notification to user {} with type {}", userId, payload.getType());
+        } catch (Exception e) {
+            log.error("Failed to notify user {}", userId, e);
+        }
+    }
+
+    public void notifyAdmins(RealtimeNotification payload) {
+        userRepository.findByRoleName(Role.RoleName.ADMIN)
+                .forEach(admin -> notifyUser(admin.getId(), payload));
     }
 }

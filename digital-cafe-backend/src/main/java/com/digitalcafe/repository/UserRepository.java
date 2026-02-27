@@ -21,6 +21,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("SELECT u FROM User u JOIN u.roles r WHERE r.name = :roleName")
     List<User> findByRoleName(Role.RoleName roleName);
 
+    @Query("SELECT CASE WHEN COUNT(u) > 0 THEN true ELSE false END FROM User u JOIN u.roles r WHERE r.name = :roleName")
+    boolean existsByRoleName(Role.RoleName roleName);
+
     @Query("SELECT u FROM User u JOIN u.roles r WHERE r.name = :roleName")
     Page<User> findByRolesName(String roleName, Pageable pageable);
 
@@ -54,6 +57,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     List<User> findTop10ByOrderByCreatedAtDesc();
     List<User> findTop5ByOrderByCreatedAtDesc();
+    Page<User> findAllByOrderByCreatedAtDesc(Pageable pageable);
     
     // Additional dashboard queries
     Long countByMustResetPassword(Boolean mustResetPassword);

@@ -13,7 +13,8 @@ import java.math.BigDecimal;
 @Entity
 @Table(name = "menu_items", indexes = {
         @Index(name = "idx_cafe_menu", columnList = "cafe_id"),
-        @Index(name = "idx_category", columnList = "category")
+        @Index(name = "idx_category", columnList = "category"),
+        @Index(name = "idx_menu_deleted", columnList = "is_deleted")
 })
 @Getter
 @Setter
@@ -49,6 +50,10 @@ public class MenuItem extends BaseEntity {
     @Column(name = "is_available", nullable = false)
     @Builder.Default
     private Boolean isAvailable = true;
+
+    @Column(name = "is_deleted", nullable = false)
+    @Builder.Default
+    private Boolean isDeleted = false;
 
     @Column(name = "is_vegetarian", nullable = false)
     @Builder.Default

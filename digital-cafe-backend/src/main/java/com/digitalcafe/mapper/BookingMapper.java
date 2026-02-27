@@ -20,6 +20,8 @@ public interface BookingMapper {
     @Mapping(target = "cafeName", source = "cafe.name")
     @Mapping(target = "tableId", source = "table.id")
     @Mapping(target = "tableNumber", source = "table.tableNumber")
+    @Mapping(target = "startTime", expression = "java(booking.getStartTimeOrFallback())")
+    @Mapping(target = "endTime", expression = "java(booking.getEndTimeOrFallback())")
     @Mapping(target = "canOrder", expression = "java(booking.isActive())")
     @Mapping(target = "hasOrder", expression = "java(booking.getOrder() != null)")
     BookingResponse toResponse(Booking booking);

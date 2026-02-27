@@ -27,7 +27,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     // Orders for Chef (newly placed orders that need to be prepared)
     @Query("SELECT o FROM Order o WHERE o.cafe.id = :cafeId " +
-           "AND o.status = 'PLACED' " +
+           "AND o.status = 'PENDING' " +
            "ORDER BY o.createdAt ASC")
     List<Order> findPendingOrdersForChef(Long cafeId);
 
@@ -62,4 +62,5 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     Long countByCreatedAtAfter(LocalDateTime date);
     Long countByCreatedAtBetween(LocalDateTime start, LocalDateTime end);
     Long countByStatus(Order.OrderStatus status);
+    Page<Order> findAllByOrderByCreatedAtDesc(Pageable pageable);
 }

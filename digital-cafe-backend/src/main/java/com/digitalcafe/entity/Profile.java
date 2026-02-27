@@ -48,6 +48,21 @@ public class Profile extends BaseEntity {
     @Column(name = "profile_picture_url")
     private String profilePictureUrl;
 
+    @Column(name = "govt_id_type", length = 50)
+    private String govtIdType;
+
+    @Column(name = "govt_id_file_name", length = 255)
+    private String govtIdFileName;
+
+    @Column(name = "govt_id_content_type", length = 100)
+    private String govtIdContentType;
+
+    @Column(name = "govt_id_document_path", length = 500)
+    private String govtIdDocumentPath;
+
+    @Column(name = "govt_id_file_size")
+    private Long govtIdFileSize;
+
     @OneToOne(mappedBy = "profile", cascade = CascadeType.ALL, orphanRemoval = true)
     private Address address;
 
@@ -81,7 +96,7 @@ public class Profile extends BaseEntity {
      * Calculates profile completion percentage based on filled fields.
      */
     public int calculateCompletionPercentage() {
-        int totalFields = 8; // firstName, lastName, dob, gender, phone, address, academic (at least 1)
+        int totalFields = 7; // firstName, lastName, dob, gender, phone, address, academic (at least 1)
         int filledFields = 0;
 
         if (firstName != null && !firstName.isBlank()) filledFields++;
@@ -99,7 +114,7 @@ public class Profile extends BaseEntity {
      * Checks if profile is complete enough for system access.
      */
     public boolean isComplete() {
-        return calculateCompletionPercentage() >= 85; // Minimum 85% to be considered complete
+        return calculateCompletionPercentage() == 100;
     }
 
     public String getFullName() {

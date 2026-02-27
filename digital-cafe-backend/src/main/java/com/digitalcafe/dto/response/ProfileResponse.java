@@ -25,6 +25,11 @@ public class ProfileResponse {
     private String gender;
     private String phoneNumber;
     private String profilePictureUrl;
+    private String govtIdType;
+    private String govtIdFileName;
+    private String govtIdContentType;
+    private String govtIdDocumentPath;
+    private Long govtIdFileSize;
     private Integer completionPercentage;
     private AddressResponse address;
     private List<AcademicInfoResponse> academicInformation;

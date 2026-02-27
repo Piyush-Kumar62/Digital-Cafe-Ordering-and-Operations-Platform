@@ -29,6 +29,8 @@ public class BookingResponse {
     private String tableNumber;
     private LocalDate bookingDate;
     private LocalTime bookingTime;
+    private LocalTime startTime;
+    private LocalTime endTime;
     private Integer numberOfGuests;
     private String status;
     private String specialRequests;

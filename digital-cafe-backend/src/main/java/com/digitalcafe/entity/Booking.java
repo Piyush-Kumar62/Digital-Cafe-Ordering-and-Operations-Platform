@@ -18,7 +18,9 @@ import java.time.LocalTime;
         @Index(name = "idx_customer_booking", columnList = "customer_id"),
         @Index(name = "idx_cafe_booking", columnList = "cafe_id"),
         @Index(name = "idx_table_booking", columnList = "table_id"),
-        @Index(name = "idx_booking_date_time", columnList = "booking_date, booking_time")
+        @Index(name = "idx_booking_date", columnList = "booking_date"),
+        @Index(name = "idx_booking_date_time", columnList = "booking_date, booking_time"),
+        @Index(name = "idx_booking_date_start_time", columnList = "booking_date, start_time")
 }, uniqueConstraints = {
         @UniqueConstraint(name = "uk_booking_table_date_time", columnNames = {"table_id", "booking_date", "booking_time"})
 })
@@ -54,6 +56,12 @@ public class Booking extends BaseEntity {
     @Column(name = "booking_time", nullable = false)
     private LocalTime bookingTime;
 
+    @Column(name = "start_time")
+    private LocalTime startTime;
+
+    @Column(name = "end_time")
+    private LocalTime endTime;
+
     @Column(name = "number_of_guests", nullable = false)
     private Integer numberOfGuests;
 
@@ -75,6 +83,7 @@ public class Booking extends BaseEntity {
     private Order order;
 
     public enum BookingStatus {
+        BOOKED,       // Booking confirmed and active
         PENDING,      // Booking created, awaiting confirmation
         CONFIRMED,    // Booking confirmed
         CHECKED_IN,   // Customer arrived
@@ -87,14 +96,31 @@ public class Booking extends BaseEntity {
      * Gets the booking date and time as LocalDateTime.
      */
     public LocalDateTime getBookingDateTime() {
-        return LocalDateTime.of(bookingDate, bookingTime);
+        return LocalDateTime.of(bookingDate, getStartTimeOrFallback());
+    }
+
+    public LocalTime getStartTimeOrFallback() {
+        return startTime != null ? startTime : bookingTime;
+    }
+
+    public LocalTime getEndTimeOrFallback() {
+        LocalTime effectiveStart = getStartTimeOrFallback();
+        if (endTime != null) {
+            return endTime;
+        }
+        return effectiveStart != null ? effectiveStart.plusHours(2) : null;
+    }
+
+    public LocalDateTime getBookingEndDateTime() {
+        LocalTime effectiveEnd = getEndTimeOrFallback();
+        return LocalDateTime.of(bookingDate, effectiveEnd);
     }
 
     /**
      * Checks if booking is active (can be used for orders).
      */
     public boolean isActive() {
-        return status == BookingStatus.CONFIRMED || status == BookingStatus.CHECKED_IN;
+        return status == BookingStatus.BOOKED || status == BookingStatus.CONFIRMED || status == BookingStatus.CHECKED_IN;
     }
 
     /**

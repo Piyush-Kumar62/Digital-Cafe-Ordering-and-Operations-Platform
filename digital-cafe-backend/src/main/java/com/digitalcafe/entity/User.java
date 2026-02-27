@@ -15,7 +15,9 @@ import java.util.Set;
 @Entity
 @Table(name = "users", indexes = {
         @Index(name = "idx_username", columnList = "username"),
-        @Index(name = "idx_email", columnList = "email")
+        @Index(name = "idx_email", columnList = "email"),
+        @Index(name = "idx_user_cafe_id", columnList = "cafe_id"),
+        @Index(name = "idx_created_by_user_id", columnList = "created_by_user_id")
 })
 @Getter
 @Setter
@@ -34,6 +36,18 @@ public class User extends BaseEntity {
     @Column(name = "email", nullable = false, unique = true, length = 100)
     private String email;
 
+    @Column(name = "first_name", length = 100)
+    private String firstName;
+
+    @Column(name = "last_name", length = 100)
+    private String lastName;
+
+    @Column(name = "display_name", length = 150)
+    private String displayName;
+
+    @Column(name = "profile_image_url", length = 500)
+    private String profileImageUrl;
+
     @Column(name = "password", nullable = false)
     private String password;
 
@@ -44,6 +58,10 @@ public class User extends BaseEntity {
     @Column(name = "is_email_verified", nullable = false)
     @Builder.Default
     private Boolean isEmailVerified = false;
+
+    @Column(name = "email_verified", nullable = false)
+    @Builder.Default
+    private Boolean emailVerified = false;
 
     @Column(name = "is_profile_complete", nullable = false)
     @Builder.Default
@@ -69,6 +87,11 @@ public class User extends BaseEntity {
     @Column(name = "last_login")
     private LocalDateTime lastLogin;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "account_status", nullable = false, length = 20)
+    @Builder.Default
+    private AccountStatus accountStatus = AccountStatus.ACTIVE;
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "user_roles",
@@ -80,6 +103,9 @@ public class User extends BaseEntity {
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Profile profile;
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private UserPreference userPreference;
 
     // Relationship tracking for staff created by cafe owners
     @ManyToOne(fetch = FetchType.LAZY)
@@ -105,6 +131,11 @@ public class User extends BaseEntity {
         REJECTED
     }
 
+    public enum AccountStatus {
+        ACTIVE,
+        DISABLED
+    }
+
     /**
      * Adds a role to the user.
      */
@@ -117,5 +148,42 @@ public class User extends BaseEntity {
      */
     public boolean hasRole(Role.RoleName roleName) {
         return roles.stream().anyMatch(role -> role.getName().equals(roleName));
+    }
+
+    public void setIsActive(Boolean isActive) {
+        this.isActive = isActive;
+        this.accountStatus = Boolean.TRUE.equals(isActive) ? AccountStatus.ACTIVE : AccountStatus.DISABLED;
+    }
+
+    public void setAccountStatus(AccountStatus accountStatus) {
+        this.accountStatus = accountStatus == null ? AccountStatus.ACTIVE : accountStatus;
+        this.isActive = this.accountStatus == AccountStatus.ACTIVE;
+    }
+
+    public void setIsEmailVerified(Boolean isEmailVerified) {
+        this.isEmailVerified = isEmailVerified;
+        this.emailVerified = isEmailVerified;
+    }
+
+    public void setEmailVerified(Boolean emailVerified) {
+        this.emailVerified = emailVerified;
+        this.isEmailVerified = emailVerified;
+    }
+
+    @PrePersist
+    @PreUpdate
+    private void syncDerivedAccountFields() {
+        if (this.accountStatus == null) {
+            this.accountStatus = Boolean.TRUE.equals(this.isActive) ? AccountStatus.ACTIVE : AccountStatus.DISABLED;
+        }
+        if (this.isActive == null) {
+            this.isActive = this.accountStatus == AccountStatus.ACTIVE;
+        }
+        if (this.emailVerified == null) {
+            this.emailVerified = Boolean.TRUE.equals(this.isEmailVerified);
+        }
+        if (this.isEmailVerified == null) {
+            this.isEmailVerified = Boolean.TRUE.equals(this.emailVerified);
+        }
     }
 }

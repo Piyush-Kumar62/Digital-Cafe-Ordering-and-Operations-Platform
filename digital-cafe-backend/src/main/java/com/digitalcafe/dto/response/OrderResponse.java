@@ -1,5 +1,6 @@
 package com.digitalcafe.dto.response;
 
+import com.digitalcafe.entity.Order;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -31,7 +32,7 @@ public class OrderResponse {
     private BigDecimal tax;
     private BigDecimal discount;
     private BigDecimal totalAmount;
-    private String status;
+    private Order.OrderStatus status;
     private String specialInstructions;
     private LocalDateTime placedAt;
     private LocalDateTime preparingAt;

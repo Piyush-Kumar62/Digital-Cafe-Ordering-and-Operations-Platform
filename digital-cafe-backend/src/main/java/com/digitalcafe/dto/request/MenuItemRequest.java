@@ -40,6 +40,10 @@ public class MenuItemRequest {
     @Min(value = 1, message = "Preparation time must be at least 1 minute")
     private Integer preparationTimeMinutes;
 
+    // Backward compatibility for existing frontend payload key.
+    @Min(value = 1, message = "Preparation time must be at least 1 minute")
+    private Integer preparationTime;
+
     @Min(value = 0)
     private Integer calories;
 

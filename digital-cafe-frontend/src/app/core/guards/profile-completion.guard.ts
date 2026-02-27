@@ -17,6 +17,10 @@ export const profileCompletionGuard: CanActivateFn = (route, state) => {
     return false;
   }
 
+  if (authService.isSystemAdmin()) {
+    return true;
+  }
+
   // Check if profile is complete (only for customers)
   if (authService.isCustomer() && !user.isProfileComplete) {
     router.navigate(['/customer/complete-profile']);

@@ -22,6 +22,11 @@ import {
 } from "@shared/models/booking.model";
 import { Payment, PaymentRequest } from "@shared/models/payment.model";
 import {
+  AdminProfile,
+  AdminProfileUpdateRequest,
+  ProfileImageUploadResponse,
+} from "@shared/models/admin-profile.model";
+import {
   Profile,
   ProfileUpdateRequest,
   AcademicInfo,
@@ -219,6 +224,13 @@ export class ApiService {
       .pipe(map((res: any) => res?.data || []));
   }
 
+  // Backward-compatible alias for waiter workflow screens.
+  getReadyOrdersForWaiterWorkflow(): Observable<Order[]> {
+    return this.http
+      .get<any>(`${this.baseUrl}/waiter/ready-orders`)
+      .pipe(map((res: any) => this.unwrapApiData<Order[]>(res, [])));
+  }
+
   getOrdersByStatus(cafeId: number, status: string): Observable<Order[]> {
     return this.http.get<Order[]>(
       `${this.baseUrl}/orders/cafe/${cafeId}/status/${status}`,
@@ -233,6 +245,27 @@ export class ApiService {
     return this.http.put<Order>(`${this.baseUrl}/orders/${id}/status`, null, {
       params: { status },
     });
+  }
+
+  // Backward-compatible chef workflow helper.
+  getChefOrders(): Observable<Order[]> {
+    return this.http
+      .get<any>(`${this.baseUrl}/chef/orders`)
+      .pipe(map((res: any) => this.unwrapApiData<Order[]>(res, [])));
+  }
+
+  // Backward-compatible chef workflow helper.
+  markOrderReady(orderId: number): Observable<Order> {
+    return this.http
+      .put<any>(`${this.baseUrl}/chef/order/${orderId}/ready`, null)
+      .pipe(map((res: any) => this.unwrapApiData<Order>(res, res as Order)));
+  }
+
+  // Backward-compatible waiter workflow helper.
+  markOrderServed(orderId: number): Observable<Order> {
+    return this.http
+      .put<any>(`${this.baseUrl}/waiter/order/${orderId}/served`, null)
+      .pipe(map((res: any) => this.unwrapApiData<Order>(res, res as Order)));
   }
 
   cancelOrder(id: number): Observable<MessageResponse> {
@@ -297,6 +330,112 @@ export class ApiService {
 
   getPaymentByOrder(orderId: number): Observable<Payment> {
     return this.http.get<Payment>(`${this.baseUrl}/payments/order/${orderId}`);
+  }
+
+  // Backward-compatible customer payments list.
+  getMyPayments(): Observable<Payment[]> {
+    return this.http
+      .get<any>(`${this.baseUrl}/payments/my`)
+      .pipe(map((res: any) => this.unwrapApiData<Payment[]>(res, [])));
+  }
+
+  verifyPayment(
+    paymentId: number,
+    paymentGatewayPaymentId: string,
+    signature: string,
+  ): Observable<Payment> {
+    return this.http
+      .post<any>(`${this.baseUrl}/payments/${paymentId}/verify`, {
+        paymentGatewayPaymentId,
+        signature,
+      })
+      .pipe(map((res: any) => this.unwrapApiData<Payment>(res, res as Payment)));
+  }
+
+  getAdminProfile(): Observable<AdminProfile> {
+    return this.http
+      .get<any>(`${this.baseUrl}/users/profile`)
+      .pipe(map((res: any) => this.unwrapApiData<AdminProfile>(res, res as AdminProfile)));
+  }
+
+  updateAdminProfile(request: AdminProfileUpdateRequest): Observable<AdminProfile> {
+    return this.http
+      .put<any>(`${this.baseUrl}/users/profile`, request)
+      .pipe(map((res: any) => this.unwrapApiData<AdminProfile>(res, res as AdminProfile)));
+  }
+
+  uploadAdminProfileImage(file: File): Observable<ProfileImageUploadResponse> {
+    const formData = new FormData();
+    formData.append("file", file);
+    return this.http
+      .post<any>(`${this.baseUrl}/users/profile/image`, formData)
+      .pipe(
+        map((res: any) =>
+          this.unwrapApiData<ProfileImageUploadResponse>(res, res as ProfileImageUploadResponse),
+        ),
+      );
+  }
+
+  deleteAdminProfileImage(): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/users/profile/image`);
+  }
+
+  uploadCustomerProfileImage(file: File): Observable<ProfileImageUploadResponse> {
+    const formData = new FormData();
+    formData.append("file", file);
+    return this.http
+      .post<any>(`${this.baseUrl}/users/profile/self/image`, formData)
+      .pipe(
+        map((res: any) =>
+          this.unwrapApiData<ProfileImageUploadResponse>(res, res as ProfileImageUploadResponse),
+        ),
+      );
+  }
+
+  updateCustomerProfile(request: {
+    firstName: string;
+    lastName: string;
+    displayName: string;
+  }): Observable<{
+    firstName?: string;
+    lastName?: string;
+    displayName?: string;
+    profileImageUrl?: string;
+    profileCompletionPercentage?: number;
+    lastLogin?: string;
+  }> {
+    return this.http
+      .put<any>(`${this.baseUrl}/users/profile/self`, request)
+      .pipe(
+        map((res: any) =>
+          this.unwrapApiData(res, {
+            firstName: "",
+            lastName: "",
+            displayName: "",
+          }),
+        ),
+      );
+  }
+
+  getCustomerProfile(): Observable<{
+    firstName?: string;
+    lastName?: string;
+    displayName?: string;
+    profileImageUrl?: string;
+    profileCompletionPercentage?: number;
+    lastLogin?: string;
+  }> {
+    return this.http
+      .get<any>(`${this.baseUrl}/users/profile/self`)
+      .pipe(
+        map((res: any) =>
+          this.unwrapApiData(res, {
+            firstName: "",
+            lastName: "",
+            displayName: "",
+          }),
+        ),
+      );
   }
 
   // ============ Profile APIs ============
@@ -566,5 +705,45 @@ export class ApiService {
       `${this.baseUrl}/admin/reject/${userId}`,
       null,
     );
+  }
+
+  getAdminActivities(
+    page: number = 0,
+    size: number = 10,
+  ): Observable<{
+    content: Array<{
+      timestamp: string;
+      description: string;
+      userRole?: string;
+      activityType?: string;
+      type?: string;
+    }>;
+    totalElements: number;
+    totalPages: number;
+    pageNumber: number;
+    pageSize: number;
+  }> {
+    const params = new HttpParams()
+      .set("page", page.toString())
+      .set("size", size.toString());
+
+    return this.http.get<any>(`${this.baseUrl}/admin/activities`, { params }).pipe(
+      map((res: any) =>
+        this.unwrapApiData(res, {
+          content: [],
+          totalElements: 0,
+          totalPages: 0,
+          pageNumber: page,
+          pageSize: size,
+        }),
+      ),
+    );
+  }
+
+  private unwrapApiData<T>(response: any, fallback: T): T {
+    if (response && typeof response === "object" && "data" in response) {
+      return (response.data ?? fallback) as T;
+    }
+    return (response ?? fallback) as T;
   }
 }

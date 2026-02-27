@@ -13,6 +13,10 @@ export const emailVerificationGuard: CanActivateFn = (route, state) => {
     return false;
   }
 
+  if (authService.isSystemAdmin()) {
+    return true;
+  }
+
   // Check if email is verified
   if (!user.isEmailVerified) {
     router.navigate(['/auth/verify-email']);

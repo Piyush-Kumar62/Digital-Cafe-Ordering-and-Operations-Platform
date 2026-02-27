@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Client, IMessage, StompSubscription } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, filter, Observable } from 'rxjs';
 import { environment } from '@environments/environment';
 import { AuthService } from '@core/auth/auth.service';
 import { Order } from '@shared/models/order.model';
@@ -18,10 +18,12 @@ export interface WebSocketMessage {
 export class WebSocketService {
   private client: Client | null = null;
   private subscriptions: Map<string, StompSubscription> = new Map();
+  private destinationCallbacks: Map<string, Array<(payload: any) => void>> = new Map();
+  private destinationStreams: Map<string, BehaviorSubject<any | null>> = new Map();
+  private defaultSubscriptionsInitialized = false;
   private connectionStatus = new BehaviorSubject<boolean>(false);
   public connectionStatus$ = this.connectionStatus.asObservable();
 
-  // Order notification subjects
   private orderNotifications = new BehaviorSubject<Order | null>(null);
   public orderNotifications$ = this.orderNotifications.asObservable();
 
@@ -54,9 +56,10 @@ export class WebSocketService {
       reconnectDelay: 5000,
       heartbeatIncoming: 4000,
       heartbeatOutgoing: 4000,
-      onConnect: (_frame) => {
+      onConnect: () => {
         this.connectionStatus.next(true);
         this.setupDefaultSubscriptions();
+        this.resubscribeDynamicDestinations();
       },
       onDisconnect: () => {
         this.connectionStatus.next(false);
@@ -74,6 +77,10 @@ export class WebSocketService {
     if (this.client) {
       this.subscriptions.forEach((sub) => sub.unsubscribe());
       this.subscriptions.clear();
+      this.destinationCallbacks.clear();
+      this.destinationStreams.forEach((stream) => stream.complete());
+      this.destinationStreams.clear();
+      this.defaultSubscriptionsInitialized = false;
       this.client.deactivate();
       this.client = null;
       this.connectionStatus.next(false);
@@ -82,37 +89,6 @@ export class WebSocketService {
 
   isConnected(): boolean {
     return this.client?.connected || false;
-  }
-
-  private setupDefaultSubscriptions(): void {
-    const user = this.authService.currentUserValue;
-    if (!user) return;
-
-    // Subscribe to user-specific notifications
-    this.subscribe(`/user/queue/notifications`, (message) => {
-      this.handleNotification(message);
-    });
-    // Backward-compatible path in case server uses explicit user-id queue naming
-    this.subscribe(`/user/${user.id}/queue/notifications`, (message) => {
-      this.handleNotification(message);
-    });
-
-    // Subscribe to role-based channels
-    if (user.roles.includes('ROLE_CHEF') && user.cafeId) {
-      this.subscribeToChefOrders(user.cafeId);
-    }
-
-    if (user.roles.includes('ROLE_WAITER') && user.cafeId) {
-      this.subscribeToWaiterOrders(user.cafeId);
-    }
-
-    if (user.roles.includes('ROLE_CAFE_OWNER') && user.cafeId) {
-      this.subscribeToCafeOrders(user.cafeId);
-    }
-
-    if (user.roles.includes('ROLE_CUSTOMER')) {
-      this.subscribeToCustomerOrders(user.id);
-    }
   }
 
   subscribeToChefOrders(cafeId: number): void {
@@ -162,27 +138,19 @@ export class WebSocketService {
     });
   }
 
-  private subscribe(destination: string, callback: (payload: any) => void): void {
-    if (!this.client?.connected) {
-      console.error('Cannot subscribe: WebSocket not connected');
-      return;
+  watchDestination<T>(destination: string): Observable<T> {
+    let stream = this.destinationStreams.get(destination);
+    if (!stream) {
+      stream = new BehaviorSubject<T | null>(null);
+      this.destinationStreams.set(destination, stream);
+      this.subscribe(destination, (payload: T) => stream?.next(payload));
     }
 
-    // Avoid duplicate subscriptions
-    if (this.subscriptions.has(destination)) {
-      return;
+    if (!this.isConnected()) {
+      this.connect();
     }
 
-    const subscription = this.client.subscribe(destination, (message: IMessage) => {
-      try {
-        const payload = JSON.parse(message.body);
-        callback(payload);
-      } catch (error) {
-        console.error('Error parsing WebSocket message:', error);
-      }
-    });
-
-    this.subscriptions.set(destination, subscription);
+    return stream.asObservable().pipe(filter((value): value is T => value !== null));
   }
 
   unsubscribe(destination: string): void {
@@ -190,6 +158,13 @@ export class WebSocketService {
     if (subscription) {
       subscription.unsubscribe();
       this.subscriptions.delete(destination);
+    }
+    this.destinationCallbacks.delete(destination);
+
+    const stream = this.destinationStreams.get(destination);
+    if (stream) {
+      stream.complete();
+      this.destinationStreams.delete(destination);
     }
   }
 
@@ -205,8 +180,58 @@ export class WebSocketService {
     });
   }
 
+  private setupDefaultSubscriptions(): void {
+    if (this.defaultSubscriptionsInitialized) {
+      return;
+    }
+
+    const user = this.authService.currentUserValue;
+    if (!user) return;
+
+    this.subscribe('/user/queue/notifications', (message) => this.handleNotification(message));
+    this.subscribe(`/user/${user.id}/queue/notifications`, (message) => this.handleNotification(message));
+
+    if (user.roles.includes('ROLE_CHEF') && user.cafeId) {
+      this.subscribeToChefOrders(user.cafeId);
+    }
+
+    if (user.roles.includes('ROLE_WAITER') && user.cafeId) {
+      this.subscribeToWaiterOrders(user.cafeId);
+    }
+
+    if (user.roles.includes('ROLE_CAFE_OWNER') && user.cafeId) {
+      this.subscribeToCafeOrders(user.cafeId);
+    }
+
+    if (user.roles.includes('ROLE_CUSTOMER')) {
+      this.subscribeToCustomerOrders(user.id);
+    }
+
+    this.defaultSubscriptionsInitialized = true;
+  }
+
+  private subscribe(destination: string, callback: (payload: any) => void): void {
+    const callbacks = this.destinationCallbacks.get(destination) || [];
+    this.destinationCallbacks.set(destination, [...callbacks, callback]);
+
+    if (!this.client?.connected || this.subscriptions.has(destination)) {
+      return;
+    }
+
+    const subscription = this.client.subscribe(destination, (message: IMessage) => {
+      try {
+        const payload = JSON.parse(message.body);
+        const destinationCallbacks = this.destinationCallbacks.get(destination) || [];
+        destinationCallbacks.forEach((cb) => cb(payload));
+      } catch (error) {
+        console.error('Error parsing WebSocket message:', error);
+      }
+    });
+
+    this.subscriptions.set(destination, subscription);
+  }
+
   private handleNotification(message: any): void {
-    // Handle different notification types
     switch (message.type) {
       case 'NEW_ORDER':
         this.orderNotifications.next(message.payload);
@@ -217,5 +242,25 @@ export class WebSocketService {
       default:
         break;
     }
+  }
+
+  private resubscribeDynamicDestinations(): void {
+    Array.from(this.destinationCallbacks.keys()).forEach((destination) => {
+      if (this.subscriptions.has(destination) || !this.client?.connected) {
+        return;
+      }
+
+      const subscription = this.client.subscribe(destination, (message: IMessage) => {
+        try {
+          const payload = JSON.parse(message.body);
+          const callbacks = this.destinationCallbacks.get(destination) || [];
+          callbacks.forEach((cb) => cb(payload));
+        } catch (error) {
+          console.error('Error parsing WebSocket message:', error);
+        }
+      });
+
+      this.subscriptions.set(destination, subscription);
+    });
   }
 }

@@ -52,6 +52,11 @@ export class AuthService {
     return this.hasRole(UserRole.ADMIN);
   }
 
+  // Backward-compatible alias used by guards/components.
+  public isSystemAdmin(): boolean {
+    return this.isAdmin();
+  }
+
   public isCafeOwner(): boolean {
     return this.hasRole(UserRole.CAFE_OWNER);
   }
@@ -77,6 +82,12 @@ export class AuthService {
 
   register(request: RegisterRequest): Observable<RegisterResponse> {
     return this.http.post<RegisterResponse>(`${this.apiUrl}/register`, request).pipe(catchError(this.handleError));
+  }
+
+  // Backward-compatible method for legacy registration flow that supplied govt proof.
+  // Current backend contract accepts JSON /register; file argument is intentionally ignored.
+  registerWithGovtId(request: RegisterRequest, _govtIdProof: File): Observable<RegisterResponse> {
+    return this.register(request);
   }
 
   login(request: LoginRequest): Observable<AuthResponse> {
@@ -179,7 +190,7 @@ export class AuthService {
     } else if (this.isWaiter()) {
       return '/waiter/dashboard';
     } else if (this.isCustomer()) {
-      return '/customer/dashboard';
+      return '/customer/cafe';
     }
 
     return '/auth/login';

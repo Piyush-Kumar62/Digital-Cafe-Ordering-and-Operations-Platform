@@ -3,7 +3,7 @@ import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
 import { Router, RouterModule } from "@angular/router";
 import { AuthService } from "../../../core/auth/auth.service";
-import { NotificationService } from "@core/services/notification.service";
+import { AlertService } from "@core/services/alert.service";
 import { NavbarComponent } from "../../../shared/components/navbar/navbar.component";
 import {
   PersonalDetails,
@@ -49,6 +49,7 @@ export class RegisterComponent implements OnInit {
   // Step 3: Address
   address: AddressInfo = {
     street: "",
+    plotNumber: "",
     city: "",
     state: "",
     pincode: "",
@@ -89,7 +90,7 @@ export class RegisterComponent implements OnInit {
   constructor(
     private authService: AuthService,
     private router: Router,
-    private notificationService: NotificationService,
+    private alertService: AlertService,
   ) {}
 
   ngOnInit() {
@@ -196,6 +197,10 @@ export class RegisterComponent implements OnInit {
     const addr = this.address;
     if (!addr.street.trim()) {
       this.errorMessage = "Street address is required";
+      return false;
+    }
+    if (!addr.plotNumber.trim()) {
+      this.errorMessage = "Plot number is required";
       return false;
     }
     if (!addr.city.trim()) {
@@ -313,11 +318,15 @@ export class RegisterComponent implements OnInit {
   // Submit registration
   onSubmit() {
     if (!this.validateCurrentStep()) {
+      if (this.errorMessage) {
+        this.alertService.warning("Validation Error", this.errorMessage);
+      }
       return;
     }
 
     this.isLoading = true;
     this.errorMessage = "";
+    this.alertService.loading("Creating your account. Please wait.");
 
     // Filter out empty work experiences
     const filteredWorkExperience = this.workExperienceList.filter(
@@ -327,6 +336,7 @@ export class RegisterComponent implements OnInit {
     const payload: RegisterRequest = {
       username: this.username.trim(),
       role: "CUSTOMER",
+      govtIdType: this.govtIdType,
       personalDetails: this.personalDetails,
       address: this.address,
       academicInfoList: this.academicInfoList,
@@ -334,21 +344,26 @@ export class RegisterComponent implements OnInit {
         filteredWorkExperience.length > 0 ? filteredWorkExperience : undefined,
     };
 
-    this.authService.register(payload).subscribe({
+    const request$ = this.govtIdProof
+      ? this.authService.registerWithGovtId(payload, this.govtIdProof)
+      : this.authService.register(payload);
+
+    request$.subscribe({
       next: (response) => {
         this.isLoading = false;
+        this.alertService.close();
         this.successMessage =
           response.message || "Registration successful. Awaiting admin approval.";
-        this.notificationService.success(
-          "Registration successful. Awaiting admin approval.",
-        );
+        this.alertService.success("Registration Successful", this.successMessage);
         setTimeout(() => {
           this.router.navigate(["/auth/login"]);
         }, 2000);
       },
       error: (error) => {
         this.isLoading = false;
+        this.alertService.close();
         this.errorMessage = error.message || "Registration failed. Please try again.";
+        this.alertService.error("Registration Failed", this.errorMessage);
       },
     });
   }
@@ -370,3 +385,5 @@ export class RegisterComponent implements OnInit {
     return step <= this.currentStep;
   }
 }
+
+

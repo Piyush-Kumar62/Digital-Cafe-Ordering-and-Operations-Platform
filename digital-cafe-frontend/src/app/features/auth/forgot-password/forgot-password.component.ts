@@ -3,7 +3,7 @@ import { Component } from "@angular/core";
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from "@angular/forms";
 import { RouterModule } from "@angular/router";
 import { AuthService } from "@core/auth/auth.service";
-import { NotificationService } from "@core/services/notification.service";
+import { AlertService } from "@core/services/alert.service";
 import { NavbarComponent } from "@shared/components/navbar/navbar.component";
 
 @Component({
@@ -21,7 +21,7 @@ export class ForgotPasswordComponent {
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
-    private notificationService: NotificationService,
+    private alertService: AlertService,
   ) {
     this.forgotPasswordForm = this.fb.group({
       email: ["", [Validators.required, Validators.email]],
@@ -39,19 +39,24 @@ export class ForgotPasswordComponent {
     }
 
     this.loading = true;
+    this.alertService.loading("Sending reset link. Please wait.");
     const email = this.forgotPasswordForm.value.email as string;
 
     this.authService.forgotPassword(email).subscribe({
       next: () => {
         this.loading = false;
+        this.alertService.close();
         this.sent = true;
-        this.notificationService.success("Reset link sent to your email.");
+        this.alertService.success("Reset Link Sent", "Check your inbox for password reset instructions.");
       },
       error: (error) => {
         this.loading = false;
-        this.notificationService.error(error.message || "Failed to send reset link.");
+        this.alertService.close();
+        this.alertService.error("Reset Request Failed", error.message || "Failed to send reset link.");
       },
     });
   }
 }
+
+
 

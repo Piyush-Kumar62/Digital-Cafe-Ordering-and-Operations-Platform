@@ -156,6 +156,16 @@ import { FooterComponent } from "@shared/components/footer/footer.component";
   `,
   styles: [
     `
+      :host ::ng-deep app-navbar .navbar-spacer {
+        border-bottom: 0 !important;
+        background: linear-gradient(
+          120deg,
+          #18181b 0%,
+          #1e293b 60%,
+          #0f172a 100%
+        ) !important;
+      }
+
       .about-hero {
         background: linear-gradient(
           120deg,

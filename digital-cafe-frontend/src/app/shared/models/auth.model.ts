@@ -12,6 +12,9 @@ export interface User {
   mustResetPassword?: boolean;
   registrationStatus?: string;
   cafeId?: number;
+  avatarUrl?: string;
+  profileImageUrl?: string;
+  lastLogin?: string;
   createdAt?: string;
 }
 
@@ -22,6 +25,7 @@ export interface AuthResponse {
   userId: number;
   username: string;
   email: string;
+  cafeId?: number;
   roles: string[];
   isEmailVerified: boolean;
   isProfileComplete: boolean;
@@ -69,6 +73,7 @@ export interface PersonalDetails {
 
 export interface AddressInfo {
   street: string;
+  plotNumber: string;
   city: string;
   state: string;
   pincode: string;
@@ -100,6 +105,7 @@ export interface WorkExperience {
 export interface RegisterRequest {
   username: string;
   role: string;
+  govtIdType?: string;
   personalDetails: PersonalDetails;
   address: AddressInfo;
   academicInfoList: AcademicInfo[];

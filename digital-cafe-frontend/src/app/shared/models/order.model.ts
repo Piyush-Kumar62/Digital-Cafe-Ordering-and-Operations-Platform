@@ -57,12 +57,9 @@ export interface OrderItemRequest {
 
 export enum OrderStatus {
   PENDING = 'PENDING',
-  CONFIRMED = 'CONFIRMED',
-  PLACED = 'PLACED',
   PREPARING = 'PREPARING',
   READY = 'READY',
   SERVED = 'SERVED',
-  COMPLETED = 'COMPLETED',
   CANCELLED = 'CANCELLED',
 }
 

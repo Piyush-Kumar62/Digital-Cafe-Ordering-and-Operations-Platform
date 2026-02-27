@@ -1,0 +1,29 @@
+<section class="cafe-list-page">
+  <header class="hero">
+    <p class="eyebrow">Digital Cafe Platform</p>
+    <h1>Browse Cafes</h1>
+    <p>Pick a cafe, select your slot, pre-order items, and checkout smoothly.</p>
+  </header>
+
+  <div class="state" *ngIf="loading">Loading cafes...</div>
+  <div class="state" *ngIf="!loading && cafes.length === 0">No cafes available right now.</div>
+
+  <section class="grid" *ngIf="!loading && cafes.length > 0">
+    <article class="card" *ngFor="let cafe of cafes" (click)="openCafe(cafe.id)">
+      <img [src]="cafe.imageUrl || 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1200&q=80'" [alt]="cafe.name" />
+      <span class="rating">★ {{ cafe.rating || 0 | number: "1.1-1" }}</span>
+      <div class="content">
+        <h3>{{ cafe.name }}</h3>
+        <p class="location">{{ cafe.location }}</p>
+        <p class="description">{{ cafe.description || "No description available." }}</p>
+        <p class="time">{{ cafe.openTime }} - {{ cafe.closeTime }}</p>
+      </div>
+    </article>
+  </section>
+
+  <footer class="pager" *ngIf="totalPages > 1">
+    <button (click)="previous()" [disabled]="page === 0">Previous</button>
+    <span>Page {{ page + 1 }} of {{ totalPages }}</span>
+    <button (click)="next()" [disabled]="page + 1 >= totalPages">Next</button>
+  </footer>
+</section>

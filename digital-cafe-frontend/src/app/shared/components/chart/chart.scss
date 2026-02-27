@@ -1,0 +1,21 @@
+:host {
+  display: block;
+  width: 100%;
+  min-height: 280px;
+}
+
+.chart-wrapper {
+  width: 100%;
+  min-height: 280px;
+}
+
+.no-data {
+  min-height: 240px;
+  display: grid;
+  place-items: center;
+  border: 1px dashed #cbd5e1;
+  border-radius: 12px;
+  color: #64748b;
+  font-size: 0.9rem;
+  background: #f8fafc;
+}

@@ -9,6 +9,8 @@ export interface Booking {
   tableNumber?: string;
   bookingDate: string;
   bookingTime: string;
+  startTime?: string;
+  endTime?: string;
   numberOfGuests: number;
   status: BookingStatus;
   specialRequests?: string;
@@ -22,11 +24,14 @@ export interface BookingRequest {
   tableId: number;
   bookingDate: string;
   bookingTime: string;
+  startTime?: string;
+  endTime?: string;
   numberOfGuests: number;
   specialRequests?: string;
 }
 
 export enum BookingStatus {
+  BOOKED = 'BOOKED',
   PENDING = 'PENDING',
   CONFIRMED = 'CONFIRMED',
   CANCELLED = 'CANCELLED',

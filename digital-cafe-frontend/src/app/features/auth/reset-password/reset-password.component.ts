@@ -3,7 +3,7 @@ import { Component, OnInit } from "@angular/core";
 import { AbstractControl, FormBuilder, FormGroup, ReactiveFormsModule, ValidationErrors, ValidatorFn, Validators } from "@angular/forms";
 import { ActivatedRoute, Router, RouterModule } from "@angular/router";
 import { AuthService } from "@core/auth/auth.service";
-import { NotificationService } from "@core/services/notification.service";
+import { AlertService } from "@core/services/alert.service";
 import { NavbarComponent } from "@shared/components/navbar/navbar.component";
 
 function passwordMatchValidator(passwordKey: string, confirmPasswordKey: string): ValidatorFn {
@@ -33,7 +33,7 @@ export class ResetPasswordComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     public authService: AuthService,
-    private notificationService: NotificationService,
+    private alertService: AlertService,
   ) {}
 
   ngOnInit(): void {
@@ -68,6 +68,7 @@ export class ResetPasswordComponent implements OnInit {
     }
 
     this.loading = true;
+    this.alertService.loading("Updating password. Please wait.");
 
     if (this.useTokenFlow && this.token) {
       this.authService
@@ -78,12 +79,14 @@ export class ResetPasswordComponent implements OnInit {
         .subscribe({
           next: () => {
             this.loading = false;
+            this.alertService.close();
             this.completed = true;
-            this.notificationService.success("Password reset successful. Please login.");
+            this.alertService.success("Password Reset Successful", "Please login with your new password.");
           },
           error: (error) => {
             this.loading = false;
-            this.notificationService.error(error.message || "Failed to reset password.");
+            this.alertService.close();
+            this.alertService.error("Reset Failed", error.message || "Failed to reset password.");
           },
         });
       return;
@@ -97,13 +100,15 @@ export class ResetPasswordComponent implements OnInit {
       .subscribe({
         next: () => {
           this.loading = false;
+          this.alertService.close();
           this.completed = true;
-          this.notificationService.success("Password updated successfully.");
+          this.alertService.success("Password Updated", "Your password has been changed successfully.");
           this.authService.logout();
         },
         error: (error) => {
           this.loading = false;
-          this.notificationService.error(error.message || "Failed to change password.");
+          this.alertService.close();
+          this.alertService.error("Update Failed", error.message || "Failed to change password.");
         },
       });
   }
@@ -112,3 +117,5 @@ export class ResetPasswordComponent implements OnInit {
     this.router.navigate(["/auth/login"]);
   }
 }
+
+

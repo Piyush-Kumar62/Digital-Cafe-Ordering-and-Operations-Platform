@@ -1,0 +1,31 @@
+<section
+  #ctaSection
+  class="cta-section"
+  [class.is-visible]="isVisible"
+  aria-label="Call to action"
+>
+  <div class="cta-shell">
+    <div class="cta-header">
+      <h2>Modern Café Operations. Effortless Customer Experience.</h2>
+      <p>
+        All your café operations — bookings to billing — in one secure system.
+      </p>
+    </div>
+
+    <div class="cta-actions">
+      <a class="cta-btn cta-btn-primary" routerLink="/auth/register">
+        Start Booking Now
+      </a>
+      <a class="cta-btn cta-btn-secondary" routerLink="/auth/register">
+        Register Your Cafe
+      </a>
+      <a class="cta-btn cta-btn-outline" routerLink="/auth/login"> Login </a>
+    </div>
+
+    <div class="cta-trust" aria-label="Trust indicators">
+      <span class="trust-chip">Fast Onboarding</span>
+      <span class="trust-chip">Multi-Cafe Ready</span>
+      <span class="trust-chip">Actionable Dashboards</span>
+    </div>
+  </div>
+</section>

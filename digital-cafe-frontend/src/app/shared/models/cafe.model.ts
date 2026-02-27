@@ -39,3 +39,29 @@ export interface Table {
   cafeId: number;
   cafeName?: string;
 }
+
+export interface PublicCafeCard {
+  id: number;
+  name: string;
+  location: string;
+  description: string;
+  openTime: string;
+  closeTime: string;
+  rating: number;
+  imageUrl?: string;
+}
+
+export interface PublicCafeMenuItem {
+  id: number;
+  name: string;
+  description: string;
+  category: string;
+  price: number;
+  imageUrl?: string;
+  available: boolean;
+}
+
+export interface PublicCafeDetail {
+  cafeDetails: PublicCafeCard;
+  menuItems: PublicCafeMenuItem[];
+}

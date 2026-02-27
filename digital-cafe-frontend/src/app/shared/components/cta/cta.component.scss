@@ -1,0 +1,214 @@
+:host {
+  display: block;
+}
+
+/* -----------------------------
+   CTA SECTION BACKGROUND DEPTH
+------------------------------*/
+.cta-section {
+  position: relative;
+  padding: clamp(1rem, 1.8vw, 1.6rem) 0 clamp(2rem, 3vw, 2.8rem);
+  padding-inline: clamp(1rem, 2vw, 1.5rem);
+  overflow: visible;
+}
+
+/* -----------------------------
+   GLASS CONTAINER (UPGRADED)
+------------------------------*/
+.cta-shell {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 1200px);
+  margin: 0 auto;
+  border-radius: 22px;
+  padding: clamp(1.3rem, 2vw, 1.8rem) clamp(1.2rem, 2.2vw, 1.8rem);
+
+  background: linear-gradient(
+    145deg,
+    rgba(126, 84, 192, 0.58),
+    rgba(86, 47, 149, 0.62)
+  );
+
+  border: 1px solid rgba(216, 180, 254, 0.46);
+
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+
+  box-shadow:
+    0 24px 48px rgba(20, 8, 40, 0.42),
+    0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+
+  transform: none;
+  opacity: 1;
+  transition: box-shadow 240ms ease;
+}
+
+.cta-section.is-visible .cta-shell {
+  transform: none;
+  opacity: 1;
+}
+
+/* -----------------------------
+   TYPOGRAPHY (PREMIUM TUNING)
+------------------------------*/
+.cta-header {
+  text-align: center;
+  margin-bottom: 1.2rem;
+}
+
+.cta-header h2 {
+  margin: 0;
+  color: #ffffff;
+  font-family: "Poppins", sans-serif;
+  font-size: clamp(1.7rem, 2.2vw, 2.45rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.12;
+}
+
+.cta-header p {
+  margin: 0.7rem auto 0;
+  max-width: 900px;
+  color: #e5e7eb;
+  font-family: "Poppins", sans-serif;
+  font-size: clamp(0.98rem, 1.1vw, 1.22rem);
+  font-weight: 400;
+  line-height: 1.38;
+}
+
+/* -----------------------------
+   BUTTON SYSTEM
+------------------------------*/
+.cta-actions {
+  margin-top: 0.8rem;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.cta-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 3rem;
+  padding: 0.7rem 1.4rem;
+  border-radius: 14px;
+
+  font-weight: 700;
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+
+  transition:
+    transform 240ms ease,
+    box-shadow 240ms ease,
+    background 240ms ease,
+    border-color 240ms ease;
+}
+
+.cta-btn:hover {
+  transform: translateY(-3px);
+}
+
+/* PRIMARY BUTTON (Dominant Glow) */
+.cta-btn-primary {
+  color: #ffffff;
+
+  background: linear-gradient(135deg, #f472b6, #9333ea);
+
+  border: 1px solid rgba(255, 255, 255, 0.18);
+
+  box-shadow: 0 12px 30px rgba(147, 51, 234, 0.4);
+}
+
+.cta-btn-primary:hover {
+  box-shadow:
+    0 16px 40px rgba(147, 51, 234, 0.55),
+    0 0 25px rgba(244, 114, 182, 0.45);
+}
+
+/* SECONDARY BUTTON */
+.cta-btn-secondary {
+  color: #ffffff;
+
+  background: rgba(147, 51, 234, 0.15);
+  border: 1px solid rgba(216, 180, 254, 0.4);
+
+  backdrop-filter: blur(6px);
+}
+
+.cta-btn-secondary:hover {
+  background: rgba(147, 51, 234, 0.25);
+  box-shadow: 0 12px 25px rgba(30, 12, 64, 0.3);
+}
+
+/* OUTLINE BUTTON */
+.cta-btn-outline {
+  color: #ffffff;
+
+  background: transparent;
+  border: 1px solid rgba(196, 181, 253, 0.5);
+}
+
+.cta-btn-outline:hover {
+  background: rgba(147, 51, 234, 0.2);
+  border-color: rgba(216, 180, 254, 0.8);
+}
+
+/* -----------------------------
+   TRUST CHIPS (Refined)
+------------------------------*/
+.cta-trust {
+  margin-top: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  justify-content: center;
+}
+
+.trust-chip {
+  padding: 0.45rem 0.85rem;
+  border-radius: 999px;
+
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+
+  color: #f8fafc;
+
+  background: rgba(68, 34, 122, 0.62);
+  border: 1px solid rgba(216, 180, 254, 0.4);
+
+  backdrop-filter: blur(8px);
+
+  transition: all 200ms ease;
+}
+
+.trust-chip:hover {
+  background: rgba(147, 51, 234, 0.3);
+  transform: translateY(-2px);
+}
+
+/* -----------------------------
+   RESPONSIVE
+------------------------------*/
+@media (max-width: 768px) {
+  .cta-btn {
+    width: 100%;
+    max-width: 280px;
+  }
+}
+
+/* -----------------------------
+   REDUCED MOTION
+------------------------------*/
+@media (prefers-reduced-motion: reduce) {
+  .cta-shell,
+  .cta-btn,
+  .trust-chip {
+    transition: none;
+  }
+}

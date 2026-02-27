@@ -3,13 +3,20 @@ import { CommonModule } from "@angular/common";
 import { RouterModule, Router } from "@angular/router";
 import { NavbarComponent } from "@shared/components/navbar/navbar.component";
 import { FooterComponent } from "@shared/components/footer/footer.component";
+import { CtaComponent } from "@shared/components/cta/cta.component";
 import { ApiService } from "@core/services/api.service";
 import { Cafe } from "@shared/models/cafe.model";
 
 @Component({
   selector: "app-landing",
   standalone: true,
-  imports: [CommonModule, RouterModule, NavbarComponent, FooterComponent],
+  imports: [
+    CommonModule,
+    RouterModule,
+    NavbarComponent,
+    FooterComponent,
+    CtaComponent,
+  ],
   templateUrl: "./landing.component.html",
   styleUrls: ["./landing.component.scss"],
 })
@@ -53,42 +60,6 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
       icon: "📊",
       title: "Analytics",
       description: "Powerful insights for café owners to grow their business.",
-    },
-  ];
-
-  problemPoints = [
-    "Manual or unavailable table booking creates customer friction, especially during peak hours when seats are in demand.",
-    "Customers face long waits before food preparation starts, which increases drop-offs and lowers overall dining satisfaction.",
-    "Limited coordination between chef and waiter causes delays, resulting in missed handoffs and inconsistent service speed.",
-    "Manual payment handling slows operations and reporting, while increasing billing errors and closing-time workload.",
-    "No centralized visibility for multi-cafe operations makes it difficult to compare performance, staffing, and daily throughput.",
-    "Lack of real-time order status updates reduces service transparency, so guests and staff both struggle to track progress.",
-  ];
-
-  solutionSnapshots = [
-    {
-      title: "Centralized Multi-Café Platform",
-      description:
-        "Manage customers, staff workflows, and café operations from one unified system.",
-      icon: "🌐",
-    },
-    {
-      title: "Pre-Booking + Pre-Ordering",
-      description:
-        "Customers reserve tables and place orders in advance to reduce waiting time.",
-      icon: "📲",
-    },
-    {
-      title: "Role-Driven Operations",
-      description:
-        "Admin, Owner, Chef, Waiter, and Customer each get role-specific modules and actions.",
-      icon: "🧭",
-    },
-    {
-      title: "Secure Digital Transactions",
-      description:
-        "Online payment, controlled access, and verified user flow for safer operations.",
-      icon: "🔒",
     },
   ];
 
@@ -201,14 +172,6 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
     },
   ];
 
-  roleMatrix = [
-    { role: "Admin", createdBy: "System Default", access: "Creates café owners, platform governance" },
-    { role: "Café Owner", createdBy: "Admin", access: "Manages café, tables, menu, chef, waiter" },
-    { role: "Chef", createdBy: "Café Owner", access: "Updates order status: Preparing → Ready" },
-    { role: "Waiter", createdBy: "Café Owner", access: "Serves ready orders and marks served" },
-    { role: "Customer", createdBy: "Self Registration", access: "Books table, orders food, tracks status, pays online" },
-  ];
-
   workflowSteps = [
     {
       status: "Placed",
@@ -301,33 +264,6 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
     { label: "Role-Based Workflow Coverage", value: "100%" },
     { label: "Real-Time Status Stages", value: "4" },
     { label: "Core Business Modules", value: "8+" },
-  ];
-
-  previewCards = [
-    {
-      title: "Table Booking Preview",
-      subtitle: "Choose café, date, and time slot",
-      points: ["Select café branch", "Pick table & guests", "Confirm schedule instantly"],
-      cta: "Start Booking",
-      route: "/auth/register",
-      icon: "🗓️",
-    },
-    {
-      title: "Menu Preview",
-      subtitle: "Browse categories and pre-order",
-      points: ["Filter menu by category", "Add items to cart", "Checkout before arrival"],
-      cta: "View Menu Flow",
-      route: "/auth/login",
-      icon: "🍔",
-    },
-    {
-      title: "Order Tracking Preview",
-      subtitle: "Follow every stage in real-time",
-      points: ["Track preparing status", "Get ready-to-serve updates", "See delivery confirmation"],
-      cta: "Track Order Flow",
-      route: "/auth/login",
-      icon: "📊",
-    },
   ];
 
   faqs = [
@@ -423,7 +359,7 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // Observe all animatable elements
     const elements = document.querySelectorAll(
-      ".feature-card, .cafe-card, .testimonial-card, .section-header, .cta-content, .timeline-step, .role-card, .workflow-step, .security-card, .problem-card, .solution-card, .preview-card, .faq-item, .metric-box",
+      ".feature-card, .cafe-card, .testimonial-card, .section-header, .timeline-step, .role-card, .workflow-step, .security-card, .faq-item, .metric-box",
     );
     elements.forEach((el) => this.observer?.observe(el));
   }
@@ -436,11 +372,7 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
           this.featuredCafes = cafes.slice(0, 6);
         }
       },
-      error: (error) => {
-        console.warn(
-          "Could not load cafes from API, using fallback data:",
-          error,
-        );
+      error: () => {
         // Fallback data already loaded in ngOnInit
       },
     });

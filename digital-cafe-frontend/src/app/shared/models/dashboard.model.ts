@@ -77,6 +77,7 @@ export interface OwnerDashboard {
   totalTables: number;
   popularItems: PopularItem[];
   revenueData: RevenueData[];
+  orderStatusCounts: { [key: string]: number };
 }
 
 export interface ChefDashboard {

@@ -1,0 +1,88 @@
+<section class="detail-page" *ngIf="!loading && cafe as data">
+  <header class="banner">
+    <img [src]="data.cafeDetails.imageUrl || 'https://images.unsplash.com/photo-1445116572660-236099ec97a0?auto=format&fit=crop&w=1600&q=80'" [alt]="data.cafeDetails.name" />
+    <div class="overlay">
+      <p class="location">{{ data.cafeDetails.location }}</p>
+      <h1>{{ data.cafeDetails.name }}</h1>
+      <p class="meta">★ {{ data.cafeDetails.rating || 0 | number: "1.1-1" }} · {{ data.cafeDetails.openTime }} - {{ data.cafeDetails.closeTime }}</p>
+    </div>
+  </header>
+
+  <section class="controls">
+    <h2>Book Your Slot</h2>
+    <div class="booking-grid">
+      <label>
+        Date
+        <input type="date" [(ngModel)]="selectedDate" (change)="onSlotChange()" />
+      </label>
+      <label>
+        Time
+        <input type="time" [(ngModel)]="selectedTime" (change)="onSlotChange()" />
+      </label>
+      <label>
+        Guests
+        <input type="number" min="1" max="20" [(ngModel)]="guests" (change)="onSlotChange()" />
+      </label>
+      <div class="availability">
+        <p>Tables available</p>
+        <strong>{{ availableTables }}</strong>
+      </div>
+      <button (click)="bookTable()" [disabled]="bookingInProgress">
+        {{ bookingInProgress ? "Booking..." : "Book Table" }}
+      </button>
+    </div>
+    <p class="status" *ngIf="bookingId">Booking confirmed: #{{ bookingId }}</p>
+  </section>
+
+  <section class="layout">
+    <section class="menu-grid">
+      <article class="item-card" *ngFor="let item of data.menuItems">
+        <img [src]="item.imageUrl || 'https://images.unsplash.com/photo-1495195134817-aeb325a55b65?auto=format&fit=crop&w=800&q=80'" [alt]="item.name" />
+        <div class="body">
+          <h3>{{ item.name }}</h3>
+          <p>{{ item.description || "No description available." }}</p>
+          <div class="meta">
+            <strong>${{ item.price | number: "1.2-2" }}</strong>
+            <small>{{ item.category }}</small>
+          </div>
+          <div class="actions">
+            <div class="qty-control">
+              <button type="button" (click)="decrementQuantity(item.id)" [disabled]="!item.available">-</button>
+              <input type="number" min="1" max="10" [value]="getQuantity(item.id)" (input)="setQuantity(item.id, $any($event.target).value)" [disabled]="!item.available" />
+              <button type="button" (click)="incrementQuantity(item.id)" [disabled]="!item.available">+</button>
+            </div>
+            <button (click)="addToCart(item)" [disabled]="!item.available">Add to Cart</button>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <aside class="cart" *ngIf="cartItems$ | async as cartItems">
+      <h3>Cart</h3>
+      <div class="line" *ngFor="let line of cartItems">
+        <div>
+          <strong>{{ line.item.name }}</strong>
+          <p>Qty {{ line.quantity }}</p>
+        </div>
+        <button (click)="removeFromCart(line.item.id)">-</button>
+      </div>
+      <p class="empty" *ngIf="cartItems.length === 0">Cart is empty.</p>
+      <p class="total">Total: <strong>${{ cartTotal$ | async | number: "1.2-2" }}</strong></p>
+      <button (click)="placeOrder()" [disabled]="orderInProgress || !bookingId">{{ orderInProgress ? "Placing..." : "Place Order" }}</button>
+      <p class="status" *ngIf="orderId">Order placed: #{{ orderId }}</p>
+
+      <label class="payment">
+        Payment Method
+        <select [(ngModel)]="paymentMethod">
+          <option value="UPI">UPI</option>
+          <option value="CARD">Card</option>
+          <option value="WALLET">Wallet</option>
+          <option value="CASH">Cash</option>
+        </select>
+      </label>
+      <button (click)="payNow()" [disabled]="paymentInProgress || !orderId">{{ paymentInProgress ? "Processing..." : "Make Payment" }}</button>
+    </aside>
+  </section>
+</section>
+
+<div class="state" *ngIf="loading">Loading cafe details...</div>

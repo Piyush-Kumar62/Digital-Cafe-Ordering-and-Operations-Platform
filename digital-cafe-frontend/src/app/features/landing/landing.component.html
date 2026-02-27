@@ -214,43 +214,6 @@
   </div>
 </section>
 
-<!-- Problem Statement -->
-<section id="problem" class="problem-section">
-  <div class="container-custom">
-    <div class="section-header">
-      <h2 class="section-title">Problem Statement</h2>
-      <p class="section-subtitle">
-        Traditional café workflows create delays, bottlenecks, and inconsistent customer experience.
-      </p>
-    </div>
-    <div class="problem-grid">
-      <div class="problem-card" *ngFor="let item of problemPoints">
-        <span class="problem-dot"></span>
-        <p>{{ item }}</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- Proposed Solution Snapshot -->
-<section id="solution" class="solution-section">
-  <div class="container-custom">
-    <div class="section-header">
-      <h2 class="section-title">Proposed Solution Snapshot</h2>
-      <p class="section-subtitle">
-        A secure, role-driven, real-time digital platform for complete café lifecycle management.
-      </p>
-    </div>
-    <div class="solution-grid">
-      <div class="solution-card" *ngFor="let item of solutionSnapshots">
-        <div class="solution-icon">{{ item.icon }}</div>
-        <h3>{{ item.title }}</h3>
-        <p>{{ item.description }}</p>
-      </div>
-    </div>
-  </div>
-</section>
-
 <!-- Features Section -->
 <section id="features" class="features-section">
   <div class="container-custom">
@@ -331,79 +294,6 @@
   </div>
 </section>
 
-<!-- Role Permission/Creation Matrix -->
-<section id="role-matrix" class="matrix-section">
-  <div class="container-custom">
-    <div class="section-header">
-      <h2 class="section-title">Role Permission & Creation Matrix</h2>
-      <p class="section-subtitle">
-        Clear ownership and access boundaries to keep operations secure and scalable.
-      </p>
-    </div>
-
-    <div class="matrix-highlights" aria-label="Role matrix highlights">
-      <article class="highlight-card">
-        <span class="highlight-icon">👥</span>
-        <div>
-          <p class="highlight-value">{{ roleMatrix.length }}</p>
-          <p class="highlight-label">Defined Roles</p>
-        </div>
-      </article>
-      <article class="highlight-card">
-        <span class="highlight-icon">🧭</span>
-        <div>
-          <p class="highlight-value">100%</p>
-          <p class="highlight-label">Creator Traceability</p>
-        </div>
-      </article>
-      <article class="highlight-card">
-        <span class="highlight-icon">🛡️</span>
-        <div>
-          <p class="highlight-value">RBAC</p>
-          <p class="highlight-label">Access Control Model</p>
-        </div>
-      </article>
-    </div>
-
-    <div class="matrix-shell">
-      <div class="matrix-table-wrap" role="region" aria-label="Role permission table">
-        <table class="matrix-table">
-          <thead>
-            <tr>
-              <th><span class="th-chip">Role</span></th>
-              <th><span class="th-chip">Created By</span></th>
-              <th><span class="th-chip">Primary Responsibilities</span></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let row of roleMatrix">
-              <td>
-                <span class="role-pill">{{ row.role }}</span>
-              </td>
-              <td>
-                <span class="creator-tag">{{ row.createdBy }}</span>
-              </td>
-              <td>
-                <p class="matrix-access">{{ row.access }}</p>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="matrix-cards" aria-label="Role permission cards">
-        <article class="matrix-card" *ngFor="let row of roleMatrix">
-          <div class="matrix-card-head">
-            <span class="role-pill">{{ row.role }}</span>
-            <span class="creator-tag">{{ row.createdBy }}</span>
-          </div>
-          <p class="matrix-access">{{ row.access }}</p>
-        </article>
-      </div>
-    </div>
-  </div>
-</section>
-
 <!-- Workflow Visualization Section -->
 <section id="workflow" class="workflow-section">
   <div class="container-custom">
@@ -474,15 +364,6 @@
       </div>
     </div>
 
-    <div class="mandatory-rules">
-      <h3>Mandatory Access Rules</h3>
-      <ul>
-        <li>Email verification is required before full platform access.</li>
-        <li>Customer profile completion is mandatory for protected modules.</li>
-        <li>Public self-registration is only for Customer role.</li>
-      </ul>
-    </div>
-
     <div class="trust-badges">
       <div class="badge-item">
         <div class="badge-icon">🔐</div>
@@ -541,38 +422,6 @@
 
     <div *ngIf="!loading && featuredCafes.length === 0" class="empty-state">
       <p>No cafés available at the moment. Check back soon!</p>
-    </div>
-  </div>
-</section>
-
-<!-- Menu/Booking Preview -->
-<section id="preview" class="preview-section">
-  <div class="container-custom">
-    <div class="section-header">
-      <h2 class="section-title">Menu & Booking Preview</h2>
-      <p class="section-subtitle">
-        Preview the exact customer flow for booking tables and pre-ordering meals.
-      </p>
-    </div>
-    <div class="preview-grid">
-      <div class="preview-card" *ngFor="let card of previewCards; let i = index">
-        <div class="preview-head">
-          <div class="preview-icon">{{ card.icon }}</div>
-          <span class="preview-flow-chip">Flow {{ i + 1 }}</span>
-        </div>
-        <h3>{{ card.title }}</h3>
-        <p class="preview-subtitle">{{ card.subtitle }}</p>
-        <ul class="preview-points">
-          <li *ngFor="let point of card.points">
-            <span class="point-dot"></span>
-            <span>{{ point }}</span>
-          </li>
-        </ul>
-        <button class="preview-btn" [routerLink]="card.route">
-          <span>{{ card.cta }}</span>
-          <i class="bi bi-arrow-right-short"></i>
-        </button>
-      </div>
     </div>
   </div>
 </section>
@@ -678,73 +527,7 @@
   </div>
 </section>
 
-<!-- CTA Section -->
-<section class="cta-section cta-clean">
-  <div class="container-custom">
-    <div class="cta-head-card section-header">
-      <h2 class="cta-title section-title">Ready to Transform Café Operations?</h2>
-      <p class="cta-subtitle section-subtitle">
-        Join thousands of happy customers and café owners today
-      </p>
-    </div>
-
-    <div class="cta-body">
-      <div class="cta-buttons">
-        <button class="btn-cta btn-customer" routerLink="/auth/register">
-          <span class="btn-icon">🍽️</span>
-          <div class="btn-text">
-            <div class="btn-label">Customer Register</div>
-            <div class="btn-sublabel">Book, order, and pay online</div>
-          </div>
-        </button>
-
-        <button class="btn-cta btn-owner" routerLink="/auth/login">
-          <span class="btn-icon">🔐</span>
-          <div class="btn-text">
-            <div class="btn-label">Login</div>
-            <div class="btn-sublabel">Access your assigned dashboard</div>
-          </div>
-        </button>
-
-        <button class="btn-cta btn-staff" routerLink="/contact">
-          <span class="btn-icon">📨</span>
-          <div class="btn-text">
-            <div class="btn-label">Owner/Staff Onboarding Request</div>
-            <div class="btn-sublabel">Contact us for role provisioning</div>
-          </div>
-        </button>
-      </div>
-
-      <div class="cta-secondary-grid">
-        <article class="cta-secondary-card">
-          <div class="cta-secondary-icon">📋</div>
-          <h4>Browse FAQs First</h4>
-          <p>Get quick answers about registration, roles, and access before you start.</p>
-          <a routerLink="/" fragment="faq" class="cta-secondary-link">View FAQ</a>
-        </article>
-
-        <article class="cta-secondary-card">
-          <div class="cta-secondary-icon">🗓️</div>
-          <h4>Plan Your Visit</h4>
-          <p>Choose a café, check slots, and get ready to book your table faster.</p>
-          <a routerLink="/auth/login" class="cta-secondary-link">Go to Login</a>
-        </article>
-
-        <article class="cta-secondary-card">
-          <div class="cta-secondary-icon">🛡️</div>
-          <h4>Secure Account Setup</h4>
-          <p>Use verified email, strong password, and reset flow to keep your account protected.</p>
-          <a routerLink="/auth/register" class="cta-secondary-link">Create Account</a>
-        </article>
-      </div>
-
-      <p class="cta-note">
-        Already have an account?
-        <a routerLink="/auth/login" class="cta-link">Sign In</a>
-      </p>
-    </div>
-  </div>
-</section>
+<app-cta></app-cta>
 
 <app-footer></app-footer>
 

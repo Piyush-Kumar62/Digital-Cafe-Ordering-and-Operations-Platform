@@ -1,0 +1,314 @@
+:host {
+  display: block;
+}
+
+.detail-page {
+  min-height: 100vh;
+  padding: 1rem;
+  color: #0f172a;
+  background:
+    radial-gradient(circle at 0 0, rgba(14, 165, 233, 0.22), transparent 32%),
+    radial-gradient(circle at 100% 100%, rgba(34, 197, 94, 0.15), transparent 34%),
+    linear-gradient(145deg, #f8fafc, #ecfeff);
+}
+
+.banner {
+  position: relative;
+  border-radius: 20px;
+  overflow: hidden;
+  min-height: 280px;
+  box-shadow: 0 16px 35px rgba(15, 23, 42, 0.25);
+}
+
+.banner img {
+  width: 100%;
+  height: 320px;
+  object-fit: cover;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: end;
+  padding: 1.1rem;
+  color: #f8fafc;
+  background: linear-gradient(180deg, rgba(2, 6, 23, 0.16), rgba(2, 6, 23, 0.74));
+}
+
+.overlay h1 {
+  margin: 0.15rem 0 0.3rem;
+}
+
+.location,
+.meta {
+  margin: 0;
+}
+
+.controls {
+  margin-top: 1rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 16px;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(9px);
+}
+
+.controls h2 {
+  margin: 0 0 0.7rem;
+}
+
+.booking-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.7rem;
+  align-items: end;
+}
+
+.booking-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.82rem;
+  color: #334155;
+}
+
+.booking-grid input,
+.booking-grid select,
+.booking-grid button {
+  border-radius: 10px;
+  padding: 0.5rem 0.6rem;
+}
+
+.booking-grid input,
+.booking-grid select {
+  border: 1px solid #cbd5e1;
+}
+
+.availability {
+  border: 1px dashed #94a3b8;
+  border-radius: 12px;
+  padding: 0.45rem;
+}
+
+.availability p {
+  margin: 0;
+  color: #475569;
+  font-size: 0.78rem;
+}
+
+.availability strong {
+  font-size: 1.1rem;
+}
+
+.booking-grid button {
+  border: 0;
+  color: #fff;
+  cursor: pointer;
+  font-weight: 700;
+  background: linear-gradient(100deg, #0e7490, #0284c7);
+}
+
+.layout {
+  margin-top: 1rem;
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1rem;
+}
+
+.menu-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.item-card {
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid #dbeafe;
+  background: #fff;
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.09);
+  transition: transform 0.2s ease;
+}
+
+.item-card:hover {
+  transform: translateY(-3px);
+}
+
+.item-card img {
+  width: 100%;
+  height: 170px;
+  object-fit: cover;
+}
+
+.body {
+  padding: 0.75rem;
+}
+
+.body h3 {
+  margin: 0 0 0.3rem;
+}
+
+.body p {
+  margin: 0;
+  color: #475569;
+}
+
+.meta {
+  margin-top: 0.55rem;
+  display: flex;
+  justify-content: space-between;
+}
+
+.actions {
+  margin-top: 0.55rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.actions input,
+.actions button {
+  border-radius: 8px;
+  padding: 0.45rem;
+}
+
+.actions input {
+  border: 1px solid #cbd5e1;
+}
+
+.qty-control {
+  display: grid;
+  grid-template-columns: 36px 1fr 36px;
+  gap: 0.3rem;
+}
+
+.qty-control input {
+  text-align: center;
+}
+
+.qty-control button {
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  color: #0f172a;
+  cursor: pointer;
+}
+
+.actions button {
+  border: 0;
+  color: #fff;
+  cursor: pointer;
+  background: linear-gradient(95deg, #0284c7, #0ea5e9);
+}
+
+.cart {
+  border-radius: 14px;
+  border: 1px solid #cbd5e1;
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(9px);
+  padding: 0.85rem;
+  height: fit-content;
+  position: sticky;
+  top: 1rem;
+}
+
+.cart h3 {
+  margin: 0 0 0.6rem;
+}
+
+.line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0.45rem;
+  margin-bottom: 0.45rem;
+}
+
+.line p {
+  margin: 0.2rem 0 0;
+  color: #64748b;
+  font-size: 0.78rem;
+}
+
+.line button {
+  border: 0;
+  border-radius: 999px;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+}
+
+.cart > button,
+.payment select {
+  width: 100%;
+  margin-top: 0.55rem;
+}
+
+.cart > button {
+  border: 0;
+  border-radius: 10px;
+  padding: 0.65rem;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+  background: linear-gradient(100deg, #0f766e, #16a34a);
+}
+
+.payment {
+  display: flex;
+  flex-direction: column;
+  margin-top: 0.6rem;
+  gap: 0.25rem;
+  color: #334155;
+  font-size: 0.84rem;
+}
+
+.payment select {
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 0.5rem;
+}
+
+.status,
+.empty,
+.total {
+  color: #334155;
+}
+
+.state {
+  padding: 1rem;
+  color: #475569;
+}
+
+@media (max-width: 980px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .cart {
+    position: static;
+  }
+
+  .menu-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .booking-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .detail-page {
+    padding: 0.6rem;
+  }
+
+  .booking-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { AuthService } from '@core/auth/auth.service';
-import { NotificationService } from '@core/services/notification.service';
+import { AlertService } from '@core/services/alert.service';
 
 @Component({
   selector: 'app-verify-email',
@@ -171,7 +171,7 @@ export class VerifyEmailComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private authService: AuthService,
-    private notificationService: NotificationService,
+    private alertService: AlertService,
   ) {}
 
   ngOnInit(): void {
@@ -189,7 +189,7 @@ export class VerifyEmailComponent implements OnInit {
       next: (response) => {
         this.verifying = false;
         this.verified = true;
-        this.notificationService.success('Email verified successfully!');
+        this.alertService.success('Email verified successfully!');
       },
       error: (error) => {
         this.verifying = false;
@@ -202,7 +202,7 @@ export class VerifyEmailComponent implements OnInit {
   resendVerification(): void {
     const user = this.authService.currentUserValue;
     if (!user || !user.email) {
-      this.notificationService.error('Unable to resend verification email.');
+      this.alertService.error('Unable to resend verification email.');
       return;
     }
 
@@ -211,12 +211,14 @@ export class VerifyEmailComponent implements OnInit {
     this.authService.resendVerificationEmail(user.email).subscribe({
       next: (response) => {
         this.resending = false;
-        this.notificationService.success('Verification email sent! Please check your inbox.');
+        this.alertService.success('Verification email sent! Please check your inbox.');
       },
       error: (error) => {
         this.resending = false;
-        this.notificationService.error(error.message || 'Failed to resend verification email.');
+        this.alertService.error(error.message || 'Failed to resend verification email.');
       },
     });
   }
 }
+
+

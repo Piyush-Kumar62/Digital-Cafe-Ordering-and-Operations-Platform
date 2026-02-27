@@ -3,7 +3,7 @@ import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
 import { NavbarComponent } from "@shared/components/navbar/navbar.component";
 import { FooterComponent } from "@shared/components/footer/footer.component";
-import { NotificationService } from "@core/services/notification.service";
+import { AlertService } from "@core/services/alert.service";
 
 @Component({
   selector: "app-contact",
@@ -178,6 +178,14 @@ import { NotificationService } from "@core/services/notification.service";
   `,
   styles: [
     `
+      :host ::ng-deep app-navbar .navbar-spacer {
+        border-bottom: 0 !important;
+        background:
+          radial-gradient(circle at 10% 10%, rgba(251, 191, 36, 0.14), transparent 32%),
+          radial-gradient(circle at 90% 15%, rgba(59, 130, 246, 0.14), transparent 34%),
+          linear-gradient(135deg, #fef2f2 0%, #fff 100%) !important;
+      }
+
       .contact-container {
         min-height: calc(100vh - 140px);
         background:
@@ -517,7 +525,7 @@ export class ContactComponent {
 
   isSubmitting = false;
 
-  constructor(private notificationService: NotificationService) {}
+  constructor(private alertService: AlertService) {}
 
   submitForm(): void {
     if (this.isSubmitting) return;
@@ -526,7 +534,7 @@ export class ContactComponent {
 
     // Simulate form submission
     setTimeout(() => {
-      this.notificationService.success(
+      this.alertService.success(
         "Message sent successfully! We will get back to you soon.",
       );
 
@@ -543,3 +551,5 @@ export class ContactComponent {
     }, 1500);
   }
 }
+
+

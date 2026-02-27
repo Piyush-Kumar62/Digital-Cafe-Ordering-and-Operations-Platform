@@ -1,7 +1,8 @@
-import { Component, OnInit } from "@angular/core";
+import { Component, HostListener, OnInit } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { RouterModule, Router, NavigationEnd } from "@angular/router";
 import { AuthService } from "@core/auth/auth.service";
+import { ThemeService } from "@core/services/theme.service";
 import { User } from "@shared/models/auth.model";
 
 @Component({
@@ -586,6 +587,7 @@ export class NavbarComponent implements OnInit {
   constructor(
     private authService: AuthService,
     private router: Router,
+    private themeService: ThemeService,
   ) {}
 
   ngOnInit(): void {
@@ -606,9 +608,8 @@ export class NavbarComponent implements OnInit {
     });
 
     // Load theme preference from localStorage
-    const savedTheme = localStorage.getItem("cafe_theme") || localStorage.getItem("theme");
-    this.isDarkMode = savedTheme === "dark";
-    this.applyTheme();
+    this.themeService.syncFromStorage();
+    this.isDarkMode = this.themeService.isDarkMode();
   }
 
   toggleMenu(): void {
@@ -642,7 +643,27 @@ export class NavbarComponent implements OnInit {
 
   toggleTheme(): void {
     this.isDarkMode = !this.isDarkMode;
-    this.applyTheme();
+    this.themeService.setTheme(this.isDarkMode);
+  }
+
+  @HostListener("window:storage", ["$event"])
+  onStorageThemeChange(event: StorageEvent): void {
+    if (event.key !== "theme" && event.key !== "cafe_theme") {
+      return;
+    }
+    this.themeService.syncFromStorage();
+    this.isDarkMode = this.themeService.isDarkMode();
+  }
+
+  @HostListener("window:theme-changed", ["$event"])
+  onThemeChanged(event: Event): void {
+    const customEvent = event as CustomEvent<{ dark: boolean }>;
+    if (typeof customEvent?.detail?.dark === "boolean") {
+      this.isDarkMode = customEvent.detail.dark;
+    } else {
+      this.themeService.syncFromStorage();
+      this.isDarkMode = this.themeService.isDarkMode();
+    }
   }
 
   private updateRouteContext(url: string): void {
@@ -650,19 +671,6 @@ export class NavbarComponent implements OnInit {
     this.isLandingPage = pathOnly === "" || pathOnly === "/";
   }
 
-  private applyTheme(): void {
-    if (this.isDarkMode) {
-      document.documentElement.classList.add("dark");
-      document.documentElement.classList.add("dark-mode");
-      localStorage.setItem("cafe_theme", "dark");
-      localStorage.setItem("theme", "dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-      document.documentElement.classList.remove("dark-mode");
-      localStorage.setItem("cafe_theme", "light");
-      localStorage.setItem("theme", "light");
-    }
-  }
   getDisplayName(): string {
     if (!this.user) return "";
 

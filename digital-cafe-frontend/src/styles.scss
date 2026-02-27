@@ -467,3 +467,158 @@ html.dark .swal-text,
 html.dark-mode .swal-text {
   color: #cbd5e1;
 }
+
+/* SweetAlert hardened app theme styles */
+.swal-modal.dc-swal {
+  border-radius: 16px !important;
+  border: 1px solid #dbe4f0;
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.24) !important;
+}
+
+.swal-modal.dc-swal .swal-title {
+  font-family: "Poppins", sans-serif;
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.swal-modal.dc-swal .swal-text {
+  font-family: "Inter", sans-serif;
+  font-size: 1.05rem;
+  line-height: 1.55;
+}
+
+.swal-modal.dc-swal .swal-button {
+  border-radius: 10px !important;
+  font-weight: 600 !important;
+  padding: 0.55rem 1.1rem !important;
+}
+
+.swal-overlay {
+  z-index: 20000 !important;
+}
+
+.swal-modal.dc-swal .swal-icon--success:before,
+.swal-modal.dc-swal .swal-icon--success:after,
+.swal-modal.dc-swal .swal-icon--success__hide-corners {
+  background: #ffffff !important;
+}
+
+.swal-modal.dc-swal.dc-swal-light {
+  background: #ffffff !important;
+  border-color: #dbe4f0 !important;
+}
+
+.swal-modal.dc-swal.dc-swal-light .swal-title {
+  color: #0f172a !important;
+}
+
+.swal-modal.dc-swal.dc-swal-light .swal-text {
+  color: #475569 !important;
+}
+
+.swal-modal.dc-swal.dc-swal-dark {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+}
+
+.swal-modal.dc-swal.dc-swal-dark .swal-title {
+  color: #f8fafc !important;
+}
+
+.swal-modal.dc-swal.dc-swal-dark .swal-text {
+  color: #cbd5e1 !important;
+}
+
+.swal-modal.dc-swal.dc-swal-dark .swal-button {
+  color: #f8fafc !important;
+}
+
+.swal-modal.dc-swal.dc-swal-dark .swal-icon--success:before,
+.swal-modal.dc-swal.dc-swal-dark .swal-icon--success:after,
+.swal-modal.dc-swal.dc-swal-dark .swal-icon--success__hide-corners {
+  background: #0f172a !important;
+}
+
+.swal-modal.dc-swal.dc-swal-success .swal-button--confirm,
+.swal-modal.dc-swal.dc-swal-info .swal-button--confirm {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+}
+
+.swal-modal.dc-swal.dc-swal-warning .swal-button--confirm {
+  background: linear-gradient(135deg, #d97706, #b45309) !important;
+}
+
+.swal-modal.dc-swal.dc-swal-error .swal-button--confirm {
+  background: linear-gradient(135deg, #dc2626, #b91c1c) !important;
+}
+
+/* Global body theme classes */
+body.light-theme {
+  background-color: #f8fafc;
+  color: #0f172a;
+}
+
+body.dark-theme {
+  background-color: #0f172a;
+  color: #e2e8f0;
+}
+
+/* SweetAlert performance + theme overrides (instant open, no flicker) */
+.swal-overlay {
+  backdrop-filter: none !important;
+}
+
+.swal-modal,
+.swal-modal * {
+  transition: none !important;
+  animation: none !important;
+}
+
+.swal-modal.swal-light-mode {
+  background-color: #ffffff !important;
+  color: #1f2937 !important;
+  border: 1px solid #e5e7eb !important;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.14) !important;
+}
+
+.swal-modal.swal-light-mode .swal-title {
+  color: #0f172a !important;
+}
+
+.swal-modal.swal-light-mode .swal-text {
+  color: #475569 !important;
+}
+
+.swal-modal.swal-dark-mode {
+  background-color: #1f2937 !important;
+  color: #f9fafb !important;
+  border: 1px solid #374151 !important;
+  box-shadow: 0 8px 24px rgba(2, 6, 23, 0.32) !important;
+}
+
+.swal-modal.swal-dark-mode .swal-title {
+  color: #f9fafb !important;
+}
+
+.swal-modal.swal-dark-mode .swal-text {
+  color: #cbd5e1 !important;
+}
+
+.swal-modal.swal-dark-mode .swal-button {
+  background-color: #2563eb !important;
+}
+
+.swal-modal.swal-dark-mode .swal-button--cancel {
+  background-color: #374151 !important;
+}
+
+.swal-modal.swal-dark-mode .swal-icon--success:before,
+.swal-modal.swal-dark-mode .swal-icon--success:after,
+.swal-modal.swal-dark-mode .swal-icon--success__hide-corners {
+  background: #1f2937 !important;
+}
+
+.swal-modal.swal-dark-mode .swal-icon--success__ring {
+  border-color: rgba(163, 230, 53, 0.28) !important;
+}

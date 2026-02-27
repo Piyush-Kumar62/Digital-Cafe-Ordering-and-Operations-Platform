@@ -17,8 +17,17 @@
   overflow: hidden;
 }
 
+:host ::ng-deep app-navbar .navbar-spacer {
+  height: 0 !important;
+  min-height: 0 !important;
+  border-bottom: 0 !important;
+  background: transparent !important;
+}
+
 .auth-container {
-  height: calc(100vh - 70px);
+  height: 100vh;
+  min-height: 100vh;
+  box-sizing: border-box;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -288,7 +297,8 @@
 
 @media (max-width: 640px) {
   .auth-container {
-    height: calc(100vh - 64px);
+    height: 100vh;
+    min-height: 100vh;
     padding: 0.9rem;
   }
 

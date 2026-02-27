@@ -8,7 +8,7 @@ import {
 } from "@angular/forms";
 import { Router, RouterModule, ActivatedRoute } from "@angular/router";
 import { AuthService } from "@core/auth/auth.service";
-import { NotificationService } from "@core/services/notification.service";
+import { AlertService } from "@core/services/alert.service";
 import { NavbarComponent } from "@shared/components/navbar/navbar.component";
 
 @Component({
@@ -29,7 +29,7 @@ export class LoginComponent implements OnInit {
     private authService: AuthService,
     private router: Router,
     private route: ActivatedRoute,
-    private notificationService: NotificationService,
+    private alertService: AlertService,
   ) {}
 
   ngOnInit(): void {
@@ -69,12 +69,14 @@ export class LoginComponent implements OnInit {
     }
 
     this.loading = true;
+    this.alertService.loading("Signing you in. Please wait.");
 
     this.authService.login(this.loginForm.value).subscribe({
       next: (response) => {
         this.loading = false;
+        this.alertService.close();
 
-        this.notificationService.success("Login successful!");
+        this.alertService.success("Login Successful", "Welcome back.");
 
         // Check if user must reset password
         if (response.mustResetPassword) {
@@ -82,14 +84,16 @@ export class LoginComponent implements OnInit {
           return;
         }
 
-        // Check if email is verified (bypass for admins - handled by backend)
-        if (!response.isEmailVerified) {
+        // Email verification is not required for system admin.
+        if (!this.authService.isSystemAdmin() && !response.isEmailVerified) {
+          this.alertService.warning("Email Verification Required", "Please verify your email to continue.");
           this.router.navigate(["/auth/verify-email"]);
           return;
         }
 
         // Check if profile is complete (for customers)
         if (this.authService.isCustomer() && !response.isProfileComplete) {
+          this.alertService.warning("Complete Your Profile", "Please complete your profile before proceeding.");
           this.router.navigate(["/customer/complete-profile"]);
           return;
         }
@@ -99,18 +103,16 @@ export class LoginComponent implements OnInit {
 
         // Delay navigation slightly to allow state to settle
         setTimeout(() => {
-          this.router.navigate([dashboardRoute]).catch((error) => {
-            console.error("Navigation error:", error);
-          });
+          this.router.navigate([dashboardRoute]).catch(() => {});
         }, 100);
       },
       error: (error) => {
         this.loading = false;
-        console.error("Login error:", error);
-        this.notificationService.error(
-          error.message || "Login failed. Please check your credentials.",
-        );
+        this.alertService.close();
+        this.alertService.error("Login Failed", error.message || "Please check your credentials and try again.");
       },
     });
   }
 }
+
+

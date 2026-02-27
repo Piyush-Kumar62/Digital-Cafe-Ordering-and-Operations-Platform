@@ -1,0 +1,45 @@
+<div class="chart-wrapper">
+  <ng-container *ngIf="hasData(); else noData">
+  <ngx-charts-bar-vertical
+    *ngIf="chartType === 'bar-vertical'"
+    [results]="data"
+    [view]="view"
+    [xAxis]="showXAxis"
+    [yAxis]="showYAxis"
+    [legend]="showLegend"
+    [showXAxisLabel]="showXAxisLabel"
+    [showYAxisLabel]="showYAxisLabel"
+    [xAxisLabel]="xAxisLabel"
+    [yAxisLabel]="yAxisLabel"
+    (select)="onSelect($event)">
+  </ngx-charts-bar-vertical>
+
+  <ngx-charts-pie-chart
+    *ngIf="chartType === 'pie'"
+    [results]="data"
+    [view]="view"
+    [legend]="showLegend"
+    [labels]="showPieLabels"
+    (select)="onSelect($event)">
+  </ngx-charts-pie-chart>
+
+  <ngx-charts-line-chart
+    *ngIf="chartType === 'line'"
+    [results]="data"
+    [view]="view"
+    [xAxis]="showXAxis"
+    [yAxis]="showYAxis"
+    [legend]="showLegend"
+    [showXAxisLabel]="showXAxisLabel"
+    [showYAxisLabel]="showYAxisLabel"
+    [xAxisLabel]="xAxisLabel"
+    [yAxisLabel]="yAxisLabel"
+    [autoScale]="true"
+    (select)="onSelect($event)">
+  </ngx-charts-line-chart>
+  </ng-container>
+
+  <ng-template #noData>
+    <div class="no-data">No data available yet.</div>
+  </ng-template>
+</div>

@@ -32,9 +32,19 @@ public interface TableService {
     List<TableResponse> getTablesByCafeId(Long cafeId);
 
     /**
+     * Get all tables in system
+     */
+    List<TableResponse> getAllTables();
+
+    /**
      * Get available tables for a cafe at a specific time
      */
     List<TableResponse> getAvailableTables(Long cafeId, LocalDateTime bookingTime);
+
+    /**
+     * Get available tables for a cafe at a specific time filtered by minimum seat capacity.
+     */
+    List<TableResponse> getAvailableTables(Long cafeId, LocalDateTime bookingTime, Integer seatsRequired);
 
     /**
      * Delete a table
@@ -46,4 +56,3 @@ public interface TableService {
      */
     TableResponse toggleAvailability(Long tableId, boolean isAvailable);
 }
-

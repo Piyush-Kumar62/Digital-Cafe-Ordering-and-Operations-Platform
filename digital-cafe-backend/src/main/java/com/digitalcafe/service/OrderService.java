@@ -25,9 +25,19 @@ public interface OrderService {
     OrderResponse getOrderById(Long orderId);
 
     /**
+     * Get order by booking for a specific customer
+     */
+    OrderResponse getOrderByBookingForCustomer(Long customerId, Long bookingId);
+
+    /**
      * Get all orders for a customer
      */
     List<OrderResponse> getOrdersByCustomerId(Long customerId);
+
+    /**
+     * Get all orders in system
+     */
+    List<OrderResponse> getAllOrders();
 
     /**
      * Get all orders for a cafe
@@ -58,5 +68,9 @@ public interface OrderService {
      * Get ready orders for waiter
      */
     List<OrderResponse> getReadyOrdersForWaiter(Long cafeId);
-}
 
+    /**
+     * Activate kitchen flow only after successful payment.
+     */
+    OrderResponse activateOrderAfterPayment(Long orderId);
+}

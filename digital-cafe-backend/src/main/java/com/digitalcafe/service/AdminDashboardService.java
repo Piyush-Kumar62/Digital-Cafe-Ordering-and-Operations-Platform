@@ -1,10 +1,15 @@
 package com.digitalcafe.service;
 
 import com.digitalcafe.dto.response.AdminDashboardStats;
+import com.digitalcafe.dto.response.AdminDashboardAnalyticsResponse;
+import com.digitalcafe.dto.response.PageResponse;
 import com.digitalcafe.entity.*;
 import com.digitalcafe.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -62,8 +67,7 @@ public class AdminDashboardService {
         // Order Statistics
         Long totalOrders = orderRepository.count();
         Long todayOrders = orderRepository.countByCreatedAtAfter(startOfDay);
-        Long pendingOrders = orderRepository.countByStatus(Order.OrderStatus.PLACED);
-        Long completedOrders = orderRepository.countByStatus(Order.OrderStatus.SERVED);
+        Long pendingOrders = orderRepository.countByStatus(Order.OrderStatus.PENDING);
 
         // Revenue Statistics
         Double totalRevenue = calculateTotalRevenue();
@@ -98,7 +102,6 @@ public class AdminDashboardService {
                 .totalOrders(totalOrders)
                 .todayOrders(todayOrders)
                 .pendingOrders(pendingOrders)
-                .completedOrders(completedOrders)
                 .totalRevenue(totalRevenue)
                 .todayRevenue(todayRevenue)
                 .thisMonthRevenue(thisMonthRevenue)
@@ -108,14 +111,162 @@ public class AdminDashboardService {
                 .build();
     }
 
+    public AdminDashboardAnalyticsResponse getDashboardAnalytics() {
+        AdminDashboardStats stats = getDashboardStats();
+        List<AdminDashboardAnalyticsResponse.WeeklyGrowthPoint> weeklyGrowth =
+                Optional.ofNullable(stats.getWeeklyGrowth())
+                        .orElseGet(List::of)
+                        .stream()
+                        .map(point -> AdminDashboardAnalyticsResponse.WeeklyGrowthPoint.builder()
+                                .date(point.getDate())
+                                .newUsers(point.getNewUsers() == null ? 0L : point.getNewUsers())
+                                .newBookings(point.getNewBookings() == null ? 0L : point.getNewBookings())
+                                .newOrders(point.getNewOrders() == null ? 0L : point.getNewOrders())
+                                .revenue(point.getRevenue() == null ? 0.0 : point.getRevenue())
+                                .build())
+                        .toList();
+
+        List<AdminDashboardAnalyticsResponse.WeeklyRegistrationPoint> weeklyRegistrationGrowth =
+                Optional.ofNullable(stats.getWeeklyGrowth())
+                        .orElseGet(List::of)
+                        .stream()
+                        .map(point -> AdminDashboardAnalyticsResponse.WeeklyRegistrationPoint.builder()
+                                .date(point.getDate())
+                                .count(point.getNewUsers() == null ? 0L : point.getNewUsers())
+                                .build())
+                        .toList();
+
+        List<AdminDashboardAnalyticsResponse.RecentActivityPoint> recentActivities =
+                Optional.ofNullable(stats.getRecentActivities())
+                        .orElseGet(List::of)
+                        .stream()
+                        .map(activity -> AdminDashboardAnalyticsResponse.RecentActivityPoint.builder()
+                                .activityType(activity.getActivityType())
+                                .description(activity.getDescription())
+                                .timestamp(activity.getTimestamp())
+                                .userRole(activity.getUserRole())
+                                .build())
+                        .toList();
+
+        return AdminDashboardAnalyticsResponse.builder()
+                .totalUsers(stats.getTotalUsers())
+                .activeUsers(stats.getActiveUsers())
+                .inactiveUsers(stats.getInactiveUsers())
+                .unverifiedEmailUsers(stats.getUnverifiedEmailUsers())
+                .usersWithoutPasswordReset(stats.getUsersWithoutPasswordReset())
+                .todayNewRegistrations(stats.getTodayNewRegistrations())
+                .usersByRole(stats.getUsersByRole())
+                .weeklyGrowth(weeklyGrowth)
+                .weeklyRegistrationGrowth(weeklyRegistrationGrowth)
+                .recentActivities(recentActivities)
+                .totalCafes(stats.getTotalCafes())
+                .activeCafes(stats.getActiveCafes())
+                .inactiveCafes(stats.getInactiveCafes())
+                .totalBookings(stats.getTotalBookings())
+                .todayBookings(stats.getTodayBookings())
+                .pendingBookings(stats.getPendingBookings())
+                .confirmedBookings(stats.getConfirmedBookings())
+                .totalOrders(stats.getTotalOrders())
+                .todayOrders(stats.getTodayOrders())
+                .pendingOrders(stats.getPendingOrders())
+                .revenueSummary(AdminDashboardAnalyticsResponse.RevenueSummary.builder()
+                        .totalRevenue(stats.getTotalRevenue())
+                        .todayRevenue(stats.getTodayRevenue())
+                        .thisMonthRevenue(stats.getThisMonthRevenue())
+                        .build())
+                .totalRevenue(stats.getTotalRevenue())
+                .todayRevenue(stats.getTodayRevenue())
+                .thisMonthRevenue(stats.getThisMonthRevenue())
+                .build();
+    }
+
+    public PageResponse<AdminDashboardAnalyticsResponse.RecentActivityPoint> getActivities(Pageable pageable) {
+        int pageNumber = Math.max(0, pageable.getPageNumber());
+        int pageSize = Math.max(1, pageable.getPageSize());
+        int needed = (pageNumber + 1) * pageSize;
+        Pageable fetchPage = PageRequest.of(0, needed, Sort.by(Sort.Direction.DESC, "createdAt"));
+
+        List<AdminDashboardAnalyticsResponse.RecentActivityPoint> allActivities = new ArrayList<>();
+
+        userRepository.findAllByOrderByCreatedAtDesc(fetchPage).forEach(user -> {
+            String roleNames = user.getRoles().stream()
+                    .map(role -> role.getName().name())
+                    .collect(Collectors.joining(", "));
+            allActivities.add(AdminDashboardAnalyticsResponse.RecentActivityPoint.builder()
+                    .activityType("USER_REGISTRATION")
+                    .description("New user registered: " + user.getUsername())
+                    .timestamp(user.getCreatedAt().toString())
+                    .userRole(roleNames)
+                    .build());
+        });
+
+        bookingRepository.findAllByOrderByCreatedAtDesc(fetchPage).forEach(booking ->
+                allActivities.add(AdminDashboardAnalyticsResponse.RecentActivityPoint.builder()
+                        .activityType("BOOKING")
+                        .description("New booking at " + booking.getCafe().getName())
+                        .timestamp(booking.getCreatedAt().toString())
+                        .userRole("CUSTOMER")
+                        .build())
+        );
+
+        orderRepository.findAllByOrderByCreatedAtDesc(fetchPage).forEach(order ->
+                allActivities.add(AdminDashboardAnalyticsResponse.RecentActivityPoint.builder()
+                        .activityType("ORDER")
+                        .description("Order placed: " + order.getOrderNumber())
+                        .timestamp(order.getCreatedAt().toString())
+                        .userRole("CUSTOMER")
+                        .build())
+        );
+
+        paymentRepository.findAllByOrderByCreatedAtDesc(fetchPage).forEach(payment ->
+                allActivities.add(AdminDashboardAnalyticsResponse.RecentActivityPoint.builder()
+                        .activityType("PAYMENT")
+                        .description("Payment " + payment.getStatus().name() + " for order " + payment.getOrder().getOrderNumber())
+                        .timestamp(payment.getCreatedAt().toString())
+                        .userRole("CUSTOMER")
+                        .build())
+        );
+
+        allActivities.sort(Comparator.comparing(
+                (AdminDashboardAnalyticsResponse.RecentActivityPoint a) -> LocalDateTime.parse(a.getTimestamp()))
+                .reversed());
+
+        int fromIndex = Math.min(pageNumber * pageSize, allActivities.size());
+        int toIndex = Math.min(fromIndex + pageSize, allActivities.size());
+        List<AdminDashboardAnalyticsResponse.RecentActivityPoint> content = allActivities.subList(fromIndex, toIndex);
+
+        long totalElements = userRepository.count() + bookingRepository.count() + orderRepository.count() + paymentRepository.count();
+        int totalPages = (int) Math.ceil(totalElements / (double) pageSize);
+
+        return PageResponse.<AdminDashboardAnalyticsResponse.RecentActivityPoint>builder()
+                .content(content)
+                .pageNumber(pageNumber)
+                .pageSize(pageSize)
+                .totalElements(totalElements)
+                .totalPages(totalPages)
+                .isFirst(pageNumber == 0)
+                .isLast(pageNumber >= Math.max(totalPages - 1, 0))
+                .hasNext(pageNumber < totalPages - 1)
+                .hasPrevious(pageNumber > 0)
+                .build();
+    }
+
     private Map<String, Long> getUsersByRole() {
         List<User> allUsers = userRepository.findAll();
-        return allUsers.stream()
+        Map<String, Long> counts = new LinkedHashMap<>();
+        for (Role.RoleName roleName : Role.RoleName.values()) {
+            counts.put(roleName.name(), 0L);
+        }
+
+        Map<String, Long> grouped = allUsers.stream()
                 .flatMap(user -> user.getRoles().stream())
                 .collect(Collectors.groupingBy(
                         role -> role.getName().name(),
                         Collectors.counting()
                 ));
+
+        grouped.forEach(counts::put);
+        return counts;
     }
 
     private List<AdminDashboardStats.WeeklyGrowthData> getWeeklyGrowthData() {
@@ -147,7 +298,6 @@ public class AdminDashboardService {
 
     private List<AdminDashboardStats.RecentActivity> getRecentActivities() {
         List<AdminDashboardStats.RecentActivity> activities = new ArrayList<>();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM dd, yyyy HH:mm");
 
         // Get recent users (last 5)
         List<User> recentUsers = userRepository.findTop5ByOrderByCreatedAtDesc();
@@ -159,7 +309,7 @@ public class AdminDashboardService {
             activities.add(AdminDashboardStats.RecentActivity.builder()
                     .activityType("USER_REGISTRATION")
                     .description("New user registered: " + user.getUsername())
-                    .timestamp(user.getCreatedAt().format(formatter))
+                    .timestamp(user.getCreatedAt().toString())
                     .userRole(roleNames)
                     .build());
         }
@@ -170,7 +320,7 @@ public class AdminDashboardService {
             activities.add(AdminDashboardStats.RecentActivity.builder()
                     .activityType("BOOKING")
                     .description("New booking at " + booking.getCafe().getName())
-                    .timestamp(booking.getCreatedAt().format(formatter))
+                    .timestamp(booking.getCreatedAt().toString())
                     .userRole("CUSTOMER")
                     .build());
         }

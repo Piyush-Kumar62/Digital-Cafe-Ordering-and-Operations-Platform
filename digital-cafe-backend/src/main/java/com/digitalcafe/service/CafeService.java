@@ -3,6 +3,8 @@ package com.digitalcafe.service;
 import com.digitalcafe.dto.request.CafeRequest;
 import com.digitalcafe.dto.response.CafeResponse;
 import com.digitalcafe.dto.response.PageResponse;
+import com.digitalcafe.dto.response.PublicCafeCardResponse;
+import com.digitalcafe.dto.response.PublicCafeDetailResponse;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
@@ -33,6 +35,16 @@ public interface CafeService {
     PageResponse<CafeResponse> getAllCafes(Pageable pageable);
 
     /**
+     * Public list of active cafes for SaaS-style browse page.
+     */
+    PageResponse<PublicCafeCardResponse> getPublicActiveCafes(Pageable pageable);
+
+    /**
+     * Public cafe details with available menu items.
+     */
+    PublicCafeDetailResponse getPublicCafeDetails(Long cafeId);
+
+    /**
      * Get all active cafes (public endpoint for landing page)
      */
     List<CafeResponse> getActiveCafes();
@@ -52,4 +64,3 @@ public interface CafeService {
      */
     CafeResponse toggleCafeStatus(Long cafeId, boolean isActive);
 }
-

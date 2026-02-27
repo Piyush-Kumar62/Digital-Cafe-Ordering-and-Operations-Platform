@@ -6,10 +6,12 @@ import com.digitalcafe.dto.request.RegisterRequest;
 import com.digitalcafe.dto.request.ResetPasswordRequest;
 import com.digitalcafe.dto.response.AuthResponse;
 import com.digitalcafe.dto.response.RegisterResponse;
+import org.springframework.web.multipart.MultipartFile;
 
 public interface AuthService {
     AuthResponse register(SimpleRegisterRequest request);
     RegisterResponse comprehensiveRegister(RegisterRequest request);
+    RegisterResponse comprehensiveRegisterWithGovtId(RegisterRequest request, MultipartFile govtIdProof);
     AuthResponse login(LoginRequest request);
     void verifyEmail(String token);
     void resendVerificationEmail(String email);

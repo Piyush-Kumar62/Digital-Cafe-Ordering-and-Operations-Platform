@@ -1,12 +1,16 @@
 package com.digitalcafe.service;
 
 import com.digitalcafe.dto.request.BookingRequest;
+import com.digitalcafe.dto.request.CustomerBookingRequest;
+import com.digitalcafe.dto.response.AvailabilityTableResponse;
 import com.digitalcafe.dto.response.BookingResponse;
 import com.digitalcafe.dto.response.PageResponse;
 import com.digitalcafe.entity.Booking;
 import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 
 /**
@@ -20,6 +24,11 @@ public interface BookingService {
     BookingResponse createBooking(Long customerId, BookingRequest request);
 
     /**
+     * Create a booking by auto-allocating an available table.
+     */
+    BookingResponse createBooking(Long customerId, CustomerBookingRequest request);
+
+    /**
      * Get booking by ID
      */
     BookingResponse getBookingById(Long bookingId);
@@ -28,6 +37,11 @@ public interface BookingService {
      * Get all bookings for a customer
      */
     List<BookingResponse> getBookingsByCustomerId(Long customerId);
+
+    /**
+     * Get all bookings in system
+     */
+    List<BookingResponse> getAllBookings();
 
     /**
      * Get all bookings for a cafe
@@ -53,5 +67,9 @@ public interface BookingService {
      * Check table availability for booking
      */
     boolean isTableAvailable(Long tableId, LocalDateTime bookingTime);
-}
 
+    /**
+     * Get available tables for a cafe/date/time slot.
+     */
+    List<AvailabilityTableResponse> getAvailableTablesForSlot(Long cafeId, LocalDate date, LocalTime time, Integer seatsRequired);
+}

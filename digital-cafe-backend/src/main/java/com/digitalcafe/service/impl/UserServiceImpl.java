@@ -6,6 +6,7 @@ import com.digitalcafe.dto.response.UserResponse;
 import com.digitalcafe.entity.Cafe;
 import com.digitalcafe.entity.Role;
 import com.digitalcafe.entity.User;
+import com.digitalcafe.exception.AccessDeniedException;
 import com.digitalcafe.exception.BadRequestException;
 import com.digitalcafe.exception.ResourceNotFoundException;
 import com.digitalcafe.repository.CafeRepository;
@@ -25,6 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -54,8 +56,11 @@ public class UserServiceImpl implements UserService {
         User user = User.builder()
                 .username(request.getEmail())
                 .email(request.getEmail())
+                .firstName(request.getFirstName())
+                .lastName(request.getLastName())
+                .displayName((request.getFirstName() + " " + request.getLastName()).trim())
                 .password(passwordEncoder.encode(tempPassword))
-                .roles(Collections.singleton(ownerRole))
+                .roles(new HashSet<>(Collections.singleton(ownerRole)))
                 .isActive(true)
                 .isEmailVerified(true) // Admin creates, so verified by default
                 .isProfileComplete(false)
@@ -65,6 +70,33 @@ public class UserServiceImpl implements UserService {
                 .build();
 
         user = userRepository.save(user);
+
+        if (request.getCafeName() != null && !request.getCafeName().isBlank()
+                && request.getCafeAddress() != null && !request.getCafeAddress().isBlank()
+                && request.getCafeCity() != null && !request.getCafeCity().isBlank()
+                && request.getCafePincode() != null && !request.getCafePincode().isBlank()) {
+            Cafe cafe = Cafe.builder()
+                    .name(request.getCafeName())
+                    .description(request.getCafeDescription())
+                    .address(request.getCafeAddress())
+                    .city(request.getCafeCity())
+                    .state(request.getCafeState())
+                    .pincode(request.getCafePincode())
+                    .phoneNumber(
+                            request.getCafePhoneNumber() != null && !request.getCafePhoneNumber().isBlank()
+                                    ? request.getCafePhoneNumber()
+                                    : "0000000000")
+                    .email(request.getCafeEmail())
+                    .openingTime(request.getOpeningTime())
+                    .closingTime(request.getClosingTime())
+                    .isActive(true)
+                    .owner(user)
+                    .build();
+            cafe = cafeRepository.save(cafe);
+            user.setCafe(cafe);
+            user = userRepository.save(user);
+        }
+
         log.info("Cafe owner created: {}", user.getEmail());
 
         // Send welcome email with credentials
@@ -86,6 +118,7 @@ public class UserServiceImpl implements UserService {
     }
 
     private UserResponse createStaffUser(Long cafeId, CreateUserRequest request, Role.RoleName roleName) {
+        validateCafeOwnerAccess(cafeId);
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new BadRequestException("Email already registered");
         }
@@ -103,8 +136,11 @@ public class UserServiceImpl implements UserService {
         User user = User.builder()
                 .username(request.getEmail())
                 .email(request.getEmail())
+                .firstName(request.getFirstName())
+                .lastName(request.getLastName())
+                .displayName((request.getFirstName() + " " + request.getLastName()).trim())
                 .password(passwordEncoder.encode(tempPassword))
-                .roles(Collections.singleton(role))
+                .roles(new HashSet<>(Collections.singleton(role)))
                 .cafe(cafe)
                 .createdByUser(currentUser)
                 .isActive(true)
@@ -203,6 +239,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public UserResponse createStaff(CreateStaffRequest request, String roleName) {
+        validateCafeOwnerAccess(request.getCafeId());
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new BadRequestException("Email already registered");
         }
@@ -220,8 +257,11 @@ public class UserServiceImpl implements UserService {
         User user = User.builder()
                 .username(request.getEmail())
                 .email(request.getEmail())
+                .firstName(request.getFirstName())
+                .lastName(request.getLastName())
+                .displayName((request.getFirstName() + " " + request.getLastName()).trim())
                 .password(passwordEncoder.encode(tempPassword))
-                .roles(Collections.singleton(role))
+                .roles(new HashSet<>(Collections.singleton(role)))
                 .cafe(cafe)
                 .createdByUser(currentUser)
                 .isActive(true)
@@ -245,6 +285,7 @@ public class UserServiceImpl implements UserService {
     public UserResponse toggleUserStatus(Long id, boolean isActive) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
+        validateStaffManagementAccess(user);
         user.setIsActive(isActive);
         userRepository.save(user);
         log.info("User {} status changed to: {}", user.getEmail(), isActive);
@@ -254,6 +295,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(readOnly = true)
     public List<UserResponse> getStaffByCafeId(Long cafeId) {
+        validateCafeOwnerAccess(cafeId);
         List<User> staff = userRepository.findByCafeIdAndRoles(cafeId,
                 List.of(Role.RoleName.CHEF, Role.RoleName.WAITER));
         return staff.stream()
@@ -264,6 +306,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(readOnly = true)
     public List<UserResponse> getChefsByCafeId(Long cafeId) {
+        validateCafeOwnerAccess(cafeId);
         List<User> chefs = userRepository.findByCafeIdAndRoleName(cafeId, Role.RoleName.CHEF);
         return chefs.stream()
                 .map(this::mapToUserResponse)
@@ -273,6 +316,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(readOnly = true)
     public List<UserResponse> getWaitersByCafeId(Long cafeId) {
+        validateCafeOwnerAccess(cafeId);
         List<User> waiters = userRepository.findByCafeIdAndRoleName(cafeId, Role.RoleName.WAITER);
         return waiters.stream()
                 .map(this::mapToUserResponse)
@@ -318,9 +362,45 @@ public class UserServiceImpl implements UserService {
 
     private User getCurrentUserEntity() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || authentication.getName() == null) {
+            throw new AccessDeniedException("Unauthenticated access");
+        }
         String email = authentication.getName();
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "email", email));
+    }
+
+    private void validateCafeOwnerAccess(Long cafeId) {
+        User actor = getCurrentUserEntity();
+        if (actor.hasRole(Role.RoleName.ADMIN)) {
+            return;
+        }
+        if (!actor.hasRole(Role.RoleName.CAFE_OWNER)) {
+            throw new AccessDeniedException("Only cafe owner can access this resource");
+        }
+        Long actorCafeId = actor.getCafe() != null ? actor.getCafe().getId() : null;
+        if (actorCafeId == null || !actorCafeId.equals(cafeId)) {
+            throw new AccessDeniedException("Cafe owner cannot access another cafe's staff data");
+        }
+    }
+
+    private void validateStaffManagementAccess(User staffUser) {
+        User actor = getCurrentUserEntity();
+        if (actor.hasRole(Role.RoleName.ADMIN)) {
+            return;
+        }
+        if (!actor.hasRole(Role.RoleName.CAFE_OWNER)) {
+            throw new AccessDeniedException("Only cafe owner can manage staff");
+        }
+        Long actorCafeId = actor.getCafe() != null ? actor.getCafe().getId() : null;
+        Long staffCafeId = staffUser.getCafe() != null ? staffUser.getCafe().getId() : null;
+        if (actorCafeId == null || staffCafeId == null || !actorCafeId.equals(staffCafeId)) {
+            throw new AccessDeniedException("Cafe owner cannot manage staff from another cafe");
+        }
+        boolean isManagedRole = staffUser.hasRole(Role.RoleName.CHEF) || staffUser.hasRole(Role.RoleName.WAITER);
+        if (!isManagedRole) {
+            throw new AccessDeniedException("Only chef or waiter accounts can be managed via staff endpoint");
+        }
     }
 
     private UserResponse mapToUserResponse(User user) {
@@ -328,6 +408,8 @@ public class UserServiceImpl implements UserService {
                 .id(user.getId())
                 .username(user.getUsername())
                 .email(user.getEmail())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
                 .isActive(user.getIsActive())
                 .isEmailVerified(user.getIsEmailVerified())
                 .isProfileComplete(user.getIsProfileComplete())

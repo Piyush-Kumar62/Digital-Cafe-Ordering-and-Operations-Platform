@@ -81,6 +81,7 @@ public class ProfileServiceImpl implements ProfileService {
         }
 
         profile = profileRepository.save(profile);
+        updateUserProfileCompletion(user, profile);
         log.info("Profile saved successfully for user: {}", userId);
 
         return profileMapper.toResponse(profile);
@@ -108,5 +109,54 @@ public class ProfileServiceImpl implements ProfileService {
 
         // Profile is complete if completion percentage is 100%
         return profile.calculateCompletionPercentage() == 100;
+    }
+
+    @Override
+    @Transactional
+    public ProfileResponse addAcademicInfo(Long userId, ProfileRequest.AcademicInfoRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        Profile profile = profileRepository.findByUserId(userId)
+                .orElseGet(() -> {
+                    Profile created = new Profile();
+                    created.setUser(user);
+                    return created;
+                });
+
+        AcademicInfo academicInfo = profileMapper.toAcademicInfoEntity(request);
+        academicInfo.setProfile(profile);
+        profile.getAcademicInformation().add(academicInfo);
+
+        profile = profileRepository.save(profile);
+        updateUserProfileCompletion(user, profile);
+        return profileMapper.toResponse(profile);
+    }
+
+    @Override
+    @Transactional
+    public ProfileResponse addWorkExperience(Long userId, ProfileRequest.WorkExperienceRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        Profile profile = profileRepository.findByUserId(userId)
+                .orElseGet(() -> {
+                    Profile created = new Profile();
+                    created.setUser(user);
+                    return created;
+                });
+
+        WorkExperience workExperience = profileMapper.toWorkExperienceEntity(request);
+        workExperience.setProfile(profile);
+        profile.getWorkExperiences().add(workExperience);
+
+        profile = profileRepository.save(profile);
+        updateUserProfileCompletion(user, profile);
+        return profileMapper.toResponse(profile);
+    }
+
+    private void updateUserProfileCompletion(User user, Profile profile) {
+        int completionPercentage = profile.calculateCompletionPercentage();
+        user.setProfileCompletionPercentage(completionPercentage);
+        user.setIsProfileComplete(profile.isComplete());
+        userRepository.save(user);
     }
 }

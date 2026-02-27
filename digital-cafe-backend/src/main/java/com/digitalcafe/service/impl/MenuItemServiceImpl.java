@@ -5,15 +5,21 @@ import com.digitalcafe.dto.response.MenuItemResponse;
 import com.digitalcafe.dto.response.PageResponse;
 import com.digitalcafe.entity.Cafe;
 import com.digitalcafe.entity.MenuItem;
+import com.digitalcafe.entity.Role;
+import com.digitalcafe.entity.User;
+import com.digitalcafe.exception.AccessDeniedException;
 import com.digitalcafe.exception.ResourceNotFoundException;
 import com.digitalcafe.mapper.MenuItemMapper;
 import com.digitalcafe.repository.CafeRepository;
 import com.digitalcafe.repository.MenuItemRepository;
+import com.digitalcafe.repository.UserRepository;
 import com.digitalcafe.service.MenuItemService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,12 +36,14 @@ public class MenuItemServiceImpl implements MenuItemService {
 
     private final MenuItemRepository menuItemRepository;
     private final CafeRepository cafeRepository;
+    private final UserRepository userRepository;
     private final MenuItemMapper menuItemMapper;
 
     @Override
     @Transactional
     public MenuItemResponse createMenuItem(Long cafeId, MenuItemRequest request) {
         log.info("Creating menu item for cafe ID: {}", cafeId);
+        validateCafeOwnerAccess(cafeId);
 
         Cafe cafe = cafeRepository.findById(cafeId)
                 .orElseThrow(() -> new ResourceNotFoundException("Cafe not found with ID: " + cafeId));
@@ -43,6 +51,16 @@ public class MenuItemServiceImpl implements MenuItemService {
         MenuItem menuItem = menuItemMapper.toEntity(request);
         menuItem.setCafe(cafe);
         menuItem.setIsAvailable(true);
+        menuItem.setIsDeleted(false);
+        if (menuItem.getIsVegetarian() == null) {
+            menuItem.setIsVegetarian(false);
+        }
+        if (menuItem.getIsVegan() == null) {
+            menuItem.setIsVegan(false);
+        }
+        if (menuItem.getPreparationTimeMinutes() == null && request.getPreparationTime() != null) {
+            menuItem.setPreparationTimeMinutes(request.getPreparationTime());
+        }
 
         MenuItem savedMenuItem = menuItemRepository.save(menuItem);
         log.info("Menu item created successfully with ID: {}", savedMenuItem.getId());
@@ -57,8 +75,21 @@ public class MenuItemServiceImpl implements MenuItemService {
 
         MenuItem menuItem = menuItemRepository.findById(menuItemId)
                 .orElseThrow(() -> new ResourceNotFoundException("Menu item not found with ID: " + menuItemId));
+        if (Boolean.TRUE.equals(menuItem.getIsDeleted())) {
+            throw new ResourceNotFoundException("Menu item not found with ID: " + menuItemId);
+        }
+        validateCafeOwnerAccess(menuItem.getCafe().getId());
 
         menuItemMapper.updateMenuItemFromRequest(request, menuItem);
+        if (menuItem.getIsVegetarian() == null) {
+            menuItem.setIsVegetarian(false);
+        }
+        if (menuItem.getIsVegan() == null) {
+            menuItem.setIsVegan(false);
+        }
+        if (request.getPreparationTimeMinutes() == null && request.getPreparationTime() != null) {
+            menuItem.setPreparationTimeMinutes(request.getPreparationTime());
+        }
         MenuItem updatedMenuItem = menuItemRepository.save(menuItem);
 
         log.info("Menu item updated successfully with ID: {}", menuItemId);
@@ -72,6 +103,9 @@ public class MenuItemServiceImpl implements MenuItemService {
 
         MenuItem menuItem = menuItemRepository.findById(menuItemId)
                 .orElseThrow(() -> new ResourceNotFoundException("Menu item not found with ID: " + menuItemId));
+        if (Boolean.TRUE.equals(menuItem.getIsDeleted())) {
+            throw new ResourceNotFoundException("Menu item not found with ID: " + menuItemId);
+        }
 
         return menuItemMapper.toResponse(menuItem);
     }
@@ -81,7 +115,7 @@ public class MenuItemServiceImpl implements MenuItemService {
     public List<MenuItemResponse> getMenuItemsByCafeId(Long cafeId) {
         log.info("Fetching all menu items for cafe ID: {}", cafeId);
 
-        List<MenuItem> menuItems = menuItemRepository.findByCafeId(cafeId);
+        List<MenuItem> menuItems = menuItemRepository.findByCafeIdAndIsDeletedFalse(cafeId);
         return menuItems.stream()
                 .map(menuItemMapper::toResponse)
                 .collect(Collectors.toList());
@@ -92,7 +126,7 @@ public class MenuItemServiceImpl implements MenuItemService {
     public List<MenuItemResponse> getAvailableMenuItemsByCafeId(Long cafeId) {
         log.info("Fetching available menu items for cafe ID: {}", cafeId);
 
-        List<MenuItem> menuItems = menuItemRepository.findByCafeIdAndIsAvailableTrue(cafeId);
+        List<MenuItem> menuItems = menuItemRepository.findByCafeIdAndIsAvailableTrueAndIsDeletedFalse(cafeId);
         return menuItems.stream()
                 .map(menuItemMapper::toResponse)
                 .collect(Collectors.toList());
@@ -102,6 +136,7 @@ public class MenuItemServiceImpl implements MenuItemService {
     @Transactional(readOnly = true)
     public PageResponse<MenuItemResponse> getAllMenuItems(Pageable pageable) {
         log.info("Fetching all menu items with pagination");
+        validateMenuCatalogAccess();
 
         Page<MenuItem> menuItemPage = menuItemRepository.findAll(pageable);
         List<MenuItemResponse> menuItemResponses = menuItemPage.getContent().stream()
@@ -123,11 +158,16 @@ public class MenuItemServiceImpl implements MenuItemService {
     public void deleteMenuItem(Long menuItemId) {
         log.info("Deleting menu item with ID: {}", menuItemId);
 
-        if (!menuItemRepository.existsById(menuItemId)) {
+        MenuItem menuItem = menuItemRepository.findById(menuItemId)
+                .orElseThrow(() -> new ResourceNotFoundException("Menu item not found with ID: " + menuItemId));
+        if (Boolean.TRUE.equals(menuItem.getIsDeleted())) {
             throw new ResourceNotFoundException("Menu item not found with ID: " + menuItemId);
         }
+        validateCafeOwnerAccess(menuItem.getCafe().getId());
 
-        menuItemRepository.deleteById(menuItemId);
+        menuItem.setIsDeleted(true);
+        menuItem.setIsAvailable(false);
+        menuItemRepository.save(menuItem);
         log.info("Menu item deleted successfully with ID: {}", menuItemId);
     }
 
@@ -138,6 +178,10 @@ public class MenuItemServiceImpl implements MenuItemService {
 
         MenuItem menuItem = menuItemRepository.findById(menuItemId)
                 .orElseThrow(() -> new ResourceNotFoundException("Menu item not found with ID: " + menuItemId));
+        if (Boolean.TRUE.equals(menuItem.getIsDeleted())) {
+            throw new ResourceNotFoundException("Menu item not found with ID: " + menuItemId);
+        }
+        validateCafeOwnerAccess(menuItem.getCafe().getId());
 
         menuItem.setIsAvailable(isAvailable);
         MenuItem updatedMenuItem = menuItemRepository.save(menuItem);
@@ -145,5 +189,35 @@ public class MenuItemServiceImpl implements MenuItemService {
         log.info("Menu item availability updated successfully");
         return menuItemMapper.toResponse(updatedMenuItem);
     }
-}
 
+    private User getAuthenticatedUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || authentication.getName() == null) {
+            throw new AccessDeniedException("Unauthenticated access");
+        }
+        return userRepository.findByEmail(authentication.getName())
+                .orElseThrow(() -> new AccessDeniedException("Authenticated user not found"));
+    }
+
+    private void validateCafeOwnerAccess(Long cafeId) {
+        User actor = getAuthenticatedUser();
+        if (actor.hasRole(Role.RoleName.ADMIN)) {
+            return;
+        }
+        if (!actor.hasRole(Role.RoleName.CAFE_OWNER)) {
+            throw new AccessDeniedException("Only cafe owner can manage menu items");
+        }
+        Long actorCafeId = actor.getCafe() != null ? actor.getCafe().getId() : null;
+        if (actorCafeId == null || !actorCafeId.equals(cafeId)) {
+            throw new AccessDeniedException("Cafe owner cannot manage menu items from another cafe");
+        }
+    }
+
+    private void validateMenuCatalogAccess() {
+        User actor = getAuthenticatedUser();
+        if (actor.hasRole(Role.RoleName.ADMIN) || actor.hasRole(Role.RoleName.CAFE_OWNER)) {
+            return;
+        }
+        throw new AccessDeniedException("You are not allowed to view complete menu catalog");
+    }
+}

@@ -27,5 +27,14 @@ public interface ProfileService {
      * Check if profile is complete
      */
     boolean isProfileComplete(Long userId);
-}
 
+    /**
+     * Add an academic entry to profile
+     */
+    ProfileResponse addAcademicInfo(Long userId, ProfileRequest.AcademicInfoRequest request);
+
+    /**
+     * Add a work experience entry to profile
+     */
+    ProfileResponse addWorkExperience(Long userId, ProfileRequest.WorkExperienceRequest request);
+}

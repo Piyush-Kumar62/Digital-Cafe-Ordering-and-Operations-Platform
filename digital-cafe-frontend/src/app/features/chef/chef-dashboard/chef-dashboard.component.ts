@@ -5,7 +5,7 @@ import { AuthService } from '@core/auth/auth.service';
 import { WebSocketService } from '@core/websocket/websocket.service';
 import { CardComponent } from '@shared/components/card/card.component';
 import { Order, OrderStatus } from '@shared/models/order.model';
-import { NotificationService } from '@core/services/notification.service';
+import { AlertService } from '@core/services/alert.service';
 import { Subject, takeUntil } from 'rxjs';
 
 @Component({
@@ -55,8 +55,8 @@ import { Subject, takeUntil } from 'rxjs';
                 </li>
               </ul>
             </div>
-            <button class="btn-action btn-start" (click)="updateOrderStatus(order.id, 'PREPARING')">
-              Start Preparing
+            <button class="btn-action btn-start" disabled>
+              Awaiting Kitchen Start
             </button>
           </div>
         </div>
@@ -263,7 +263,7 @@ export class ChefDashboardComponent implements OnInit, OnDestroy {
     private apiService: ApiService,
     private authService: AuthService,
     private webSocketService: WebSocketService,
-    private notificationService: NotificationService,
+    private alertService: AlertService,
   ) {}
 
   ngOnInit(): void {
@@ -281,20 +281,18 @@ export class ChefDashboardComponent implements OnInit, OnDestroy {
   }
 
   loadOrders(): void {
-    if (!this.cafeId) return;
-
-    this.apiService.getOrdersByCafe(this.cafeId).subscribe({
+    this.apiService.getChefOrders().subscribe({
       next: (orders) => {
         this.categorizeOrders(orders);
       },
       error: (error) => {
-        console.error('Error loading orders:', error);
+        this.alertService.error('Load Failed', 'Unable to load kitchen orders.');
       },
     });
   }
 
   categorizeOrders(orders: Order[]): void {
-    this.pendingOrders = orders.filter((o) => o.status === OrderStatus.PENDING || o.status === OrderStatus.CONFIRMED);
+    this.pendingOrders = orders.filter((o) => o.status === OrderStatus.PENDING);
     this.preparingOrders = orders.filter((o) => o.status === OrderStatus.PREPARING);
     this.readyOrders = orders.filter((o) => o.status === OrderStatus.READY);
   }
@@ -302,21 +300,28 @@ export class ChefDashboardComponent implements OnInit, OnDestroy {
   subscribeToOrderUpdates(): void {
     this.webSocketService.orderNotifications$.pipe(takeUntil(this.destroy$)).subscribe((order) => {
       if (order) {
-        this.notificationService.info(`New order received: #${order.orderNumber}`);
+        this.alertService.info(`New order received: #${order.orderNumber}`);
         this.loadOrders();
       }
     });
   }
 
   updateOrderStatus(orderId: number, status: string): void {
-    this.apiService.updateOrderStatus(orderId, status).subscribe({
+    this.alertService.loading('Updating order status. Please wait.');
+    const request$ = this.apiService.markOrderReady(orderId);
+
+    request$.subscribe({
       next: () => {
-        this.notificationService.success(`Order status updated to ${status}`);
+        this.alertService.close();
+        this.alertService.success('Status Updated', `Order status updated to ${status}.`);
         this.loadOrders();
       },
       error: (error) => {
-        this.notificationService.error('Failed to update order status');
+        this.alertService.close();
+        this.alertService.error('Update Failed', 'Failed to update order status');
       },
     });
   }
 }
+
+

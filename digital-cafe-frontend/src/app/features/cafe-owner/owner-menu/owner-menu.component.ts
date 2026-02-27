@@ -3,7 +3,7 @@ import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
 import { ApiService } from "@core/services/api.service";
 import { AuthService } from "@core/auth/auth.service";
-import { NotificationService } from "@core/services/notification.service";
+import { AlertService } from "@core/services/alert.service";
 import { MenuItem, MenuCategory } from "@shared/models/menu.model";
 
 @Component({
@@ -86,7 +86,7 @@ export class OwnerMenuComponent implements OnInit {
   constructor(
     private apiService: ApiService,
     private authService: AuthService,
-    private notificationService: NotificationService,
+    private alertService: AlertService,
   ) {}
 
   ngOnInit(): void {
@@ -103,13 +103,18 @@ export class OwnerMenuComponent implements OnInit {
 
   createMenuItem(): void {
     if (!this.cafeId) return;
+    this.alertService.loading("Creating menu item. Please wait.");
     this.apiService.createMenuItem(this.cafeId, this.draft).subscribe({
       next: () => {
-        this.notificationService.success("Menu item created.");
+        this.alertService.close();
+        this.alertService.success("Menu Item Created", "Menu item created successfully.");
         this.draft = { name: "", description: "", price: 0, category: "", isAvailable: true, preparationTimeMinutes: 10 };
         this.loadItems();
       },
-      error: () => this.notificationService.error("Failed to create menu item."),
+      error: () => {
+        this.alertService.close();
+        this.alertService.error("Create Failed", "Failed to create menu item.");
+      },
     });
   }
 
@@ -119,12 +124,24 @@ export class OwnerMenuComponent implements OnInit {
     });
   }
 
-  deleteItem(id: number): void {
+  async deleteItem(id: number): Promise<void> {
+    const confirmed = await this.alertService.confirm("Delete Menu Item", "This action cannot be undone.");
+    if (!confirmed) {
+      return;
+    }
+    this.alertService.loading("Deleting menu item. Please wait.");
     this.apiService.deleteMenuItem(id).subscribe({
       next: () => {
-        this.notificationService.success("Menu item deleted.");
+        this.alertService.close();
+        this.alertService.success("Menu Item Deleted", "Menu item deleted successfully.");
         this.loadItems();
+      },
+      error: () => {
+        this.alertService.close();
+        this.alertService.error("Delete Failed", "Failed to delete menu item.");
       },
     });
   }
 }
+
+

@@ -2,7 +2,7 @@ import { Component, OnDestroy, OnInit } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
 import { ApiService } from "@core/services/api.service";
-import { NotificationService } from "@core/services/notification.service";
+import { AlertService } from "@core/services/alert.service";
 import { Booking } from "@shared/models/booking.model";
 import { Cafe } from "@shared/models/cafe.model";
 
@@ -97,7 +97,7 @@ export class BookingManagementComponent implements OnInit, OnDestroy {
 
   constructor(
     private apiService: ApiService,
-    private notificationService: NotificationService,
+    private alertService: AlertService,
   ) {}
 
   ngOnInit(): void {
@@ -120,7 +120,7 @@ export class BookingManagementComponent implements OnInit, OnDestroy {
         }
         this.loadBookings();
       },
-      error: (error) => this.notificationService.error(error?.message || "Failed to load cafes"),
+      error: (error) => this.alertService.error(error?.message || "Failed to load cafes"),
     });
   }
 
@@ -135,7 +135,7 @@ export class BookingManagementComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         this.loading = false;
-        this.notificationService.error(error?.message || "Failed to load bookings");
+        this.alertService.error(error?.message || "Failed to load bookings");
       },
     });
   }
@@ -144,10 +144,10 @@ export class BookingManagementComponent implements OnInit, OnDestroy {
     const status = this.statusMap[booking.id] || booking.status;
     this.apiService.updateBookingStatusForAdmin(booking.id, status).subscribe({
       next: () => {
-        this.notificationService.success("Booking status updated.");
+        this.alertService.success("Booking status updated.");
         this.loadBookings();
       },
-      error: (error) => this.notificationService.error(error?.message || "Status update failed"),
+      error: (error) => this.alertService.error(error?.message || "Status update failed"),
     });
   }
 
@@ -156,3 +156,5 @@ export class BookingManagementComponent implements OnInit, OnDestroy {
     return value || String(booking.id);
   }
 }
+
+

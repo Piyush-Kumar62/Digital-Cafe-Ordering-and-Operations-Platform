@@ -2,7 +2,7 @@ import { Component, OnDestroy, OnInit } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
 import { ApiService } from "@core/services/api.service";
-import { NotificationService } from "@core/services/notification.service";
+import { AlertService } from "@core/services/alert.service";
 import { Order } from "@shared/models/order.model";
 import { Cafe } from "@shared/models/cafe.model";
 
@@ -89,13 +89,13 @@ export class OrderManagementComponent implements OnInit, OnDestroy {
   orders: Order[] = [];
   loading = false;
   statusMap: Record<number, string> = {};
-  statuses = ["PLACED", "PREPARING", "READY", "SERVED", "CANCELLED"];
+  statuses = ["PENDING", "PREPARING", "READY", "SERVED", "CANCELLED"];
   refreshTimer: any = null;
   refreshSeconds = 10;
 
   constructor(
     private apiService: ApiService,
-    private notificationService: NotificationService,
+    private alertService: AlertService,
   ) {}
 
   ngOnInit(): void {
@@ -118,7 +118,7 @@ export class OrderManagementComponent implements OnInit, OnDestroy {
         }
         this.loadOrders();
       },
-      error: (error) => this.notificationService.error(error?.message || "Failed to load cafes"),
+      error: (error) => this.alertService.error(error?.message || "Failed to load cafes"),
     });
   }
 
@@ -133,7 +133,7 @@ export class OrderManagementComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         this.loading = false;
-        this.notificationService.error(error?.message || "Failed to load orders");
+        this.alertService.error(error?.message || "Failed to load orders");
       },
     });
   }
@@ -142,10 +142,10 @@ export class OrderManagementComponent implements OnInit, OnDestroy {
     const status = this.statusMap[order.id] || order.status;
     this.apiService.updateOrderStatusForAdmin(order.id, status).subscribe({
       next: () => {
-        this.notificationService.success("Order status updated.");
+        this.alertService.success("Order status updated.");
         this.loadOrders();
       },
-      error: (error) => this.notificationService.error(error?.message || "Status update failed"),
+      error: (error) => this.alertService.error(error?.message || "Status update failed"),
     });
   }
 
@@ -154,3 +154,5 @@ export class OrderManagementComponent implements OnInit, OnDestroy {
     return placed || order.createdAt || "-";
   }
 }
+
+

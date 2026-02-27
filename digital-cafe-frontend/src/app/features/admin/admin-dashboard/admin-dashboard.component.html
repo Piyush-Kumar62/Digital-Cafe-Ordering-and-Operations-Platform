@@ -635,57 +635,6 @@
     </div>
   </div>
 
-  <!-- System Analytics Summary -->
-  <div
-    class="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl shadow-lg p-8 mb-8 text-white"
-  >
-    <h3 class="text-2xl font-bold mb-6">System Analytics Summary</h3>
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <div class="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-        <h4 class="text-sm font-medium text-indigo-100 mb-2">
-          User Engagement
-        </h4>
-        <p class="text-3xl font-bold mb-1">
-          {{
-            (dashboard.activeUsers / dashboard.totalUsers) * 100 || 0
-              | number: "1.1-1"
-          }}%
-        </p>
-        <p class="text-sm text-indigo-100">
-          {{ dashboard.activeUsers }} of {{ dashboard.totalUsers }} users active
-        </p>
-      </div>
-      <div class="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-        <h4 class="text-sm font-medium text-purple-100 mb-2">
-          Platform Health
-        </h4>
-        <p class="text-3xl font-bold mb-1">
-          {{
-            (dashboard.activeCafes / dashboard.totalCafes) * 100 || 0
-              | number: "1.0-0"
-          }}%
-        </p>
-        <p class="text-sm text-purple-100">
-          {{ dashboard.activeCafes }} active cafés operating
-        </p>
-      </div>
-      <div class="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-        <h4 class="text-sm font-medium text-pink-100 mb-2">
-          Order Completion Rate
-        </h4>
-        <p class="text-3xl font-bold mb-1">
-          {{
-            (dashboard.completedOrders / dashboard.totalOrders) * 100 || 0
-              | number: "1.1-1"
-          }}%
-        </p>
-        <p class="text-sm text-pink-100">
-          {{ dashboard.completedOrders }} orders successfully completed
-        </p>
-      </div>
-    </div>
-  </div>
-
   <!-- Charts Section -->
   <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-8">
     <!-- Weekly Growth Chart -->
@@ -725,7 +674,7 @@
         </p>
       </div>
       <a
-        href="#"
+        [routerLink]="['/admin/logs']"
         class="text-sm font-medium text-indigo-600 hover:text-indigo-700"
         >View All →</a
       >
@@ -739,7 +688,7 @@
     >
       <div
         *ngFor="let activity of dashboard.recentActivities; let i = index"
-        class="flex items-start p-3 rounded-lg hover:bg-gray-50 transition-colors duration-150"
+        class="flex items-start p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-800/60 transition-colors duration-150"
         [class.border-b]="i < dashboard.recentActivities.length - 1"
         [class.border-gray-100]="i < dashboard.recentActivities.length - 1"
       >
@@ -760,7 +709,7 @@
           <div class="flex items-center mt-1">
             <span
               *ngIf="activity.userRole"
-              class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800 mr-2"
+              class="activity-role-badge mr-2"
             >
               {{ activity.userRole }}
             </span>

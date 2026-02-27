@@ -17,9 +17,9 @@ import { Order } from "@shared/models/order.model";
 
       <div class="stats">
         <article class="card"><small>Total</small><strong>{{ orders.length }}</strong></article>
-        <article class="card"><small>Pending</small><strong>{{ countBy('PENDING') + countBy('PLACED') + countBy('CONFIRMED') }}</strong></article>
+        <article class="card"><small>Pending</small><strong>{{ countBy('PENDING') }}</strong></article>
         <article class="card"><small>Preparing</small><strong>{{ countBy('PREPARING') }}</strong></article>
-        <article class="card"><small>Ready/Served</small><strong>{{ countBy('READY') + countBy('SERVED') + countBy('COMPLETED') }}</strong></article>
+        <article class="card"><small>Ready/Served</small><strong>{{ countBy('READY') + countBy('SERVED') }}</strong></article>
       </div>
 
       <div class="grid">

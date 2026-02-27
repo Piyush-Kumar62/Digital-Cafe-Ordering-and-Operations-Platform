@@ -3,7 +3,7 @@ import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
 import { ApiService } from "@core/services/api.service";
 import { AuthService } from "@core/auth/auth.service";
-import { NotificationService } from "@core/services/notification.service";
+import { AlertService } from "@core/services/alert.service";
 import { User } from "@shared/models/auth.model";
 
 @Component({
@@ -78,7 +78,7 @@ export class OwnerStaffComponent implements OnInit {
   constructor(
     private apiService: ApiService,
     private authService: AuthService,
-    private notificationService: NotificationService,
+    private alertService: AlertService,
   ) {}
 
   ngOnInit(): void {
@@ -105,26 +105,49 @@ export class OwnerStaffComponent implements OnInit {
       ? this.apiService.createChef(this.cafeId, req)
       : this.apiService.createWaiter(this.cafeId, req);
 
+    this.alertService.loading("Creating staff account. Please wait.");
     action.subscribe({
       next: () => {
-        this.notificationService.success(`${this.role} account created.`);
+        this.alertService.close();
+        this.alertService.success("Staff Created", `${this.role} account created.`);
         this.firstName = "";
         this.lastName = "";
         this.username = "";
         this.email = "";
         this.loadStaff();
       },
-      error: () => this.notificationService.error(`Failed to create ${this.role}.`),
+      error: () => {
+        this.alertService.close();
+        this.alertService.error("Create Failed", `Failed to create ${this.role}.`);
+      },
     });
   }
 
-  setStatus(user: User, active: boolean): void {
+  async setStatus(user: User, active: boolean): Promise<void> {
+    const actionLabel = active ? "Activate" : "Deactivate";
+    const confirmed = await this.alertService.confirm(
+      `${actionLabel} Staff`,
+      `Are you sure you want to ${actionLabel.toLowerCase()} ${user.username}?`,
+    );
+    if (!confirmed) {
+      return;
+    }
+
     const action = active
       ? this.apiService.activateStaff(user.id)
       : this.apiService.deactivateStaff(user.id);
+    this.alertService.loading("Updating staff status. Please wait.");
     action.subscribe({
-      next: () => this.loadStaff(),
-      error: () => this.notificationService.error("Failed to update staff status."),
+      next: () => {
+        this.alertService.close();
+        this.loadStaff();
+      },
+      error: () => {
+        this.alertService.close();
+        this.alertService.error("Update Failed", "Failed to update staff status.");
+      },
     });
   }
 }
+
+

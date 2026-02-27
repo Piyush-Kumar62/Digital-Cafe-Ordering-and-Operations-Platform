@@ -8,6 +8,7 @@ import {
 import { CommonModule } from "@angular/common";
 import { RouterModule } from "@angular/router";
 import { ApiService } from "@core/services/api.service";
+import { AlertService } from "@core/services/alert.service";
 import { AdminDashboard } from "@shared/models/dashboard.model";
 import { Chart, ChartConfiguration, registerables } from "chart.js";
 
@@ -30,7 +31,10 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
   weeklyChart: Chart | null = null;
   roleChart: Chart | null = null;
 
-  constructor(private apiService: ApiService) {}
+  constructor(
+    private apiService: ApiService,
+    private alertService: AlertService,
+  ) {}
 
   ngOnInit(): void {
     this.loadDashboard();
@@ -50,7 +54,7 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
         setTimeout(() => this.initializeCharts(), 100);
       },
       error: (error) => {
-        console.error("Error loading dashboard:", error);
+        this.alertService.error("Dashboard Error", "Unable to load admin dashboard.");
         this.loading = false;
       },
     });

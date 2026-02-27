@@ -1,7 +1,7 @@
 import { Component, OnInit } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
-import { NotificationService } from "@core/services/notification.service";
+import { AlertService } from "@core/services/alert.service";
 
 @Component({
   selector: "app-settings",
@@ -70,7 +70,7 @@ export class SettingsComponent implements OnInit {
   autoRefreshSeconds = 15;
   enableToasts = true;
 
-  constructor(private notificationService: NotificationService) {}
+  constructor(private alertService: AlertService) {}
 
   ngOnInit(): void {
     const savedRefresh = Number(localStorage.getItem("admin_refresh_seconds"));
@@ -84,7 +84,7 @@ export class SettingsComponent implements OnInit {
     this.autoRefreshSeconds = normalized;
     localStorage.setItem("admin_refresh_seconds", String(normalized));
     localStorage.setItem("admin_enable_toasts", String(this.enableToasts));
-    this.notificationService.success("Admin settings saved.");
+    this.alertService.success("Admin settings saved.");
   }
 
   reset(): void {
@@ -92,6 +92,8 @@ export class SettingsComponent implements OnInit {
     this.enableToasts = true;
     localStorage.setItem("admin_refresh_seconds", "15");
     localStorage.setItem("admin_enable_toasts", "true");
-    this.notificationService.success("Admin settings reset.");
+    this.alertService.success("Admin settings reset.");
   }
 }
+
+

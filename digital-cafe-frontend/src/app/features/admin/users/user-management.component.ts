@@ -2,7 +2,7 @@ import { Component, OnInit } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
 import { ApiService } from "@core/services/api.service";
-import { NotificationService } from "@core/services/notification.service";
+import { AlertService } from "@core/services/alert.service";
 import { User } from "@shared/models/auth.model";
 
 @Component({
@@ -40,54 +40,6 @@ import { User } from "@shared/models/auth.model";
             (input)="applyFilters()"
             placeholder="Email or username"
           />
-        </div>
-      </div>
-
-      <div class="owner-card">
-        <div class="owner-create-header">
-          <h3>Create Cafe Owner</h3>
-          <p>
-            Admin can create cafe owner accounts. Login credentials are emailed
-            automatically.
-          </p>
-        </div>
-        <div class="owner-create-grid">
-          <div class="filter-item">
-            <label for="ownerFirstName">First Name</label>
-            <input
-              id="ownerFirstName"
-              type="text"
-              [(ngModel)]="ownerFirstName"
-              placeholder="Enter first name"
-            />
-          </div>
-          <div class="filter-item">
-            <label for="ownerLastName">Last Name</label>
-            <input
-              id="ownerLastName"
-              type="text"
-              [(ngModel)]="ownerLastName"
-              placeholder="Enter last name"
-            />
-          </div>
-          <div class="filter-item">
-            <label for="ownerEmail">Email</label>
-            <input
-              id="ownerEmail"
-              type="email"
-              [(ngModel)]="ownerEmail"
-              placeholder="owner@example.com"
-            />
-          </div>
-          <div class="owner-create-action">
-            <button
-              class="create-owner-btn"
-              (click)="createCafeOwner()"
-              [disabled]="creatingOwner"
-            >
-              {{ creatingOwner ? "Creating..." : "Create Cafe Owner" }}
-            </button>
-          </div>
         </div>
       </div>
 
@@ -344,7 +296,7 @@ import { User } from "@shared/models/auth.model";
       }
       .roles {
         font-weight: 600;
-        color: #334155;
+        color: var(--text, #334155);
       }
 
       .avatar {
@@ -409,6 +361,9 @@ import { User } from "@shared/models/auth.model";
       }
 
       .actions button {
+        appearance: none;
+        -webkit-appearance: none;
+        -webkit-tap-highlight-color: transparent;
         border: none;
         border-radius: 8px;
         padding: 0.4rem 0.68rem;
@@ -420,15 +375,28 @@ import { User } from "@shared/models/auth.model";
         white-space: nowrap;
         min-width: 84px;
       }
+      .actions button:focus {
+        outline: none;
+      }
+      .actions button:focus-visible {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.28);
+      }
       .actions button:hover {
         transform: translateY(-1px);
         box-shadow: 0 8px 16px rgba(15, 23, 42, 0.14);
+      }
+      .actions button:active {
+        filter: brightness(0.98);
       }
 
       .actions .approve { background: linear-gradient(135deg, #0ea5e9, #0284c7) !important; }
       .actions .reject { background: linear-gradient(135deg, #8b5cf6, #7c3aed) !important; }
       .actions .activate { background: linear-gradient(135deg, #16a34a, #15803d) !important; }
       .actions .deactivate { background: linear-gradient(135deg, #dc2626, #b91c1c) !important; }
+      .actions .deactivate:focus-visible {
+        box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.26);
+      }
 
       .content-card {
         background: #ffffff;
@@ -489,7 +457,7 @@ export class UserManagementComponent implements OnInit {
 
   constructor(
     private apiService: ApiService,
-    private notificationService: NotificationService,
+    private alertService: AlertService,
   ) {}
 
   ngOnInit(): void {
@@ -506,7 +474,7 @@ export class UserManagementComponent implements OnInit {
       },
       error: (error) => {
         this.loading = false;
-        this.notificationService.error(error?.message || "Failed to load users");
+        this.alertService.error(error?.message || "Failed to load users");
       },
     });
   }
@@ -517,7 +485,7 @@ export class UserManagementComponent implements OnInit {
     const lastName = this.ownerLastName.trim();
 
     if (!firstName || !lastName || !email) {
-      this.notificationService.error(
+      this.alertService.error(
         "First name, last name, and email are required to create a cafe owner.",
       );
       return;
@@ -534,7 +502,7 @@ export class UserManagementComponent implements OnInit {
         this.ownerFirstName = "";
         this.ownerLastName = "";
         this.ownerEmail = "";
-        this.notificationService.success(
+        this.alertService.success(
           "Cafe owner created successfully. Credentials sent via email.",
         );
         this.roleFilter = "CAFE_OWNER";
@@ -542,7 +510,7 @@ export class UserManagementComponent implements OnInit {
       },
       error: (error) => {
         this.creatingOwner = false;
-        this.notificationService.error(
+        this.alertService.error(
           error?.message || "Failed to create cafe owner",
         );
       },
@@ -567,43 +535,79 @@ export class UserManagementComponent implements OnInit {
     });
   }
 
-  approve(user: User): void {
+  async approve(user: User): Promise<void> {
+    const confirmed = await this.alertService.confirm("Approve User", `Approve ${user.username}?`);
+    if (!confirmed) {
+      return;
+    }
+    this.alertService.loading("Approving user. Please wait.");
     this.apiService.approveUser(user.id).subscribe({
       next: () => {
-        this.notificationService.success("User approved successfully. Email sent.");
+        this.alertService.close();
+        this.alertService.success("User Approved", "User approved successfully. Email sent.");
         this.refresh();
       },
-      error: (error) => this.notificationService.error(error?.message || "Approve failed"),
+      error: (error) => {
+        this.alertService.close();
+        this.alertService.error("Approve Failed", error?.message || "Approve failed");
+      },
     });
   }
 
-  reject(user: User): void {
+  async reject(user: User): Promise<void> {
+    const confirmed = await this.alertService.confirm("Reject User", `Reject ${user.username}?`);
+    if (!confirmed) {
+      return;
+    }
+    this.alertService.loading("Rejecting user. Please wait.");
     this.apiService.rejectUser(user.id).subscribe({
       next: () => {
-        this.notificationService.success("User rejected successfully. Email sent.");
+        this.alertService.close();
+        this.alertService.success("User Rejected", "User rejected successfully. Email sent.");
         this.refresh();
       },
-      error: (error) => this.notificationService.error(error?.message || "Reject failed"),
+      error: (error) => {
+        this.alertService.close();
+        this.alertService.error("Reject Failed", error?.message || "Reject failed");
+      },
     });
   }
 
-  activate(user: User): void {
+  async activate(user: User): Promise<void> {
+    const confirmed = await this.alertService.confirm("Activate User", `Activate ${user.username}?`);
+    if (!confirmed) {
+      return;
+    }
+    this.alertService.loading("Activating user. Please wait.");
     this.apiService.activateUser(user.id).subscribe({
       next: () => {
-        this.notificationService.success("User activated.");
+        this.alertService.close();
+        this.alertService.success("User Activated", "User activated.");
         this.refresh();
       },
-      error: (error) => this.notificationService.error(error?.message || "Activate failed"),
+      error: (error) => {
+        this.alertService.close();
+        this.alertService.error("Activation Failed", error?.message || "Activate failed");
+      },
     });
   }
 
-  deactivate(user: User): void {
+  async deactivate(user: User): Promise<void> {
+    const confirmed = await this.alertService.confirm("Deactivate User", `Deactivate ${user.username}?`);
+    if (!confirmed) {
+      return;
+    }
+    this.alertService.loading("Deactivating user. Please wait.");
     this.apiService.deactivateUser(user.id).subscribe({
       next: () => {
-        this.notificationService.success("User deactivated.");
+        this.alertService.close();
+        this.alertService.success("User Deactivated", "User deactivated.");
         this.refresh();
       },
-      error: (error) => this.notificationService.error(error?.message || "Deactivate failed"),
+      error: (error) => {
+        this.alertService.close();
+        this.alertService.error("Deactivation Failed", error?.message || "Deactivate failed");
+      },
     });
   }
 
@@ -615,6 +619,8 @@ export class UserManagementComponent implements OnInit {
     return (user.username || user.email || "U").charAt(0).toUpperCase();
   }
 }
+
+
 
 
 

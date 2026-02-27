@@ -65,8 +65,90 @@ aside {
   overflow: visible !important;
 }
 
+.header-left {
+  min-width: 0;
+}
+
+.header-title-wrap {
+  min-width: 0;
+}
+
+.header-title,
+.header-subtitle {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.notification-menu {
+  width: min(20rem, calc(100vw - 1.2rem));
+  max-width: calc(100vw - 1.2rem);
+  background: #ffffff !important;
+  border-color: #dbe4f0 !important;
+  color: #0f172a;
+}
+
+:host-context(.dark) .notification-menu {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #e2e8f0;
+}
+
+.profile-trigger {
+  max-width: 100%;
+}
+
 .profile-dropdown-menu {
   z-index: 1300 !important;
+}
+
+.notification-severity {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 58px;
+  border-radius: 999px;
+  padding: 0.15rem 0.55rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.severity-info {
+  background: rgba(37, 99, 235, 0.14);
+  color: #1d4ed8;
+  border: 1px solid rgba(37, 99, 235, 0.28);
+}
+
+.severity-warning {
+  background: rgba(217, 119, 6, 0.15);
+  color: #b45309;
+  border: 1px solid rgba(217, 119, 6, 0.3);
+}
+
+.severity-error {
+  background: rgba(220, 38, 38, 0.15);
+  color: #b91c1c;
+  border: 1px solid rgba(220, 38, 38, 0.3);
+}
+
+:host-context(.dark) {
+  .severity-info {
+    color: #93c5fd;
+    border-color: rgba(96, 165, 250, 0.45);
+  }
+
+  .severity-warning {
+    color: #fcd34d;
+    border-color: rgba(245, 158, 11, 0.45);
+  }
+
+  .severity-error {
+    color: #fca5a5;
+    border-color: rgba(248, 113, 113, 0.45);
+  }
 }
 
 nav a {
@@ -131,8 +213,7 @@ nav a.router-link-active::before {
 :host ::ng-deep .panel,
 :host ::ng-deep .content-card,
 :host ::ng-deep .filter-card,
-:host ::ng-deep .owner-card,
-:host ::ng-deep .actions {
+:host ::ng-deep .owner-card {
   background: linear-gradient(165deg, var(--surface) 0%, var(--surface-2) 100%) !important;
   border: 1px solid var(--border) !important;
   box-shadow: var(--shadow) !important;
@@ -156,6 +237,17 @@ nav a.router-link-active::before {
   box-shadow: var(--shadow-strong) !important;
 }
 
+/* Keep row action areas clean: no card border/background around buttons */
+:host ::ng-deep td .actions,
+:host ::ng-deep td .action-group,
+:host ::ng-deep .table-wrapper .actions,
+:host ::ng-deep .table-wrap .actions {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
 :host ::ng-deep .meta,
 :host ::ng-deep .line,
 :host ::ng-deep .empty,
@@ -177,6 +269,40 @@ nav a.router-link-active::before {
 :host ::ng-deep .empty-state p,
 :host ::ng-deep .loading-text {
   color: var(--muted) !important;
+}
+
+/* Normalize common utility classes so light/dark mode remains readable across admin modules */
+:host ::ng-deep .admin-shell .text-gray-900,
+:host ::ng-deep .admin-shell .text-slate-900,
+:host ::ng-deep .admin-shell .text-gray-800 {
+  color: var(--text) !important;
+}
+
+:host ::ng-deep .admin-shell .text-gray-700,
+:host ::ng-deep .admin-shell .text-gray-600,
+:host ::ng-deep .admin-shell .text-gray-500,
+:host ::ng-deep .admin-shell .text-slate-600,
+:host ::ng-deep .admin-shell .text-slate-500 {
+  color: var(--muted) !important;
+}
+
+:host ::ng-deep .admin-shell .bg-white {
+  background: linear-gradient(165deg, var(--surface) 0%, var(--surface-2) 100%) !important;
+}
+
+:host ::ng-deep .admin-shell .bg-gray-50,
+:host ::ng-deep .admin-shell .bg-slate-50 {
+  background: color-mix(in srgb, var(--surface-2) 90%, transparent) !important;
+}
+
+:host ::ng-deep .admin-shell .border-gray-200,
+:host ::ng-deep .admin-shell .border-slate-200,
+:host ::ng-deep .admin-shell .border-gray-300 {
+  border-color: var(--border) !important;
+}
+
+:host ::ng-deep .admin-shell .text-white {
+  color: #ffffff !important;
 }
 
 :host ::ng-deep input,
@@ -266,8 +392,23 @@ nav a.router-link-active::before {
     line-height: 1.2;
   }
 
-  .admin-shell header p {
+  .admin-shell header p.header-subtitle {
     display: none;
+  }
+
+  .header-actions {
+    gap: 0.45rem !important;
+  }
+
+  .profile-trigger {
+    padding: 0.2rem 0.25rem !important;
+    gap: 0.45rem !important;
+  }
+
+  .profile-avatar {
+    width: 2.2rem !important;
+    height: 2.2rem !important;
+    border-radius: 0.7rem !important;
   }
 
   :host ::ng-deep .management-container,
@@ -297,6 +438,41 @@ nav a.router-link-active::before {
 }
 
 @media (max-width: 480px) {
+  .app-top-header {
+    padding-left: 0.65rem !important;
+    padding-right: 0.65rem !important;
+  }
+
+  .header-left {
+    gap: 0.35rem !important;
+  }
+
+  .header-title {
+    font-size: 0.95rem !important;
+  }
+
+  .header-actions {
+    gap: 0.25rem !important;
+  }
+
+  .header-actions > button,
+  .header-actions .relative > button {
+    padding: 0.45rem !important;
+    border-radius: 0.7rem !important;
+  }
+
+  .profile-avatar {
+    width: 2rem !important;
+    height: 2rem !important;
+    border-radius: 0.6rem !important;
+    font-size: 0.78rem;
+  }
+
+  .notification-menu {
+    right: -0.2rem;
+    max-height: min(70vh, 24rem);
+  }
+
   :host ::ng-deep .toolbar,
   :host ::ng-deep .card,
   :host ::ng-deep .panel,

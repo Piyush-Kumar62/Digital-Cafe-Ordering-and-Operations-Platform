@@ -3,7 +3,7 @@ import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
 import { ApiService } from "@core/services/api.service";
 import { AuthService } from "@core/auth/auth.service";
-import { NotificationService } from "@core/services/notification.service";
+import { AlertService } from "@core/services/alert.service";
 import { Table } from "@shared/models/cafe.model";
 
 @Component({
@@ -70,7 +70,7 @@ export class OwnerTablesComponent implements OnInit {
   constructor(
     private apiService: ApiService,
     private authService: AuthService,
-    private notificationService: NotificationService,
+    private alertService: AlertService,
   ) {}
 
   ngOnInit(): void {
@@ -87,24 +87,44 @@ export class OwnerTablesComponent implements OnInit {
 
   createTable(): void {
     if (!this.cafeId) return;
+    this.alertService.loading("Adding table. Please wait.");
     this.apiService.createTable(this.cafeId, {
       tableNumber: this.tableNumber,
       capacity: this.capacity,
     }).subscribe({
       next: () => {
-        this.notificationService.success("Table added.");
+        this.alertService.close();
+        this.alertService.success("Table Added", "Table added successfully.");
         this.tableNumber = "";
         this.capacity = 2;
         this.loadTables();
       },
-      error: () => this.notificationService.error("Failed to create table."),
+      error: () => {
+        this.alertService.close();
+        this.alertService.error("Create Failed", "Failed to create table.");
+      },
     });
   }
 
-  toggleAvailability(table: Table): void {
+  async toggleAvailability(table: Table): Promise<void> {
+    const action = table.isAvailable ? "Disable" : "Enable";
+    const confirmed = await this.alertService.confirm("Update Table Status", `${action} table ${table.tableNumber}?`);
+    if (!confirmed) {
+      return;
+    }
+
+    this.alertService.loading("Updating table status. Please wait.");
     this.apiService.toggleTableStatus(table.id, !table.isAvailable).subscribe({
-      next: () => this.loadTables(),
-      error: () => this.notificationService.error("Failed to update table."),
+      next: () => {
+        this.alertService.close();
+        this.loadTables();
+      },
+      error: () => {
+        this.alertService.close();
+        this.alertService.error("Update Failed", "Failed to update table.");
+      },
     });
   }
 }
+
+

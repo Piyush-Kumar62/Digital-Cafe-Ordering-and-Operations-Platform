@@ -128,7 +128,7 @@
     <!-- Toggle Button -->
     <button
       (click)="isSidebarCollapsed = !isSidebarCollapsed"
-      class="absolute -right-3 top-24 bg-gradient-to-br from-sky-500 to-indigo-600 text-white p-1.5 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110 z-50 hidden lg:block"
+      class="absolute right-2 top-24 bg-gradient-to-br from-sky-500 to-indigo-600 text-white p-1.5 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110 z-50 hidden lg:block"
     >
       <svg
         class="w-4 h-4 transition-transform"
@@ -155,7 +155,7 @@
   >
     <!-- Top Header Bar -->
     <header class="app-top-header bg-white/95 dark:bg-slate-900/95 backdrop-blur border-b border-gray-200 dark:border-gray-700 h-20 flex items-center justify-between px-4 sm:px-8 shadow-sm">
-      <div class="flex items-center gap-4">
+      <div class="header-left flex items-center gap-4">
         <button
           (click)="isSidebarCollapsed = !isSidebarCollapsed"
           class="p-2.5 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
@@ -174,39 +174,71 @@
             />
           </svg>
         </button>
-        <div>
-          <h2 class="text-xl font-bold text-gray-900 dark:text-white">
+        <div class="header-title-wrap">
+          <h2 class="header-title text-xl font-bold text-gray-900 dark:text-white">
             Admin Dashboard
           </h2>
-          <p class="text-sm text-gray-500 dark:text-gray-400">
+          <p class="header-subtitle text-sm text-gray-500 dark:text-gray-400">
             Manage your digital café platform
           </p>
         </div>
       </div>
 
       <!-- Header Actions -->
-      <div class="flex items-center gap-3">
+      <div class="header-actions flex items-center gap-3">
         <!-- Notifications -->
-        <button
-          class="relative p-2.5 rounded-xl hover:bg-gray-100 transition-colors"
-        >
-          <svg
-            class="w-6 h-6 text-gray-600"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+        <div #notificationContainer class="relative">
+          <button
+            (click)="toggleNotificationDropdown()"
+            class="relative p-2.5 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
           >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-            />
-          </svg>
-          <span
-            class="absolute top-2 right-2 h-2 w-2 bg-red-500 rounded-full"
-          ></span>
-        </button>
+            <svg
+              class="w-6 h-6 text-gray-600 dark:text-gray-300"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+              />
+            </svg>
+            <span
+              *ngIf="unreadNotifications > 0"
+              class="absolute -top-1 -right-1 min-w-5 h-5 px-1 bg-red-500 text-white text-[11px] rounded-full flex items-center justify-center"
+            >
+              {{ unreadNotifications > 9 ? "9+" : unreadNotifications }}
+            </span>
+          </button>
+
+          <div
+            *ngIf="notificationDropdownOpen"
+            class="notification-menu absolute right-0 top-full mt-2 w-80 max-h-96 overflow-y-auto bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl z-50"
+          >
+            <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+              <p class="text-sm font-semibold text-gray-900 dark:text-white">Notifications</p>
+            </div>
+            <div *ngIf="notifications.length === 0" class="px-4 py-6 text-sm text-gray-500 dark:text-gray-400 text-center">
+              No notifications yet
+            </div>
+            <div *ngFor="let item of notifications" class="px-4 py-3 border-b border-gray-100 dark:border-gray-700/60 last:border-b-0">
+              <div class="mb-2 flex items-center justify-between gap-2">
+                <span class="notification-severity" [ngClass]="getNotificationSeverityClass(item.severity)">
+                  {{ item.severity | titlecase }}
+                </span>
+                <span class="text-[11px] text-gray-400 whitespace-nowrap">{{ getNotificationTime(item.timestamp) }}</span>
+              </div>
+              <div class="flex items-start justify-between gap-3">
+                <div>
+                  <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ item.title }}</p>
+                  <p class="text-xs text-gray-600 dark:text-gray-300 mt-1">{{ item.message }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
 
         <!-- Theme Toggle -->
         <button
@@ -253,20 +285,20 @@
 
           <button
             (click)="toggleProfileDropdown()"
-            class="flex items-center gap-3 rounded-xl px-2 py-1 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all duration-200"
+            class="profile-trigger flex items-center gap-3 rounded-xl px-2 py-1 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all duration-200"
           >
-            <div class="text-right hidden sm:block">
+            <div class="profile-meta text-right hidden sm:block">
               <p class="text-sm font-semibold text-gray-900 dark:text-white">
-                {{ currentUser?.username || "Admin" }}
+                {{ getDisplayName() }}
               </p>
 
               <p class="text-xs text-gray-500 dark:text-gray-400">
-                {{ currentUser?.roles?.[0] || "ADMIN" }}
+                {{ getRoleLabel() }}
               </p>
             </div>
 
             <div
-              class="h-10 w-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold shadow-md transition-all duration-300 hover:scale-105 hover:shadow-lg overflow-hidden"
+              class="profile-avatar h-10 w-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold shadow-md transition-all duration-300 hover:scale-105 hover:shadow-lg overflow-hidden"
             >
               <img
                 *ngIf="adminProfileImage"

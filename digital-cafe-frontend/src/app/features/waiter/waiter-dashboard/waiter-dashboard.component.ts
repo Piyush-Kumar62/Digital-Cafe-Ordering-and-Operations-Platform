@@ -1,7 +1,7 @@
 import { Component, OnDestroy, OnInit } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { ApiService } from "@core/services/api.service";
-import { NotificationService } from "@core/services/notification.service";
+import { AlertService } from "@core/services/alert.service";
 import { WebSocketService } from "@core/websocket/websocket.service";
 import { Order } from "@shared/models/order.model";
 import { Subject, takeUntil } from "rxjs";
@@ -21,7 +21,7 @@ export class WaiterDashboardComponent implements OnInit, OnDestroy {
 
   constructor(
     private apiService: ApiService,
-    private notificationService: NotificationService,
+    private alertService: AlertService,
     private webSocketService: WebSocketService,
   ) {}
 
@@ -35,21 +35,29 @@ export class WaiterDashboardComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  markServed(orderId: number): void {
-    this.apiService.updateOrderStatus(orderId, "SERVED").subscribe({
+  async markServed(orderId: number): Promise<void> {
+    const confirmed = await this.alertService.confirm("Confirm Service", "Mark this order as served?");
+    if (!confirmed) {
+      return;
+    }
+
+    this.alertService.loading("Updating order status. Please wait.");
+    this.apiService.markOrderServed(orderId).subscribe({
       next: () => {
-        this.notificationService.success("Order marked as served.");
+        this.alertService.close();
+        this.alertService.success("Order Served", "Order marked as served.");
         this.loadData();
       },
       error: () => {
-        this.notificationService.error("Failed to update order status.");
+        this.alertService.close();
+        this.alertService.error("Update Failed", "Failed to update order status.");
       },
     });
   }
 
   private loadData(): void {
     this.loading = true;
-    this.apiService.getReadyOrdersForWaiter().subscribe({
+    this.apiService.getReadyOrdersForWaiterWorkflow().subscribe({
       next: (orders) => {
         this.readyOrders = orders || [];
         this.servedToday = this.calculateServedToday(orders || []);
@@ -81,3 +89,5 @@ export class WaiterDashboardComponent implements OnInit, OnDestroy {
     }).length;
   }
 }
+
+

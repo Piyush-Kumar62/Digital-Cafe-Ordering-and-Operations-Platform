@@ -1,5 +1,6 @@
 import {
   Component,
+  NgZone,
   OnInit,
   OnDestroy,
   HostListener,
@@ -15,6 +16,11 @@ import { Subscription } from "rxjs";
 import { filter } from "rxjs/operators";
 
 import { AuthService } from "@core/auth/auth.service";
+import { ThemeService } from "@core/services/theme.service";
+import { AdminProfileService } from "../profile/admin-profile.service";
+import { WebSocketService } from "@core/websocket/websocket.service";
+import { AdminProfile } from "@shared/models/admin-profile.model";
+import { environment } from "@environments/environment";
 
 interface NavigationItem {
   label: string;
@@ -28,6 +34,15 @@ interface NavigationItem {
   }[];
 }
 
+interface AdminHeaderNotification {
+  id: string;
+  title: string;
+  message: string;
+  timestamp: string;
+  severity: "info" | "warning" | "error";
+  read: boolean;
+}
+
 @Component({
   selector: "app-admin-layout",
   standalone: true,
@@ -35,17 +50,28 @@ interface NavigationItem {
   templateUrl: "./admin-layout.component.html",
   styleUrls: ["./admin-layout.component.scss"],
 })
-export class AdminLayoutComponent implements OnInit {
+export class AdminLayoutComponent implements OnInit, OnDestroy {
   isSidebarCollapsed = false;
   private isMobileView = false;
   currentUser: any;
   isDarkMode = false;
   profileDropdownOpen = false;
+  notificationDropdownOpen = false;
   adminProfileImage = "";
+  notifications: AdminHeaderNotification[] = [];
   isDashboardRoute = false;
   private routerEventsSub?: Subscription;
+  private currentUserSub?: Subscription;
+  private profileWsSub?: Subscription;
+  private adminNotificationSub?: Subscription;
+  private adminNotificationGlobalSub?: Subscription;
+  private wsDestination: string | null = null;
+  private notificationDestination: string | null = null;
+  private globalNotificationDestination: string | null = null;
   @ViewChild("profileContainer", { static: false })
   profileContainer!: ElementRef;
+  @ViewChild("notificationContainer", { static: false })
+  notificationContainer!: ElementRef;
 
   navigationItems: NavigationItem[] = [
     {
@@ -106,11 +132,13 @@ export class AdminLayoutComponent implements OnInit {
   constructor(
     private authService: AuthService,
     private router: Router,
+    private themeService: ThemeService,
+    private adminProfileService: AdminProfileService,
+    private webSocketService: WebSocketService,
+    private ngZone: NgZone,
   ) {
-    // Load dark mode preference from localStorage
-    const savedTheme = localStorage.getItem("cafe_theme");
-    this.isDarkMode = savedTheme === "dark";
-    this.applyTheme();
+    this.themeService.syncFromStorage();
+    this.isDarkMode = this.themeService.isDarkMode();
     // Check if we're on mobile and collapse sidebar
     if (typeof window !== "undefined") {
       this.isMobileView = window.innerWidth < 1024; // lg breakpoint
@@ -120,7 +148,14 @@ export class AdminLayoutComponent implements OnInit {
 
   ngOnInit(): void {
     this.currentUser = this.authService.currentUserValue;
-    this.adminProfileImage = localStorage.getItem("admin_profile_image") || "";
+    this.adminProfileImage = this.resolveImageUrl(this.currentUser?.avatarUrl || "");
+    this.currentUserSub = this.authService.currentUser.subscribe((user) => {
+      this.currentUser = user;
+      this.adminProfileImage = this.resolveImageUrl(user?.avatarUrl || "");
+    });
+    this.loadAdminProfileForHeader();
+    this.bindProfileRealtimeUpdates();
+    this.bindAdminNotifications();
     this.updateRouteState(this.router.url);
     this.routerEventsSub = this.router.events
       .pipe(filter((event) => event instanceof NavigationEnd))
@@ -132,6 +167,19 @@ export class AdminLayoutComponent implements OnInit {
 
   ngOnDestroy(): void {
     this.routerEventsSub?.unsubscribe();
+    this.currentUserSub?.unsubscribe();
+    this.profileWsSub?.unsubscribe();
+    this.adminNotificationSub?.unsubscribe();
+    this.adminNotificationGlobalSub?.unsubscribe();
+    if (this.wsDestination) {
+      this.webSocketService.unsubscribe(this.wsDestination);
+    }
+    if (this.notificationDestination) {
+      this.webSocketService.unsubscribe(this.notificationDestination);
+    }
+    if (this.globalNotificationDestination) {
+      this.webSocketService.unsubscribe(this.globalNotificationDestination);
+    }
   }
 
   toggleSidebar(): void {
@@ -142,7 +190,16 @@ export class AdminLayoutComponent implements OnInit {
     item.expanded = !item.expanded;
   }
   toggleProfileDropdown(): void {
+    this.notificationDropdownOpen = false;
     this.profileDropdownOpen = !this.profileDropdownOpen;
+  }
+
+  toggleNotificationDropdown(): void {
+    this.profileDropdownOpen = false;
+    this.notificationDropdownOpen = !this.notificationDropdownOpen;
+    if (this.notificationDropdownOpen) {
+      this.notifications = this.notifications.map((item) => ({ ...item, read: true }));
+    }
   }
   goToLanding(): void {
     this.router.navigate(["/"]);
@@ -150,26 +207,25 @@ export class AdminLayoutComponent implements OnInit {
 
   logout(): void {
     this.authService.logout();
-    this.router.navigate(["/auth/login"]).catch((error) => {
-      console.error("Logout navigation error:", error);
-    });
+    this.router.navigate(["/auth/login"]).catch(() => {});
   }
   @HostListener("document:click", ["$event"])
   onDocumentClick(event: MouseEvent): void {
-    if (!this.profileContainer) return;
+    const clickedInsideProfile = this.profileContainer?.nativeElement?.contains(event.target) || false;
+    const clickedInsideNotification = this.notificationContainer?.nativeElement?.contains(event.target) || false;
 
-    const clickedInside = this.profileContainer.nativeElement.contains(
-      event.target,
-    );
-
-    if (!clickedInside) {
+    if (!clickedInsideProfile) {
       this.profileDropdownOpen = false;
+    }
+    if (!clickedInsideNotification) {
+      this.notificationDropdownOpen = false;
     }
   }
 
   @HostListener("document:keydown.escape")
   closeDropdown() {
     this.profileDropdownOpen = false;
+    this.notificationDropdownOpen = false;
   }
 
   @HostListener("window:resize")
@@ -179,23 +235,32 @@ export class AdminLayoutComponent implements OnInit {
       this.isMobileView = mobile;
       this.isSidebarCollapsed = mobile;
       this.profileDropdownOpen = false;
+      this.notificationDropdownOpen = false;
     }
   }
 
   toggleTheme(): void {
     this.isDarkMode = !this.isDarkMode;
-    this.applyTheme();
-    localStorage.setItem("theme", this.isDarkMode ? "dark" : "light");
-    localStorage.setItem("cafe_theme", this.isDarkMode ? "dark" : "light");
+    this.themeService.setTheme(this.isDarkMode);
   }
 
-  private applyTheme(): void {
-    if (this.isDarkMode) {
-      document.documentElement.classList.add("dark-mode");
-      document.documentElement.classList.add("dark");
+  @HostListener("window:storage", ["$event"])
+  onStorageThemeChange(event: StorageEvent): void {
+    if (event.key !== "theme" && event.key !== "cafe_theme") {
+      return;
+    }
+    this.themeService.syncFromStorage();
+    this.isDarkMode = this.themeService.isDarkMode();
+  }
+
+  @HostListener("window:theme-changed", ["$event"])
+  onThemeChanged(event: Event): void {
+    const customEvent = event as CustomEvent<{ dark: boolean }>;
+    if (typeof customEvent?.detail?.dark !== "boolean") {
+      this.themeService.syncFromStorage();
+      this.isDarkMode = this.themeService.isDarkMode();
     } else {
-      document.documentElement.classList.remove("dark-mode");
-      document.documentElement.classList.remove("dark");
+      this.isDarkMode = customEvent.detail.dark;
     }
   }
 
@@ -204,7 +269,49 @@ export class AdminLayoutComponent implements OnInit {
   }
 
   getAvatarText(): string {
-    return this.currentUser?.username?.charAt(0)?.toUpperCase() || "A";
+    const name = this.getDisplayName();
+    return name?.charAt(0)?.toUpperCase() || "A";
+  }
+
+  getDisplayName(): string {
+    const displayName = (this.currentUser?.username || "").trim();
+    if (displayName) {
+      return displayName;
+    }
+    const first = this.currentUser?.firstName || "";
+    const last = this.currentUser?.lastName || "";
+    const fullName = `${first} ${last}`.trim();
+    if (fullName) {
+      return fullName;
+    }
+    return "Admin";
+  }
+
+  getRoleLabel(): string {
+    const role = this.currentUser?.roles?.[0] || "ROLE_ADMIN";
+    return String(role).replace("ROLE_", "");
+  }
+
+  get unreadNotifications(): number {
+    return this.notifications.filter((item) => !item.read).length;
+  }
+
+  getNotificationTime(timestamp: string): string {
+    const date = new Date(timestamp);
+    if (Number.isNaN(date.getTime())) {
+      return "";
+    }
+    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  }
+
+  getNotificationSeverityClass(severity: "info" | "warning" | "error"): string {
+    if (severity === "warning") {
+      return "severity-warning";
+    }
+    if (severity === "error") {
+      return "severity-error";
+    }
+    return "severity-info";
   }
 
   getIconSVG(iconName: string): string {
@@ -243,5 +350,102 @@ export class AdminLayoutComponent implements OnInit {
 
   private updateRouteState(url: string): void {
     this.isDashboardRoute = /^\/admin\/dashboard(?:\?|$|\/)?/.test(url);
+  }
+
+  private loadAdminProfileForHeader(): void {
+    this.adminProfileService.getProfile().subscribe({
+      next: (profile) => this.applyAdminProfileToHeader(profile),
+      error: () => {},
+    });
+  }
+
+  private bindProfileRealtimeUpdates(): void {
+    const userId = this.authService.currentUserValue?.id;
+    if (!userId) {
+      return;
+    }
+    this.wsDestination = `/topic/profile/${userId}`;
+    this.profileWsSub = this.webSocketService
+      .watchDestination<AdminProfile>(this.wsDestination)
+      .subscribe({
+        next: (profile) => this.ngZone.run(() => this.applyAdminProfileToHeader(profile)),
+      });
+  }
+
+  private bindAdminNotifications(): void {
+    const userId = this.authService.currentUserValue?.id;
+    if (!userId) {
+      return;
+    }
+
+    this.notificationDestination = `/user/${userId}/queue/notifications`;
+    this.adminNotificationSub = this.webSocketService
+      .watchDestination<any>(this.notificationDestination)
+      .subscribe({
+        next: (payload) => this.ngZone.run(() => this.pushNotification(payload)),
+      });
+
+    this.globalNotificationDestination = "/user/queue/notifications";
+    this.adminNotificationGlobalSub = this.webSocketService
+      .watchDestination<any>(this.globalNotificationDestination)
+      .subscribe({
+        next: (payload) => this.ngZone.run(() => this.pushNotification(payload)),
+      });
+  }
+
+  private applyAdminProfileToHeader(profile: AdminProfile): void {
+    const current = this.authService.currentUserValue;
+    if (!current) {
+      return;
+    }
+    this.authService.updateUserData({
+      ...current,
+      username: profile.displayName || current.username,
+      firstName: profile.firstName || current.firstName,
+      lastName: profile.lastName || current.lastName,
+      avatarUrl: profile.profileImageUrl || "",
+    });
+    this.adminProfileImage = this.resolveImageUrl(profile.profileImageUrl || "");
+  }
+
+  private resolveImageUrl(value: string): string {
+    if (!value) {
+      return "";
+    }
+    if (value.startsWith("http")) {
+      return value;
+    }
+    const backendBase = environment.apiUrl.replace("/api", "");
+    return `${backendBase}${value}`;
+  }
+
+  private normalizeNotification(payload: any): AdminHeaderNotification {
+    const title = payload?.title || "Platform Update";
+    const message = payload?.message || payload?.description || "A new event requires your attention.";
+    const severity = (payload?.severity || "info") as "info" | "warning" | "error";
+    const timestamp = payload?.timestamp || new Date().toISOString();
+
+    return {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      title,
+      message,
+      severity,
+      timestamp,
+      read: false,
+    };
+  }
+
+  private pushNotification(payload: any): void {
+    const normalized = this.normalizeNotification(payload);
+    const fingerprint = `${normalized.title}|${normalized.message}|${normalized.timestamp}`;
+    const alreadyPresent = this.notifications.some((item) => {
+      const existing = `${item.title}|${item.message}|${item.timestamp}`;
+      return existing === fingerprint;
+    });
+
+    if (alreadyPresent) {
+      return;
+    }
+    this.notifications = [normalized, ...this.notifications].slice(0, 20);
   }
 }

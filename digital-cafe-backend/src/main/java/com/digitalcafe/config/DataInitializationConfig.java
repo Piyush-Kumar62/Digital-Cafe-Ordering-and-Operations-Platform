@@ -62,17 +62,24 @@ public class DataInitializationConfig {
 
     private void createAdminUserIfNotExists() {
         String adminEmail = "admin@digitalcafe.com";
+        boolean adminExistsByEmail = userRepository.existsByEmail(adminEmail);
+        boolean adminExistsByRole = userRepository.existsByRoleName(Role.RoleName.ADMIN);
 
-        if (!userRepository.existsByEmail(adminEmail)) {
+        if (!adminExistsByEmail && !adminExistsByRole) {
             Role adminRole = roleRepository.findByName(Role.RoleName.ADMIN)
                     .orElseThrow(() -> new RuntimeException("Admin role not found"));
 
             User admin = User.builder()
                     .username(adminEmail)
                     .email(adminEmail)
+                    .firstName("System")
+                    .lastName("Admin")
+                    .displayName("System Admin")
                     .password(passwordEncoder.encode("Admin@123"))
                     .isActive(true)
                     .isEmailVerified(true)
+                    .emailVerified(true)
+                    .accountStatus(User.AccountStatus.ACTIVE)
                     .isProfileComplete(true)
                     .mustResetPassword(false)
                     .profileCompletionPercentage(100)

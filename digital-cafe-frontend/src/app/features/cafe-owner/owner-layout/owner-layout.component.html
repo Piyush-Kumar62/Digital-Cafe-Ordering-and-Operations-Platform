@@ -1,0 +1,42 @@
+<div class="layout">
+
+ 
+  <!-- Sidebar -->
+  <aside class="sidebar" [class.collapsed]="isSidebarCollapsed">
+  
+    <!-- Back Button for Home -->
+   <div class="back-home" (click)="goHome()">
+  <i class="bi bi-arrow-left"></i>
+  <span *ngIf="!isSidebarCollapsed"> Back</span>
+</div>
+
+    <div class="logo">
+      ☕ Cafe
+      <span *ngIf="!isSidebarCollapsed">Owner</span>
+    </div>
+    
+    <nav>
+  <a *ngFor="let item of navigationItems"
+     [routerLink]="item.route"
+     routerLinkActive="active">
+
+    <!-- ICON -->
+    <i class="bi" [ngClass]="'bi-' + item.icon"></i>
+
+    <!-- TEXT -->
+    <span *ngIf="!isSidebarCollapsed">{{ item.label }}</span>
+  </a>
+</nav>
+
+    <div class="bottom">
+      <button (click)="toggleTheme()">🌙</button>
+      <button (click)="logout()">Logout</button>
+    </div>
+  </aside>
+
+  <!-- Content -->
+  <main class="content">
+    <router-outlet></router-outlet>
+  </main>
+
+</div>

@@ -1,0 +1,757 @@
+<app-navbar></app-navbar>
+
+<!-- Hero Section -->
+<section class="hero-section">
+  <div class="hero-container">
+    <div class="hero-content">
+      <div class="hero-text">
+        <div class="hero-badge">
+          <span class="badge-icon">☕</span>
+          <span class="badge-text">Premium Café Experience</span>
+        </div>
+        <h1 class="hero-title">
+          Transform Your Café Experience
+          <span class="hero-highlight"
+            >Book, Order & Pay Before You Arrive</span
+          >
+        </h1>
+        <p class="hero-subtitle">
+          Skip the wait. Pre-book tables, order meals ahead, and enjoy seamless
+          dining with our complete digital café management platform. Perfect for
+          customers, café owners, chefs, and staff.
+        </p>
+        <div class="hero-actions">
+          <button class="btn-primary" routerLink="/auth/register">
+            <span>Get Started</span>
+            <svg
+              class="btn-arrow"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M13 7l5 5m0 0l-5 5m5-5H6"
+              ></path>
+            </svg>
+          </button>
+          <button class="btn-outline" (click)="scrollToSection('features')">
+            <span>Learn More</span>
+          </button>
+        </div>
+        <div class="hero-stats">
+          <div class="stat-item">
+            <div class="stat-number">500+</div>
+            <div class="stat-label">Cafés</div>
+          </div>
+          <div class="stat-divider"></div>
+          <div class="stat-item">
+            <div class="stat-number">10K+</div>
+            <div class="stat-label">Users</div>
+          </div>
+          <div class="stat-divider"></div>
+          <div class="stat-item">
+            <div class="stat-number">50K+</div>
+            <div class="stat-label">Orders</div>
+          </div>
+        </div>
+      </div>
+      <div class="hero-image">
+        <div class="image-wrapper">
+          <div class="image-backdrop"></div>
+          <div class="coffee-cup">
+            <svg
+              viewBox="0 0 200 250"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <!-- Steam -->
+              <g class="steam">
+                <path
+                  d="M80 20 Q85 10, 80 0"
+                  stroke="#9ca3af"
+                  stroke-width="3"
+                  stroke-linecap="round"
+                  opacity="0.6"
+                />
+                <path
+                  d="M100 25 Q105 15, 100 5"
+                  stroke="#9ca3af"
+                  stroke-width="3"
+                  stroke-linecap="round"
+                  opacity="0.6"
+                  style="animation-delay: 0.2s"
+                />
+                <path
+                  d="M120 20 Q125 10, 120 0"
+                  stroke="#9ca3af"
+                  stroke-width="3"
+                  stroke-linecap="round"
+                  opacity="0.6"
+                  style="animation-delay: 0.4s"
+                />
+              </g>
+
+              <!-- Cup Body -->
+              <path
+                d="M60 60 L50 180 Q50 200, 70 200 L130 200 Q150 200, 150 180 L140 60 Z"
+                fill="url(#cupGradient)"
+                stroke="#6b7280"
+                stroke-width="3"
+              />
+
+              <!-- Cup Handle -->
+              <path
+                d="M150 100 Q180 100, 180 130 Q180 160, 150 160"
+                fill="none"
+                stroke="#6b7280"
+                stroke-width="3"
+                stroke-linecap="round"
+              />
+
+              <!-- Coffee -->
+              <ellipse
+                cx="100"
+                cy="65"
+                rx="40"
+                ry="10"
+                fill="#78350f"
+                opacity="0.9"
+              />
+              <path
+                d="M60 60 L52 170 Q52 185, 70 185 L130 185 Q148 185, 148 170 L140 60 Z"
+                fill="url(#coffeeGradient)"
+              />
+
+              <!-- Foam/Cream -->
+              <ellipse
+                cx="100"
+                cy="60"
+                rx="35"
+                ry="8"
+                fill="#fef3c7"
+                opacity="0.8"
+              />
+
+              <!-- Cup Rim -->
+              <ellipse
+                cx="100"
+                cy="60"
+                rx="40"
+                ry="10"
+                fill="none"
+                stroke="#6b7280"
+                stroke-width="3"
+              />
+
+              <!-- Highlights -->
+              <path
+                d="M75 80 Q70 120, 68 160"
+                stroke="#ffffff"
+                stroke-width="2"
+                opacity="0.3"
+                stroke-linecap="round"
+              />
+
+              <defs>
+                <linearGradient
+                  id="cupGradient"
+                  x1="0%"
+                  y1="0%"
+                  x2="100%"
+                  y2="100%"
+                >
+                  <stop
+                    offset="0%"
+                    style="stop-color: #f3f4f6; stop-opacity: 1"
+                  />
+                  <stop
+                    offset="100%"
+                    style="stop-color: #e5e7eb; stop-opacity: 1"
+                  />
+                </linearGradient>
+                <linearGradient
+                  id="coffeeGradient"
+                  x1="0%"
+                  y1="0%"
+                  x2="0%"
+                  y2="100%"
+                >
+                  <stop
+                    offset="0%"
+                    style="stop-color: #92400e; stop-opacity: 1"
+                  />
+                  <stop
+                    offset="100%"
+                    style="stop-color: #78350f; stop-opacity: 1"
+                  />
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+          <div class="floating-card card-1">
+            <div class="card-icon">🍰</div>
+            <div class="card-text">Fresh Pastries</div>
+          </div>
+          <div class="floating-card card-2">
+            <div class="card-icon">⚡</div>
+            <div class="card-text">Quick Service</div>
+          </div>
+          <div class="floating-card card-3">
+            <div class="card-icon">⭐</div>
+            <div class="card-text">5-Star Rating</div>
+          </div>
+          <div class="floating-card card-4">
+            <div class="card-icon">📱</div>
+            <div class="card-text">Easy Online Booking</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Problem Statement -->
+<section id="problem" class="problem-section">
+  <div class="container-custom">
+    <div class="section-header">
+      <h2 class="section-title">Problem Statement</h2>
+      <p class="section-subtitle">
+        Traditional café workflows create delays, bottlenecks, and inconsistent customer experience.
+      </p>
+    </div>
+    <div class="problem-grid">
+      <div class="problem-card" *ngFor="let item of problemPoints">
+        <span class="problem-dot"></span>
+        <p>{{ item }}</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Proposed Solution Snapshot -->
+<section id="solution" class="solution-section">
+  <div class="container-custom">
+    <div class="section-header">
+      <h2 class="section-title">Proposed Solution Snapshot</h2>
+      <p class="section-subtitle">
+        A secure, role-driven, real-time digital platform for complete café lifecycle management.
+      </p>
+    </div>
+    <div class="solution-grid">
+      <div class="solution-card" *ngFor="let item of solutionSnapshots">
+        <div class="solution-icon">{{ item.icon }}</div>
+        <h3>{{ item.title }}</h3>
+        <p>{{ item.description }}</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Features Section -->
+<section id="features" class="features-section">
+  <div class="container-custom">
+    <div class="section-header">
+      <h2 class="section-title">Why Choose Digital Café?</h2>
+      <p class="section-subtitle">
+        Everything you need for a modern café experience
+      </p>
+    </div>
+
+    <div class="features-grid">
+      <div *ngFor="let feature of features" class="feature-card">
+        <div class="feature-icon-wrapper">
+          <div class="feature-icon-bg">{{ feature.icon }}</div>
+        </div>
+        <h3 class="feature-title">{{ feature.title }}</h3>
+        <p class="feature-description">{{ feature.description }}</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- How It Works Section -->
+<section id="how-it-works" class="how-it-works-section">
+  <div class="container-custom">
+    <div class="section-header">
+      <h2 class="section-title">How It Works</h2>
+      <p class="section-subtitle">
+        Simple steps from booking to enjoying your meal
+      </p>
+    </div>
+
+    <div class="timeline-wrapper">
+      <div
+        *ngFor="let step of howItWorks; let i = index"
+        class="timeline-step"
+        [attr.data-step]="step.step"
+      >
+        <div class="step-number">{{ step.step }}</div>
+        <div class="step-icon">{{ step.icon }}</div>
+        <h3 class="step-title">{{ step.title }}</h3>
+        <p class="step-description">{{ step.description }}</p>
+        <div *ngIf="i < howItWorks.length - 1" class="step-connector"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Roles Section -->
+<section id="roles" class="roles-section">
+  <div class="container-custom">
+    <div class="section-header">
+      <h2 class="section-title">Role-Based Operating Model</h2>
+      <p class="section-subtitle">
+        Tailored experiences for each user role in the café ecosystem
+      </p>
+    </div>
+
+    <div class="roles-grid">
+      <div *ngFor="let role of roles" class="role-card">
+        <div class="role-header bg-gradient-to-br" [ngClass]="role.color">
+          <div class="role-icon">{{ role.icon }}</div>
+          <h3 class="role-title">{{ role.title }}</h3>
+        </div>
+        <div class="role-body">
+          <ul class="role-features">
+            <li *ngFor="let feature of role.features">
+              <span class="feature-check">✓</span>
+              <span>{{ feature }}</span>
+            </li>
+          </ul>
+          <button class="role-cta-btn" [routerLink]="role.route">
+            {{ role.cta }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Role Permission/Creation Matrix -->
+<section id="role-matrix" class="matrix-section">
+  <div class="container-custom">
+    <div class="section-header">
+      <h2 class="section-title">Role Permission & Creation Matrix</h2>
+      <p class="section-subtitle">
+        Clear ownership and access boundaries to keep operations secure and scalable.
+      </p>
+    </div>
+
+    <div class="matrix-highlights" aria-label="Role matrix highlights">
+      <article class="highlight-card">
+        <span class="highlight-icon">👥</span>
+        <div>
+          <p class="highlight-value">{{ roleMatrix.length }}</p>
+          <p class="highlight-label">Defined Roles</p>
+        </div>
+      </article>
+      <article class="highlight-card">
+        <span class="highlight-icon">🧭</span>
+        <div>
+          <p class="highlight-value">100%</p>
+          <p class="highlight-label">Creator Traceability</p>
+        </div>
+      </article>
+      <article class="highlight-card">
+        <span class="highlight-icon">🛡️</span>
+        <div>
+          <p class="highlight-value">RBAC</p>
+          <p class="highlight-label">Access Control Model</p>
+        </div>
+      </article>
+    </div>
+
+    <div class="matrix-shell">
+      <div class="matrix-table-wrap" role="region" aria-label="Role permission table">
+        <table class="matrix-table">
+          <thead>
+            <tr>
+              <th><span class="th-chip">Role</span></th>
+              <th><span class="th-chip">Created By</span></th>
+              <th><span class="th-chip">Primary Responsibilities</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of roleMatrix">
+              <td>
+                <span class="role-pill">{{ row.role }}</span>
+              </td>
+              <td>
+                <span class="creator-tag">{{ row.createdBy }}</span>
+              </td>
+              <td>
+                <p class="matrix-access">{{ row.access }}</p>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="matrix-cards" aria-label="Role permission cards">
+        <article class="matrix-card" *ngFor="let row of roleMatrix">
+          <div class="matrix-card-head">
+            <span class="role-pill">{{ row.role }}</span>
+            <span class="creator-tag">{{ row.createdBy }}</span>
+          </div>
+          <p class="matrix-access">{{ row.access }}</p>
+        </article>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Workflow Visualization Section -->
+<section id="workflow" class="workflow-section">
+  <div class="container-custom">
+    <div class="section-header">
+      <h2 class="section-title">Real-Time Order Tracking</h2>
+      <p class="section-subtitle">
+        Watch your order progress from placement to delivery
+      </p>
+    </div>
+
+    <div class="workflow-container">
+      <div
+        *ngFor="let step of workflowSteps; let i = index"
+        class="workflow-step"
+      >
+        <div class="workflow-icon" [style.background-color]="step.color">
+          <span>{{ step.icon }}</span>
+          <span
+            *ngIf="step.status === 'Served'"
+            class="served-badge"
+            aria-hidden="true"
+            >★</span
+          >
+        </div>
+        <div class="workflow-label">
+          <h4>{{ step.status }}</h4>
+          <p>{{ step.description }}</p>
+        </div>
+        <div *ngIf="i < workflowSteps.length - 1" class="workflow-arrow">
+          <svg width="40" height="20" viewBox="0 0 40 20" fill="none">
+            <path
+              d="M0 10 L35 10 M25 3 L35 10 L25 17"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="workflow-demo">
+      <p class="demo-text">
+        <strong>Try it yourself:</strong> Experience the complete journey from
+        ordering to serving with our intuitive interface
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- Security & Trust Section -->
+<section id="security" class="security-section">
+  <div class="container-custom">
+    <div class="section-header">
+      <h2 class="section-title">Enterprise-Grade Security</h2>
+      <p class="section-subtitle">
+        Your data and transactions are protected with industry-leading security
+        measures
+      </p>
+    </div>
+
+    <div class="security-grid">
+      <div *ngFor="let security of securityFeatures" class="security-card">
+        <div class="security-icon">{{ security.icon }}</div>
+        <h3 class="security-title">{{ security.title }}</h3>
+        <p class="security-description">{{ security.description }}</p>
+      </div>
+    </div>
+
+    <div class="mandatory-rules">
+      <h3>Mandatory Access Rules</h3>
+      <ul>
+        <li>Email verification is required before full platform access.</li>
+        <li>Customer profile completion is mandatory for protected modules.</li>
+        <li>Public self-registration is only for Customer role.</li>
+      </ul>
+    </div>
+
+    <div class="trust-badges">
+      <div class="badge-item">
+        <div class="badge-icon">🔐</div>
+        <div class="badge-text">End-to-End Encryption</div>
+      </div>
+      <div class="badge-item">
+        <div class="badge-icon">🛡️</div>
+        <div class="badge-text">Role-Based Access Control</div>
+      </div>
+      <div class="badge-item">
+        <div class="badge-icon">💳</div>
+        <div class="badge-text">Safe and Trusted Payments</div>
+      </div>
+      <div class="badge-item">
+        <div class="badge-icon">🔑</div>
+        <div class="badge-text">Protected System Access</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Cafes Section -->
+<section id="cafes" class="cafes-section">
+  <div class="container-custom">
+    <div class="section-header">
+      <h2 class="section-title">Featured Cafés</h2>
+      <p class="section-subtitle">Discover amazing cafés near you</p>
+    </div>
+
+    <div *ngIf="loading" class="loading-grid">
+      <div *ngFor="let i of [1, 2, 3, 4, 5, 6]" class="skeleton-card"></div>
+    </div>
+
+    <div *ngIf="!loading && featuredCafes.length > 0" class="cafes-grid">
+      <div
+        *ngFor="let cafe of featuredCafes"
+        class="cafe-card"
+        (click)="navigateToCafe(cafe.id)"
+      >
+        <div class="cafe-image">
+          <img [src]="getCafeImage(cafe)" [alt]="cafe.name" />
+          <div class="cafe-rating">
+            <span>⭐ {{ cafe?.rating ? cafe.rating.toFixed(1) : '0.0' }}</span>
+          </div>
+        </div>
+        <div class="cafe-info">
+          <h3 class="cafe-name">{{ cafe.name }}</h3>
+          <p class="cafe-location">📍 {{ cafe.city }}, {{ cafe.state }}</p>
+          <p class="cafe-description">{{ cafe.description }}</p>
+          <div class="cafe-hours">
+            <span>🕐 {{ cafe.openingTime }} - {{ cafe.closingTime }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="!loading && featuredCafes.length === 0" class="empty-state">
+      <p>No cafés available at the moment. Check back soon!</p>
+    </div>
+  </div>
+</section>
+
+<!-- Menu/Booking Preview -->
+<section id="preview" class="preview-section">
+  <div class="container-custom">
+    <div class="section-header">
+      <h2 class="section-title">Menu & Booking Preview</h2>
+      <p class="section-subtitle">
+        Preview the exact customer flow for booking tables and pre-ordering meals.
+      </p>
+    </div>
+    <div class="preview-grid">
+      <div class="preview-card" *ngFor="let card of previewCards; let i = index">
+        <div class="preview-head">
+          <div class="preview-icon">{{ card.icon }}</div>
+          <span class="preview-flow-chip">Flow {{ i + 1 }}</span>
+        </div>
+        <h3>{{ card.title }}</h3>
+        <p class="preview-subtitle">{{ card.subtitle }}</p>
+        <ul class="preview-points">
+          <li *ngFor="let point of card.points">
+            <span class="point-dot"></span>
+            <span>{{ point }}</span>
+          </li>
+        </ul>
+        <button class="preview-btn" [routerLink]="card.route">
+          <span>{{ card.cta }}</span>
+          <i class="bi bi-arrow-right-short"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Testimonials Section -->
+<section id="testimonials" class="testimonials-section">
+  <div class="container-custom">
+    <div class="section-header">
+      <h2 class="section-title">What People Say</h2>
+      <p class="section-subtitle">Trusted by café owners and customers alike</p>
+    </div>
+
+    <div class="testimonials-grid">
+      <div *ngFor="let testimonial of testimonials" class="testimonial-card">
+        <div class="testimonial-avatar">{{ testimonial.image }}</div>
+        <p class="testimonial-text">"{{ testimonial.text }}"</p>
+        <div class="testimonial-author">
+          <p class="author-name">{{ testimonial.name }}</p>
+          <p class="author-role">{{ testimonial.role }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="social-metrics">
+      <div class="metric-box" *ngFor="let metric of platformMetrics">
+        <div class="metric-value">{{ metric.value }}</div>
+        <div class="metric-label">{{ metric.label }}</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ Section -->
+<section id="faq" class="faq-section">
+  <div class="container-custom">
+    <div class="section-header">
+      <h2 class="section-title">Frequently Asked Questions</h2>
+      <p class="section-subtitle">
+        Important clarifications about onboarding, roles, and platform flow.
+      </p>
+    </div>
+
+    <div class="faq-layout">
+      <div class="faq-side-stack">
+        <aside class="faq-side-card" aria-label="FAQ quick help">
+          <div class="faq-side-head">
+            <span class="faq-side-chip">Quick Help</span>
+            <span class="faq-side-icon" aria-hidden="true">💡</span>
+          </div>
+          <h3>Need instant clarity before you start?</h3>
+          <p>
+            These answers cover registration rules, role onboarding, and how platform access works
+            from login to dashboard modules.
+          </p>
+          <p class="faq-total">{{ faqs.length }} quick answers available</p>
+          <div class="faq-side-points">
+            <span class="faq-point">Role-based onboarding</span>
+            <span class="faq-point">Verification-first access</span>
+            <span class="faq-point">Secure operational flow</span>
+            <span class="faq-point">Booking and order flow</span>
+          </div>
+        </aside>
+
+        <article class="faq-side-note" aria-label="FAQ support note">
+          <h4>Still need help?</h4>
+          <p>
+            Start with the most common questions first. If you still need support, we can guide
+            you with onboarding, role activation, and account recovery.
+          </p>
+          <ul class="faq-side-checklist">
+            <li>Email verification help</li>
+            <li>Login and reset support</li>
+            <li>Role access clarification</li>
+          </ul>
+          <a class="faq-side-link" routerLink="/contact">Contact Support</a>
+        </article>
+      </div>
+
+      <div class="faq-list" role="list">
+        <article
+          class="faq-item"
+          *ngFor="let faq of faqs; let i = index"
+          [class.is-open]="activeFaqIndex === i"
+          role="listitem"
+        >
+          <button
+            type="button"
+            class="faq-question"
+            (click)="toggleFaq(i)"
+            [attr.aria-expanded]="activeFaqIndex === i"
+            [attr.aria-controls]="'faq-answer-' + i"
+          >
+            <span class="faq-question-text">{{ faq.question }}</span>
+            <span class="faq-toggle" aria-hidden="true">{{ activeFaqIndex === i ? "−" : "+" }}</span>
+          </button>
+
+          <div class="faq-answer" *ngIf="activeFaqIndex === i" [id]="'faq-answer-' + i">
+            {{ faq.answer }}
+          </div>
+        </article>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta-section cta-clean">
+  <div class="container-custom">
+    <div class="cta-head-card section-header">
+      <h2 class="cta-title section-title">Ready to Transform Café Operations?</h2>
+      <p class="cta-subtitle section-subtitle">
+        Join thousands of happy customers and café owners today
+      </p>
+    </div>
+
+    <div class="cta-body">
+      <div class="cta-buttons">
+        <button class="btn-cta btn-customer" routerLink="/auth/register">
+          <span class="btn-icon">🍽️</span>
+          <div class="btn-text">
+            <div class="btn-label">Customer Register</div>
+            <div class="btn-sublabel">Book, order, and pay online</div>
+          </div>
+        </button>
+
+        <button class="btn-cta btn-owner" routerLink="/auth/login">
+          <span class="btn-icon">🔐</span>
+          <div class="btn-text">
+            <div class="btn-label">Login</div>
+            <div class="btn-sublabel">Access your assigned dashboard</div>
+          </div>
+        </button>
+
+        <button class="btn-cta btn-staff" routerLink="/contact">
+          <span class="btn-icon">📨</span>
+          <div class="btn-text">
+            <div class="btn-label">Owner/Staff Onboarding Request</div>
+            <div class="btn-sublabel">Contact us for role provisioning</div>
+          </div>
+        </button>
+      </div>
+
+      <div class="cta-secondary-grid">
+        <article class="cta-secondary-card">
+          <div class="cta-secondary-icon">📋</div>
+          <h4>Browse FAQs First</h4>
+          <p>Get quick answers about registration, roles, and access before you start.</p>
+          <a routerLink="/" fragment="faq" class="cta-secondary-link">View FAQ</a>
+        </article>
+
+        <article class="cta-secondary-card">
+          <div class="cta-secondary-icon">🗓️</div>
+          <h4>Plan Your Visit</h4>
+          <p>Choose a café, check slots, and get ready to book your table faster.</p>
+          <a routerLink="/auth/login" class="cta-secondary-link">Go to Login</a>
+        </article>
+
+        <article class="cta-secondary-card">
+          <div class="cta-secondary-icon">🛡️</div>
+          <h4>Secure Account Setup</h4>
+          <p>Use verified email, strong password, and reset flow to keep your account protected.</p>
+          <a routerLink="/auth/register" class="cta-secondary-link">Create Account</a>
+        </article>
+      </div>
+
+      <p class="cta-note">
+        Already have an account?
+        <a routerLink="/auth/login" class="cta-link">Sign In</a>
+      </p>
+    </div>
+  </div>
+</section>
+
+<app-footer></app-footer>
+
+
+
+
+
+
+
+

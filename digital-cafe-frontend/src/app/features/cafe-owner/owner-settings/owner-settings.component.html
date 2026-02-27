@@ -1,0 +1,218 @@
+<div class="owner-settings-bg">
+  <div class="overlay"></div>
+
+  <div class="owner-settings-content">
+    <section class="settings-page" *ngIf="!loading">
+
+      <!-- ================= COVER BANNER ================= -->
+      <div class="cover-banner">
+        <img
+          *ngIf="cafe.coverUrl; else coverPlaceholder"
+          class="cover-img"
+          [src]="coverUrl"
+        />
+
+        <ng-template #coverPlaceholder>
+          <img class="cover-img" src="assets/images/cover-placeholder.jpg" />
+        </ng-template>
+
+        <div class="banner-overlay">
+          <h1>{{ cafe.name }}</h1>
+
+          <span class="status" [class.active]="cafe.isActive">
+            {{ cafe.isActive ? "Active Cafe" : "Inactive Cafe" }}
+          </span>
+
+          <div class="banner-actions">
+            <button class="edit-btn" (click)="goToEditCafe()">Edit Cafe</button>
+            <button class="view-btn" (click)="openView()">View Cafe</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= INFO CARDS ================= -->
+      <div class="info-grid">
+
+        <div class="info-card">
+          <h4>📍 Address</h4>
+          <p>
+            {{ cafe.address }}, {{ cafe.city }}, {{ cafe.state }} -
+            {{ cafe.pincode }}
+          </p>
+        </div>
+
+        <div class="info-card">
+          <h4>📞 Contact</h4>
+          <p>{{ cafe.phoneNumber }}</p>
+          <p>{{ cafe.email }}</p>
+        </div>
+
+        <div class="info-card">
+          <h4>⏰ Working Hours</h4>
+          <p *ngIf="cafe.openTime && cafe.closeTime">
+            {{ formatTime(cafe.openTime) }} -
+            {{ formatTime(cafe.closeTime) }}
+          </p>
+          <p *ngIf="!cafe.openTime">Not set</p>
+        </div>
+
+      </div>
+
+      <!-- ================= BRANDING ================= -->
+      <div class="media-section">
+        <h3>Branding & Media</h3>
+
+        <div class="media-grid">
+
+          <!-- ================= LOGO ================= -->
+          <div class="upload-card">
+            <label>Logo</label>
+
+            <ng-container *ngIf="cafe.logoUrl; else logoUploadBlock">
+              <img
+                [src]="logoUrl"
+                class="preview-img"
+              />
+            </ng-container>
+
+            <ng-template #logoUploadBlock>
+              <input type="file" (change)="onLogoSelected($event)" />
+
+              <img
+                *ngIf="logoPreview"
+                [src]="logoPreview"
+                class="preview-img"
+              />
+
+              <button
+                *ngIf="selectedLogoFile"
+                class="primary-btn"
+                (click)="uploadLogo()"
+              >
+                Upload Logo
+              </button>
+            </ng-template>
+          </div>
+
+          <!-- ================= COVER ================= -->
+          <div class="upload-card">
+            <label>Cover Image</label>
+
+            <ng-container *ngIf="cafe.coverUrl; else coverUploadBlock">
+              <img
+                [src]="coverUrl"
+                class="preview-img"
+              />
+            </ng-container>
+
+            <ng-template #coverUploadBlock>
+              <input type="file" (change)="onCoverSelected($event)" />
+
+              <img
+                *ngIf="coverPreview"
+                [src]="coverPreview"
+                class="preview-img"
+              />
+
+              <button
+                *ngIf="selectedCoverFile"
+                class="primary-btn"
+                (click)="uploadCover()"
+              >
+                Upload Cover
+              </button>
+            </ng-template>
+          </div>
+
+          <!-- ================= GALLERY ================= -->
+          <div class="upload-card full">
+            <label>Gallery Images (Max 4)</label>
+
+            <input type="file" multiple (change)="onGallerySelected($event)" />
+
+            <div class="gallery-preview">
+
+              <!-- Existing Images -->
+              <img
+                *ngFor="let img of cafe.galleryImages"
+                [src]="'http://localhost:8080/' + img"
+                class="preview-img"
+              />
+
+              <!-- Preview Before Upload -->
+              <img
+                *ngFor="let img of galleryPreview"
+                [src]="img"
+                class="preview-img"
+              />
+
+            </div>
+
+            <button
+              *ngIf="selectedGalleryFiles.length"
+              class="primary-btn"
+              (click)="uploadGallery()"
+            >
+              Upload Gallery
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ================= MAP ================= -->
+      <div class="map-section" *ngIf="mapUrl">
+        <h3>Location Preview</h3>
+
+        <iframe
+          width="100%"
+          height="260"
+          style="border:0"
+          loading="lazy"
+          [src]="mapUrl">
+        </iframe>
+      </div>
+
+    </section>
+
+    <!-- ================= VIEW MODAL ================= -->
+    <div class="modal-overlay" *ngIf="showViewModal">
+      <div class="modal view-modal">
+
+        <img
+          *ngIf="cafe.coverUrl"
+          [src]="coverUrl"
+          class="view-cover"
+        />
+
+        <h2>{{ cafe.name }}</h2>
+
+        <p class="view-address">
+          {{ cafe.address }}, {{ cafe.city }},
+          {{ cafe.state }} - {{ cafe.pincode }}
+        </p>
+
+        <div class="view-details">
+          <span>📞 {{ cafe.phoneNumber }}</span>
+
+          <p *ngIf="cafe.openTime && cafe.closeTime">
+            🕒 {{ formatTime(cafe.openTime) }} -
+            {{ formatTime(cafe.closeTime) }}
+          </p>
+        </div>
+
+        <div class="gallery">
+          <img
+            *ngFor="let img of cafe.galleryImages"
+            [src]="'http://localhost:8080/' + img"
+          />
+        </div>
+
+        <button class="secondary-btn" (click)="closeView()">
+          Close
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>

@@ -1,0 +1,72 @@
+<div class="tables-wrapper">
+  <div class="tables-card">
+    <!-- Header Row -->
+    <div class="card-header">
+      <div class="left">
+        <button class="card-back-btn" (click)="goBack()">← Back</button>
+        <div>
+          <h2>🪑 Manage Tables</h2>
+          <p>Control seating capacity & availability</p>
+        </div>
+      </div>
+
+      <!-- Add Button on Right -->
+      <button class="add-btn" (click)="openAddForm()">+ Add Table</button>
+    </div>
+
+    <!-- Tables Grid -->
+    <div class="tables-grid">
+      <div class="table-box" *ngFor="let table of tables">
+        <!-- Use generated number instead of DB id -->
+        <h3>Table No : {{table.id}}</h3>
+
+        <!-- Capacity -->
+        <p>👥 Seats: {{ table.capacity }}</p>
+
+        <!-- Status -->
+        <div
+          class="status"
+          [ngClass]="table.isAvailable ? 'available' : 'occupied'"
+        >
+          {{ table.isAvailable ? "Available" : "Occupied" }}
+        </div>
+
+        <!-- Actions -->
+        <div class="actions">
+          <button (click)="startEdit(table)">Edit</button>
+
+          <!-- ✅ FIXED FUNCTION NAME -->
+          <button (click)="toggleAvailability(table)">
+            {{ table.isAvailable ? 'Mark Occupied' : 'Mark Available' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ADD / EDIT MODAL -->
+<div class="modal-overlay" *ngIf="showForm">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>{{ isEditMode ? "Edit Table" : "Add Table" }}</h3>
+      <span class="close" (click)="closeForm()">×</span>
+    </div>
+
+    <div class="form-section">
+      <label>Seating Capacity</label>
+      <input
+        type="number"
+        [(ngModel)]="formCapacity"
+        min="1"
+        placeholder="Enter number of seats"
+      />
+    </div>
+
+    <div class="modal-actions">
+      <button *ngIf="!isEditMode" (click)="addTable()">Create</button>
+      <button *ngIf="isEditMode" (click)="updateTable()">Update</button>
+      <button class="cancel" (click)="closeForm()">Cancel</button>
+    </div>
+  </div>
+</div>

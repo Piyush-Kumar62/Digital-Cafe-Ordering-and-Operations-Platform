@@ -1,0 +1,240 @@
+<section class="staff-page">
+  <!-- Header Row -->
+  <div class="page-header">
+    <div>
+      <h1>Staff Management</h1>
+      <p>Add and manage chefs and waiters for your cafe.</p>
+    </div>
+
+    <button class="primary-btn" (click)="openAddStaff()">+ Add Staff</button>
+  </div>
+
+  <!-- Filters -->
+  <div class="filter-bar">
+    <input
+      type="text"
+      placeholder="Search by name or email..."
+      [(ngModel)]="searchText"
+      (input)="applyFilters()"
+    />
+
+    <select [(ngModel)]="selectedRole" (change)="applyFilters()">
+      <option value="">All Roles</option>
+      <option value="CHEF">Chef</option>
+      <option value="WAITER">Waiter</option>
+    </select>
+
+    <select [(ngModel)]="selectedStatus" (change)="applyFilters()">
+      <option value="">All Status</option>
+      <option value="ACTIVE">Active</option>
+      <option value="INACTIVE">Inactive</option>
+    </select>
+
+    <button (click)="resetFilters()">Reset</button>
+  </div>
+
+  <!-- ================= STAFF TABLE ================= -->
+
+  <div class="table-wrapper">
+    <table class="staff-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th>Status</th>
+          <th>Shift</th>
+          <th>Experience</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr *ngFor="let s of filteredStaff">
+          <td>
+            <div class="name-cell">
+              <div class="avatar-sm">
+                {{ (s.firstName || s.username)?.charAt(0) | uppercase }}
+              </div>
+
+              <div class="name">
+                {{
+                  s.firstName || s.lastName
+                    ? (s.firstName || "") + " " + (s.lastName || "")
+                    : s.username
+                }}
+              </div>
+            </div>
+          </td>
+
+          <td>{{ s.email }}</td>
+
+          <td>
+            <span class="role-badge">
+              {{ (s.roles && s.roles[0]) || "-" }}
+            </span>
+          </td>
+
+          <td>
+            <span
+              class="status-badge"
+              [class.active]="s.isActive"
+              [class.inactive]="!s.isActive"
+            >
+              {{ s.isActive ? "Active" : "Inactive" }}
+            </span>
+          </td>
+
+          <td>{{ s.shift || "-" }}</td>
+
+          <td>{{ s.experienceYears || 0 }} yrs</td>
+
+          <td class="action-cell">
+            <button class="edit-btn" (click)="editStaff(s)">Edit</button>
+
+            <button
+              *ngIf="s.isActive"
+              class="danger-btn"
+              (click)="setStatus(s, false)"
+            >
+              Deactivate
+            </button>
+
+            <button
+              *ngIf="!s.isActive"
+              class="success-btn"
+              (click)="setStatus(s, true)"
+            >
+              Activate
+            </button>
+          </td>
+        </tr>
+
+        <tr *ngIf="filteredStaff.length === 0">
+          <td colspan="7" class="empty-row">
+            No staff found matching your search.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ================= MODERN MODAL ================= -->
+
+<div class="modal-overlay" *ngIf="showModal">
+  <div class="modal modern-modal">
+
+    <!-- Header -->
+    <div class="modal-header">
+      <div>
+        <h2>{{ isEditMode ? "Edit Staff" : "Create Staff Account" }}</h2>
+        <p class="subtitle">
+          Manage staff details and work information
+        </p>
+      </div>
+
+      <button class="close-btn" (click)="closeModal()">×</button>
+    </div>
+
+    <!-- Scrollable Body -->
+    <div class="modal-body">
+
+      <form (ngSubmit)="submitStaff()">
+
+        <!-- ================= BASIC ================= -->
+        <div class="form-section">
+          <h3>Basic Information</h3>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Role *</label>
+              <select [(ngModel)]="role" name="role" required>
+                <option value="CHEF">Chef</option>
+                <option value="WAITER">Waiter</option>
+              </select>
+            </div>
+
+            <div class="form-group" *ngIf="!isEditMode">
+              <label>Username *</label>
+              <input [(ngModel)]="username" name="username" required />
+            </div>
+
+            <div class="form-group">
+              <label>Email *</label>
+              <input [(ngModel)]="email" name="email" required />
+            </div>
+          </div>
+        </div>
+
+        <!-- ================= PERSONAL ================= -->
+        <div class="form-section">
+          <h3>Personal Details</h3>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label>First Name</label>
+              <input [(ngModel)]="firstName" name="firstName" />
+            </div>
+
+            <div class="form-group">
+              <label>Last Name</label>
+              <input [(ngModel)]="lastName" name="lastName" />
+            </div>
+
+            <div class="form-group">
+              <label>Phone</label>
+              <input [(ngModel)]="phone" name="phone" />
+            </div>
+
+            <div class="form-group">
+              <label>Date of Birth</label>
+              <input type="date" [(ngModel)]="dob" name="dob" />
+            </div>
+          </div>
+        </div>
+
+        <!-- ================= WORK ================= -->
+        <div class="form-section">
+          <h3>Work Information</h3>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Joining Date</label>
+              <input type="date" [(ngModel)]="joiningDate" name="joiningDate" />
+            </div>
+
+            <div class="form-group">
+              <label>Experience (Years)</label>
+              <input type="number"
+                     [(ngModel)]="experienceYears"
+                     name="experienceYears" />
+            </div>
+
+            <div class="form-group">
+              <label>Shift</label>
+              <select [(ngModel)]="shift" name="shift">
+                <option value="MORNING">Morning</option>
+                <option value="EVENING">Evening</option>
+                <option value="FULL_DAY">Full Day</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+      </form>
+    </div>
+
+    <!-- Footer -->
+    <div class="modal-footer">
+      <button class="secondary-btn" (click)="closeModal()">
+        Cancel
+      </button>
+
+      <button class="primary-btn" (click)="submitStaff()">
+        {{ isEditMode ? "Update Staff" : "Create Staff" }}
+      </button>
+    </div>
+
+  </div>
+</div>

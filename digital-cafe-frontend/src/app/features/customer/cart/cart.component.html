@@ -1,0 +1,86 @@
+<div class="container mx-auto px-4 py-8">
+  <h1 class="text-4xl font-extrabold text-gray-800 mb-8 text-center">Your Cart</h1>
+
+  <div *ngIf="loadingBooking" class="mb-6 rounded-lg bg-blue-50 border border-blue-200 p-4 text-blue-700">
+    Loading booking details...
+  </div>
+
+  <div *ngIf="!loadingBooking && activeBooking" class="mb-6 rounded-lg bg-green-50 border border-green-200 p-4 text-green-700">
+    <p class="font-semibold">Active Booking: {{ activeBooking.bookingNumber || ('#' + activeBooking.id) }}</p>
+    <p class="text-sm">
+      {{ activeBooking.cafeName || ('Cafe ' + activeBooking.cafeId) }} |
+      Table {{ activeBooking.tableNumber || activeBooking.tableId }} |
+      {{ activeBooking.bookingDate }} {{ activeBooking.bookingTime }}
+    </p>
+  </div>
+
+  <div *ngIf="!loadingBooking && !activeBooking" class="mb-6 rounded-lg bg-amber-50 border border-amber-200 p-4 text-amber-700">
+    <p class="font-semibold">No active confirmed booking found.</p>
+    <p class="text-sm mb-3">You need a confirmed table booking before placing order.</p>
+    <button (click)="goToBooking()" class="bg-amber-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-amber-700">
+      Book a Table
+    </button>
+  </div>
+
+  <div *ngIf="cart$ | async as cart">
+    <div *ngIf="cart.items.length > 0; else emptyCart" class="bg-white rounded-lg shadow-lg p-6">
+      <!-- Cart Items -->
+      <div *ngFor="let cartItem of cart.items" class="flex justify-between items-center border-b border-gray-200 py-4">
+        <div class="flex items-center">
+          <img
+            [src]="getCartItemImage(cartItem.item)"
+            (error)="onImageError($event)"
+            [alt]="cartItem.item.name"
+            loading="lazy"
+            decoding="async"
+            class="w-20 h-20 object-cover rounded-lg mr-6"
+          >
+          <div>
+            <h2 class="text-xl font-bold text-gray-900">{{ cartItem.item.name }}</h2>
+            <p class="text-gray-600">${{ cartItem.item.price | number:'1.2-2' }}</p>
+          </div>
+        </div>
+        <div class="flex items-center">
+          <span class="text-lg font-semibold mr-4">{{ cartItem.quantity }}</span>
+          <button (click)="removeItem(cartItem.item.id)" class="text-red-500 hover:text-red-700 font-bold text-xl">&times;</button>
+        </div>
+      </div>
+
+      <!-- Cart Summary -->
+      <div class="mt-8">
+        <div class="flex justify-between items-center text-xl font-bold text-gray-800">
+          <span>Total Items:</span>
+          <span>{{ cart.totalItems }}</span>
+        </div>
+        <div class="flex justify-between items-center text-2xl font-extrabold text-indigo-600 mt-2">
+          <span>Total Price:</span>
+          <span>${{ cart.totalPrice | number:'1.2-2' }}</span>
+        </div>
+
+        <div class="mt-6">
+          <label for="specialInstructions" class="block text-sm font-medium text-gray-700">Special Instructions (Optional)</label>
+          <textarea [(ngModel)]="specialInstructions" id="specialInstructions" rows="3" placeholder="Any special requests for the chef?" class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"></textarea>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="mt-8 flex justify-between">
+        <button (click)="clearCart()" class="bg-gray-300 text-gray-800 font-bold py-2 px-6 rounded-lg hover:bg-gray-400 transition-colors duration-300">
+          Clear Cart
+        </button>
+        <button (click)="placeOrder()" [disabled]="!activeBooking" class="bg-indigo-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-indigo-700 transition-colors duration-300 disabled:opacity-60 disabled:cursor-not-allowed">
+          Place Order
+        </button>
+      </div>
+    </div>
+
+    <ng-template #emptyCart>
+      <div class="text-center py-16 bg-white rounded-lg shadow-lg">
+        <p class="text-2xl text-gray-500">Your cart is empty.</p>
+        <a routerLink="/customer/menu" class="mt-4 inline-block bg-indigo-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-indigo-700 transition-colors duration-300">
+          Go to Menu
+        </a>
+      </div>
+    </ng-template>
+  </div>
+</div>

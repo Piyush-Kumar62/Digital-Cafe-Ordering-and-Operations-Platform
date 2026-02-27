@@ -1,0 +1,108 @@
+<div class="complete-profile-shell">
+  <div class="card">
+    <h1>Complete Your Profile</h1>
+    <p>Add your details once to continue to menu and booking.</p>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <div class="grid two">
+        <label>
+          First Name
+          <input type="text" formControlName="firstName" />
+        </label>
+        <label>
+          Last Name
+          <input type="text" formControlName="lastName" />
+        </label>
+      </div>
+
+      <div class="grid three">
+        <label>
+          Date of Birth
+          <input type="date" formControlName="dateOfBirth" />
+        </label>
+        <label>
+          Gender
+          <select formControlName="gender">
+            <option value="">Select</option>
+            <option value="MALE">Male</option>
+            <option value="FEMALE">Female</option>
+            <option value="OTHER">Other</option>
+          </select>
+        </label>
+        <label>
+          Phone Number
+          <input type="tel" formControlName="phoneNumber" />
+        </label>
+      </div>
+
+      <div class="grid two">
+        <label>
+          Street
+          <input type="text" formControlName="street" />
+        </label>
+        <label>
+          City
+          <input type="text" formControlName="city" />
+        </label>
+      </div>
+
+      <div class="grid three">
+        <label>
+          State
+          <input type="text" formControlName="state" />
+        </label>
+        <label>
+          Country
+          <input type="text" formControlName="country" />
+        </label>
+        <label>
+          Pincode
+          <input type="text" formControlName="pincode" />
+        </label>
+      </div>
+
+      <h2>Academic Information</h2>
+
+      <div class="grid two">
+        <label>
+          Institution Name
+          <input type="text" formControlName="institutionName" />
+        </label>
+        <label>
+          Degree
+          <input type="text" formControlName="degree" />
+        </label>
+      </div>
+
+      <div class="grid three">
+        <label>
+          Field of Study
+          <input type="text" formControlName="fieldOfStudy" />
+        </label>
+        <label>
+          Start Date
+          <input type="date" formControlName="academicStartDate" />
+        </label>
+        <label>
+          End Date
+          <input type="date" formControlName="academicEndDate" />
+        </label>
+      </div>
+
+      <div class="grid two">
+        <label>
+          Grade
+          <input type="text" formControlName="grade" />
+        </label>
+        <label class="checkbox">
+          <input type="checkbox" formControlName="isCurrent" />
+          Currently studying
+        </label>
+      </div>
+
+      <button type="submit" [disabled]="loading">
+        {{ loading ? "Saving..." : "Save and Continue" }}
+      </button>
+    </form>
+  </div>
+</div>

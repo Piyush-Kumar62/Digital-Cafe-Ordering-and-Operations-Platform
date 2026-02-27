@@ -1,0 +1,77 @@
+<div class="menu-shell">
+  <div class="menu-header">
+    <h1>Browse Menu</h1>
+    <p>Select your cafe, filter by category, and add items to cart.</p>
+  </div>
+
+  <div class="toolbar">
+    <div class="field">
+      <label for="menuCafeId">Choose Café</label>
+      <select
+        id="menuCafeId"
+        [value]="selectedCafeId || ''"
+        (change)="onCafeChange($any($event.target).value)"
+      >
+        <option value="" disabled>Select a cafe</option>
+        <option *ngFor="let cafe of cafes" [value]="cafe.id">
+          {{ cafe.name }} - {{ cafe.city }}
+        </option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="searchText">Search</label>
+      <input
+        id="searchText"
+        type="text"
+        [(ngModel)]="searchText"
+        placeholder="Search by item name or description"
+      />
+    </div>
+  </div>
+
+  <div class="category-strip" *ngIf="categories.length > 0">
+    <button
+      *ngFor="let category of categories"
+      [class.active]="selectedCategory === category"
+      (click)="onCategoryChange(category)"
+    >
+      {{ category === 'ALL' ? 'All' : category.replace('_', ' ') }}
+    </button>
+    <button class="clear-btn" (click)="clearFilters()">Clear Filters</button>
+  </div>
+
+  <div *ngIf="loading" class="state">Loading menu...</div>
+
+  <div *ngIf="!loading" class="grid">
+    <article *ngFor="let item of filteredMenuItems" class="card">
+      <div class="media">
+        <img
+          [src]="getMenuImage(item)"
+          [alt]="item.name"
+          loading="lazy"
+          decoding="async"
+          (error)="onImageError($event, item)"
+        />
+      </div>
+      <div class="card-body">
+        <div class="card-top">
+          <h2>{{ item.name }}</h2>
+          <span class="badge">{{ item.category }}</span>
+        </div>
+        <p class="desc">{{ item.description || 'No description available.' }}</p>
+        <div class="meta">
+          <strong>${{ item.price | number:'1.2-2' }}</strong>
+          <span>{{ item.preparationTime || 0 }} mins</span>
+        </div>
+        <button (click)="addToCart(item)" [class.added]="addedItemId === item.id">
+          {{ addedItemId === item.id ? 'Added' : 'Add to Cart' }}
+        </button>
+      </div>
+    </article>
+  </div>
+
+  <div *ngIf="!loading && filteredMenuItems.length === 0" class="state">
+    No menu items match the selected filters.
+  </div>
+</div>

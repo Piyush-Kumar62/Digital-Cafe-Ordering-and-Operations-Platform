@@ -1,0 +1,71 @@
+<section class="customer-dashboard">
+  <header class="hero">
+    <div>
+      <h1>Customer Dashboard</h1>
+      <p>Book tables, order faster, and track everything in real time.</p>
+    </div>
+    <a routerLink="/customer/cart" class="cart-chip">
+      <span class="material-icons">shopping_cart</span>
+      Cart ({{ cartItemCount }})
+    </a>
+  </header>
+
+  <div class="stats">
+    <article class="stat-card">
+      <h3>Active Orders</h3>
+      <strong>{{ stats.activeOrders }}</strong>
+    </article>
+    <article class="stat-card">
+      <h3>Completed Orders</h3>
+      <strong>{{ stats.completedOrders }}</strong>
+    </article>
+    <article class="stat-card">
+      <h3>Active Bookings</h3>
+      <strong>{{ stats.activeBookings }}</strong>
+    </article>
+    <article class="stat-card accent">
+      <h3>Cart Items</h3>
+      <strong>{{ cartItemCount }}</strong>
+    </article>
+  </div>
+
+  <div class="quick-actions">
+    <a class="action-card" *ngFor="let action of quickActions" [routerLink]="action.path">
+      <span class="material-icons">{{ action.icon }}</span>
+      <div>
+        <h4>{{ action.title }}</h4>
+        <p>{{ action.description }}</p>
+      </div>
+    </a>
+  </div>
+
+  <div class="panels" *ngIf="!loading; else loadingState">
+    <article class="panel">
+      <h2>Upcoming Bookings</h2>
+      <div class="empty" *ngIf="upcomingBookings.length === 0">No upcoming bookings yet.</div>
+      <div class="row" *ngFor="let booking of upcomingBookings">
+        <div>
+          <strong>{{ booking.cafeName || ('Cafe #' + booking.cafeId) }}</strong>
+          <p>Table {{ booking.tableNumber || booking.tableId }} • {{ booking.bookingDate }} {{ booking.bookingTime }}</p>
+        </div>
+        <span class="badge" [ngClass]="getStatusClass(booking.status)">{{ booking.status }}</span>
+      </div>
+    </article>
+
+    <article class="panel">
+      <h2>Recent Orders</h2>
+      <div class="empty" *ngIf="recentOrders.length === 0">No orders found yet.</div>
+      <div class="row" *ngFor="let order of recentOrders">
+        <div>
+          <strong>Order #{{ order.orderNumber || order.id }}</strong>
+          <p>{{ order.items.length }} items • {{ order.totalAmount | currency:'INR' }}</p>
+        </div>
+        <span class="badge" [ngClass]="getStatusClass(order.status)">{{ order.status }}</span>
+      </div>
+    </article>
+  </div>
+
+  <ng-template #loadingState>
+    <div class="loading">Loading dashboard...</div>
+  </ng-template>
+</section>

@@ -1,0 +1,139 @@
+<!-- ================= LOADING STATE ================= -->
+<div *ngIf="loading" class="loading-wrapper">
+  <div class="loader"></div>
+  <p>Loading Café Dashboard...</p>
+</div>
+
+<!-- ================= DASHBOARD CONTENT ================= -->
+<div *ngIf="!loading" class="dashboard-container">
+
+  <!-- HEADER -->
+  <div class="dashboard-header">
+    <div>
+      <h1>Café Owner Dashboard</h1>
+      <p>Manage your café operations in real-time</p>
+    </div>
+
+    <button (click)="refresh()" class="refresh-btn">
+      Refresh
+    </button>
+  </div>
+
+  <!-- ================= QUICK STATS ================= -->
+  <div class="stats-grid">
+
+    <div class="stat-card blue">
+      <p>Total Tables</p>
+      <h2>{{ dashboard.totalTables }}</h2>
+      <span>{{ dashboard.availableTables }} Available</span>
+    </div>
+
+    <div class="stat-card green">
+      <p>Staff Members</p>
+      <h2>{{ dashboard.totalStaff }}</h2>
+      <span>{{ dashboard.activeStaff }} Active</span>
+    </div>
+
+    <div class="stat-card orange">
+      <p>Today's Orders</p>
+      <h2>{{ dashboard.todayOrders }}</h2>
+      <span>{{ dashboard.pendingOrders }} Pending</span>
+    </div>
+
+    <div class="stat-card purple">
+      <p>Today's Revenue</p>
+      <h2>₹{{ dashboard.todayRevenue }}</h2>
+    </div>
+
+  </div>
+
+  <!-- ================= ANALYTICS ================= -->
+  <div class="charts-grid">
+
+    <div class="chart-card">
+      <h3>Today's Orders Overview</h3>
+      <!-- IMPORTANT: #ordersChart must match TS ViewChild -->
+      <div class="chart-wrapper">
+  <canvas #ordersChart></canvas>
+</div>
+    </div>
+
+    <div class="chart-card">
+      <h3>Table Availability</h3>
+      <!-- IMPORTANT: #tableChart must match TS ViewChild -->
+     <div class="chart-wrapper">
+  <canvas #tableChart></canvas>
+</div>
+    </div>
+
+  </div>
+
+  <!-- ================= MANAGEMENT ================= -->
+  <div class="management-grid">
+
+    <div class="manage-card">
+      <h3>Table Management</h3>
+      <button routerLink="/owner/tables">Manage Tables</button>
+      <p>Add / edit seating capacity and availability.</p>
+    </div>
+
+    <div class="manage-card">
+      <h3>Staff Management</h3>
+      <button routerLink="/owner/staff">Manage Staff</button>
+      <p>Add waiters, chefs and assign roles.</p>
+    </div>
+
+    <div class="manage-card">
+      <h3>Menu Management</h3>
+      <button routerLink="/owner/menu">Manage Menu</button>
+      <p>Add items, price, availability.</p>
+    </div>
+
+  </div>
+
+  <!-- ================= BOOKINGS ================= -->
+  <div class="data-grid">
+
+    <div class="data-card">
+      <h3>Upcoming Reservations</h3>
+
+      <div *ngFor="let booking of dashboard.upcomingBookings">
+        <strong>{{ booking.customerName }}</strong>
+        <small>{{ booking.date }} | Table {{ booking.tableNumber }}</small>
+      </div>
+
+      <p *ngIf="dashboard.upcomingBookings.length === 0" class="empty">
+        No upcoming reservations.
+      </p>
+    </div>
+
+    <div class="data-card">
+      <h3>Recent Orders</h3>
+
+      <div *ngFor="let order of dashboard.recentOrders">
+        <strong>Order #{{ order.id }}</strong>
+        <small>₹{{ order.amount }} • {{ order.status }}</small>
+      </div>
+
+      <p *ngIf="dashboard.recentOrders.length === 0" class="empty">
+        No recent orders.
+      </p>
+    </div>
+
+  </div>
+
+  <!-- ================= INVENTORY ================= -->
+  <div class="alert-card">
+    <h3>Low Stock Alerts</h3>
+
+    <div *ngFor="let item of dashboard.lowStockItems" class="alert-row">
+      <span>{{ item.name }}</span>
+      <span>Only {{ item.remaining }} left</span>
+    </div>
+
+    <p *ngIf="dashboard.lowStockItems.length === 0" class="empty">
+      No low stock alerts.
+    </p>
+  </div>
+
+</div>

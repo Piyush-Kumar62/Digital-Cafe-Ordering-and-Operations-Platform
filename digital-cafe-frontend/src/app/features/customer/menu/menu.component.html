@@ -1,77 +1,145 @@
-<div class="menu-shell">
-  <div class="menu-header">
-    <h1>Browse Menu</h1>
-    <p>Select your cafe, filter by category, and add items to cart.</p>
-  </div>
+<section class="experience">
+  <section class="cafe-browser">
+    <div class="section-head">
+      <h2>Choose Your Cafe</h2>
+      <p>Select a cafe card to continue with booking and ordering.</p>
+    </div>
+    <div class="state" *ngIf="loadingCafes">Loading cafes...</div>
+    <div class="cafe-grid" *ngIf="!loadingCafes && cafes.length > 0">
+      <article class="cafe-card" *ngFor="let cafe of cafes" (click)="selectCafeCard(cafe.id)" [class.active]="selectedCafeId === cafe.id">
+        <img [src]="cafe.imageUrl || 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1200&q=80'" [alt]="cafe.name" />
+        <span class="rating">★ {{ (cafe.rating || 0) | number: '1.1-1' }}</span>
+        <div class="cafe-content">
+          <h3>{{ cafe.name }}</h3>
+          <p class="cafe-location">{{ getCafeLocation(cafe) }}</p>
+          <p class="cafe-description">{{ cafe.description || 'No description available.' }}</p>
+          <p class="cafe-time">{{ cafe.openingTime }} - {{ cafe.closingTime }}</p>
+        </div>
+      </article>
+    </div>
+    <div class="empty-cafe" *ngIf="!loadingCafes && cafes.length === 0">
+      No active cafes available right now.
+    </div>
+  </section>
 
-  <div class="toolbar">
-    <div class="field">
-      <label for="menuCafeId">Choose Café</label>
-      <select
-        id="menuCafeId"
-        [value]="selectedCafeId || ''"
-        (change)="onCafeChange($any($event.target).value)"
-      >
-        <option value="" disabled>Select a cafe</option>
-        <option *ngFor="let cafe of cafes" [value]="cafe.id">
-          {{ cafe.name }} - {{ cafe.city }}
+  <section class="booking-glass" *ngIf="selectedCafe as cafe">
+    <h2>Table Booking - {{ cafe.name }}</h2>
+    <div class="booking-grid">
+      <label>
+        Date
+        <input type="date" [(ngModel)]="selectedDate" (ngModelChange)="onBookingDateOrTimeChange()" />
+      </label>
+      <label>
+        Time Slot
+        <input type="time" [(ngModel)]="selectedTime" (ngModelChange)="onBookingDateOrTimeChange()" />
+      </label>
+      <label>
+        Guests
+        <input type="number" min="1" max="20" [(ngModel)]="guestsCount" (ngModelChange)="onGuestsChange()" />
+      </label>
+      <label>
+        Available Tables
+        <select [(ngModel)]="selectedTableId">
+          <option [ngValue]="null" disabled>{{ loadingTables ? 'Loading...' : 'Select table' }}</option>
+          <option *ngFor="let table of availableTables" [ngValue]="table.id">
+            {{ table.tableNumber }} ({{ table.capacity }} seats)
+          </option>
+        </select>
+      </label>
+      <button class="book-btn" (click)="bookTable()" [disabled]="bookingInProgress">
+        {{ bookingInProgress ? 'Booking...' : 'Book Now' }}
+      </button>
+    </div>
+    <p class="booking-state" *ngIf="bookingReady">Booking confirmed: #{{ activeBooking?.bookingNumber || activeBooking?.id }}</p>
+  </section>
+
+  <section class="menu-controls" *ngIf="selectedCafeId">
+    <label>
+      Search
+      <input type="text" [(ngModel)]="searchText" placeholder="Search dishes..." />
+    </label>
+    <label>
+      Category
+      <select [value]="selectedCategory" (change)="setCategory($any($event.target).value)">
+        <option *ngFor="let category of categories" [value]="category">
+          {{ category === 'ALL' ? 'All Categories' : category.replace('_', ' ') }}
         </option>
       </select>
-    </div>
+    </label>
+  </section>
 
-    <div class="field">
-      <label for="searchText">Search</label>
-      <input
-        id="searchText"
-        type="text"
-        [(ngModel)]="searchText"
-        placeholder="Search by item name or description"
-      />
-    </div>
-  </div>
+  <div class="layout" *ngIf="selectedCafeId">
+    <section class="menu-grid">
+      <div class="state" *ngIf="loadingMenu">Loading menu...</div>
+      <article class="dish-card" *ngFor="let item of filteredMenuItems">
+        <div class="image-wrap">
+          <img [src]="getMenuImage(item)" [alt]="item.name" (error)="onImageError($event)" />
+          <span class="availability" [class.off]="!item.isAvailable">{{ item.isAvailable ? 'Available' : 'Unavailable' }}</span>
+        </div>
+        <div class="dish-body">
+          <h3>{{ item.name }}</h3>
+          <p>{{ item.description || 'No description available.' }}</p>
+          <div class="dish-meta">
+            <strong>${{ item.price | number: '1.2-2' }}</strong>
+            <small>{{ item.category }}</small>
+          </div>
+          <div class="qty-row">
+            <div class="qty-control">
+              <button type="button" (click)="decreaseSelectedQuantity(item.id)" [disabled]="!item.isAvailable">-</button>
+              <input
+                type="number"
+                min="1"
+                max="10"
+                [value]="getSelectedQuantity(item.id)"
+                (input)="setSelectedQuantity(item.id, $any($event.target).value)"
+                [disabled]="!item.isAvailable"
+              />
+              <button type="button" (click)="increaseSelectedQuantity(item.id)" [disabled]="!item.isAvailable">+</button>
+            </div>
+            <button (click)="addToCart(item)" [disabled]="!item.isAvailable">Add to Cart</button>
+          </div>
+        </div>
+      </article>
+      <div class="state" *ngIf="!loadingMenu && filteredMenuItems.length === 0">No items match your filters.</div>
+    </section>
 
-  <div class="category-strip" *ngIf="categories.length > 0">
-    <button
-      *ngFor="let category of categories"
-      [class.active]="selectedCategory === category"
-      (click)="onCategoryChange(category)"
-    >
-      {{ category === 'ALL' ? 'All' : category.replace('_', ' ') }}
-    </button>
-    <button class="clear-btn" (click)="clearFilters()">Clear Filters</button>
-  </div>
-
-  <div *ngIf="loading" class="state">Loading menu...</div>
-
-  <div *ngIf="!loading" class="grid">
-    <article *ngFor="let item of filteredMenuItems" class="card">
-      <div class="media">
-        <img
-          [src]="getMenuImage(item)"
-          [alt]="item.name"
-          loading="lazy"
-          decoding="async"
-          (error)="onImageError($event, item)"
-        />
+    <aside class="cart-panel">
+      <h3>Cart</h3>
+      <p class="cart-sub">{{ cartItemsCount }} item(s)</p>
+      <div class="cart-lines" *ngIf="cart.length > 0; else emptyCart">
+        <div class="cart-line" *ngFor="let line of cart">
+          <div>
+            <strong>{{ line.item.name }}</strong>
+            <p>${{ line.item.price | number: '1.2-2' }}</p>
+          </div>
+          <div class="qty-buttons">
+            <button (click)="decreaseCartItem(line.item.id)">-</button>
+            <span>{{ line.quantity }}</span>
+            <button (click)="increaseCartItem(line.item.id)">+</button>
+          </div>
+        </div>
       </div>
-      <div class="card-body">
-        <div class="card-top">
-          <h2>{{ item.name }}</h2>
-          <span class="badge">{{ item.category }}</span>
-        </div>
-        <p class="desc">{{ item.description || 'No description available.' }}</p>
-        <div class="meta">
-          <strong>${{ item.price | number:'1.2-2' }}</strong>
-          <span>{{ item.preparationTime || 0 }} mins</span>
-        </div>
-        <button (click)="addToCart(item)" [class.added]="addedItemId === item.id">
-          {{ addedItemId === item.id ? 'Added' : 'Add to Cart' }}
+      <ng-template #emptyCart>
+        <p class="empty-cart">Your cart is empty.</p>
+      </ng-template>
+      <div class="cart-footer">
+        <p>Total <strong>${{ cartTotal | number: '1.2-2' }}</strong></p>
+        <button class="order-btn" (click)="placeOrder()" [disabled]="orderInProgress || !bookingReady || cart.length === 0">
+          {{ orderInProgress ? 'Placing...' : 'Place Order' }}
         </button>
       </div>
-    </article>
+      <p class="rule" *ngIf="!bookingReady">Place booking first to enable ordering.</p>
+    </aside>
   </div>
 
-  <div *ngIf="!loading && filteredMenuItems.length === 0" class="state">
-    No menu items match the selected filters.
-  </div>
-</div>
+  <section class="tracker" *ngIf="activeOrder as order">
+    <h2>Order Status</h2>
+    <div class="steps">
+      <div class="step" *ngFor="let step of orderSteps" [class.done]="getStepState(step) === 'done'" [class.active]="getStepState(step) === 'active'">
+        <div class="dot"></div>
+        <span>{{ step }}</span>
+      </div>
+    </div>
+    <p class="order-meta">Order #{{ order.orderNumber || order.id }} · Total ${{ order.totalAmount | number: '1.2-2' }}</p>
+  </section>
+</section>

@@ -22,7 +22,7 @@ export class OrderTrackingComponent implements OnInit, OnDestroy {
   private pollSub?: Subscription;
   private destroy$ = new Subject<void>();
   orderStatusSteps: OrderStatus[] = [
-    OrderStatus.PLACED,
+    OrderStatus.PENDING,
     OrderStatus.PREPARING,
     OrderStatus.READY,
     OrderStatus.SERVED

@@ -1,19 +1,18 @@
 import { Component, OnInit } from '@angular/core';
 import { Router, RouterOutlet } from '@angular/router';
 import { LoadingComponent } from './shared/components/loading/loading.component';
-import { ToastComponent } from './shared/components/toast/toast.component';
 import { WebSocketService } from './core/websocket/websocket.service';
 import { AuthService } from './core/auth/auth.service';
+import { ThemeService } from './core/services/theme.service';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, LoadingComponent, ToastComponent],
+  imports: [RouterOutlet, LoadingComponent],
   template: `
     <div style="min-height: 100vh;">
       <router-outlet></router-outlet>
       <app-loading></app-loading>
-      <app-toast></app-toast>
     </div>
   `,
   styles: [],
@@ -25,6 +24,7 @@ export class AppComponent implements OnInit {
     private webSocketService: WebSocketService,
     private authService: AuthService,
     private router: Router,
+    private themeService: ThemeService,
   ) {}
 
   ngOnInit(): void {
@@ -77,19 +77,6 @@ export class AppComponent implements OnInit {
   }
 
   private initializeTheme(): void {
-    const storedTheme = localStorage.getItem("cafe_theme") || localStorage.getItem("theme");
-    const isDark = storedTheme === "dark";
-
-    if (isDark) {
-      document.documentElement.classList.add("dark");
-      document.documentElement.classList.add("dark-mode");
-      localStorage.setItem("cafe_theme", "dark");
-      localStorage.setItem("theme", "dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-      document.documentElement.classList.remove("dark-mode");
-      localStorage.setItem("cafe_theme", "light");
-      localStorage.setItem("theme", "light");
-    }
+    this.themeService.initTheme();
   }
 }

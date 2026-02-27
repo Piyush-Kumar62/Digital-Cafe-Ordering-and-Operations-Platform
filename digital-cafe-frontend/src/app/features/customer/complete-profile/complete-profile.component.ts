@@ -5,7 +5,7 @@ import { Router } from "@angular/router";
 import { HttpClient } from "@angular/common/http";
 import { environment } from "@environments/environment";
 import { AuthService } from "@core/auth/auth.service";
-import { NotificationService } from "@core/services/notification.service";
+import { AlertService } from "@core/services/alert.service";
 
 @Component({
   selector: "app-complete-profile",
@@ -22,7 +22,7 @@ export class CompleteProfileComponent {
     private fb: FormBuilder,
     private http: HttpClient,
     private authService: AuthService,
-    private notificationService: NotificationService,
+    private alertService: AlertService,
     private router: Router,
   ) {
     this.form = this.fb.group({
@@ -32,6 +32,7 @@ export class CompleteProfileComponent {
       gender: ["", Validators.required],
       phoneNumber: ["", [Validators.required, Validators.pattern(/^[0-9]{10,20}$/)]],
       street: ["", Validators.required],
+      plotNumber: ["", [Validators.required, Validators.maxLength(50)]],
       city: ["", Validators.required],
       state: [""],
       country: ["India"],
@@ -63,7 +64,7 @@ export class CompleteProfileComponent {
       profilePictureUrl: null,
       address: {
         street: v.street,
-        plotNumber: "",
+        plotNumber: v.plotNumber,
         city: v.city,
         state: v.state,
         country: v.country,
@@ -88,23 +89,25 @@ export class CompleteProfileComponent {
       .post<{ data?: { completionPercentage?: number } }>(`${environment.apiUrl}/profiles`, payload)
       .subscribe({
         next: (res) => {
+          const completionPercentage = res?.data?.completionPercentage ?? 0;
+          const isProfileComplete = completionPercentage >= 100;
           const currentUser = this.authService.currentUserValue;
           if (currentUser) {
             this.authService.updateUserData({
               ...currentUser,
               firstName: v.firstName,
               lastName: v.lastName,
-              isProfileComplete: true,
-              profileCompletionPercentage: res?.data?.completionPercentage ?? 100,
+              isProfileComplete,
+              profileCompletionPercentage: completionPercentage,
             });
           }
 
-          this.notificationService.success("Profile completed successfully.");
-          this.router.navigate(["/customer/menu"]);
+          this.alertService.success("Profile completed successfully.");
+          this.router.navigate([isProfileComplete ? "/customer/cafe" : "/customer/complete-profile"]);
         },
         error: (error) => {
           const message = error?.error?.message || "Failed to complete profile.";
-          this.notificationService.error(message);
+          this.alertService.error(message);
           this.loading = false;
         },
         complete: () => {
@@ -113,3 +116,5 @@ export class CompleteProfileComponent {
       });
   }
 }
+
+

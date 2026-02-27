@@ -8,7 +8,7 @@ import { Router } from '@angular/router';
 import { Booking } from '@shared/models/booking.model';
 import { BookingService } from '../booking/booking.service';
 import { CustomerJourneyService } from '../customer-journey.service';
-import { NotificationService } from '@core/services/notification.service';
+import { AlertService } from '@core/services/alert.service';
 
 @Component({
   selector: 'app-cart',
@@ -36,12 +36,12 @@ export class CartComponent implements OnInit {
     private router: Router,
     private bookingService: BookingService,
     private customerJourneyService: CustomerJourneyService,
-    private notificationService: NotificationService,
+    private alertService: AlertService,
   ) { }
 
   ngOnInit(): void {
     this.activeBooking = this.customerJourneyService.getActiveBooking();
-    if (!this.activeBooking || this.activeBooking.status !== 'CONFIRMED') {
+    if (!this.activeBooking || (this.activeBooking.status !== 'BOOKED' && this.activeBooking.status !== 'CONFIRMED')) {
       this.loadLatestBooking();
     }
   }
@@ -56,8 +56,8 @@ export class CartComponent implements OnInit {
 
   placeOrder(): void {
     if (!this.activeBooking?.id) {
-      this.notificationService.error('Please complete table booking before placing order.');
-      this.router.navigate(['/customer/booking']);
+      this.alertService.error('Please complete table booking before placing order.');
+      this.router.navigate(['/customer/cafe']);
       return;
     }
 
@@ -66,21 +66,23 @@ export class CartComponent implements OnInit {
       specialInstructions: this.specialInstructions
     };
 
+    this.alertService.loading('Placing your order. Please wait.');
     this.cartService.placeOrder(orderRequest).subscribe({
       next: (order) => {
+        this.alertService.close();
         this.cartService.clearCart();
-        this.notificationService.success('Order placed successfully.');
-        this.router.navigate(['/customer/order-tracking', order.id]);
+        this.alertService.success('Order Placed', 'Complete payment to confirm your order.');
+        this.router.navigate(['/customer/payment', order.id]);
       },
       error: (err) => {
-        console.error('Failed to place order', err);
-        this.notificationService.error(err?.error?.message || 'Failed to place order.');
+        this.alertService.close();
+        this.alertService.error('Order Failed', err?.error?.message || 'Failed to place order.');
       }
     });
   }
 
   goToBooking(): void {
-    this.router.navigate(['/customer/booking']);
+    this.router.navigate(['/customer/cafe']);
   }
 
   getCartItemImage(item: any): string {
@@ -105,7 +107,7 @@ export class CartComponent implements OnInit {
     this.bookingService.getMyBookings().subscribe({
       next: (bookings) => {
         const confirmed = (bookings || [])
-          .filter((booking) => booking.status === 'CONFIRMED' && !booking.hasOrder)
+          .filter((booking) => (booking.status === 'BOOKED' || booking.status === 'CONFIRMED') && !booking.hasOrder)
           .sort((a, b) =>
             new Date(`${b.bookingDate}T${b.bookingTime}`).getTime() -
             new Date(`${a.bookingDate}T${a.bookingTime}`).getTime(),
@@ -121,3 +123,5 @@ export class CartComponent implements OnInit {
     });
   }
 }
+
+

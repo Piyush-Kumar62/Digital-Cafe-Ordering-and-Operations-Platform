@@ -29,6 +29,20 @@ export const routes: Routes = [
       ),
   },
   {
+    path: "cafes",
+    loadComponent: () =>
+      import("./features/public/cafe-list/cafe-list.component").then(
+        (m) => m.CafeListComponent,
+      ),
+  },
+  {
+    path: "cafes/:id",
+    loadComponent: () =>
+      import("./features/public/cafe-detail/cafe-detail.component").then(
+        (m) => m.CafeDetailComponent,
+      ),
+  },
+  {
     path: "privacy",
     loadComponent: () =>
       import("./features/legal/privacy-policy.component").then(
@@ -204,6 +218,13 @@ export const routes: Routes = [
           ),
       },
       {
+        path: "bookings",
+        loadComponent: () =>
+          import("./features/cafe-owner/owner-bookings/owner-bookings.component").then(
+            (m) => m.OwnerBookingsComponent,
+          ),
+      },
+      {
         path: "orders",
         loadComponent: () =>
           import("./features/cafe-owner/owner-orders/owner-orders.component").then(
@@ -244,6 +265,13 @@ export const routes: Routes = [
         loadComponent: () =>
           import("./features/cafe-owner/owner-staff/owner-staff.component").then(
             (m) => m.OwnerStaffComponent,
+          ),
+      },
+      {
+        path: "bookings",
+        loadComponent: () =>
+          import("./features/cafe-owner/owner-bookings/owner-bookings.component").then(
+            (m) => m.OwnerBookingsComponent,
           ),
       },
       {
@@ -291,7 +319,7 @@ export const routes: Routes = [
     ],
   },
 
-    {
+  {
     path: "customer/complete-profile",
     canActivate: [authGuard, emailVerificationGuard, roleGuard],
     data: { roles: [UserRole.CUSTOMER] },
@@ -303,6 +331,10 @@ export const routes: Routes = [
   // Customer routes
   {
     path: "customer",
+    loadComponent: () =>
+      import("./features/customer/customer-layout/customer-layout.component").then(
+        (m) => m.CustomerLayoutComponent,
+      ),
     canActivate: [
       authGuard,
       emailVerificationGuard,
@@ -319,11 +351,16 @@ export const routes: Routes = [
           ),
       },
       {
-        path: "menu",
+        path: "cafe",
         loadComponent: () =>
           import("./features/customer/menu/menu.component").then(
             (m) => m.MenuComponent,
           ),
+      },
+      {
+        path: "menu",
+        redirectTo: "cafe",
+        pathMatch: "full",
       },
       {
         path: "cart",
@@ -333,11 +370,16 @@ export const routes: Routes = [
           ),
       },
       {
-        path: "booking",
+        path: "payment/:orderId",
         loadComponent: () =>
-          import("./features/customer/booking/booking.component").then(
-            (m) => m.BookingComponent,
+          import("./features/customer/payment/payment.component").then(
+            (m) => m.PaymentComponent,
           ),
+      },
+      {
+        path: "booking",
+        redirectTo: "cafe",
+        pathMatch: "full",
       },
       {
         path: "order-tracking",
@@ -353,7 +395,42 @@ export const routes: Routes = [
             (m) => m.OrderTrackingComponent,
           ),
       },
-      { path: "", redirectTo: "dashboard", pathMatch: "full" },
+      {
+        path: "my-bookings",
+        loadComponent: () =>
+          import("./features/customer/my-bookings/my-bookings.component").then(
+            (m) => m.MyBookingsComponent,
+          ),
+      },
+      {
+        path: "my-orders",
+        loadComponent: () =>
+          import("./features/customer/my-orders/my-orders.component").then(
+            (m) => m.MyOrdersComponent,
+          ),
+      },
+      {
+        path: "payments",
+        loadComponent: () =>
+          import("./features/customer/my-payments/my-payments.component").then(
+            (m) => m.MyPaymentsComponent,
+          ),
+      },
+      {
+        path: "profile",
+        loadComponent: () =>
+          import("./features/customer/my-profile/my-profile.component").then(
+            (m) => m.MyProfileComponent,
+          ),
+      },
+      {
+        path: "notifications",
+        loadComponent: () =>
+          import("./features/customer/my-notifications/my-notifications.component").then(
+            (m) => m.MyNotificationsComponent,
+          ),
+      },
+      { path: "", redirectTo: "cafe", pathMatch: "full" },
     ],
   },
 
@@ -371,6 +448,53 @@ export const routes: Routes = [
         (m) => m.MenuComponent,
       ),
   },
+  {
+    path: "cart",
+    canActivate: [
+      authGuard,
+      emailVerificationGuard,
+      profileCompletionGuard,
+      roleGuard,
+    ],
+    data: { roles: [UserRole.CUSTOMER] },
+    loadComponent: () =>
+      import("./features/customer/cart/cart.component").then(
+        (m) => m.CartComponent,
+      ),
+  },
+  {
+    path: "checkout",
+    canActivate: [
+      authGuard,
+      emailVerificationGuard,
+      profileCompletionGuard,
+      roleGuard,
+    ],
+    data: { roles: [UserRole.CUSTOMER] },
+    loadComponent: () =>
+      import("./features/customer/cart/cart.component").then(
+        (m) => m.CartComponent,
+      ),
+  },
+  {
+    path: "booking",
+    redirectTo: "/customer/cafe",
+    pathMatch: "full",
+  },
+  {
+    path: "orders",
+    canActivate: [
+      authGuard,
+      emailVerificationGuard,
+      profileCompletionGuard,
+      roleGuard,
+    ],
+    data: { roles: [UserRole.CUSTOMER] },
+    loadComponent: () =>
+      import("./features/customer/my-orders/my-orders.component").then(
+        (m) => m.MyOrdersComponent,
+      ),
+  },
 
   {
     path: "not-found",
@@ -383,4 +507,3 @@ export const routes: Routes = [
   // Fallback route
   { path: "**", redirectTo: "not-found" },
 ];
-

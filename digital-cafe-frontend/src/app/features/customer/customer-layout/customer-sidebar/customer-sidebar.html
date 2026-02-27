@@ -1,0 +1,25 @@
+<div class="sidebar" [class.collapsed]="isCollapsed">
+  <div class="sidebar-header">
+    <a routerLink="/" class="logo">
+      <img src="assets/digital-cafe-logo.png" alt="Digital Cafe Logo" />
+      <span *ngIf="!isCollapsed">Digital Cafe</span>
+    </a>
+  </div>
+
+  <nav class="sidebar-nav">
+    <ul>
+      <li *ngFor="let item of menuItems">
+        <a [routerLink]="item.path" routerLinkActive="active">
+          <span class="material-icons">{{ item.icon }}</span>
+          <span class="nav-text" *ngIf="!isCollapsed">{{ item.name }}</span>
+        </a>
+      </li>
+    </ul>
+  </nav>
+
+  <div class="sidebar-footer">
+    <button (click)="toggleCollapse()">
+      <span class="material-icons">{{ isCollapsed ? 'chevron_right' : 'chevron_left' }}</span>
+    </button>
+  </div>
+</div>

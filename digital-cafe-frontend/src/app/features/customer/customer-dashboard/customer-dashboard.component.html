@@ -1,71 +1,116 @@
-<section class="customer-dashboard">
-  <header class="hero">
-    <div>
-      <h1>Customer Dashboard</h1>
-      <p>Book tables, order faster, and track everything in real time.</p>
+<div class="profile-warning" *ngIf="user && user.profileCompletionPercentage && user.profileCompletionPercentage < 100">
+  <h2>Complete Your Profile</h2>
+  <p>Your profile is only {{ user.profileCompletionPercentage }}% complete. Please complete your profile to unlock all features.</p>
+  <button routerLink="/customer/complete-profile">Complete Profile</button>
+</div>
+
+<div class="dashboard-grid" *ngIf="!loading; else loadingState">
+  <section class="summary-cards">
+    <app-card *ngFor="let stat of summaryStats"
+              [title]="stat.title"
+              [value]="stat.value"
+              [icon]="stat.icon"
+              [description]="stat.description"
+              [variant]="stat.variant"></app-card>
+  </section>
+
+  <!-- Charts -->
+  <div class="chart-container booking-trend-card">
+    <h3>Monthly Booking Trend</h3>
+    <app-chart
+      [data]="monthlyBookingTrend"
+      chartType="line"
+      xAxisLabel="Month"
+      yAxisLabel="Number of Bookings">
+    </app-chart>
+  </div>
+  <div class="chart-container order-status-card">
+    <h3>Order Status Distribution</h3>
+    <app-chart
+      [data]="orderStatusDistribution"
+      chartType="pie">
+    </app-chart>
+  </div>
+  <div class="chart-container monthly-spending-card">
+    <h3>Monthly Spending</h3>
+    <app-chart
+      [data]="monthlySpending"
+      chartType="bar-vertical"
+      xAxisLabel="Month"
+      yAxisLabel="Amount Spent (INR)">
+    </app-chart>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="quick-actions-container quick-actions-card">
+    <h3>Quick Actions</h3>
+    <div class="quick-actions">
+      <button routerLink="/customer/cafe" [disabled]="user && user.profileCompletionPercentage && user.profileCompletionPercentage < 100">Book New Table</button>
+      <button routerLink="/customer/cafe">Browse Cafes</button>
+      <button routerLink="/customer/order-tracking">Track Current Order</button>
+      <button routerLink="/customer/my-orders">My Orders</button>
+      <button routerLink="/customer/payments">My Payments</button>
+      <button routerLink="/customer/profile">Update Profile</button>
     </div>
-    <a routerLink="/customer/cart" class="cart-chip">
-      <span class="material-icons">shopping_cart</span>
-      Cart ({{ cartItemCount }})
-    </a>
-  </header>
-
-  <div class="stats">
-    <article class="stat-card">
-      <h3>Active Orders</h3>
-      <strong>{{ stats.activeOrders }}</strong>
-    </article>
-    <article class="stat-card">
-      <h3>Completed Orders</h3>
-      <strong>{{ stats.completedOrders }}</strong>
-    </article>
-    <article class="stat-card">
-      <h3>Active Bookings</h3>
-      <strong>{{ stats.activeBookings }}</strong>
-    </article>
-    <article class="stat-card accent">
-      <h3>Cart Items</h3>
-      <strong>{{ cartItemCount }}</strong>
-    </article>
   </div>
 
-  <div class="quick-actions">
-    <a class="action-card" *ngFor="let action of quickActions" [routerLink]="action.path">
-      <span class="material-icons">{{ action.icon }}</span>
-      <div>
-        <h4>{{ action.title }}</h4>
-        <p>{{ action.description }}</p>
+  <!-- Recent Activity -->
+  <div class="recent-activity-container recent-activity-card">
+    <h3>Recent Activity</h3>
+    <div class="activity-tables">
+      <div class="activity-table">
+        <h4>Recent Bookings</h4>
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Café</th>
+              <th>Time</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let booking of upcomingBookings">
+              <td>{{ booking.bookingDate | date:'shortDate' }}</td>
+              <td>{{ booking.cafeName }}</td>
+              <td>{{ booking.bookingTime }}</td>
+              <td><span class="badge" [ngClass]="getStatusClass(booking.status)">{{ booking.status }}</span></td>
+            </tr>
+            <tr *ngIf="upcomingBookings.length === 0">
+              <td colspan="4">No upcoming bookings.</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
-    </a>
+      <div class="activity-table">
+        <h4>Recent Orders</h4>
+        <table>
+          <thead>
+            <tr>
+              <th>Order ID</th>
+              <th>Status</th>
+              <th>Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let order of recentOrders">
+              <td>#{{ order.orderNumber }}</td>
+              <td><span class="badge" [ngClass]="getStatusClass(order.status)">{{ order.status }}</span></td>
+              <td>{{ order.totalAmount | currency:'INR' }}</td>
+            </tr>
+            <tr *ngIf="recentOrders.length === 0">
+              <td colspan="3">No recent orders.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
+</div>
 
-  <div class="panels" *ngIf="!loading; else loadingState">
-    <article class="panel">
-      <h2>Upcoming Bookings</h2>
-      <div class="empty" *ngIf="upcomingBookings.length === 0">No upcoming bookings yet.</div>
-      <div class="row" *ngFor="let booking of upcomingBookings">
-        <div>
-          <strong>{{ booking.cafeName || ('Cafe #' + booking.cafeId) }}</strong>
-          <p>Table {{ booking.tableNumber || booking.tableId }} • {{ booking.bookingDate }} {{ booking.bookingTime }}</p>
-        </div>
-        <span class="badge" [ngClass]="getStatusClass(booking.status)">{{ booking.status }}</span>
-      </div>
-    </article>
-
-    <article class="panel">
-      <h2>Recent Orders</h2>
-      <div class="empty" *ngIf="recentOrders.length === 0">No orders found yet.</div>
-      <div class="row" *ngFor="let order of recentOrders">
-        <div>
-          <strong>Order #{{ order.orderNumber || order.id }}</strong>
-          <p>{{ order.items.length }} items • {{ order.totalAmount | currency:'INR' }}</p>
-        </div>
-        <span class="badge" [ngClass]="getStatusClass(order.status)">{{ order.status }}</span>
-      </div>
-    </article>
+<ng-template #loadingState>
+  <div class="loading">
+    <!-- Skeleton loader can be implemented here -->
+    <p>Loading dashboard...</p>
   </div>
-
-  <ng-template #loadingState>
-    <div class="loading">Loading dashboard...</div>
-  </ng-template>
-</section>
+</ng-template>

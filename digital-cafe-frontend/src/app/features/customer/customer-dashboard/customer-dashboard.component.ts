@@ -1,74 +1,50 @@
-import { Component, OnDestroy, OnInit } from "@angular/core";
-import { CommonModule } from "@angular/common";
-import { RouterModule } from "@angular/router";
-import { Subject, forkJoin } from "rxjs";
-import { map, takeUntil } from "rxjs/operators";
-import { CartService } from "../cart/cart.service";
-import { ApiService } from "@core/services/api.service";
-import { Booking } from "@shared/models/booking.model";
-import { Order } from "@shared/models/order.model";
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
+import { Subject, forkJoin } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+import { ApiService } from '@core/services/api.service';
+import { Booking, BookingStatus } from '@shared/models/booking.model';
+import { Order, OrderStatus } from '@shared/models/order.model';
+import { CardComponent } from '@shared/components/card/card';
+import { ChartComponent } from '@shared/components/chart/chart';
+import { AuthService } from '@core/auth/auth.service';
+import { User } from '@shared/models/auth.model';
 
 @Component({
-  selector: "app-customer-dashboard",
+  selector: 'app-customer-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule],
-  templateUrl: "./customer-dashboard.component.html",
-  styleUrls: ["./customer-dashboard.component.scss"],
+  imports: [CommonModule, RouterModule, CardComponent, ChartComponent],
+  templateUrl: './customer-dashboard.component.html',
+  styleUrls: ['./customer-dashboard.component.scss'],
 })
 export class CustomerDashboardComponent implements OnInit, OnDestroy {
-  cartItemCount = 0;
   loading = true;
+  summaryStats: {
+    title: string;
+    value: string;
+    icon: string;
+    description: string;
+    variant: 'blue' | 'teal' | 'violet' | 'orange' | 'rose' | 'indigo';
+  }[] = [];
   recentOrders: Order[] = [];
   upcomingBookings: Booking[] = [];
-  stats = {
-    activeOrders: 0,
-    completedOrders: 0,
-    activeBookings: 0,
-  };
+  user: User | null = null;
+
+  // Chart data
+  monthlyBookingTrend: any[] = [];
+  orderStatusDistribution: any[] = [];
+  monthlySpending: any[] = [];
+
   private destroy$ = new Subject<void>();
 
-  quickActions = [
-    {
-      path: "/customer/menu",
-      title: "Browse Menu",
-      description: "Explore dishes and add to cart",
-      icon: "restaurant_menu",
-    },
-    {
-      path: "/customer/booking",
-      title: "Book a Table",
-      description: "Reserve your slot in seconds",
-      icon: "event_available",
-    },
-    {
-      path: "/customer/cart",
-      title: "My Cart",
-      description: "Review items and place order",
-      icon: "shopping_bag",
-    },
-    {
-      path: "/customer/order-tracking",
-      title: "Track Orders",
-      description: "See live status updates",
-      icon: "local_shipping",
-    },
-  ];
-
-  constructor(
-    private cartService: CartService,
-    private apiService: ApiService,
-  ) {}
+  constructor(private apiService: ApiService, private authService: AuthService) {}
 
   ngOnInit(): void {
-    this.cartService.cart$
-      .pipe(
-        map((cart) => cart.totalItems),
-        takeUntil(this.destroy$),
-      )
-      .subscribe((count) => (this.cartItemCount = count));
-
+    this.authService.currentUser.subscribe(user => this.user = user);
     this.loadDashboardData();
   }
+
 
   ngOnDestroy(): void {
     this.destroy$.next();
@@ -83,35 +59,9 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: ({ bookings, orders }) => {
-          const activeOrderStatuses = [
-            "PENDING",
-            "CONFIRMED",
-            "PLACED",
-            "PREPARING",
-            "READY",
-          ];
-          const completedOrderStatuses = ["SERVED", "COMPLETED"];
-          const activeBookingStatuses = ["PENDING", "CONFIRMED"];
-
-          this.stats.activeOrders = orders.filter((o) =>
-            activeOrderStatuses.includes(String(o.status)),
-          ).length;
-          this.stats.completedOrders = orders.filter((o) =>
-            completedOrderStatuses.includes(String(o.status)),
-          ).length;
-          this.stats.activeBookings = bookings.filter((b) =>
-            activeBookingStatuses.includes(String(b.status)),
-          ).length;
-
-          this.recentOrders = [...orders]
-            .sort((a, b) => this.getTimestamp(b.createdAt) - this.getTimestamp(a.createdAt))
-            .slice(0, 5);
-
-          this.upcomingBookings = [...bookings]
-            .filter((b) => activeBookingStatuses.includes(String(b.status)))
-            .sort((a, b) => this.getBookingDateTime(a) - this.getBookingDateTime(b))
-            .slice(0, 5);
-
+          this.calculateSummaryStats(bookings, orders);
+          this.prepareRecentActivities(bookings, orders);
+          this.prepareCharts(bookings, orders);
           this.loading = false;
         },
         error: () => {
@@ -120,37 +70,104 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
       });
   }
 
+  private calculateSummaryStats(bookings: Booking[], orders: Order[]): void {
+    const totalBookings = bookings.length;
+    const upcomingBookingsCount = bookings.filter(b => b.status === BookingStatus.CONFIRMED).length;
+    const totalOrders = orders.length;
+    const completedOrders = orders.filter(o => o.status === OrderStatus.SERVED).length;
+    const totalAmountSpent = orders.reduce((acc, o) => acc + Number(o.totalAmount || 0), 0);
+    const activeNotifications = Number(localStorage.getItem('customer_unread_notifications') || '0');
+
+    this.summaryStats = [
+      { title: 'Total Bookings', value: totalBookings.toString(), icon: 'book_online', description: 'All time', variant: 'blue' },
+      { title: 'Upcoming Booking', value: upcomingBookingsCount.toString(), icon: 'event', description: 'Confirmed bookings', variant: 'teal' },
+      { title: 'Total Orders', value: totalOrders.toString(), icon: 'receipt_long', description: 'All time', variant: 'violet' },
+      { title: 'Completed Orders', value: completedOrders.toString(), icon: 'done_all', description: 'Served & paid', variant: 'indigo' },
+      { title: 'Total Spent', value: `₹${totalAmountSpent.toFixed(2)}`, icon: 'monetization_on', description: 'All orders', variant: 'orange' },
+      { title: 'Active Notifications', value: activeNotifications.toString(), icon: 'notifications', description: 'Unread messages', variant: 'rose' },
+    ];
+  }
+
+  private prepareRecentActivities(bookings: Booking[], orders: Order[]): void {
+    this.recentOrders = [...orders]
+      .sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime())
+      .slice(0, 5);
+
+    this.upcomingBookings = [...bookings]
+      .filter(b => b.status === BookingStatus.CONFIRMED)
+      .sort((a, b) => new Date(a.bookingDate).getTime() - new Date(b.bookingDate).getTime())
+      .slice(0, 5);
+  }
+
+  private prepareCharts(bookings: Booking[], orders: Order[]): void {
+    const monthLabels = this.getLastSixMonths();
+
+    // 1. Monthly Booking Trend (Line Chart)
+    const bookingCountsByMonth = bookings.reduce((acc, b) => {
+      const date = new Date(b.bookingDate);
+      if (Number.isNaN(date.getTime())) return acc;
+      const month = date.toLocaleString('default', { month: 'short' });
+      acc[month] = (acc[month] || 0) + 1;
+      return acc;
+    }, {} as { [key: string]: number });
+
+    this.monthlyBookingTrend = [{
+      name: 'Bookings',
+      series: monthLabels.map(month => ({ name: month, value: bookingCountsByMonth[month] || 0 }))
+    }];
+
+    // 2. Order Status Distribution (Pie Chart)
+    const orderStatusCounts = orders.reduce((acc, o) => {
+      const status = o.status.toString();
+      acc[status] = (acc[status] || 0) + 1;
+      return acc;
+    }, {} as { [key: string]: number });
+
+    this.orderStatusDistribution = Object.keys(orderStatusCounts).map(status => ({
+      name: status,
+      value: orderStatusCounts[status]
+    }));
+
+    // 3. Monthly Spending (Bar Chart)
+    const spendingByMonth = orders.reduce((acc, o) => {
+      if (!o.createdAt) return acc;
+      const date = new Date(o.createdAt);
+      if (Number.isNaN(date.getTime())) return acc;
+      const month = date.toLocaleString('default', { month: 'short' });
+      acc[month] = (acc[month] || 0) + Number(o.totalAmount || 0);
+      return acc;
+    }, {} as { [key: string]: number });
+
+    this.monthlySpending = monthLabels.map(month => ({
+      name: month,
+      value: spendingByMonth[month] || 0
+    }));
+  }
+
+  private getLastSixMonths(): string[] {
+    const labels: string[] = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date();
+      d.setMonth(d.getMonth() - i);
+      labels.push(d.toLocaleString('default', { month: 'short' }));
+    }
+    return labels;
+  }
+
   getStatusClass(status: string | undefined): string {
     switch (status) {
-      case "READY":
-      case "SERVED":
-      case "COMPLETED":
-      case "CONFIRMED":
-        return "ok";
-      case "PENDING":
-      case "PLACED":
-      case "PREPARING":
-        return "warn";
-      case "CANCELLED":
-      case "NO_SHOW":
-        return "bad";
+      case 'READY':
+      case 'SERVED':
+      case 'CONFIRMED':
+        return 'ok';
+      case 'PENDING':
+      case 'PREPARING':
+        return 'warn';
+      case 'CANCELLED':
+      case 'NO_SHOW':
+        return 'bad';
       default:
-        return "neutral";
+        return 'neutral';
     }
-  }
-
-  private getTimestamp(value?: string): number {
-    if (!value) {
-      return 0;
-    }
-    const parsed = Date.parse(value);
-    return Number.isNaN(parsed) ? 0 : parsed;
-  }
-
-  private getBookingDateTime(booking: Booking): number {
-    const date = booking.bookingDate || "";
-    const time = booking.bookingTime || "00:00";
-    const parsed = Date.parse(`${date}T${time}`);
-    return Number.isNaN(parsed) ? Number.MAX_SAFE_INTEGER : parsed;
   }
 }

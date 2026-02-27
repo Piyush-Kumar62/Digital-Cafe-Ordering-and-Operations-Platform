@@ -47,6 +47,24 @@ export class CartService {
     this.updateCart(newItems);
   }
 
+  updateQuantity(itemId: number, quantity: number): void {
+    const safeQuantity = Math.max(0, Math.floor(quantity));
+    const currentCart = this.cartSubject.getValue();
+    const newItems = currentCart.items
+      .map((i) => {
+        if (i.item.id !== itemId) {
+          return i;
+        }
+        return { ...i, quantity: safeQuantity };
+      })
+      .filter((i) => i.quantity > 0);
+    this.updateCart(newItems);
+  }
+
+  getTotal(): number {
+    return this.cartSubject.getValue().totalPrice;
+  }
+
   clearCart(): void {
     this.updateCart([]);
   }

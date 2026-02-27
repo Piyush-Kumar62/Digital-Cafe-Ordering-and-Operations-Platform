@@ -10,6 +10,7 @@ import com.digitalcafe.payment.PaymentService;
 import com.digitalcafe.repository.OrderRepository;
 import com.digitalcafe.repository.PaymentRepository;
 import com.digitalcafe.repository.UserRepository;
+import com.digitalcafe.service.OrderService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -21,6 +22,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
+import java.util.List;
 
 /**
  * REST controller for payment operations.
@@ -36,6 +38,7 @@ public class PaymentController {
     private final OrderRepository orderRepository;
     private final PaymentRepository paymentRepository;
     private final UserRepository userRepository;
+    private final OrderService orderService;
 
     @PostMapping
     @PreAuthorize("hasRole('CUSTOMER')")
@@ -61,7 +64,7 @@ public class PaymentController {
     @GetMapping("/{paymentId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'CUSTOMER', 'CAFE_OWNER')")
     public ResponseEntity<ApiResponse<PaymentResponse>> getPaymentById(@PathVariable Long paymentId) {
-        Payment payment = paymentRepository.findById(paymentId)
+        Payment payment = paymentRepository.findByIdWithOrder(paymentId)
                 .orElseThrow(() -> new IllegalArgumentException("Payment not found"));
         validateCustomerPaymentAccess(payment);
         PaymentResponse response = paymentMapper.toResponse(payment);
@@ -72,9 +75,20 @@ public class PaymentController {
     @PreAuthorize("hasAnyRole('ADMIN', 'CUSTOMER', 'CAFE_OWNER')")
     public ResponseEntity<ApiResponse<PaymentResponse>> getPaymentByOrderId(@PathVariable Long orderId) {
         Payment payment = paymentService.getPaymentByOrderId(orderId);
+        payment = paymentRepository.findByIdWithOrder(payment.getId())
+                .orElseThrow(() -> new IllegalArgumentException("Payment not found"));
         validateCustomerPaymentAccess(payment);
         PaymentResponse response = paymentMapper.toResponse(payment);
         return ResponseEntity.ok(ApiResponse.success("Payment retrieved successfully", response));
+    }
+
+    @GetMapping("/my")
+    @PreAuthorize("hasRole('CUSTOMER')")
+    public ResponseEntity<ApiResponse<List<PaymentResponse>>> getMyPayments() {
+        Long customerId = getAuthenticatedUserId();
+        List<Payment> payments = paymentRepository.findByCustomerId(customerId);
+        List<PaymentResponse> response = paymentMapper.toResponseList(payments);
+        return ResponseEntity.ok(ApiResponse.success("Payments retrieved successfully", response));
     }
 
     @PostMapping("/{paymentId}/verify")
@@ -89,7 +103,10 @@ public class PaymentController {
                 .orElseThrow(() -> new IllegalArgumentException("Payment not found"));
         validateCustomerPaymentAccess(existingPayment);
 
-        Payment payment = paymentService.verifyAndCompletePayment(paymentId, paymentGatewayPaymentId, signature);
+        paymentService.verifyAndCompletePayment(paymentId, paymentGatewayPaymentId, signature);
+        Payment payment = paymentRepository.findByIdWithOrder(paymentId)
+                .orElseThrow(() -> new IllegalArgumentException("Payment not found"));
+        orderService.activateOrderAfterPayment(payment.getOrder().getId());
         PaymentResponse response = paymentMapper.toResponse(payment);
 
         return ResponseEntity.ok(ApiResponse.success("Payment verified successfully", response));
@@ -105,7 +122,9 @@ public class PaymentController {
         validateCustomerPaymentAccess(existingPayment);
 
         String reason = request != null ? request.getOrDefault("reason", "Payment failed") : "Payment failed";
-        Payment payment = paymentService.handlePaymentFailure(paymentId, reason);
+        paymentService.handlePaymentFailure(paymentId, reason);
+        Payment payment = paymentRepository.findByIdWithOrder(paymentId)
+                .orElseThrow(() -> new IllegalArgumentException("Payment not found"));
         PaymentResponse response = paymentMapper.toResponse(payment);
 
         return ResponseEntity.ok(ApiResponse.success("Payment marked as failed", response));
@@ -137,7 +156,9 @@ public class PaymentController {
         }
 
         Long customerId = getAuthenticatedUserId();
-        if (!payment.getOrder().getCustomer().getId().equals(customerId)) {
+        Long paymentCustomerId = paymentRepository.findCustomerIdByPaymentId(payment.getId())
+                .orElseThrow(() -> new IllegalArgumentException("Payment not found"));
+        if (!paymentCustomerId.equals(customerId)) {
             throw new IllegalArgumentException("Payment does not belong to authenticated customer");
         }
     }

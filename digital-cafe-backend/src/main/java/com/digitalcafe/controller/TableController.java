@@ -52,6 +52,13 @@ public class TableController {
         return ResponseEntity.ok(ApiResponse.success("Table retrieved successfully", response));
     }
 
+    @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'CAFE_OWNER')")
+    public ResponseEntity<ApiResponse<List<TableResponse>>> getAllTables() {
+        List<TableResponse> response = tableService.getAllTables();
+        return ResponseEntity.ok(ApiResponse.success("Tables retrieved successfully", response));
+    }
+
     @GetMapping("/cafe/{cafeId}")
     public ResponseEntity<ApiResponse<List<TableResponse>>> getTablesByCafeId(@PathVariable Long cafeId) {
         List<TableResponse> response = tableService.getTablesByCafeId(cafeId);
@@ -71,9 +78,10 @@ public class TableController {
     public ResponseEntity<ApiResponse<List<TableResponse>>> getAvailableTablesBySlot(
             @RequestParam Long cafeId,
             @RequestParam LocalDate date,
-            @RequestParam LocalTime timeSlot) {
+            @RequestParam LocalTime timeSlot,
+            @RequestParam(required = false) Integer seats) {
         LocalDateTime bookingTime = LocalDateTime.of(date, timeSlot);
-        List<TableResponse> response = tableService.getAvailableTables(cafeId, bookingTime);
+        List<TableResponse> response = tableService.getAvailableTables(cafeId, bookingTime, seats);
         return ResponseEntity.ok(ApiResponse.success("Available tables retrieved successfully", response));
     }
 

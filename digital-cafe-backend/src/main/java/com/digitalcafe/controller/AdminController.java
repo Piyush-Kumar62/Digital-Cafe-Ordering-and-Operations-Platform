@@ -1,7 +1,10 @@
 package com.digitalcafe.controller;
 
 import com.digitalcafe.dto.request.CreateUserRequest;
+import com.digitalcafe.dto.response.AdminDashboardAnalyticsResponse;
+import com.digitalcafe.dto.response.ApiResponse;
 import com.digitalcafe.dto.response.AdminDashboardStats;
+import com.digitalcafe.dto.response.PageResponse;
 import com.digitalcafe.dto.response.UserResponse;
 import com.digitalcafe.service.AdminDashboardService;
 import com.digitalcafe.service.UserService;
@@ -34,6 +37,18 @@ public class AdminController {
     public ResponseEntity<AdminDashboardStats> getDashboardStats() {
         AdminDashboardStats stats = adminDashboardService.getDashboardStats();
         return ResponseEntity.ok(stats);
+    }
+
+    @GetMapping("/dashboard")
+    public ResponseEntity<ApiResponse<AdminDashboardAnalyticsResponse>> getDashboardAnalytics() {
+        AdminDashboardAnalyticsResponse response = adminDashboardService.getDashboardAnalytics();
+        return ResponseEntity.ok(ApiResponse.success("Admin dashboard analytics retrieved successfully", response));
+    }
+
+    @GetMapping("/activities")
+    public ResponseEntity<ApiResponse<PageResponse<AdminDashboardAnalyticsResponse.RecentActivityPoint>>> getActivities(Pageable pageable) {
+        PageResponse<AdminDashboardAnalyticsResponse.RecentActivityPoint> response = adminDashboardService.getActivities(pageable);
+        return ResponseEntity.ok(ApiResponse.success("Admin activities retrieved successfully", response));
     }
 
     @PostMapping("/cafe-owners")

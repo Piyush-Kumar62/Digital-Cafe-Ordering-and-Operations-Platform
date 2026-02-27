@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -22,6 +23,12 @@ import java.util.List;
 public class MenuItemController {
 
     private final MenuItemService menuItemService;
+
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<MenuItemResponse>>> getAllMenuItems() {
+        List<MenuItemResponse> response = menuItemService.getAllMenuItems(Pageable.unpaged()).getContent();
+        return ResponseEntity.ok(ApiResponse.success("Menu items retrieved successfully", response));
+    }
 
     @PostMapping("/cafe/{cafeId}")
     @PreAuthorize("hasRole('CAFE_OWNER')")
@@ -76,4 +83,3 @@ public class MenuItemController {
         return ResponseEntity.ok(ApiResponse.success("Menu item availability updated successfully", response));
     }
 }
-

@@ -55,11 +55,16 @@ public class CafeController {
 
     @GetMapping("/active")
     public ResponseEntity<ApiResponse<List<CafeResponse>>> getActiveCafes() {
-        List<CafeResponse> response = cafeService.getActiveCafes();
-        return ResponseEntity.ok(ApiResponse.success("Active cafes retrieved successfully", response));
+      List<CafeResponse> response = getCafeResponses();
+      return ResponseEntity.ok(ApiResponse.success("Active cafes retrieved successfully", response));
     }
 
-    @GetMapping
+  private List<CafeResponse> getCafeResponses() {
+    List<CafeResponse> response = cafeService.getActiveCafes();
+    return response;
+  }
+
+  @GetMapping
     public ResponseEntity<ApiResponse<PageResponse<CafeResponse>>> getAllCafes(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,

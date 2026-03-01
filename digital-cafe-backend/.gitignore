@@ -9,9 +9,7 @@ target/
 logs/
 
 ### Maven ###
-.mvn/wrapper/maven-wrapper.jar
-.mvn/timing.properties
-.mvn/wrapper/maven-wrapper.properties
+
 ROLES_SUMMARY.md
 ### STS ###
 .apt_generated
@@ -43,7 +41,6 @@ build/
 .vscode/
 
 ### Sensitive Configuration Files ###
-src/main/resources/application.properties
 src/main/resources/application-prod.properties
 src/main/resources/application-local.properties
 *-secret.properties
@@ -52,8 +49,6 @@ target/classes/application.properties
 target/classes/sample-data.sql
 Digital_Cafe_API.postman_collection.json
 ### Internal Documentation (Not for GitHub) ###
-*.md
-!README.md
 PUSH_GUIDE.md
 PROJECT_DOCUMENTATION.md
  postman-test-script.js

@@ -1,0 +1,51 @@
+<section class="owner-page">
+  <header class="page-header">
+    <h1>Order Overview</h1>
+    <p>Monitor incoming orders and service progress for your cafe.</p>
+  </header>
+
+  <div class="stats" *ngIf="!loading">
+    <article class="card">
+      <small>Total</small><strong>{{ orders.length }}</strong>
+    </article>
+    <article class="card">
+      <small>Pending</small
+      ><strong>{{
+        countBy("PENDING") + countBy("PLACED") + countBy("CONFIRMED")
+      }}</strong>
+    </article>
+    <article class="card">
+      <small>Preparing</small><strong>{{ countBy("PREPARING") }}</strong>
+    </article>
+    <article class="card">
+      <small>Ready/Served</small
+      ><strong>{{
+        countBy("READY") + countBy("SERVED") + countBy("COMPLETED")
+      }}</strong>
+    </article>
+  </div>
+
+  <div *ngIf="loading" class="card loading">Loading orders...</div>
+  <div *ngIf="!loading && orders.length === 0" class="card loading">
+    No orders found.
+  </div>
+
+  <div class="grid" *ngIf="!loading && orders.length > 0">
+    <article class="card item" *ngFor="let order of orders">
+      <div>
+        <h3>Order #{{ order.orderNumber || order.id }}</h3>
+        <p>
+          Table {{ order.tableNumber || order.tableId || "-" }} •
+          {{ order.customerName || "#" + order.customerId }}
+        </p>
+        <p>
+          {{ order.items.length || 0 }} items •
+          {{ order.totalAmount | currency: "INR" }}
+        </p>
+      </div>
+      <span class="status" [ngClass]="getStatusClass(order.status)">{{
+        order.status
+      }}</span>
+    </article>
+  </div>
+</section>

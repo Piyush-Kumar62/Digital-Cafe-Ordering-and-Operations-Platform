@@ -83,17 +83,18 @@
             <div>
               <label for="role" class="form-label">Role *</label>
               <div class="input-group">
-                <span class="input-group-text"
-                  ><i class="bi bi-shield"></i
-                ></span>
-                <input
-                  type="text"
+                <span class="input-group-text"><i class="bi bi-shield"></i></span>
+                <select
                   class="form-control"
                   id="role"
-                  value="Customer"
-                  readonly
-                />
-                <input type="hidden" [(ngModel)]="role" name="role" />
+                  [(ngModel)]="role"
+                  name="role"
+                  required
+                >
+                  <option *ngFor="let roleOption of roleOptions" [value]="roleOption">
+                    {{ roleOption.replace('_', ' ') | titlecase }}
+                  </option>
+                </select>
               </div>
             </div>
             <div>

@@ -1,0 +1,245 @@
+/* ===== PAGE WRAPPER ===== */
+.owner-page {
+  padding: 1.5rem;
+  color: #0f172a;
+  min-height: 100vh;
+  background: linear-gradient(160deg, #f8fafc 0%, #eef2ff 100%);
+}
+
+/* ===== HEADER ===== */
+.page-header {
+  margin-bottom: 1.5rem;
+}
+
+.page-header h1 {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.page-header p {
+  margin: 0.35rem 0 0;
+  color: #64748b;
+  font-size: 0.95rem;
+}
+
+/* ===== STAT CARDS ===== */
+.stats {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-bottom: 1.5rem;
+}
+
+.card {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 1.1rem 1.25rem;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.07);
+  transition: box-shadow 0.2s ease;
+}
+
+.card:hover {
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+}
+
+.stats .card {
+  border-left: 4px solid #6366f1;
+}
+
+.stats .card:nth-child(2) {
+  border-left-color: #f59e0b;
+}
+.stats .card:nth-child(3) {
+  border-left-color: #f97316;
+}
+.stats .card:nth-child(4) {
+  border-left-color: #10b981;
+}
+
+.stats small {
+  color: #64748b;
+  font-weight: 600;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.stats strong {
+  display: block;
+  margin-top: 0.3rem;
+  font-size: 2rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+/* ===== LOADING / EMPTY ===== */
+.loading {
+  text-align: center;
+  color: #64748b;
+  padding: 2rem;
+}
+
+/* ===== ORDERS GRID ===== */
+.grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+}
+
+/* ===== ORDER CARD ===== */
+.item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.item h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.item p {
+  margin: 0.3rem 0 0;
+  color: #64748b;
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+/* ===== STATUS BADGE ===== */
+.status {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  background: #e0f2fe;
+  color: #0c4a6e;
+}
+
+/* Dynamic status colors */
+.status-pending,
+.status-placed {
+  background: #fef9c3;
+  color: #854d0e;
+}
+.status-confirmed {
+  background: #dbeafe;
+  color: #1e3a8a;
+}
+.status-preparing {
+  background: #ffedd5;
+  color: #9a3412;
+}
+.status-ready {
+  background: #dcfce7;
+  color: #14532d;
+}
+.status-served {
+  background: #d1fae5;
+  color: #065f46;
+}
+.status-cancelled {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 900px) {
+  .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .stats {
+    grid-template-columns: 1fr;
+  }
+  .grid {
+    grid-template-columns: 1fr;
+  }
+  .item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* ===== DARK MODE ===== */
+:host-context(.dark) {
+  .owner-page {
+    background: linear-gradient(160deg, #0f172a 0%, #1a1040 100%);
+    color: #f1f5f9;
+  }
+
+  .page-header h1 {
+    color: #f1f5f9;
+  }
+  .page-header p {
+    color: #94a3b8;
+  }
+
+  .card {
+    background: #1e293b;
+    border-color: rgba(255, 255, 255, 0.06);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  }
+  .card:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  }
+
+  .stats small {
+    color: #64748b;
+  }
+  .stats strong {
+    color: #f1f5f9;
+  }
+
+  .loading {
+    color: #94a3b8;
+  }
+
+  .item h3 {
+    color: #f1f5f9;
+  }
+  .item p {
+    color: #94a3b8;
+  }
+
+  .status {
+    background: rgba(14, 165, 233, 0.15);
+    color: #38bdf8;
+  }
+  .status-pending,
+  .status-placed {
+    background: rgba(234, 179, 8, 0.15);
+    color: #fbbf24;
+  }
+  .status-confirmed {
+    background: rgba(59, 130, 246, 0.15);
+    color: #60a5fa;
+  }
+  .status-preparing {
+    background: rgba(249, 115, 22, 0.15);
+    color: #fb923c;
+  }
+  .status-ready {
+    background: rgba(16, 185, 129, 0.15);
+    color: #34d399;
+  }
+  .status-served {
+    background: rgba(16, 185, 129, 0.12);
+    color: #6ee7b7;
+  }
+  .status-cancelled {
+    background: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+  }
+}

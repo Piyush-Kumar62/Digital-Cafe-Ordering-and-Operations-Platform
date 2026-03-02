@@ -1,0 +1,60 @@
+<div class="chef-shell">
+  <!-- Top Header -->
+  <header class="top-header">
+    <div class="header-left">
+      <div class="brand">
+        <span class="brand-icon">🍳</span>
+        <div>
+          <h2 class="header-title">Kitchen Dashboard</h2>
+          <p class="header-subtitle">Real-time order management</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <!-- Profile -->
+      <div class="profile-wrap" #profileContainer>
+        <button class="profile-btn" (click)="toggleProfileDropdown()">
+          <div class="profile-meta">
+            <p class="profile-name">{{ getDisplayName() }}</p>
+            <p class="profile-role">Chef</p>
+          </div>
+          <div class="avatar">
+            <img
+              *ngIf="profileImage"
+              [src]="profileImage"
+              alt="Profile"
+              class="avatar-img"
+            />
+            <span *ngIf="!profileImage" class="avatar-initials">{{
+              getAvatarText()
+            }}</span>
+          </div>
+        </button>
+
+        <!-- Dropdown -->
+        <div *ngIf="profileDropdownOpen" class="profile-dropdown">
+          <div class="dropdown-user">
+            <div class="dropdown-avatar">
+              <img *ngIf="profileImage" [src]="profileImage" alt="Profile" />
+              <span *ngIf="!profileImage">{{ getAvatarText() }}</span>
+            </div>
+            <div>
+              <p class="dropdown-name">{{ getDisplayName() }}</p>
+              <p class="dropdown-email">{{ getUserEmail() }}</p>
+            </div>
+          </div>
+          <div class="dropdown-divider"></div>
+          <button (click)="logout()" class="dropdown-item danger">
+            <span>🚪</span> Logout
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Page content -->
+  <main class="page-content">
+    <router-outlet></router-outlet>
+  </main>
+</div>

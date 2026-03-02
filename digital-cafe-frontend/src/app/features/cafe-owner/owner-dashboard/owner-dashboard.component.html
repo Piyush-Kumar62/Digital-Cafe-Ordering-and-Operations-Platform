@@ -1,0 +1,233 @@
+<!-- LOADING -->
+<div *ngIf="loading" class="loading-screen">
+  <div class="loader-ring"></div>
+  <p>Loading your dashboard&hellip;</p>
+</div>
+
+<!-- DASHBOARD -->
+<div *ngIf="!loading" class="dashboard">
+
+  <!-- Page Header -->
+  <header class="page-header">
+    <div class="header-left">
+      <span class="eyebrow">&#9749; CAFE OPERATIONS</span>
+      <h1>{{ cafeName }}</h1>
+      <p class="sub">Live overview of tables, staff, orders &amp; reservations</p>
+    </div>
+    <div class="header-right">
+      <div class="live-badge"><span class="live-dot"></span>Live &mdash; auto-refreshes</div>
+      <span class="last-refresh">Updated {{ lastRefreshed | date:'h:mm a' }}</span>
+      <button class="btn-refresh" [class.refreshing]="refreshing" (click)="refresh()" type="button">
+        <span class="spin-icon">&#8635;</span>
+        {{ refreshing ? 'Refreshing&hellip;' : 'Refresh' }}
+      </button>
+    </div>
+  </header>
+
+  <!-- KPI Cards -->
+  <section class="kpi-grid">
+
+    <article class="kpi-card kpi-blue">
+      <div class="kpi-top">
+        <div class="kpi-icon-wrap kpi-icon-blue">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 9h18M3 15h18M5 9V5h14v4M7 15v4M17 15v4"/></svg>
+        </div>
+        <span class="kpi-trend neutral">Tables</span>
+      </div>
+      <p class="kpi-label">Total Tables</p>
+      <h2 class="kpi-value">{{ stats.totalTables }}</h2>
+      <div class="kpi-bar">
+        <div class="kpi-bar-fill bar-green" [style.width.%]="stats.totalTables ? (stats.availableTables / stats.totalTables) * 100 : 0"></div>
+      </div>
+      <p class="kpi-sub"><span class="dot green"></span>{{ stats.availableTables }} available &nbsp;<span class="dot red"></span>{{ stats.occupiedTables }} occupied</p>
+      <a routerLink="/owner/tables" class="kpi-link">Manage &#8594;</a>
+    </article>
+
+    <article class="kpi-card kpi-purple">
+      <div class="kpi-top">
+        <div class="kpi-icon-wrap kpi-icon-purple">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+        </div>
+        <span class="badge badge-green">{{ stats.activeStaff }} active</span>
+      </div>
+      <p class="kpi-label">Staff Members</p>
+      <h2 class="kpi-value">{{ stats.totalStaff }}</h2>
+      <p class="kpi-sub">
+        &#x1F468;&#x200D;&#x1F373;&nbsp;{{ stats.staffBreakdown.chefs }} chefs &nbsp;
+        &#x1F935;&nbsp;{{ stats.staffBreakdown.waiters }} waiters
+      </p>
+      <a routerLink="/owner/staff" class="kpi-link">Manage &#8594;</a>
+    </article>
+
+    <article class="kpi-card kpi-orange">
+      <div class="kpi-top">
+        <div class="kpi-icon-wrap kpi-icon-orange">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="12" y2="16"/></svg>
+        </div>
+        <span class="kpi-trend up">Today</span>
+      </div>
+      <p class="kpi-label">Today's Orders</p>
+      <h2 class="kpi-value">{{ stats.todayOrders }}</h2>
+      <p class="kpi-sub">
+        <span class="badge badge-yellow">{{ stats.pendingOrders }} pending</span>
+        <span class="badge badge-indigo ml4">{{ stats.preparingOrders }} preparing</span>
+      </p>
+      <p class="kpi-sub mt4 text-green">&#10003; {{ stats.completedOrders }} completed</p>
+      <a routerLink="/owner/orders" class="kpi-link">View &#8594;</a>
+    </article>
+
+    <article class="kpi-card kpi-green">
+      <div class="kpi-top">
+        <div class="kpi-icon-wrap kpi-icon-green">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+        </div>
+        <span class="kpi-trend up">Revenue</span>
+      </div>
+      <p class="kpi-label">Today's Revenue</p>
+      <h2 class="kpi-value">{{ formatCurrency(stats.todayRevenue) }}</h2>
+      <p class="kpi-sub">{{ revenueGrowthLabel }}</p>
+      <a routerLink="/owner/orders" class="kpi-link">Details &#8594;</a>
+    </article>
+
+    <article class="kpi-card kpi-cyan">
+      <div class="kpi-top">
+        <div class="kpi-icon-wrap kpi-icon-cyan">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        </div>
+        <span class="kpi-trend neutral">Bookings</span>
+      </div>
+      <p class="kpi-label">Today's Bookings</p>
+      <h2 class="kpi-value">{{ stats.todayBookings }}</h2>
+      <p class="kpi-sub">{{ stats.upcomingBookingsCount }} upcoming confirmed</p>
+      <a routerLink="/owner/bookings" class="kpi-link">View &#8594;</a>
+    </article>
+
+    <article class="kpi-card kpi-pink">
+      <div class="kpi-top">
+        <div class="kpi-icon-wrap kpi-icon-pink">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 8h1a4 4 0 010 8h-1"/><path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+        </div>
+        <span class="kpi-trend neutral">Menu</span>
+      </div>
+      <p class="kpi-label">Menu Items</p>
+      <h2 class="kpi-value">{{ stats.totalMenuItems }}</h2>
+      <p class="kpi-sub">{{ stats.availableMenuItems }} available now</p>
+      <a routerLink="/owner/menu" class="kpi-link">Manage &#8594;</a>
+    </article>
+
+  </section>
+
+  <!-- Charts Row 1 -->
+  <section class="charts-row">
+    <article class="chart-card chart-wide">
+      <div class="chart-card-header">
+        <div><h3>Revenue Trend</h3><p>Last 7 days</p></div>
+        <span class="chart-badge">&#8377; {{ formatCurrency(stats.weekRevenue) }} this week</span>
+      </div>
+      <div class="chart-area tall"><canvas #revenueChart></canvas></div>
+    </article>
+    <article class="chart-card chart-narrow">
+      <div class="chart-card-header">
+        <div><h3>Order Status</h3><p>Today's breakdown</p></div>
+      </div>
+      <div class="chart-area medium"><canvas #orderStatusChart></canvas></div>
+      <div *ngIf="orderStatusCounts.length === 0" class="chart-empty">
+        <span>No orders today</span>
+      </div>
+    </article>
+  </section>
+
+  <!-- Charts Row 2 -->
+  <section class="charts-row">
+    <article class="chart-card chart-wide">
+      <div class="chart-card-header">
+        <div><h3>Popular Menu Items</h3><p>By order volume</p></div>
+        <a routerLink="/owner/menu" class="chart-link">View all &#8594;</a>
+      </div>
+      <div class="chart-area medium"><canvas #popularChart></canvas></div>
+      <div *ngIf="popularItems.length === 0" class="chart-empty"><span>No order data available yet</span></div>
+    </article>
+    <article class="chart-card chart-narrow">
+      <div class="chart-card-header">
+        <div><h3>Table Availability</h3><p>Current snapshot</p></div>
+      </div>
+      <div class="table-occupancy-stat">
+        <span class="occ-pct">{{ tableOccupancyPct }}%</span>
+        <span class="occ-label">Occupied</span>
+      </div>
+      <div class="chart-area medium"><canvas #tableChart></canvas></div>
+    </article>
+  </section>
+
+  <!-- Lists Row -->
+  <section class="lists-row">
+    <article class="list-card">
+      <div class="list-header">
+        <h3>&#x1F4C5; Upcoming Reservations</h3>
+        <a routerLink="/owner/bookings" class="list-link">View all</a>
+      </div>
+      <div class="list-body">
+        <div *ngFor="let b of upcomingBookings" class="list-item">
+          <div class="list-item-icon booking-icon">{{ b.guests }}</div>
+          <div class="list-item-info">
+            <strong>{{ b.customerName }}</strong>
+            <span>{{ b.date }} at {{ b.time }} &middot; Table {{ b.tableNumber }}</span>
+          </div>
+          <span class="status-badge" [ngClass]="getBookingStatusClass(b.status)">{{ b.status }}</span>
+        </div>
+        <div *ngIf="upcomingBookings.length === 0" class="list-empty">No upcoming reservations</div>
+      </div>
+    </article>
+    <article class="list-card">
+      <div class="list-header">
+        <h3>&#x1F4CB; Recent Orders</h3>
+        <a routerLink="/owner/orders" class="list-link">View all</a>
+      </div>
+      <div class="list-body">
+        <div *ngFor="let o of recentOrders" class="list-item">
+          <div class="list-item-icon order-icon">#{{ o.id }}</div>
+          <div class="list-item-info">
+            <strong>Table {{ o.tableNumber }}</strong>
+            <span>{{ formatCurrency(o.amount) }} &middot; {{ formatTime(o.createdAt) }}</span>
+          </div>
+          <span class="status-badge" [ngClass]="getOrderStatusClass(o.status)">{{ o.status }}</span>
+        </div>
+        <div *ngIf="recentOrders.length === 0" class="list-empty">No recent orders</div>
+      </div>
+    </article>
+  </section>
+
+  <!-- Popular Items Table -->
+  <section class="popular-section" *ngIf="popularItems.length > 0">
+    <div class="section-header-row">
+      <h3>&#x1F3C6; Top Performing Items</h3>
+      <a routerLink="/owner/menu" class="list-link">View menu &#8594;</a>
+    </div>
+    <div class="popular-table">
+      <div class="popular-row header-row">
+        <span>#</span><span>Item</span><span>Orders</span><span>Revenue</span><span>Performance</span>
+      </div>
+      <div *ngFor="let item of popularItems; let i = index" class="popular-row">
+        <span class="rank-badge" [ngClass]="'rank-' + (i + 1)">{{ i + 1 }}</span>
+        <span class="item-name">{{ item.name }}</span>
+        <span class="item-stat">{{ item.orders }}</span>
+        <span class="item-stat">{{ formatCurrency(item.revenue) }}</span>
+        <div class="mini-bar-wrap">
+          <div class="mini-bar" [style.width.%]="popularItems[0].orders ? (item.orders / popularItems[0].orders) * 100 : 0"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Quick Actions -->
+  <section class="quick-actions">
+    <h3 class="qa-title">Quick Actions</h3>
+    <div class="qa-grid">
+      <a *ngFor="let a of quickActions" [routerLink]="a.route" class="qa-tile color-{{a.color}}">
+        <span class="qa-icon">{{ a.icon }}</span>
+        <span class="qa-label">{{ a.label }}</span>
+      </a>
+    </div>
+  </section>
+
+</div>

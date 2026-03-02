@@ -1,0 +1,23 @@
+<div class="container">
+      <div class="card hero">
+        <h2>Preferences</h2>
+        <p>Customize admin experience and dashboard behavior.</p>
+      </div>
+
+      <div class="card">
+        <label>Auto Refresh Interval (seconds)</label>
+        <input type="number" min="5" max="120" [(ngModel)]="autoRefreshSeconds" />
+      </div>
+
+      <div class="card">
+        <label class="toggle">
+          <input type="checkbox" [(ngModel)]="enableToasts" />
+          Enable toast notifications
+        </label>
+      </div>
+
+      <div class="actions">
+        <button (click)="save()">Save Settings</button>
+        <button class="secondary" (click)="reset()">Reset Defaults</button>
+      </div>
+    </div>

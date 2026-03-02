@@ -1,0 +1,45 @@
+<div class="management-container">
+      <div class="toolbar">
+        <select [(ngModel)]="selectedCafeId" (change)="loadBookings()">
+          <option [ngValue]="null">Select cafe</option>
+          <option *ngFor="let cafe of cafes" [ngValue]="cafe.id">{{ cafe.name }}</option>
+        </select>
+        <span class="meta">Auto refresh: {{ refreshSeconds }}s</span>
+      </div>
+
+      <div class="card table-wrap" *ngIf="bookings.length; else emptyState">
+        <table>
+          <thead>
+            <tr>
+              <th>Booking</th>
+              <th>Customer</th>
+              <th>Table</th>
+              <th>Date</th>
+              <th>Guests</th>
+              <th>Status</th>
+              <th>Update</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let booking of bookings">
+              <td>{{ getBookingNumber(booking) }}</td>
+              <td>{{ booking.customerName || "-" }}</td>
+              <td>{{ booking.tableNumber || "-" }}</td>
+              <td>{{ booking.bookingDate }} {{ booking.bookingTime }}</td>
+              <td>{{ booking.numberOfGuests }}</td>
+              <td>{{ booking.status }}</td>
+              <td class="actions">
+                <select [(ngModel)]="statusMap[booking.id]">
+                  <option *ngFor="let s of statuses" [value]="s">{{ s }}</option>
+                </select>
+                <button class="btn-info" (click)="updateStatus(booking)">Save</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <ng-template #emptyState>
+        <div class="card empty">No bookings found for selected cafe.</div>
+      </ng-template>
+    </div>

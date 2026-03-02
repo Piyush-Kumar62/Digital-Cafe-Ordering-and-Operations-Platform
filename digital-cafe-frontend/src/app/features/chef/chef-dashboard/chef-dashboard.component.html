@@ -1,0 +1,70 @@
+<div class="dashboard-container">
+      <div class="dashboard-header">
+        <h1>Chef Dashboard</h1>
+        <p>Manage kitchen operations</p>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-box pending">
+          <h3>{{ pendingOrders.length }}</h3>
+          <p>Pending Orders</p>
+        </div>
+        <div class="stat-box preparing">
+          <h3>{{ preparingOrders.length }}</h3>
+          <p>Preparing</p>
+        </div>
+        <div class="stat-box ready">
+          <h3>{{ readyOrders.length }}</h3>
+          <p>Ready</p>
+        </div>
+      </div>
+
+      <app-card title="Pending Orders" class="orders-section">
+        <div *ngIf="pendingOrders.length === 0" class="empty-state">
+          <p>No pending orders</p>
+        </div>
+        <div class="orders-grid">
+          <div *ngFor="let order of pendingOrders" class="order-card pending">
+            <div class="order-header">
+              <h3>Order #{{ order.orderNumber }}</h3>
+              <span class="badge badge-warning">{{ order.status }}</span>
+            </div>
+            <div class="order-details">
+              <p><strong>Table:</strong> {{ order.tableNumber }}</p>
+              <p><strong>Items:</strong></p>
+              <ul class="items-list">
+                <li *ngFor="let item of order.items">
+                  {{ item.quantity }}x {{ item.menuItemName }}
+                  <span *ngIf="item.specialInstructions" class="special-note"> ({{ item.specialInstructions }}) </span>
+                </li>
+              </ul>
+            </div>
+            <button class="btn-action btn-start" disabled>
+              Awaiting Kitchen Start
+            </button>
+          </div>
+        </div>
+      </app-card>
+
+      <app-card title="Preparing" class="orders-section">
+        <div *ngIf="preparingOrders.length === 0" class="empty-state">
+          <p>No orders being prepared</p>
+        </div>
+        <div class="orders-grid">
+          <div *ngFor="let order of preparingOrders" class="order-card preparing">
+            <div class="order-header">
+              <h3>Order #{{ order.orderNumber }}</h3>
+              <span class="badge badge-info">{{ order.status }}</span>
+            </div>
+            <div class="order-details">
+              <p><strong>Table:</strong> {{ order.tableNumber }}</p>
+              <p><strong>Items:</strong></p>
+              <ul class="items-list">
+                <li *ngFor="let item of order.items">{{ item.quantity }}x {{ item.menuItemName }}</li>
+              </ul>
+            </div>
+            <button class="btn-action btn-ready" (click)="updateOrderStatus(order.id, 'READY')">Mark as Ready</button>
+          </div>
+        </div>
+      </app-card>
+    </div>

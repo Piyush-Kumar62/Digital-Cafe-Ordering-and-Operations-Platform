@@ -1,0 +1,37 @@
+<div class="verify-container">
+      <div class="verify-card">
+        <div *ngIf="!verifying && !verified" class="verify-pending">
+          <div class="icon">📧</div>
+          <h1>Verify Your Email</h1>
+          <p>We've sent a verification link to your email address.</p>
+          <p>Please check your inbox and click the link to verify your account.</p>
+
+          <div class="resend-section">
+            <p>Didn't receive the email?</p>
+            <button class="btn-resend" (click)="resendVerification()" [disabled]="resending">
+              {{ resending ? 'Sending...' : 'Resend Verification Email' }}
+            </button>
+          </div>
+        </div>
+
+        <div *ngIf="verifying" class="verify-loading">
+          <div class="spinner"></div>
+          <h2>Verifying your email...</h2>
+          <p>Please wait a moment.</p>
+        </div>
+
+        <div *ngIf="verified" class="verify-success">
+          <div class="icon success">✓</div>
+          <h1>Email Verified!</h1>
+          <p>Your email has been successfully verified.</p>
+          <button class="btn-primary" routerLink="/auth/login">Continue to Login</button>
+        </div>
+
+        <div *ngIf="error" class="verify-error">
+          <div class="icon error">✕</div>
+          <h1>Verification Failed</h1>
+          <p>{{ errorMessage }}</p>
+          <button class="btn-primary" routerLink="/auth/login">Back to Login</button>
+        </div>
+      </div>
+    </div>

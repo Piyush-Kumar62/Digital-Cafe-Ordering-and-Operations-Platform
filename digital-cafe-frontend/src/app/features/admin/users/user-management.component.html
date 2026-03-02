@@ -1,0 +1,119 @@
+<div class="management-container">
+  <div class="filter-card">
+    <div class="filter-item">
+      <label>Status</label>
+      <select [(ngModel)]="statusFilter" (change)="applyFilters()">
+        <option value="ALL">All</option>
+        <option value="PENDING_APPROVAL">Pending Approval</option>
+        <option value="APPROVED">Approved</option>
+        <option value="REJECTED">Rejected</option>
+      </select>
+    </div>
+    <div class="filter-item">
+      <label>Role</label>
+      <select [(ngModel)]="roleFilter" (change)="applyFilters()">
+        <option value="ALL">All</option>
+        <option value="ADMIN">Admin</option>
+        <option value="CAFE_OWNER">Cafe Owner</option>
+        <option value="CHEF">Chef</option>
+        <option value="WAITER">Waiter</option>
+        <option value="CUSTOMER">Customer</option>
+      </select>
+    </div>
+    <div class="filter-item search">
+      <label>Search</label>
+      <input
+        type="text"
+        [(ngModel)]="searchText"
+        (input)="applyFilters()"
+        placeholder="Email or username"
+      />
+    </div>
+  </div>
+
+  <div class="content-card">
+    <div class="table-wrapper" *ngIf="filteredUsers.length > 0; else emptyState">
+      <table>
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Roles</th>
+            <th>Email Verified</th>
+            <th>Reset Required</th>
+            <th>Status</th>
+            <th>Active</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let user of filteredUsers">
+            <td>
+              <div class="user-cell">
+                <div class="avatar">{{ getAvatar(user) }}</div>
+                <div>
+                  <div class="name">{{ user.username }}</div>
+                  <div class="email">{{ user.email }}</div>
+                </div>
+              </div>
+            </td>
+            <td><div class="roles">{{ (user.roles || []).join(", ") || "-" }}</div></td>
+            <td>
+              <span [class.ok]="user.isEmailVerified" [class.bad]="!user.isEmailVerified">
+                {{ user.isEmailVerified ? "Yes" : "No" }}
+              </span>
+            </td>
+            <td>
+              <span [class.bad]="user.mustResetPassword" [class.ok]="!user.mustResetPassword">
+                {{ user.mustResetPassword ? "Yes" : "No" }}
+              </span>
+            </td>
+            <td>
+              <span class="badge" [class.pending]="getStatus(user) === 'PENDING_APPROVAL'" [class.approved]="getStatus(user) === 'APPROVED'" [class.rejected]="getStatus(user) === 'REJECTED'">
+                {{ getStatus(user) }}
+              </span>
+            </td>
+            <td>{{ user.isActive ? "Active" : "Inactive" }}</td>
+            <td>
+              <div class="actions action-group">
+                <button
+                  *ngIf="getStatus(user) === 'PENDING_APPROVAL'"
+                  class="approve"
+                  (click)="approve(user)"
+                >
+                  Approve
+                </button>
+                <button
+                  *ngIf="getStatus(user) === 'PENDING_APPROVAL'"
+                  class="reject"
+                  (click)="reject(user)"
+                >
+                  Reject
+                </button>
+                <button
+                  *ngIf="getStatus(user) !== 'PENDING_APPROVAL' && user.isActive"
+                  class="deactivate"
+                  (click)="deactivate(user)"
+                >
+                  Deactivate
+                </button>
+                <button
+                  *ngIf="getStatus(user) !== 'PENDING_APPROVAL' && !user.isActive"
+                  class="activate"
+                  (click)="activate(user)"
+                >
+                  Activate
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <ng-template #emptyState>
+      <div class="empty-state">
+        <h2>No users found</h2>
+        <p>Try changing filters and search criteria.</p>
+      </div>
+    </ng-template>
+  </div>
+</div>

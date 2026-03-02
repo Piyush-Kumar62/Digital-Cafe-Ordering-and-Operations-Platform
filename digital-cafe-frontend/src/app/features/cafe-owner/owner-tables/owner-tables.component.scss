@@ -1,0 +1,702 @@
+// ── Design Tokens ──────────────────────────────────────
+$surface-bg: #0f172a;
+$surface-card: #1e293b;
+$surface-hover: #263349;
+$border: rgba(255, 255, 255, 0.08);
+$text-primary: #f1f5f9;
+$text-secondary: #94a3b8;
+$text-muted: #64748b;
+$accent: #6366f1;
+$accent-light: rgba(99, 102, 241, 0.15);
+$green: #10b981;
+$green-light: rgba(16, 185, 129, 0.15);
+$red: #ef4444;
+$red-light: rgba(239, 68, 68, 0.15);
+$amber: #f59e0b;
+
+// ── Wrapper ─────────────────────────────────────────────
+.tables-wrapper {
+  padding: 28px 20px;
+  min-height: 100vh;
+  background: $surface-bg;
+}
+
+// ── Main Card ────────────────────────────────────────────
+.tables-card {
+  width: 100%;
+  max-width: 1140px;
+  margin: 0 auto;
+  background: $surface-card;
+  border-radius: 20px;
+  padding: 28px;
+  border: 1px solid $border;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+}
+
+// ── Header ───────────────────────────────────────────────
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.back-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid $border;
+  color: $text-secondary;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  white-space: nowrap;
+  transition: all 0.2s;
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: $text-primary;
+  }
+}
+
+.title-icon {
+  display: inline-flex;
+  align-items: center;
+  color: $accent;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+.page-title {
+  font-size: 1.45rem;
+  font-weight: 700;
+  color: $text-primary;
+  margin: 0 0 4px;
+}
+
+.page-subtitle {
+  font-size: 13px;
+  color: $text-secondary;
+  margin: 0;
+}
+
+// ── Add Button ───────────────────────────────────────────
+.add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 20px;
+  border: none;
+  background: linear-gradient(135deg, #4f46e5, #6366f1);
+  color: #fff;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.25s;
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(99, 102, 241, 0.45);
+  }
+  &.mt-sm {
+    margin-top: 16px;
+  }
+}
+
+// ── Stats Bar ────────────────────────────────────────────
+.stats-bar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.stat-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 20px;
+  border-radius: 12px;
+  border: 1px solid $border;
+  min-width: 80px;
+}
+
+.chip-value {
+  font-size: 1.4rem;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 3px;
+}
+
+.chip-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: $text-muted;
+}
+
+.chip-total {
+  background: rgba(99, 102, 241, 0.12);
+  .chip-value {
+    color: #818cf8;
+  }
+}
+.chip-available {
+  background: $green-light;
+  .chip-value {
+    color: $green;
+  }
+}
+.chip-occupied {
+  background: $red-light;
+  .chip-value {
+    color: $red;
+  }
+}
+
+// ── Loading Skeleton ─────────────────────────────────────
+.skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.skeleton-card {
+  background: $surface-hover;
+  border-radius: 16px;
+  padding: 20px;
+  border: 1px solid $border;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sk {
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  animation: shimmer 1.4s infinite;
+}
+
+.sk-title {
+  height: 18px;
+  width: 60%;
+}
+.sk-row {
+  height: 14px;
+  width: 45%;
+}
+.sk-badge {
+  height: 24px;
+  width: 35%;
+  border-radius: 20px;
+}
+.sk-actions {
+  height: 32px;
+  width: 100%;
+  border-radius: 8px;
+}
+
+@keyframes shimmer {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+// ── Empty State ───────────────────────────────────────────
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: $text-secondary;
+
+  .empty-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: rgba(99, 102, 241, 0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    color: $accent;
+  }
+  h3 {
+    color: $text-primary;
+    font-size: 1.15rem;
+    margin: 0 0 8px;
+  }
+  p {
+    font-size: 14px;
+    margin: 0;
+  }
+}
+
+// ── Tables Grid ───────────────────────────────────────────
+.tables-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 16px;
+}
+
+// ── Table Card ────────────────────────────────────────────
+.table-card {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 16px;
+  padding: 18px;
+  border: 1px solid $border;
+  border-top: 3px solid $border;
+  transition: all 0.25s ease;
+  position: relative;
+  overflow: hidden;
+
+  &:hover {
+    transform: translateY(-4px);
+    background: $surface-hover;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+  }
+
+  &.card-available {
+    border-top-color: $green;
+  }
+  &.card-occupied {
+    border-top-color: $red;
+  }
+}
+
+// ── Card Top ─────────────────────────────────────────────
+.card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+
+.table-number {
+  font-size: 1rem;
+  font-weight: 700;
+  color: $text-primary;
+}
+
+.status-badge {
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 20px;
+  padding: 3px 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+
+  &.badge-available {
+    background: $green-light;
+    color: $green;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+  }
+  &.badge-occupied {
+    background: $red-light;
+    color: $red;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+  }
+}
+
+// ── Seats Row ─────────────────────────────────────────────
+.seats-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: $text-secondary;
+  font-size: 14px;
+  margin-bottom: 16px;
+
+  svg {
+    color: $text-muted;
+    flex-shrink: 0;
+  }
+}
+
+// ── Card Actions ──────────────────────────────────────────
+.card-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.action-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.btn-edit {
+  background: rgba(99, 102, 241, 0.12);
+  color: #818cf8;
+  border-color: rgba(99, 102, 241, 0.25);
+  &:hover {
+    background: rgba(99, 102, 241, 0.22);
+  }
+}
+
+.btn-toggle {
+  flex: 2;
+  &.btn-occupy {
+    background: $red-light;
+    color: $red;
+    border-color: rgba(239, 68, 68, 0.25);
+    &:hover {
+      background: rgba(239, 68, 68, 0.22);
+    }
+  }
+  &.btn-free {
+    background: $green-light;
+    color: $green;
+    border-color: rgba(16, 185, 129, 0.25);
+    &:hover {
+      background: rgba(16, 185, 129, 0.22);
+    }
+  }
+}
+
+.btn-delete {
+  flex: 0 0 auto;
+  background: rgba(239, 68, 68, 0.08);
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.2);
+  padding: 7px 9px;
+  &:hover {
+    background: rgba(239, 68, 68, 0.2);
+  }
+}
+
+// ── Modal Overlay ─────────────────────────────────────────
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 20px;
+  backdrop-filter: blur(4px);
+}
+
+.danger-overlay {
+  background: rgba(0, 0, 0, 0.75);
+}
+
+// ── Modal ─────────────────────────────────────────────────
+.modal {
+  background: #1e293b;
+  width: 100%;
+  max-width: 440px;
+  border-radius: 18px;
+  border: 1px solid $border;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+  animation: modal-in 0.22s ease;
+  overflow: hidden;
+}
+
+.modal-danger {
+  max-width: 380px;
+}
+
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: scale(0.94) translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px 0;
+
+  h3 {
+    color: $text-primary;
+    font-size: 1.1rem;
+    margin: 0;
+  }
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  color: $text-muted;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: 0.2s;
+  &:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: $text-primary;
+  }
+}
+
+.danger-header {
+  flex-direction: column;
+  align-items: center;
+  padding-top: 28px;
+  gap: 10px;
+
+  h3 {
+    color: #f87171;
+    font-size: 1.2rem;
+  }
+}
+
+.danger-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: rgba(239, 68, 68, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $red;
+}
+
+.modal-body {
+  padding: 20px 24px;
+  color: $text-secondary;
+  font-size: 14px;
+  line-height: 1.6;
+
+  p {
+    margin: 0;
+    text-align: center;
+  }
+}
+
+.form-group {
+  margin-bottom: 16px;
+
+  label {
+    display: block;
+    font-size: 13px;
+    color: $text-secondary;
+    margin-bottom: 6px;
+    font-weight: 500;
+  }
+
+  input {
+    width: 100%;
+    padding: 10px 14px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid $border;
+    border-radius: 8px;
+    color: $text-primary;
+    font-size: 14px;
+    outline: none;
+    transition: border 0.2s;
+    box-sizing: border-box;
+
+    &::placeholder {
+      color: $text-muted;
+    }
+    &:focus {
+      border-color: $accent;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+    }
+  }
+}
+
+.opt {
+  color: $text-muted;
+  font-weight: 400;
+  font-size: 12px;
+}
+
+.req {
+  color: $red;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 24px 24px;
+}
+
+.btn-cancel {
+  padding: 9px 20px;
+  border-radius: 8px;
+  border: 1px solid $border;
+  background: transparent;
+  color: $text-secondary;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: 0.2s;
+  &:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: $text-primary;
+  }
+}
+
+.btn-primary {
+  padding: 9px 24px;
+  border-radius: 8px;
+  border: none;
+  background: linear-gradient(135deg, #4f46e5, #6366f1);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  min-width: 80px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  &:hover:not(:disabled) {
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+  }
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.btn-danger {
+  padding: 9px 24px;
+  border-radius: 8px;
+  border: none;
+  background: $red;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  min-width: 100px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  &:hover:not(:disabled) {
+    background: #dc2626;
+    box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+  }
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+// ── Spinner ───────────────────────────────────────────────
+.spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// ── Responsive ────────────────────────────────────────────
+@media (max-width: 640px) {
+  .tables-wrapper {
+    padding: 14px 10px;
+  }
+  .tables-card {
+    padding: 18px;
+  }
+  .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .add-btn {
+    width: 100%;
+    justify-content: center;
+  }
+  .tables-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .stats-bar {
+    gap: 8px;
+  }
+  .stat-chip {
+    padding: 8px 14px;
+    min-width: 64px;
+  }
+}
+
+@media (max-width: 400px) {
+  .tables-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* legacy shim */
+.table-box::before {
+  content: "";
+  display: none;
+}
+
+/* ===== LIGHT MODE OVERRIDES ===== */
+/* Tables is dark by default — provide light-mode overrides */
+:host-context(:not(.dark)) {
+  .tables-wrapper {
+    background: #f1f5f9;
+  }
+  .tables-card {
+    background: #ffffff;
+    border-color: #e2e8f0;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  }
+  .card-header h1,
+  .card-header h2 {
+    color: #0f172a;
+  }
+  .table-cell {
+    background: #f8fafc;
+    border-color: #e2e8f0;
+    color: #0f172a;
+  }
+  .table-cell:hover {
+    background: #ede9fe;
+    border-color: #6366f1;
+  }
+  .table-cell.occupied {
+    background: rgba(239, 68, 68, 0.08);
+    border-color: #ef4444;
+    color: #7f1d1d;
+  }
+  .table-cell.available {
+    background: rgba(16, 185, 129, 0.08);
+    border-color: #10b981;
+    color: #14532d;
+  }
+  .stat-chip {
+    background: #f1f5f9;
+    color: #0f172a;
+    border: 1px solid #e2e8f0;
+  }
+}

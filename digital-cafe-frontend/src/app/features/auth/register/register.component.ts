@@ -84,7 +84,7 @@ export class RegisterComponent implements OnInit {
 
   genderOptions = ["MALE", "FEMALE", "OTHER", "PREFER_NOT_TO_SAY"];
   maritalStatusOptions = ["SINGLE", "MARRIED", "DIVORCED", "WIDOWED"];
-  roleOptions = ["CUSTOMER"];
+  roleOptions = ["CUSTOMER", "CAFE_OWNER"];
   currentYear = new Date().getFullYear();
 
   constructor(
@@ -152,8 +152,8 @@ export class RegisterComponent implements OnInit {
       this.errorMessage = "Username is required";
       return false;
     }
-    if (this.role !== "CUSTOMER") {
-      this.errorMessage = "Only CUSTOMER role is allowed for public registration";
+    if (this.role !== "CUSTOMER" && this.role !== "CAFE_OWNER") {
+      this.errorMessage = "Only CUSTOMER or CAFE OWNER roles are valid for registration";
       return false;
     }
     if (!this.govtIdType) {
@@ -335,7 +335,7 @@ export class RegisterComponent implements OnInit {
 
     const payload: RegisterRequest = {
       username: this.username.trim(),
-      role: "CUSTOMER",
+      role: this.role,
       govtIdType: this.govtIdType,
       personalDetails: this.personalDetails,
       address: this.address,

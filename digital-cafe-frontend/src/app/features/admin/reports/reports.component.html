@@ -1,0 +1,19 @@
+<div class="container">
+      <div class="actions">
+        <button (click)="exportSummary()" [disabled]="!dashboard">Export Summary CSV</button>
+        <button (click)="exportUsers()" [disabled]="!users.length">Export Users CSV</button>
+        <button (click)="exportCafes()" [disabled]="!cafes.length">Export Cafes CSV</button>
+      </div>
+
+      <div class="card" *ngIf="dashboard as d">
+        <h2>Current Summary Snapshot</h2>
+        <div class="grid">
+          <div class="metric-tile"><span>Total Users</span><strong>{{ d.totalUsers }}</strong></div>
+          <div class="metric-tile"><span>Active Users</span><strong>{{ d.activeUsers }}</strong></div>
+          <div class="metric-tile"><span>Total Cafes</span><strong>{{ d.totalCafes }}</strong></div>
+          <div class="metric-tile"><span>Total Bookings</span><strong>{{ d.totalBookings }}</strong></div>
+          <div class="metric-tile"><span>Total Orders</span><strong>{{ d.totalOrders }}</strong></div>
+          <div class="metric-tile"><span>Total Revenue</span><strong>{{ d.totalRevenue }}</strong></div>
+        </div>
+      </div>
+    </div>

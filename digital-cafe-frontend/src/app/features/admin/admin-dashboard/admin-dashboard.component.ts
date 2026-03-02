@@ -10,6 +10,7 @@ import { RouterModule } from "@angular/router";
 import { ApiService } from "@core/services/api.service";
 import { AlertService } from "@core/services/alert.service";
 import { AdminDashboard } from "@shared/models/dashboard.model";
+import { User } from "@shared/models/auth.model";
 import { Chart, ChartConfiguration, registerables } from "chart.js";
 
 // Register Chart.js components
@@ -28,6 +29,8 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
 
   dashboard: AdminDashboard | null = null;
   loading = true;
+  pendingUsers: User[] = [];
+  pendingLoading = false;
   weeklyChart: Chart | null = null;
   roleChart: Chart | null = null;
 
@@ -38,6 +41,7 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
 
   ngOnInit(): void {
     this.loadDashboard();
+    this.loadPendingApprovals();
   }
 
   ngAfterViewInit(): void {
@@ -54,10 +58,65 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
         setTimeout(() => this.initializeCharts(), 100);
       },
       error: (error) => {
-        this.alertService.error("Dashboard Error", "Unable to load admin dashboard.");
+        this.alertService.error(
+          "Dashboard Error",
+          "Unable to load admin dashboard.",
+        );
         this.loading = false;
       },
     });
+  }
+
+  loadPendingApprovals(): void {
+    this.pendingLoading = true;
+    this.apiService.getPendingUsers().subscribe({
+      next: (users) => {
+        this.pendingUsers = users || [];
+        this.pendingLoading = false;
+      },
+      error: () => {
+        this.pendingUsers = [];
+        this.pendingLoading = false;
+      },
+    });
+  }
+
+  async approveUser(user: User): Promise<void> {
+    const confirmed = await this.alertService.confirm(
+      "Approve User",
+      `Approve ${user.username || user.email}?`,
+    );
+    if (!confirmed) return;
+    this.apiService.approveUser(user.id).subscribe({
+      next: () => {
+        this.alertService.success("User approved. Email sent to user.");
+        this.loadPendingApprovals();
+        this.loadDashboard();
+      },
+      error: (e) => this.alertService.error(e?.message || "Approval failed"),
+    });
+  }
+
+  async rejectUser(user: User): Promise<void> {
+    const confirmed = await this.alertService.confirm(
+      "Reject User",
+      `Reject ${user.username || user.email}?`,
+    );
+    if (!confirmed) return;
+    this.apiService.rejectUser(user.id).subscribe({
+      next: () => {
+        this.alertService.success("User rejected. Email sent to user.");
+        this.loadPendingApprovals();
+        this.loadDashboard();
+      },
+      error: (e) => this.alertService.error(e?.message || "Rejection failed"),
+    });
+  }
+
+  getUserRole(user: User): string {
+    const roles = user.roles || [];
+    const r = roles[0] || "";
+    return r.replace("ROLE_", "");
   }
 
   initializeCharts(): void {

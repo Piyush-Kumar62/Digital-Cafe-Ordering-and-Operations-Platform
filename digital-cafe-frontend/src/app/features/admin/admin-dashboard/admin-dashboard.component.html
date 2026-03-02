@@ -28,7 +28,7 @@
     </div>
     <div class="mt-4 sm:mt-0">
       <button
-        (click)="loadDashboard()"
+        (click)="loadDashboard(); loadPendingApprovals()"
         [disabled]="loading"
         class="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
       >
@@ -47,6 +47,71 @@
         </svg>
         Refresh Data
       </button>
+    </div>
+  </div>
+
+  <!-- ===== PENDING APPROVALS BANNER ===== -->
+  <div
+    *ngIf="pendingUsers && pendingUsers.length > 0"
+    class="mb-6 bg-amber-50 border border-amber-300 rounded-xl p-5"
+  >
+    <div class="flex items-center justify-between mb-4">
+      <div class="flex items-center gap-3">
+        <div
+          class="h-10 w-10 rounded-full bg-amber-500 flex items-center justify-center text-white font-bold text-lg"
+        >
+          {{ pendingUsers.length }}
+        </div>
+        <div>
+          <h3 class="text-amber-800 font-semibold text-base">
+            Pending User Approvals
+          </h3>
+          <p class="text-amber-600 text-sm">
+            New registrations awaiting your review
+          </p>
+        </div>
+      </div>
+      <a
+        routerLink="/admin/users"
+        class="text-sm font-medium text-amber-700 hover:text-amber-900 underline"
+        >View All →</a
+      >
+    </div>
+    <div class="space-y-2 max-h-60 overflow-y-auto">
+      <div
+        *ngFor="let user of pendingUsers"
+        class="flex items-center justify-between bg-white rounded-lg px-4 py-3 border border-amber-200"
+      >
+        <div class="flex items-center gap-3">
+          <div
+            class="h-9 w-9 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-sm"
+          >
+            {{ (user.username || user.email || "U").charAt(0).toUpperCase() }}
+          </div>
+          <div>
+            <p class="font-medium text-gray-900 text-sm">
+              {{ user.username || user.email }}
+            </p>
+            <p class="text-xs text-gray-500">
+              {{ user.email }} &bull; {{ getUserRole(user) }}
+            </p>
+          </div>
+        </div>
+        <div class="flex gap-2">
+          <button
+            (click)="approveUser(user)"
+            class="px-3 py-1.5 text-xs font-semibold bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+          >
+            Approve
+          </button>
+          <button
+            (click)="rejectUser(user)"
+            class="px-3 py-1.5 text-xs font-semibold bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+          >
+            Reject
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -707,10 +772,7 @@
             {{ activity.description }}
           </p>
           <div class="flex items-center mt-1">
-            <span
-              *ngIf="activity.userRole"
-              class="activity-role-badge mr-2"
-            >
+            <span *ngIf="activity.userRole" class="activity-role-badge mr-2">
               {{ activity.userRole }}
             </span>
             <span class="text-xs text-gray-500">

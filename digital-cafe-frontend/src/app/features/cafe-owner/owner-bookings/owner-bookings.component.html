@@ -1,0 +1,43 @@
+<section class="owner-page">
+  <header class="page-header">
+    <h1>Booking Overview</h1>
+    <p>Track reservation flow, seating utilization, and customer arrivals.</p>
+  </header>
+
+  <div class="stats" *ngIf="!loading">
+    <article class="card">
+      <small>Total</small><strong>{{ bookings.length }}</strong>
+    </article>
+    <article class="card">
+      <small>Booked</small><strong>{{ countBy("BOOKED") }}</strong>
+    </article>
+    <article class="card">
+      <small>Confirmed</small><strong>{{ countBy("CONFIRMED") }}</strong>
+    </article>
+    <article class="card">
+      <small>Completed</small><strong>{{ countBy("COMPLETED") }}</strong>
+    </article>
+  </div>
+
+  <div *ngIf="loading" class="card loading">Loading bookings...</div>
+  <div *ngIf="!loading && bookings.length === 0" class="card loading">
+    No bookings found.
+  </div>
+
+  <div class="grid" *ngIf="!loading && bookings.length > 0">
+    <article class="card item" *ngFor="let booking of bookings">
+      <div>
+        <h3>Booking #{{ booking.bookingNumber || booking.id }}</h3>
+        <p>Customer: {{ booking.customerName || "#" + booking.customerId }}</p>
+        <p>
+          Table {{ booking.tableNumber || booking.tableId }} •
+          {{ booking.numberOfGuests }} guests
+        </p>
+        <p>{{ booking.bookingDate }} {{ booking.bookingTime }}</p>
+      </div>
+      <span class="status" [ngClass]="getStatusClass(booking.status)">{{
+        booking.status
+      }}</span>
+    </article>
+  </div>
+</section>

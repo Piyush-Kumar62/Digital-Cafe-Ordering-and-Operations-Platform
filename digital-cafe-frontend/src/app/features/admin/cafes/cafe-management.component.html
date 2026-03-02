@@ -1,0 +1,49 @@
+<div class="management-container">
+      <div class="toolbar">
+        <input
+          type="text"
+          [(ngModel)]="searchText"
+          (input)="applyFilter()"
+          placeholder="Search by cafe name, city, owner"
+        />
+        <span class="meta">Total: {{ filteredCafes.length }}</span>
+      </div>
+
+      <div class="card table-wrap" *ngIf="filteredCafes.length; else emptyState">
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Owner</th>
+              <th>Location</th>
+              <th>Contact</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let cafe of filteredCafes">
+              <td>{{ cafe.name }}</td>
+              <td>{{ cafe.ownerName || "-" }}</td>
+              <td>{{ cafe.city }}, {{ cafe.state }}</td>
+              <td>{{ cafe.email }}</td>
+              <td>
+                <span class="badge" [class.active]="cafe.isActive" [class.inactive]="!cafe.isActive">
+                  {{ cafe.isActive ? "ACTIVE" : "INACTIVE" }}
+                </span>
+              </td>
+              <td class="actions">
+                <button class="btn-info" (click)="toggleStatus(cafe)">
+                  {{ cafe.isActive ? "Deactivate" : "Activate" }}
+                </button>
+                <button class="btn-danger" (click)="deleteCafe(cafe)">Delete</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <ng-template #emptyState>
+        <div class="card empty">No cafes found.</div>
+      </ng-template>
+    </div>

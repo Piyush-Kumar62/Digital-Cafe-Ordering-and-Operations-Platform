@@ -1,0 +1,174 @@
+<section class="owner-page">
+  <header class="page-header">
+    <div>
+      <h1>Menu Management</h1>
+      <p>Create categories, add menu items, and control item availability.</p>
+    </div>
+    <button class="btn-primary" (click)="openCreate()">+ Add Item</button>
+  </header>
+
+  <section class="stats-grid">
+    <article class="stat-card">
+      <small>Total Items</small>
+      <strong>{{ menuItems.length }}</strong>
+    </article>
+    <article class="stat-card">
+      <small>Available</small>
+      <strong>{{ availableCount }}</strong>
+    </article>
+    <article class="stat-card">
+      <small>Hidden</small>
+      <strong>{{ hiddenCount }}</strong>
+    </article>
+  </section>
+
+  <!-- Form Modal / Slide-in Panel -->
+  <div class="modal-backdrop" *ngIf="showForm" (click)="cancelForm()"></div>
+  <aside class="form-panel card" *ngIf="showForm">
+    <h2>{{ isEditMode ? "Edit Menu Item" : "Add New Item" }}</h2>
+    <form (ngSubmit)="saveMenuItem()">
+      <!-- Item image upload -->
+      <div class="field img-upload-field">
+        <label>Item Photo (optional)</label>
+        <div class="img-preview" *ngIf="imagePreviewUrl || draft.imageUrl">
+          <img [src]="imagePreviewUrl || draft.imageUrl" alt="preview" />
+        </div>
+        <label class="upload-btn btn-secondary" for="menuItemImage">
+          {{ imagePreviewUrl ? "Change Photo" : "Upload Photo" }}
+        </label>
+        <input
+          type="file"
+          id="menuItemImage"
+          accept="image/*"
+          hidden
+          (change)="onImageChange($event)"
+        />
+      </div>
+      <div class="field">
+        <label>Item Name *</label>
+        <input
+          [(ngModel)]="draft.name"
+          name="name"
+          placeholder="e.g. Masala Chai"
+          required
+        />
+      </div>
+      <div class="field">
+        <label>Category *</label>
+        <select [(ngModel)]="draft.category" name="category" required>
+          <option value="" disabled>Select category</option>
+          <option *ngFor="let c of categories" [value]="c">
+            {{ categoryLabel(c) }}
+          </option>
+        </select>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Price (₹) *</label>
+          <input
+            [(ngModel)]="draft.price"
+            name="price"
+            type="number"
+            min="1"
+            placeholder="0"
+            required
+          />
+        </div>
+        <div class="field">
+          <label>Prep Time (min)</label>
+          <input
+            [(ngModel)]="draft.preparationTimeMinutes"
+            name="preparationTimeMinutes"
+            type="number"
+            min="1"
+            placeholder="10"
+          />
+        </div>
+      </div>
+      <div class="field">
+        <label>Description</label>
+        <textarea
+          [(ngModel)]="draft.description"
+          name="description"
+          placeholder="Short description..."
+          rows="3"
+        ></textarea>
+      </div>
+      <label class="checkbox">
+        <input
+          type="checkbox"
+          [(ngModel)]="draft.isAvailable"
+          name="isAvailable"
+        />
+        Available immediately
+      </label>
+      <div class="form-actions">
+        <button type="button" class="btn-secondary" (click)="cancelForm()">
+          Cancel
+        </button>
+        <button type="submit" class="btn-primary" [disabled]="saving">
+          {{ saving ? "Saving…" : isEditMode ? "Update Item" : "Add Item" }}
+        </button>
+      </div>
+    </form>
+  </aside>
+
+  <div class="toolbar card">
+    <input [(ngModel)]="searchText" placeholder="Search by item name..." />
+    <select [(ngModel)]="categoryFilter">
+      <option value="">All categories</option>
+      <option *ngFor="let c of categories" [value]="c">
+        {{ categoryLabel(c) }}
+      </option>
+    </select>
+  </div>
+
+  <div *ngIf="loading" class="loading card">Loading menu items...</div>
+  <div
+    *ngIf="!loading && filteredItems.length === 0 && !showForm"
+    class="empty-state card"
+  >
+    <p>No menu items found.</p>
+    <button class="btn-primary" (click)="openCreate()">
+      Add Your First Item
+    </button>
+  </div>
+
+  <div class="grid" *ngIf="!loading && filteredItems.length > 0">
+    <article class="card item" *ngFor="let item of filteredItems">
+      <div class="item-img-wrap" *ngIf="item.imageUrl">
+        <img
+          [src]="item.imageUrl"
+          [alt]="item.name"
+          (error)="$any($event.target).parentElement.style.display = 'none'"
+        />
+      </div>
+      <div class="item-body">
+        <h3>{{ item.name }}</h3>
+        <p class="category-tag">{{ categoryLabel(item.category) }}</p>
+        <p class="price">{{ item.price | currency: "INR" }}</p>
+        <p class="subtext" *ngIf="item.description">{{ item.description }}</p>
+        <p class="subtext">
+          Prep:
+          {{ item.preparationTimeMinutes || item.preparationTime || 0 }} min
+        </p>
+      </div>
+      <div class="actions">
+        <span
+          class="badge"
+          [class.ok]="item.isAvailable"
+          [class.bad]="!item.isAvailable"
+        >
+          {{ item.isAvailable ? "Available" : "Hidden" }}
+        </span>
+        <button class="btn-sm" (click)="openEdit(item)">Edit</button>
+        <button class="btn-sm" (click)="toggleAvailability(item)">
+          {{ item.isAvailable ? "Hide" : "Show" }}
+        </button>
+        <button class="btn-sm danger" (click)="deleteItem(item.id)">
+          Delete
+        </button>
+      </div>
+    </article>
+  </div>
+</section>

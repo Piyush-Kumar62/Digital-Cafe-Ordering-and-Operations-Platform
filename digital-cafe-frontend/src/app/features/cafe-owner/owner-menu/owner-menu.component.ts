@@ -1,147 +1,237 @@
-import { Component, OnInit } from "@angular/core";
 import { CommonModule } from "@angular/common";
+import { Component, OnInit } from "@angular/core";
 import { FormsModule } from "@angular/forms";
+import { ActivatedRoute, Router } from "@angular/router";
 import { ApiService } from "@core/services/api.service";
-import { AuthService } from "@core/auth/auth.service";
 import { AlertService } from "@core/services/alert.service";
-import { MenuItem, MenuCategory } from "@shared/models/menu.model";
+import {
+  MenuCategory,
+  MenuItem,
+  MenuItemRequest,
+} from "@shared/models/menu.model";
 
 @Component({
   selector: "app-owner-menu",
   standalone: true,
   imports: [CommonModule, FormsModule],
-  template: `
-    <section class="owner-page">
-      <header class="page-header">
-        <h1>Menu Management</h1>
-        <p>Add and manage cafe menu items.</p>
-      </header>
-
-      <form class="card form-grid" (ngSubmit)="createMenuItem()">
-        <input [(ngModel)]="draft.name" name="name" placeholder="Item name" required />
-        <select [(ngModel)]="draft.category" name="category" required>
-          <option value="" disabled>Select category</option>
-          <option *ngFor="let c of categories" [value]="c">{{ c }}</option>
-        </select>
-        <input [(ngModel)]="draft.price" name="price" type="number" min="1" placeholder="Price" required />
-        <input [(ngModel)]="draft.preparationTimeMinutes" name="preparationTimeMinutes" type="number" min="1" placeholder="Prep time (min)" required />
-        <textarea [(ngModel)]="draft.description" name="description" placeholder="Description"></textarea>
-        <label class="checkbox"><input type="checkbox" [(ngModel)]="draft.isAvailable" name="isAvailable" /> Available</label>
-        <button type="submit">Add Menu Item</button>
-      </form>
-
-      <div class="grid">
-        <article class="card item" *ngFor="let item of menuItems">
-          <div>
-            <h3>{{ item.name }}</h3>
-            <p>{{ item.category }} • {{ item.price | currency:'INR' }}</p>
-          </div>
-          <div class="actions">
-            <span [class.ok]="item.isAvailable" [class.bad]="!item.isAvailable">
-              {{ item.isAvailable ? 'Available' : 'Hidden' }}
-            </span>
-            <button (click)="toggleAvailability(item)">{{ item.isAvailable ? 'Hide' : 'Show' }}</button>
-            <button class="danger" (click)="deleteItem(item.id)">Delete</button>
-          </div>
-        </article>
-      </div>
-    </section>
-  `,
-  styles: [`
-    .owner-page { padding: 1rem; color: #0f172a; }
-    .page-header { margin-bottom: 1rem; }
-    .page-header h1 { margin: 0; }
-    .page-header p { margin: .35rem 0 0; color: #64748b; }
-    .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: .9rem; box-shadow: 0 6px 18px rgba(2, 6, 23, .06); }
-    .form-grid { display: grid; gap: .7rem; grid-template-columns: repeat(2, minmax(0,1fr)); margin-bottom: 1rem; }
-    input, select, textarea, button { border: 1px solid #cbd5e1; border-radius: 10px; padding: .55rem .65rem; font: inherit; }
-    textarea { grid-column: span 2; min-height: 80px; resize: vertical; }
-    .checkbox { display: flex; align-items: center; gap: .5rem; color: #334155; }
-    button { background: #0ea5e9; color: #fff; border: 0; font-weight: 700; cursor: pointer; }
-    .grid { display: grid; gap: .8rem; }
-    .item { display: flex; justify-content: space-between; align-items: center; gap: .8rem; }
-    .item h3 { margin: 0; }
-    .item p { margin: .2rem 0 0; color: #64748b; font-size: .9rem; }
-    .actions { display: flex; align-items: center; gap: .45rem; }
-    .actions span { font-size: .8rem; font-weight: 700; padding: .2rem .45rem; border-radius: 999px; }
-    .actions .ok { background: #dcfce7; color: #166534; }
-    .actions .bad { background: #fee2e2; color: #991b1b; }
-    .actions .danger { background: #ef4444; }
-    @media (max-width: 768px) { .form-grid { grid-template-columns: 1fr; } textarea { grid-column: span 1; } .item { flex-direction: column; align-items: flex-start; } }
-  `],
+  templateUrl: "./owner-menu.component.html",
+  styleUrls: ["./owner-menu.component.scss"],
 })
 export class OwnerMenuComponent implements OnInit {
   menuItems: MenuItem[] = [];
   categories = Object.values(MenuCategory);
   cafeId: number | null = null;
-  draft = {
-    name: "",
-    description: "",
-    price: 0,
-    category: "",
-    isAvailable: true,
-    preparationTimeMinutes: 10,
-  };
+  loading = false;
+  saving = false;
+  searchText = "";
+  categoryFilter = "";
+
+  showForm = false;
+  isEditMode = false;
+  editingItemId: number | null = null;
+  selectedImageFile: File | null = null;
+  imagePreviewUrl: string | null = null;
+
+  draft: MenuItemRequest = this.emptyDraft();
 
   constructor(
     private apiService: ApiService,
-    private authService: AuthService,
     private alertService: AlertService,
+    private router: Router,
+    private route: ActivatedRoute,
   ) {}
 
   ngOnInit(): void {
-    this.cafeId = this.authService.currentUserValue?.cafeId || null;
-    this.loadItems();
+    // Check if a specific cafeId is passed via query param (multi-cafe support)
+    const queryId = this.route.snapshot.queryParamMap.get("cafeId");
+    if (queryId) {
+      this.cafeId = +queryId;
+      this.loadItems();
+      return;
+    }
+    this.apiService.cafeExistsForOwner().subscribe({
+      next: (exists) => {
+        if (!exists) {
+          this.router.navigate(["/owner/setup"]);
+          return;
+        }
+        this.apiService.getMyCafe().subscribe({
+          next: (cafe) => {
+            this.cafeId = cafe.id;
+            this.loadItems();
+          },
+          error: () => this.alertService.error("Unable to load cafe."),
+        });
+      },
+      error: () => this.alertService.error("Unable to validate cafe status."),
+    });
+  }
+
+  private emptyDraft(): MenuItemRequest {
+    return {
+      name: "",
+      description: "",
+      price: 0,
+      category: "",
+      isAvailable: true,
+      preparationTimeMinutes: 10,
+    };
+  }
+
+  get filteredItems(): MenuItem[] {
+    const q = this.searchText.trim().toLowerCase();
+    return (this.menuItems || []).filter((item) => {
+      const categoryOk =
+        !this.categoryFilter || item.category === this.categoryFilter;
+      const textOk = !q || (item.name || "").toLowerCase().includes(q);
+      return categoryOk && textOk;
+    });
+  }
+
+  get availableCount(): number {
+    return this.menuItems.filter((item) => item.isAvailable).length;
+  }
+
+  get hiddenCount(): number {
+    return this.menuItems.filter((item) => !item.isAvailable).length;
   }
 
   loadItems(): void {
     if (!this.cafeId) return;
+    this.loading = true;
     this.apiService.getMenuItemsByCafe(this.cafeId).subscribe({
-      next: (items) => this.menuItems = items || [],
+      next: (items) => {
+        this.menuItems = items || [];
+        this.loading = false;
+      },
+      error: () => {
+        this.loading = false;
+        this.alertService.error("Failed to load menu items.");
+      },
     });
   }
 
-  createMenuItem(): void {
+  openCreate(): void {
+    this.isEditMode = false;
+    this.editingItemId = null;
+    this.draft = this.emptyDraft();
+    this.showForm = true;
+  }
+
+  openEdit(item: MenuItem): void {
+    this.isEditMode = true;
+    this.editingItemId = item.id;
+    this.imagePreviewUrl = (item as any).imageUrl || null;
+    this.selectedImageFile = null;
+    this.draft = {
+      name: item.name,
+      description: item.description || "",
+      price: item.price,
+      category: item.category,
+      isAvailable: item.isAvailable,
+      preparationTimeMinutes:
+        item.preparationTimeMinutes || (item as any).preparationTime || 10,
+      imageUrl: (item as any).imageUrl || undefined,
+    };
+    this.showForm = true;
+  }
+
+  cancelForm(): void {
+    this.showForm = false;
+    this.isEditMode = false;
+    this.editingItemId = null;
+    this.draft = this.emptyDraft();
+    this.selectedImageFile = null;
+    this.imagePreviewUrl = null;
+  }
+
+  onImageChange(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    this.selectedImageFile = file;
+    const reader = new FileReader();
+    reader.onload = () => (this.imagePreviewUrl = reader.result as string);
+    reader.readAsDataURL(file);
+  }
+
+  saveMenuItem(): void {
     if (!this.cafeId) return;
-    this.alertService.loading("Creating menu item. Please wait.");
-    this.apiService.createMenuItem(this.cafeId, this.draft).subscribe({
-      next: () => {
-        this.alertService.close();
-        this.alertService.success("Menu Item Created", "Menu item created successfully.");
-        this.draft = { name: "", description: "", price: 0, category: "", isAvailable: true, preparationTimeMinutes: 10 };
-        this.loadItems();
-      },
-      error: () => {
-        this.alertService.close();
-        this.alertService.error("Create Failed", "Failed to create menu item.");
-      },
-    });
+    if (
+      !this.draft.name.trim() ||
+      !this.draft.category ||
+      this.draft.price <= 0
+    ) {
+      this.alertService.error(
+        "Please enter valid item details (name, category, price > 0).",
+      );
+      return;
+    }
+    this.saving = true;
+
+    const doSave = (imageUrl?: string) => {
+      if (imageUrl) this.draft.imageUrl = imageUrl;
+      const obs =
+        this.isEditMode && this.editingItemId != null
+          ? this.apiService.updateMenuItem(this.editingItemId, this.draft)
+          : this.apiService.createMenuItem(this.cafeId!, this.draft);
+
+      obs.subscribe({
+        next: () => {
+          this.saving = false;
+          this.alertService.success(
+            this.isEditMode ? "Menu item updated." : "Menu item created.",
+          );
+          this.cancelForm();
+          this.loadItems();
+        },
+        error: (err) => {
+          this.saving = false;
+          this.alertService.error(
+            err?.error?.message || "Failed to save menu item.",
+          );
+        },
+      });
+    };
+
+    if (this.selectedImageFile) {
+      this.apiService.uploadMenuItemImage(this.selectedImageFile).subscribe({
+        next: (url) => doSave(url),
+        error: () => {
+          this.saving = false;
+          this.alertService.error("Failed to upload image. Please try again.");
+        },
+      });
+    } else {
+      doSave();
+    }
   }
 
   toggleAvailability(item: MenuItem): void {
-    this.apiService.toggleMenuItemAvailability(item.id, !item.isAvailable).subscribe({
-      next: () => this.loadItems(),
-    });
+    this.apiService
+      .toggleMenuItemAvailability(item.id, !item.isAvailable)
+      .subscribe({
+        next: () => this.loadItems(),
+        error: () => this.alertService.error("Failed to update availability."),
+      });
   }
 
   async deleteItem(id: number): Promise<void> {
-    const confirmed = await this.alertService.confirm("Delete Menu Item", "This action cannot be undone.");
-    if (!confirmed) {
-      return;
-    }
-    this.alertService.loading("Deleting menu item. Please wait.");
+    const confirmed = await this.alertService.confirm(
+      "Delete Item",
+      "Are you sure you want to delete this menu item?",
+    );
+    if (!confirmed) return;
     this.apiService.deleteMenuItem(id).subscribe({
       next: () => {
-        this.alertService.close();
-        this.alertService.success("Menu Item Deleted", "Menu item deleted successfully.");
+        this.alertService.success("Menu item deleted.");
         this.loadItems();
       },
-      error: () => {
-        this.alertService.close();
-        this.alertService.error("Delete Failed", "Failed to delete menu item.");
-      },
+      error: () => this.alertService.error("Failed to delete menu item."),
     });
   }
+
+  categoryLabel(cat: string): string {
+    return cat.replace(/_/g, " ");
+  }
 }
-
-

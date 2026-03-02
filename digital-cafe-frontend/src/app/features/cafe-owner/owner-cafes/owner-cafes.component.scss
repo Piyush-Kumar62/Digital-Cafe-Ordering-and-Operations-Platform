@@ -1,0 +1,1156 @@
+@use "sass:color";
+
+/* ============================================================
+   OWNER CAFÉ MANAGEMENT — owner-cafes.component.scss
+   ============================================================ */
+
+$primary: #6d28d9;
+$primary-light: #ede9fe;
+$accent: #f59e0b;
+$success: #10b981;
+$danger: #ef4444;
+$border: #e2e8f0;
+$text: #0f172a;
+$muted: #64748b;
+$card-shadow: 0 4px 24px rgba(0, 0, 0, 0.07);
+$radius: 16px;
+
+/* ============================= LOADING ============================= */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 5rem 1rem;
+  gap: 1rem;
+  color: $muted;
+
+  .spinner {
+    width: 44px;
+    height: 44px;
+    border: 4px solid $primary-light;
+    border-top-color: $primary;
+    border-radius: 50%;
+    animation: spin 0.75s linear infinite;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ============================= PAGE ============================= */
+.owner-cafes-page {
+  padding: 1.5rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* ============================= HEADER ============================= */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
+
+  h1 {
+    margin: 0;
+    font-size: 1.7rem;
+    color: $text;
+  }
+  p {
+    margin: 0.3rem 0 0;
+    color: $muted;
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 0.7rem;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+}
+
+/* ============================= BUTTONS ============================= */
+.btn-primary,
+.btn-outline,
+.btn-seed,
+.btn-manage,
+.btn-toggle,
+.btn-ghost,
+.btn-seed-fill,
+.btn-close {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  border-radius: 10px;
+  padding: 0.55rem 1.1rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.2s;
+}
+
+.btn-primary {
+  background: $primary;
+  color: #fff;
+  &:hover {
+    background: color.adjust($primary, $lightness: -8%);
+  }
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+.btn-outline {
+  background: #fff;
+  color: $primary;
+  border-color: $primary;
+  font-size: 0.78rem;
+  padding: 0.4rem 0.8rem;
+  white-space: nowrap;
+  &:hover {
+    background: $primary-light;
+  }
+}
+.btn-seed {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #fff;
+  &:hover {
+    filter: brightness(1.08);
+  }
+}
+.btn-manage {
+  background: #f1f5f9;
+  color: $text;
+  border-color: $border;
+  font-size: 0.78rem;
+  padding: 0.4rem 0.8rem;
+  white-space: nowrap;
+  &:hover {
+    background: $primary-light;
+    color: $primary;
+    border-color: $primary;
+  }
+}
+.btn-toggle {
+  font-size: 0.78rem;
+  padding: 0.4rem 0.8rem;
+  white-space: nowrap;
+  &.deactivate {
+    background: #fee2e2;
+    color: $danger;
+    border-color: $danger;
+  }
+  &.activate {
+    background: #dcfce7;
+    color: $success;
+    border-color: $success;
+  }
+}
+.btn-ghost {
+  background: transparent;
+  color: $muted;
+  border-color: $border;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.8rem;
+  &:hover {
+    background: #f8fafc;
+    color: $text;
+  }
+}
+.btn-seed-fill {
+  background: $primary-light;
+  color: $primary;
+  border-color: $primary;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.8rem;
+  &:hover {
+    background: $primary;
+    color: #fff;
+  }
+}
+.btn-close {
+  background: #f1f5f9;
+  color: $muted;
+  border-radius: 8px;
+  padding: 0.4rem 0.7rem;
+  &:hover {
+    background: #fee2e2;
+    color: $danger;
+  }
+}
+
+/* ============================= MY CAFE SECTION ============================= */
+.my-cafe-section {
+  .section-label {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    h2 {
+      margin: 0;
+      font-size: 1.2rem;
+    }
+  }
+  .badge-live {
+    background: #dcfce7;
+    color: #166534;
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+  }
+}
+
+.cafes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.my-cafe-card {
+  background: #fff;
+  border: 1px solid $border;
+  border-radius: $radius;
+  box-shadow: $card-shadow;
+  display: flex;
+  gap: 0;
+  overflow: hidden;
+  min-height: unset;
+
+  .cafe-img-wrap {
+    flex: 0 0 280px;
+    height: 270px;
+    overflow: hidden;
+    position: relative;
+    align-self: stretch;
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .cafe-status-badge {
+      position: absolute;
+      top: 0.8rem;
+      left: 0.8rem;
+      padding: 0.3rem 0.75rem;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      &.active {
+        background: #dcfce7;
+        color: #166534;
+      }
+      &.inactive {
+        background: #fef9c3;
+        color: #854d0e;
+      }
+    }
+  }
+
+  .cafe-details {
+    flex: 1;
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    overflow: hidden;
+  }
+
+  .cafe-title-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    h2 {
+      font-size: 1.25rem;
+      margin: 0;
+      color: $text;
+    }
+    .rating-chip {
+      background: #fef9c3;
+      color: #854d0e;
+      font-size: 0.85rem;
+      font-weight: 700;
+      padding: 0.25rem 0.65rem;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      i {
+        color: #d97706;
+        font-size: 0.8rem;
+      }
+    }
+  }
+
+  .cafe-desc {
+    color: $muted;
+    margin: 0;
+    line-height: 1.5;
+    font-size: 0.85rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .cafe-meta-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.35rem;
+    .meta-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.4rem;
+      color: #334155;
+      font-size: 0.82rem;
+      i {
+        color: $primary;
+        flex-shrink: 0;
+        margin-top: 0.1rem;
+      }
+    }
+  }
+
+  .cafe-action-row {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: nowrap;
+    align-items: center;
+    margin-top: auto;
+    overflow-x: auto;
+    padding-bottom: 0.1rem;
+    scrollbar-width: none;
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+}
+
+/* ============================= NO CAFE EMPTY ============================= */
+.no-cafe-section {
+  display: flex;
+  justify-content: center;
+}
+.empty-card {
+  background: #fff;
+  border: 2px dashed $border;
+  border-radius: $radius;
+  padding: 3rem 2rem;
+  text-align: center;
+  max-width: 540px;
+  width: 100%;
+
+  .empty-icon {
+    width: 88px;
+    height: 88px;
+    border-radius: 22px;
+    background: linear-gradient(
+      135deg,
+      rgba(109, 40, 217, 0.08),
+      rgba(139, 92, 246, 0.14)
+    );
+    border: 1.5px solid rgba(109, 40, 217, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.25rem;
+    position: relative;
+    color: $primary;
+
+    svg {
+      width: 44px;
+      height: 44px;
+    }
+
+    // Small coffee cup badge in bottom-right corner
+    .cafe-icon-badge {
+      position: absolute;
+      bottom: -8px;
+      right: -8px;
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: $primary;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(109, 40, 217, 0.35);
+      svg {
+        width: 16px;
+        height: 16px;
+      }
+    }
+  }
+
+  h2 {
+    margin: 0 0 0.5rem;
+    color: $text;
+  }
+  p {
+    color: $muted;
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+  }
+  .empty-actions {
+    display: flex;
+    justify-content: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+}
+
+/* ============================= FORM ============================= */
+.form-section {
+  background: #fff;
+  border: 1px solid $border;
+  border-radius: $radius;
+  box-shadow: $card-shadow;
+  padding: 1.75rem;
+}
+
+.form-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  h2 {
+    margin: 0;
+    font-size: 1.2rem;
+  }
+}
+
+.logo-upload-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+
+  .logo-preview img {
+    width: 180px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 12px;
+    border: 2px solid $border;
+  }
+  .logo-placeholder {
+    width: 180px;
+    height: 120px;
+    border: 2px dashed $border;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: $muted;
+    gap: 0.4rem;
+    i {
+      font-size: 1.6rem;
+    }
+    span {
+      font-size: 0.82rem;
+    }
+  }
+  .upload-btn {
+    background: $primary-light;
+    color: $primary;
+    border-radius: 8px;
+    padding: 0.4rem 1rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    &:hover {
+      background: $primary;
+      color: #fff;
+    }
+  }
+}
+
+.cafe-form {
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    .full {
+      grid-column: 1 / -1;
+    }
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+
+    label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #374151;
+      .req {
+        color: $danger;
+      }
+    }
+    input,
+    select,
+    textarea {
+      border: 1px solid $border;
+      border-radius: 10px;
+      padding: 0.6rem 0.8rem;
+      font-size: 0.9rem;
+      font-family: inherit;
+      transition: border 0.2s;
+      &:focus {
+        outline: none;
+        border-color: $primary;
+        box-shadow: 0 0 0 3px rgba(109, 40, 217, 0.1);
+      }
+    }
+    textarea {
+      resize: vertical;
+    }
+    .err {
+      color: $danger;
+      font-size: 0.8rem;
+    }
+  }
+
+  .legal-divider {
+    margin-top: 0.5rem;
+    h3 {
+      font-size: 0.95rem;
+      color: $muted;
+      margin: 0;
+      border-top: 1px solid $border;
+      padding-top: 0.75rem;
+    }
+  }
+
+  .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid $border;
+  }
+}
+
+/* ============================= SEED PANEL ============================= */
+.seed-panel {
+  background: linear-gradient(135deg, #faf5ff 0%, #ede9fe 100%);
+  border: 1px solid #c4b5fd;
+  border-radius: $radius;
+  padding: 1.75rem;
+
+  .seed-panel-header {
+    margin-bottom: 1.5rem;
+    h2 {
+      margin: 0 0 0.25rem;
+      font-size: 1.2rem;
+      color: $text;
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      i {
+        color: #8b5cf6;
+        font-size: 1.1rem;
+      }
+    }
+    p {
+      color: $muted;
+      margin: 0;
+    }
+  }
+}
+
+.seed-cafes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.25rem;
+}
+
+.seed-cafe-card {
+  background: #fff;
+  border: 1px solid $border;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.12);
+  }
+
+  .seed-img-wrap {
+    position: relative;
+    height: 180px;
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .seed-rating-badge {
+      position: absolute;
+      top: 0.6rem;
+      right: 0.6rem;
+      background: rgba(0, 0, 0, 0.55);
+      color: #fff;
+      padding: 0.2rem 0.55rem;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      backdrop-filter: blur(4px);
+    }
+  }
+
+  .seed-cafe-info {
+    padding: 1rem;
+    .seed-title-row {
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+      margin-bottom: 0.5rem;
+      h3 {
+        margin: 0;
+        font-size: 1rem;
+        color: $text;
+      }
+      .seed-location {
+        font-size: 0.8rem;
+        color: $muted;
+      }
+    }
+    .seed-desc {
+      font-size: 0.85rem;
+      color: #475569;
+      margin: 0 0 0.4rem;
+      line-height: 1.5;
+    }
+    .seed-hours {
+      font-size: 0.8rem;
+      color: $muted;
+      margin-bottom: 0.75rem;
+    }
+    .seed-expanded-details {
+      background: #f8fafc;
+      border-radius: 8px;
+      padding: 0.65rem;
+      margin-bottom: 0.75rem;
+      .seed-meta {
+        font-size: 0.8rem;
+        color: #475569;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        margin-bottom: 0.25rem;
+        i {
+          color: $primary;
+        }
+      }
+    }
+    .seed-actions {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+  }
+}
+
+/* ============================= PLATFORM FLOW SECTION ============================= */
+.platform-flow-section {
+  h2 {
+    font-size: 1.2rem;
+    margin: 0 0 1.25rem;
+    color: $text;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    i {
+      color: $primary;
+      font-size: 1.1rem;
+    }
+  }
+
+  .flow-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1rem;
+  }
+
+  .flow-card {
+    background: #fff;
+    border: 1px solid $border;
+    border-radius: 14px;
+    padding: 1.4rem 1.2rem;
+    text-align: center;
+    transition:
+      transform 0.2s,
+      box-shadow 0.2s;
+
+    &:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(109, 40, 217, 0.12);
+    }
+
+    .flow-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 14px;
+      background: linear-gradient(
+        135deg,
+        rgba(109, 40, 217, 0.1),
+        rgba(139, 92, 246, 0.14)
+      );
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 0.85rem;
+
+      i {
+        font-size: 1.5rem;
+        color: $primary;
+      }
+    }
+
+    h3 {
+      margin: 0 0 0.4rem;
+      font-size: 0.95rem;
+      color: $text;
+      font-weight: 700;
+    }
+    p {
+      font-size: 0.82rem;
+      color: $muted;
+      line-height: 1.5;
+      margin: 0;
+    }
+  }
+}
+
+/* ============================= MODAL ============================= */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.modal-box {
+  background: #fff;
+  border-radius: $radius;
+  width: 100%;
+  max-width: 640px;
+  max-height: 85vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid $border;
+  h2 {
+    margin: 0;
+    font-size: 1.1rem;
+  }
+}
+.modal-subtitle {
+  padding: 0.75rem 1.5rem 0;
+  color: $muted;
+  font-size: 0.88rem;
+}
+
+.modal-cafes-list {
+  overflow-y: auto;
+  flex: 1;
+  padding: 1rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.modal-cafe-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem;
+  border: 1px solid $border;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  &:hover {
+    background: $primary-light;
+    border-color: $primary;
+  }
+
+  img {
+    width: 72px;
+    height: 52px;
+    object-fit: cover;
+    border-radius: 8px;
+    flex-shrink: 0;
+  }
+  .modal-cafe-text {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    strong {
+      font-size: 0.9rem;
+      color: $text;
+    }
+    span {
+      font-size: 0.78rem;
+      color: $muted;
+    }
+  }
+  .modal-arrow {
+    color: $primary;
+    font-size: 1.3rem;
+    flex-shrink: 0;
+  }
+}
+
+.spin {
+  animation: spin 0.75s linear infinite;
+  display: inline-block;
+}
+
+/* ============================= DARK MODE ============================= */
+:host-context(.dark) {
+  .owner-cafes-page {
+    background: transparent;
+  }
+
+  .page-header {
+    h1 {
+      color: #f1f5f9;
+    }
+    p {
+      color: #94a3b8;
+    }
+  }
+
+  /* Café cards */
+  .my-cafe-card {
+    background: #1e293b;
+    border-color: rgba(255, 255, 255, 0.07);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+
+    .cafe-title-row h2 {
+      color: #f1f5f9;
+    }
+    .cafe-desc {
+      color: #94a3b8;
+    }
+    .cafe-meta-grid .meta-item {
+      color: #cbd5e1;
+    }
+  }
+
+  /* Section labels */
+  .my-cafe-section .section-label h2 {
+    color: #f1f5f9;
+  }
+  .badge-live {
+    background: rgba(22, 101, 52, 0.4);
+    color: #86efac;
+  }
+
+  /* Empty state */
+  .empty-card {
+    background: #1e293b;
+    border-color: rgba(255, 255, 255, 0.1);
+    h2 {
+      color: #f1f5f9;
+    }
+    p {
+      color: #94a3b8;
+    }
+    .empty-icon {
+      background: linear-gradient(
+        135deg,
+        rgba(99, 102, 241, 0.12),
+        rgba(139, 92, 246, 0.18)
+      );
+      border-color: rgba(99, 102, 241, 0.25);
+      color: #818cf8;
+      .cafe-icon-badge {
+        background: #6366f1;
+        box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
+      }
+    }
+  }
+
+  /* Buttons */
+  .btn-outline {
+    background: transparent;
+    color: #a78bfa;
+    border-color: #a78bfa;
+    &:hover {
+      background: rgba(167, 139, 250, 0.1);
+    }
+  }
+  .btn-manage {
+    background: #334155;
+    color: #e2e8f0;
+    border-color: #475569;
+    &:hover {
+      background: rgba(99, 102, 241, 0.2);
+      color: #a5b4fc;
+      border-color: #6366f1;
+    }
+  }
+  .btn-close {
+    background: #334155;
+    color: #94a3b8;
+    &:hover {
+      background: rgba(239, 68, 68, 0.2);
+      color: #f87171;
+    }
+  }
+  .btn-ghost {
+    background: transparent;
+    color: #94a3b8;
+    border-color: #334155;
+    &:hover {
+      background: #334155;
+      color: #e2e8f0;
+    }
+  }
+  .btn-seed-fill {
+    background: rgba(99, 102, 241, 0.15);
+    color: #a5b4fc;
+    border-color: #6366f1;
+    &:hover {
+      background: #6366f1;
+      color: #fff;
+    }
+  }
+
+  /* Form section */
+  .form-section {
+    background: #1e293b;
+    border-color: rgba(255, 255, 255, 0.07);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+  }
+  .form-header h2 {
+    color: #f1f5f9;
+  }
+
+  .cafe-form {
+    .form-group {
+      label {
+        color: #cbd5e1;
+      }
+      input,
+      select,
+      textarea {
+        background: #0f172a;
+        border-color: #334155;
+        color: #e2e8f0;
+        &::placeholder {
+          color: #475569;
+        }
+        &:focus {
+          border-color: #6366f1;
+          box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+        }
+      }
+    }
+    .legal-divider h3 {
+      color: #64748b;
+      border-top-color: #334155;
+    }
+    .form-actions {
+      border-top-color: #334155;
+    }
+  }
+
+  .logo-placeholder {
+    border-color: #334155;
+    color: #64748b;
+  }
+
+  /* Seed panel */
+  .seed-panel {
+    background: linear-gradient(
+      135deg,
+      rgba(30, 27, 75, 0.6),
+      rgba(46, 16, 101, 0.4)
+    );
+    border-color: rgba(139, 92, 246, 0.3);
+
+    .seed-panel-header {
+      h2 {
+        color: #f1f5f9;
+      }
+      p {
+        color: #94a3b8;
+      }
+    }
+  }
+
+  .seed-cafe-card {
+    background: #1e293b;
+    border-color: rgba(255, 255, 255, 0.07);
+
+    .seed-cafe-info {
+      .seed-title-row h3 {
+        color: #f1f5f9;
+      }
+      .seed-location {
+        color: #94a3b8;
+      }
+      .seed-desc {
+        color: #94a3b8;
+      }
+      .seed-hours {
+        color: #64748b;
+      }
+      .seed-expanded-details {
+        background: #0f172a;
+        .seed-meta {
+          color: #94a3b8;
+        }
+      }
+    }
+  }
+
+  /* Platform flow */
+  .platform-flow-section {
+    h2 {
+      color: #f1f5f9;
+      i {
+        color: #818cf8;
+      }
+    }
+    .flow-card {
+      background: #1e293b;
+      border-color: rgba(255, 255, 255, 0.07);
+      h3 {
+        color: #f1f5f9;
+      }
+      p {
+        color: #94a3b8;
+      }
+      &:hover {
+        box-shadow: 0 8px 24px rgba(99, 102, 241, 0.2);
+      }
+      .flow-icon {
+        background: linear-gradient(
+          135deg,
+          rgba(99, 102, 241, 0.15),
+          rgba(139, 92, 246, 0.2)
+        );
+        i {
+          color: #818cf8;
+        }
+      }
+    }
+  }
+
+  /* Modal */
+  .modal-overlay {
+    background: rgba(0, 0, 0, 0.7);
+  }
+  .modal-box {
+    background: #1e293b;
+    border: 1px solid #334155;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
+  }
+  .modal-header {
+    border-bottom-color: #334155;
+    h2 {
+      color: #f1f5f9;
+    }
+  }
+  .modal-subtitle {
+    color: #94a3b8;
+  }
+  .modal-cafe-item {
+    border-color: #334155;
+    &:hover {
+      background: rgba(99, 102, 241, 0.12);
+      border-color: #6366f1;
+    }
+    .modal-cafe-text {
+      strong {
+        color: #e2e8f0;
+      }
+      span {
+        color: #94a3b8;
+      }
+    }
+    .modal-arrow {
+      color: #818cf8;
+    }
+  }
+
+  /* Loading */
+  .loading-state {
+    color: #94a3b8;
+    .spinner {
+      border-color: rgba(139, 92, 246, 0.2);
+      border-top-color: #8b5cf6;
+    }
+  }
+}
+
+/* ============================= RESPONSIVE ============================= */
+@media (max-width: 900px) {
+  .my-cafe-card {
+    flex-direction: column;
+    .cafe-img-wrap {
+      flex: none;
+      height: 220px;
+      img {
+        height: 220px;
+      }
+    }
+  }
+  .cafe-form .form-grid {
+    grid-template-columns: 1fr;
+    .full {
+      grid-column: 1;
+    }
+  }
+}
+@media (max-width: 600px) {
+  .page-header {
+    flex-direction: column;
+  }
+  .cafe-meta-grid {
+    grid-template-columns: 1fr;
+  }
+  .seed-cafes-grid {
+    grid-template-columns: 1fr;
+  }
+  .flow-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .owner-cafes-page {
+    padding: 1rem;
+  }
+}

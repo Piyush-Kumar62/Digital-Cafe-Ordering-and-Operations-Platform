@@ -33,4 +33,7 @@ public class UserResponse {
     private Long cafeId;
     private String cafeName;
     private String registrationStatus;
+    private java.time.LocalDate joiningDate;
+    private String shift;
+    private Integer experienceYears;
 }

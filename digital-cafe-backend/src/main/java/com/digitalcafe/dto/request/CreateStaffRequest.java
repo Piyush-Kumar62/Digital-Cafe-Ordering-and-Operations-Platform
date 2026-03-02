@@ -36,4 +36,13 @@ public class CreateStaffRequest {
 
     @NotNull(message = "Cafe ID is required")
     private Long cafeId;
+
+    @NotBlank(message = "Role is required")
+    private String role;
+
+    private java.time.LocalDate joiningDate;
+    private Integer experienceYears;
+    private String shift;
+    private String govtIdType;
+    private String govtIdNumber;
 }

@@ -55,4 +55,13 @@ public interface CafeMapper {
                 .filter(table -> Boolean.TRUE.equals(table.getIsAvailable()))
                 .count();
     }
+
+    default List<String> mapGalleryImages(List<com.digitalcafe.entity.CafeGallery> galleryImages) {
+        if (galleryImages == null) {
+            return null;
+        }
+        return galleryImages.stream()
+                .map(com.digitalcafe.entity.CafeGallery::getImageUrl)
+                .toList();
+    }
 }

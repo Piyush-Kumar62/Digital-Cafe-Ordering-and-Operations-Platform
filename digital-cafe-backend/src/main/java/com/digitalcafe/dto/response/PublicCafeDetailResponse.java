@@ -13,7 +13,22 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PublicCafeDetailResponse {
-    private PublicCafeCardResponse cafeDetails;
+    private Long id;
+    private String name;
+    private String description;
+    private String address;
+    private String city;
+    private String state;
+    private String pincode;
+    private String phoneNumber;
+    private String email;
+    private String openTime;
+    private String closeTime;
+    private String logoUrl;
+    private String coverUrl;
+    private List<String> galleryImages;
+    private java.time.LocalDateTime createdAt;
+    
     private List<PublicMenuItemResponse> menuItems;
 
     @Data

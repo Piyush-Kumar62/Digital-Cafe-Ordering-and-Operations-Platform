@@ -54,4 +54,13 @@ public class CafeRequest {
     private String imageUrl;
 
     private Long ownerId; // Used by admin when creating cafe
+
+    @Size(max = 50)
+    private String fssaiNumber;
+
+    @Size(max = 30)
+    private String gstNumber;
+
+    @Size(max = 30)
+    private String msmeNumber;
 }

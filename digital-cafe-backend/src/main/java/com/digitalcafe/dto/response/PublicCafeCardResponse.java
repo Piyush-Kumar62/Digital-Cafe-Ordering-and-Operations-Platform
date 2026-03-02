@@ -12,10 +12,12 @@ import lombok.NoArgsConstructor;
 public class PublicCafeCardResponse {
     private Long id;
     private String name;
-    private String location;
+    private String city;
+    private String state;
     private String description;
     private String openTime;
     private String closeTime;
     private Double rating;
+    private String logoUrl;
     private String imageUrl;
 }

@@ -47,8 +47,34 @@ digital-cafe-backend/uploads/
 uploads/
 docs/uploads/
 
+# Agent/automation instructions (not for source control)
+PROJECT_AGENT_INSTRUCTIONS.md
+
+# Build/test output logs (generated files, not source)
+digital-cafe-backend/compile_output.txt
+digital-cafe-backend/compile_errors.txt
+digital-cafe-backend/compile_errors2.txt
+digital-cafe-backend/compile_errors3.txt
+digital-cafe-backend/clean_compile_output.txt
+digital-cafe-backend/clean_compile_output2.txt
+digital-cafe-backend/maven_output.txt
+digital-cafe-backend/single_test_log.txt
+digital-cafe-backend/test_logs.txt
+
+# Sensitive / environment-specific config (local only)
+digital-cafe-backend/.env
+.env
+
+# Database session files
+*.session.sql
+
 # Build/cache (workspace level)
 /.angular/cache
 digital-cafe-frontend/dist/
 digital-cafe-frontend/node_modules/
 Explain.md
+PROJECT_AGENT_INSTRUCTIONS.md
+JPA_ENTITY_STRUCTURE_BLUEPRINT.md
+file-storage-and-cafe-setup.md
+PRODUCTION_DATABASE_SCHEMA_ANALYSIS.md
+docs/sql

@@ -1,17 +1,29 @@
-<div class="profile-warning" *ngIf="user && user.profileCompletionPercentage && user.profileCompletionPercentage < 100">
+<div
+  class="profile-warning"
+  *ngIf="
+    user &&
+    user.profileCompletionPercentage &&
+    user.profileCompletionPercentage < 100
+  "
+>
   <h2>Complete Your Profile</h2>
-  <p>Your profile is only {{ user.profileCompletionPercentage }}% complete. Please complete your profile to unlock all features.</p>
+  <p>
+    Your profile is only {{ user.profileCompletionPercentage }}% complete.
+    Please complete your profile to unlock all features.
+  </p>
   <button routerLink="/customer/complete-profile">Complete Profile</button>
 </div>
 
 <div class="dashboard-grid" *ngIf="!loading; else loadingState">
   <section class="summary-cards">
-    <app-card *ngFor="let stat of summaryStats"
-              [title]="stat.title"
-              [value]="stat.value"
-              [icon]="stat.icon"
-              [description]="stat.description"
-              [variant]="stat.variant"></app-card>
+    <app-card
+      *ngFor="let stat of summaryStats"
+      [title]="stat.title"
+      [value]="stat.value"
+      [icon]="stat.icon"
+      [description]="stat.description"
+      [variant]="stat.variant"
+    ></app-card>
   </section>
 
   <!-- Charts -->
@@ -21,15 +33,13 @@
       [data]="monthlyBookingTrend"
       chartType="line"
       xAxisLabel="Month"
-      yAxisLabel="Number of Bookings">
+      yAxisLabel="Number of Bookings"
+    >
     </app-chart>
   </div>
   <div class="chart-container order-status-card">
     <h3>Order Status Distribution</h3>
-    <app-chart
-      [data]="orderStatusDistribution"
-      chartType="pie">
-    </app-chart>
+    <app-chart [data]="orderStatusDistribution" chartType="pie"> </app-chart>
   </div>
   <div class="chart-container monthly-spending-card">
     <h3>Monthly Spending</h3>
@@ -37,7 +47,8 @@
       [data]="monthlySpending"
       chartType="bar-vertical"
       xAxisLabel="Month"
-      yAxisLabel="Amount Spent (INR)">
+      yAxisLabel="Amount Spent (INR)"
+    >
     </app-chart>
   </div>
 
@@ -45,12 +56,21 @@
   <div class="quick-actions-container quick-actions-card">
     <h3>Quick Actions</h3>
     <div class="quick-actions">
-      <button routerLink="/customer/cafe" [disabled]="user && user.profileCompletionPercentage && user.profileCompletionPercentage < 100">Book New Table</button>
-      <button routerLink="/customer/cafe">Browse Cafes</button>
+      <button
+        routerLink="/cafes"
+        [disabled]="
+          user &&
+          user.profileCompletionPercentage &&
+          user.profileCompletionPercentage < 100
+        "
+      >
+        Book New Table
+      </button>
+      <button routerLink="/cafes">Browse Cafes</button>
       <button routerLink="/customer/order-tracking">Track Current Order</button>
       <button routerLink="/customer/my-orders">My Orders</button>
       <button routerLink="/customer/payments">My Payments</button>
-      <button routerLink="/customer/profile">Update Profile</button>
+      <button routerLink="/customer/complete-profile">Update Profile</button>
     </div>
   </div>
 
@@ -71,10 +91,16 @@
           </thead>
           <tbody>
             <tr *ngFor="let booking of upcomingBookings">
-              <td>{{ booking.bookingDate | date:'shortDate' }}</td>
+              <td>{{ booking.bookingDate | date: "shortDate" }}</td>
               <td>{{ booking.cafeName }}</td>
               <td>{{ booking.bookingTime }}</td>
-              <td><span class="badge" [ngClass]="getStatusClass(booking.status)">{{ booking.status }}</span></td>
+              <td>
+                <span
+                  class="badge"
+                  [ngClass]="getStatusClass(booking.status)"
+                  >{{ booking.status }}</span
+                >
+              </td>
             </tr>
             <tr *ngIf="upcomingBookings.length === 0">
               <td colspan="4">No upcoming bookings.</td>
@@ -95,8 +121,12 @@
           <tbody>
             <tr *ngFor="let order of recentOrders">
               <td>#{{ order.orderNumber }}</td>
-              <td><span class="badge" [ngClass]="getStatusClass(order.status)">{{ order.status }}</span></td>
-              <td>{{ order.totalAmount | currency:'INR' }}</td>
+              <td>
+                <span class="badge" [ngClass]="getStatusClass(order.status)">{{
+                  order.status
+                }}</span>
+              </td>
+              <td>{{ order.totalAmount | currency: "INR" }}</td>
             </tr>
             <tr *ngIf="recentOrders.length === 0">
               <td colspan="3">No recent orders.</td>

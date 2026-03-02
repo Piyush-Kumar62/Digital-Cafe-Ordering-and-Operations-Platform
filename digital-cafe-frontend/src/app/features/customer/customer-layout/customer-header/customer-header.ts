@@ -26,7 +26,7 @@ type HeaderNotification = {
   styleUrls: ['./customer-header.scss']
 })
 export class CustomerHeaderComponent implements OnInit {
-  readonly defaultAvatar = 'assets/digital-cafe-logo.png';
+  readonly defaultAvatar = 'assets/branding/brand-logo.png';
   readonly backendBaseUrl = environment.apiUrl.replace('/api', '');
   user: User | null = null;
   lastLogin: Date | null = null;
@@ -232,3 +232,4 @@ export class CustomerHeaderComponent implements OnInit {
     this.router.navigate(['/auth/login']);
   }
 }
+

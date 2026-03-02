@@ -32,24 +32,63 @@ export class CafeBrowseService {
 
   getPublicCafes(page: number, size: number): Observable<PageResponse<PublicCafeCard>> {
     return this.http
-      .get<ApiResponse<PageResponse<PublicCafeCard>>>(
+      .get<ApiResponse<any>>(
         `${this.apiUrl}/public/cafes?page=${page}&size=${size}`,
       )
       .pipe(
-        map((res) => res?.data || {
-          content: [],
-          pageNumber: page,
-          pageSize: size,
-          totalElements: 0,
-          totalPages: 0,
+        map((res) => {
+          const payload = res?.data || {};
+          const content = Array.isArray(payload?.content) ? payload.content : [];
+
+          return {
+            content: content.map((item: any) => ({
+              id: item.id,
+              name: item.name,
+              location: [item.city, item.state].filter(Boolean).join(", "),
+              description: item.description || "",
+              openTime: item.openTime || "",
+              closeTime: item.closeTime || "",
+              rating: Number(item.rating || 0),
+              imageUrl: item.imageUrl || item.logoUrl || "",
+            })),
+            pageNumber: Number(payload?.pageNumber ?? page),
+            pageSize: Number(payload?.pageSize ?? size),
+            totalElements: Number(payload?.totalElements ?? 0),
+            totalPages: Number(payload?.totalPages ?? 0),
+          } as PageResponse<PublicCafeCard>;
         }),
       );
   }
 
   getCafeDetails(cafeId: number): Observable<PublicCafeDetail> {
     return this.http
-      .get<ApiResponse<PublicCafeDetail>>(`${this.apiUrl}/public/cafes/${cafeId}`)
-      .pipe(map((res) => res?.data as PublicCafeDetail));
+      .get<ApiResponse<any>>(`${this.apiUrl}/public/cafes/${cafeId}`)
+      .pipe(
+        map((res) => {
+          const data = res?.data || {};
+          return {
+            cafeDetails: {
+              id: data.id,
+              name: data.name || "",
+              location: [data.city, data.state].filter(Boolean).join(", "),
+              description: data.description || "",
+              openTime: data.openTime || "",
+              closeTime: data.closeTime || "",
+              rating: Number(data.rating || 0),
+              imageUrl: data.coverUrl || data.logoUrl || data.imageUrl || "",
+            },
+            menuItems: (data.menuItems || []).map((item: any) => ({
+              id: item.id,
+              name: item.name || "",
+              description: item.description || "",
+              category: item.category || "OTHER",
+              price: Number(item.price || 0),
+              imageUrl: item.imageUrl || "",
+              available: !!item.available,
+            })),
+          } as PublicCafeDetail;
+        }),
+      );
   }
 
   getTableAvailability(

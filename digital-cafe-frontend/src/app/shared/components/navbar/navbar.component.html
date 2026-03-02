@@ -1,0 +1,115 @@
+<nav class="navbar" [class.landing-navbar]="isLandingPage">
+  <div class="navbar-container">
+    <div class="navbar-brand">
+      <a routerLink="/" class="brand-link">
+        <span class="brand-logo">
+          <img
+            src="assets/branding/brand-logo.png"
+            alt="Digital Café Logo"
+            class="logo-img"
+          />
+        </span>
+        <span class="brand-name">Digital Café</span>
+      </a>
+    </div>
+
+    <div class="navbar-right">
+      <div class="navbar-menu" [class.active]="menuOpen">
+        <!-- Public Navigation Links -->
+        <a
+          routerLink="/"
+          class="nav-link"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: true }"
+          (click)="closeMenu(); scrollToTop()"
+          >Home</a
+        >
+        <a
+          routerLink="/"
+          fragment="features"
+          class="nav-link"
+          (click)="closeMenu(); scrollToFragment('features')"
+          >Features</a
+        >
+        <a
+          routerLink="/"
+          fragment="how-it-works"
+          class="nav-link"
+          (click)="closeMenu(); scrollToFragment('how-it-works')"
+          >How It Works</a
+        >
+        <a
+          routerLink="/cafes"
+          class="nav-link"
+          routerLinkActive="active"
+          (click)="closeMenu()"
+          >Cafés</a
+        >
+        <a
+          routerLink="/about"
+          class="nav-link"
+          routerLinkActive="active"
+          (click)="closeMenu()"
+          >About</a
+        >
+        <a
+          routerLink="/contact"
+          class="nav-link"
+          routerLinkActive="active"
+          (click)="closeMenu()"
+          >Contact</a
+        >
+
+        <ng-container *ngIf="!isAuthenticated">
+          <a routerLink="/auth/login" class="nav-link" (click)="closeMenu()"
+            >Login</a
+          >
+          <a routerLink="/auth/register" class="nav-link" (click)="closeMenu()"
+            >Register</a
+          >
+        </ng-container>
+
+        <ng-container *ngIf="isAuthenticated && user">
+          <a
+            [routerLink]="dashboardRoute"
+            class="nav-link"
+            (click)="closeMenu()"
+            >Dashboard</a
+          >
+          <div class="user-menu">
+            <div class="user-avatar">
+              {{ getDisplayName().charAt(0) }}
+            </div>
+
+            <span class="user-name">
+              {{ getDisplayName() }}
+            </span>
+
+            <button class="btn-logout" (click)="logout()">Logout</button>
+          </div>
+        </ng-container>
+      </div>
+
+      <button
+        class="theme-toggle"
+        (click)="toggleTheme()"
+        [attr.aria-label]="
+          isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'
+        "
+      >
+        <span class="theme-icon">{{ isDarkMode ? "☀️" : "🌙" }}</span>
+      </button>
+
+      <button class="menu-toggle" (click)="toggleMenu()">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+  </div>
+</nav>
+<div
+  class="navbar-spacer"
+  [class.landing-spacer]="isLandingPage"
+  aria-hidden="true"
+></div>

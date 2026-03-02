@@ -1,0 +1,165 @@
+<app-navbar></app-navbar>
+    <div class="contact-container">
+      <div class="contact-content">
+        <div class="contact-hero">
+          <span class="hero-chip">Support Team Online</span>
+          <h1 class="contact-title">Contact Us</h1>
+          <p class="contact-subtitle">
+            Have questions? We'd love to hear from you. Send us a message and
+            we'll respond as soon as possible.
+          </p>
+          <div class="hero-points">
+            <span>Fast Response</span>
+            <span>Role Onboarding Help</span>
+            <span>Account & Access Support</span>
+          </div>
+        </div>
+
+        <div class="content-wrapper">
+          <div class="contact-info">
+            <h2>Get In Touch</h2>
+
+            <div class="info-card">
+              <div class="info-icon">📍</div>
+              <div class="info-details">
+                <h3>Address</h3>
+                <p>
+                  123 Digital Street<br />Café District, Tech City<br />India -
+                  110001
+                </p>
+              </div>
+            </div>
+
+            <div class="info-card">
+              <div class="info-icon">📧</div>
+              <div class="info-details">
+                <h3>Email</h3>
+                <p>support@digitalcafe.com<br />info@digitalcafe.com</p>
+              </div>
+            </div>
+
+            <div class="info-card">
+              <div class="info-icon">📞</div>
+              <div class="info-details">
+                <h3>Phone</h3>
+                <p>+91 123 456 7890<br />+91 987 654 3210</p>
+              </div>
+            </div>
+
+            <div class="info-card">
+              <div class="info-icon">⏰</div>
+              <div class="info-details">
+                <h3>Business Hours</h3>
+                <p>
+                  Monday - Friday: 9:00 AM - 6:00 PM<br />
+                  Saturday: 10:00 AM - 4:00 PM<br />
+                  Sunday: Closed
+                </p>
+              </div>
+            </div>
+
+            <div class="social-links">
+              <h3>Follow Us</h3>
+              <div class="social-icons">
+                <a href="https://www.linkedin.com" target="_blank" rel="noopener noreferrer" class="social-icon">💼</a>
+                <a href="https://x.com" target="_blank" rel="noopener noreferrer" class="social-icon">🐦</a>
+                <a href="https://www.instagram.com" target="_blank" rel="noopener noreferrer" class="social-icon">📸</a>
+                <a href="https://www.facebook.com" target="_blank" rel="noopener noreferrer" class="social-icon">📘</a>
+              </div>
+            </div>
+          </div>
+
+          <div class="contact-form-section">
+            <h2>Send us a Message</h2>
+            <p class="form-caption">Share your query and our team will connect with you shortly.</p>
+            <form
+              class="contact-form"
+              (ngSubmit)="submitForm()"
+              #contactForm="ngForm"
+            >
+              <div class="form-group">
+                <label for="name">Full Name *</label>
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  [(ngModel)]="formData.name"
+                  required
+                  placeholder="Enter your full name"
+                  class="form-input"
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="email">Email Address *</label>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  [(ngModel)]="formData.email"
+                  required
+                  email
+                  placeholder="your.email@example.com"
+                  class="form-input"
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="phone">Phone Number</label>
+                <input
+                  type="tel"
+                  id="phone"
+                  name="phone"
+                  [(ngModel)]="formData.phone"
+                  placeholder="+91 1234567890"
+                  class="form-input"
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="subject">Subject *</label>
+                <input
+                  type="text"
+                  id="subject"
+                  name="subject"
+                  [(ngModel)]="formData.subject"
+                  required
+                  placeholder="What is this regarding?"
+                  class="form-input"
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="message">Message *</label>
+                <textarea
+                  id="message"
+                  name="message"
+                  [(ngModel)]="formData.message"
+                  required
+                  rows="6"
+                  placeholder="Tell us more about your inquiry..."
+                  class="form-input"
+                ></textarea>
+              </div>
+
+              <button
+                type="submit"
+                class="submit-button"
+                [disabled]="!contactForm.valid || isSubmitting"
+              >
+                {{ isSubmitting ? "Sending..." : "Send Message" }}
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <div class="map-section">
+          <h2>Find Us</h2>
+          <div class="map-placeholder">
+            <p>📍 Map Location</p>
+            <p class="map-text">123 Digital Street, Café District, Tech City</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <app-footer></app-footer>

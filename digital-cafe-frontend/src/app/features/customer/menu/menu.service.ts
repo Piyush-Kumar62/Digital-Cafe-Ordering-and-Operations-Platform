@@ -28,7 +28,6 @@ export class MenuService {
 
   getActiveCafes(): Observable<Cafe[]> {
     return this.http
-      // Use the stable public active-cafes endpoint.
       .get<{ data?: Cafe[] }>(`${this.cafeApiUrl}/active`)
       .pipe(map((res) => res?.data || []));
   }

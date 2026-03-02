@@ -2,6 +2,7 @@ import { CommonModule } from "@angular/common";
 import { Component, OnInit } from "@angular/core";
 import { Router } from "@angular/router";
 import { PublicCafeCard } from "@shared/models/cafe.model";
+import { buildPublicFallbackCafes } from "@shared/data/featured-cafes.data";
 import { CafeBrowseService } from "../cafe-browse.service";
 
 @Component({
@@ -51,12 +52,14 @@ export class CafeListComponent implements OnInit {
     this.loading = true;
     this.cafeBrowseService.getPublicCafes(this.page, this.size).subscribe({
       next: (res) => {
-        this.cafes = res.content || [];
-        this.totalPages = res.totalPages || 0;
+        const content = res.content || [];
+        this.cafes = content.length > 0 ? content : buildPublicFallbackCafes();
+        this.totalPages = content.length > 0 ? (res.totalPages || 0) : 1;
         this.loading = false;
       },
       error: () => {
-        this.cafes = [];
+        this.cafes = buildPublicFallbackCafes();
+        this.totalPages = 1;
         this.loading = false;
       },
     });

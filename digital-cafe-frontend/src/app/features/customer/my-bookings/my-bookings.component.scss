@@ -1,0 +1,12 @@
+.page { padding: 1rem; }
+    header h1 { margin: 0; }
+    header p { color: #64748b; margin: .4rem 0 1rem; }
+    .grid { display: grid; gap: .8rem; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+    .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: .9rem; }
+    .card h3 { margin: 0 0 .4rem; }
+    .card p { margin: .25rem 0; color: #475569; }
+    .status { display: inline-block; margin-top: .5rem; font-size: .78rem; font-weight: 700; background: #e2e8f0; padding: .2rem .5rem; border-radius: 999px; }
+    .pagination { margin-top: 1rem; display: flex; align-items: center; justify-content: center; gap: .8rem; }
+    .pagination button { border: 1px solid #cbd5e1; background: #fff; border-radius: 8px; padding: .45rem .7rem; }
+    .empty { background: #fff; border: 1px dashed #cbd5e1; border-radius: 12px; padding: 1rem; }
+    .empty a { margin-left: .5rem; color: #2563eb; }

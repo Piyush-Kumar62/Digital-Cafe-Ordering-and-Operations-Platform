@@ -1,0 +1,30 @@
+<section class="page">
+      <header>
+        <h1>My Orders</h1>
+        <p>Review your orders and jump to live tracking.</p>
+      </header>
+
+      <div class="list" *ngIf="pagedOrders.length; else empty">
+        <article class="card" *ngFor="let order of pagedOrders">
+          <div>
+            <h3>{{ order.orderNumber || ('Order #' + order.id) }}</h3>
+            <p>{{ order.items.length }} items • {{ order.totalAmount | currency:'INR' }}</p>
+            <p>Status: <strong>{{ order.status }}</strong></p>
+          </div>
+          <a [routerLink]="['/customer/order-tracking', order.id]">Track</a>
+        </article>
+      </div>
+
+      <div class="pagination" *ngIf="totalPages > 1">
+        <button (click)="prevPage()" [disabled]="page === 1">Previous</button>
+        <span>Page {{ page }} / {{ totalPages }}</span>
+        <button (click)="nextPage()" [disabled]="page === totalPages">Next</button>
+      </div>
+
+      <ng-template #empty>
+        <div class="empty">
+          No orders yet.
+          <a routerLink="/customer/cafe">Browse cafes</a>
+        </div>
+      </ng-template>
+    </section>

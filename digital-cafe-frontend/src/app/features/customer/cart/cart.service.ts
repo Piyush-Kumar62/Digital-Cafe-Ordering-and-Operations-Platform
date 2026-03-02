@@ -2,8 +2,7 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { Cart, CartItem } from '@shared/models/cart.model';
 import { MenuItem } from '@shared/models/menu.model';
-import { HttpClient } from '@angular/common/http';
-import { environment } from '@environments/environment';
+import { ApiService } from '@core/services/api.service';
 import { Order, OrderRequest } from '@shared/models/order.model';
 import { map } from 'rxjs/operators';
 
@@ -14,9 +13,7 @@ export class CartService {
   private cartSubject = new BehaviorSubject<Cart>({ items: [], totalItems: 0, totalPrice: 0 });
   cart$: Observable<Cart> = this.cartSubject.asObservable();
 
-  private apiUrl = `${environment.apiUrl}/orders`;
-
-  constructor(private http: HttpClient) { }
+  constructor(private apiService: ApiService) { }
 
   addItem(item: MenuItem): void {
     const currentCart = this.cartSubject.getValue();
@@ -84,9 +81,7 @@ export class CartService {
       }))
     };
 
-    return this.http
-      .post<{ data?: Order }>(this.apiUrl, fullOrderRequest)
-      .pipe(map((res) => res?.data as Order));
+    return this.apiService.createOrder(fullOrderRequest);
   }
 
   private updateCart(items: CartItem[]): void {

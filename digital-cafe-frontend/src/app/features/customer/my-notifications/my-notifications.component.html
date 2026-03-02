@@ -1,0 +1,18 @@
+<section class="page">
+      <header>
+        <h1>Notifications</h1>
+        <p>Real-time updates for bookings and orders.</p>
+      </header>
+
+      <div class="stack" *ngIf="notifications.length; else empty">
+        <article class="card" *ngFor="let n of notifications">
+          <h3>{{ n.title }}</h3>
+          <p>{{ n.message }}</p>
+          <small>{{ n.createdAt }}</small>
+        </article>
+      </div>
+
+      <ng-template #empty>
+        <div class="card">No notifications yet.</div>
+      </ng-template>
+    </section>

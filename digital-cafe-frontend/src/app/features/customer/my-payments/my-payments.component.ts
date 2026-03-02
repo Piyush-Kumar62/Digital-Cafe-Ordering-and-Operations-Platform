@@ -8,60 +8,8 @@ import { Payment } from "@shared/models/payment.model";
   selector: "app-my-payments",
   standalone: true,
   imports: [CommonModule, RouterModule],
-  template: `
-    <section class="page">
-      <header>
-        <h1>Payments</h1>
-        <p>View payment history and transaction status.</p>
-      </header>
-
-      <div class="table-wrap" *ngIf="pagedPayments.length; else empty">
-        <table>
-          <thead>
-            <tr>
-              <th>Transaction</th>
-              <th>Order</th>
-              <th>Amount</th>
-              <th>Status</th>
-              <th>Date</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let payment of pagedPayments">
-              <td>{{ payment.transactionId || ('Payment #' + payment.id) }}</td>
-              <td>{{ payment.orderNumber || payment.orderId }}</td>
-              <td>{{ payment.amount | currency:'INR' }}</td>
-              <td><span class="status">{{ payment.status }}</span></td>
-              <td>{{ payment.completedAt || payment.initiatedAt || '-' }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="pagination" *ngIf="totalPages > 1">
-        <button (click)="prevPage()" [disabled]="page === 1">Previous</button>
-        <span>Page {{ page }} / {{ totalPages }}</span>
-        <button (click)="nextPage()" [disabled]="page === totalPages">Next</button>
-      </div>
-
-      <ng-template #empty>
-        <div class="empty">No payments found.</div>
-      </ng-template>
-    </section>
-  `,
-  styles: [`
-    .page { padding: 1rem; }
-    header h1 { margin: 0; }
-    header p { color: #64748b; margin: .4rem 0 1rem; }
-    .table-wrap { overflow-x: auto; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; }
-    table { width: 100%; border-collapse: collapse; min-width: 700px; }
-    th, td { text-align: left; border-bottom: 1px solid #e2e8f0; padding: .7rem; }
-    th { color: #475569; font-size: .78rem; text-transform: uppercase; }
-    .status { font-size: .75rem; font-weight: 700; background: #e2e8f0; border-radius: 999px; padding: .2rem .5rem; }
-    .pagination { margin-top: 1rem; display: flex; align-items: center; justify-content: center; gap: .8rem; }
-    .pagination button { border: 1px solid #cbd5e1; background: #fff; border-radius: 8px; padding: .45rem .7rem; }
-    .empty { background: #fff; border: 1px dashed #cbd5e1; border-radius: 12px; padding: 1rem; }
-  `],
+  templateUrl: './my-payments.component.html',
+  styleUrls: ['./my-payments.component.scss'],
 })
 export class MyPaymentsComponent implements OnInit {
   payments: Payment[] = [];

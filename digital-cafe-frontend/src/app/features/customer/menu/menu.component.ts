@@ -57,15 +57,29 @@ export class MenuComponent implements OnInit, OnDestroy {
   ];
 
   private readonly fallbackImages: Record<string, string> = {
-    APPETIZER: 'https://images.unsplash.com/photo-1543339308-43e59d6b73a6?auto=format&fit=crop&w=1000&q=80',
-    MAIN_COURSE: 'https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?auto=format&fit=crop&w=1000&q=80',
-    DESSERT: 'https://images.unsplash.com/photo-1551024601-bec78aea704b?auto=format&fit=crop&w=1000&q=80',
-    BEVERAGE: 'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=1000&q=80',
-    COFFEE: 'https://images.unsplash.com/photo-1511920170033-f8396924c348?auto=format&fit=crop&w=1000&q=80',
-    SNACK: 'https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=1000&q=80',
-    SNACKS: 'https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=1000&q=80',
-    DEFAULT: 'https://images.unsplash.com/photo-1495195134817-aeb325a55b65?auto=format&fit=crop&w=1000&q=80',
+    APPETIZER: 'assets/downloads/unsplash/menu-appetizer.jpg',
+    MAIN_COURSE: 'assets/downloads/unsplash/menu-main-course.jpg',
+    DESSERT: 'assets/downloads/unsplash/menu-dessert.jpg',
+    BEVERAGE: 'assets/downloads/unsplash/menu-beverage.jpg',
+    COFFEE: 'assets/downloads/unsplash/menu-coffee.jpg',
+    SNACK: 'assets/downloads/unsplash/menu-snack.jpg',
+    SNACKS: 'assets/downloads/unsplash/menu-snack.jpg',
+    DEFAULT: 'assets/downloads/unsplash/menu-default.jpg',
   };
+  private readonly itemKeywordImages: Array<{ keywords: string[]; image: string }> = [
+    { keywords: ['pizza'], image: 'assets/downloads/menu-items/pizza.jpg' },
+    { keywords: ['burger'], image: 'assets/downloads/menu-items/burger.jpg' },
+    { keywords: ['pasta', 'spaghetti', 'macaroni'], image: 'assets/downloads/menu-items/pasta.jpg' },
+    { keywords: ['sandwich', 'sub', 'panini'], image: 'assets/downloads/menu-items/sandwich.jpg' },
+    { keywords: ['fries', 'french fries', 'chips'], image: 'assets/downloads/menu-items/fries.jpg' },
+    { keywords: ['salad'], image: 'assets/downloads/menu-items/salad.jpg' },
+    { keywords: ['cake', 'pastry', 'brownie'], image: 'assets/downloads/menu-items/cake.jpg' },
+    { keywords: ['ice cream', 'gelato', 'sundae'], image: 'assets/downloads/menu-items/ice-cream.jpg' },
+    { keywords: ['coffee', 'espresso', 'latte', 'cappuccino', 'americano', 'mocha'], image: 'assets/downloads/menu-items/coffee.jpg' },
+    { keywords: ['tea', 'chai', 'green tea'], image: 'assets/downloads/menu-items/tea.jpg' },
+    { keywords: ['juice'], image: 'assets/downloads/menu-items/juice.jpg' },
+    { keywords: ['smoothie', 'shake', 'milkshake'], image: 'assets/downloads/menu-items/smoothie.jpg' },
+  ];
 
   constructor(
     private menuService: MenuService,
@@ -125,8 +139,12 @@ export class MenuComponent implements OnInit, OnDestroy {
   }
 
   getMenuImage(item: MenuItem): string {
-    if (item.imageUrl && /^https?:\/\//i.test(item.imageUrl)) {
+    if (item.imageUrl && (/^https?:\/\//i.test(item.imageUrl) || item.imageUrl.startsWith('assets/'))) {
       return item.imageUrl;
+    }
+    const keywordImage = this.resolveImageByName(item?.name);
+    if (keywordImage) {
+      return keywordImage;
     }
     return this.fallbackImages[(item.category || '').toUpperCase()] || this.fallbackImages['DEFAULT'];
   }
@@ -136,6 +154,13 @@ export class MenuComponent implements OnInit, OnDestroy {
     if (!img) return;
     img.onerror = null;
     img.src = this.fallbackImages['DEFAULT'];
+  }
+
+  private resolveImageByName(name?: string): string | null {
+    const value = (name || '').toLowerCase();
+    if (!value) return null;
+    const match = this.itemKeywordImages.find((entry) => entry.keywords.some((key) => value.includes(key)));
+    return match?.image ?? null;
   }
 
   onCafeChange(cafeIdValue: string | number): void {
@@ -573,5 +598,7 @@ export class MenuComponent implements OnInit, OnDestroy {
     this.selectedTime = `${hh}:${mm}`;
   }
 }
+
+
 
 

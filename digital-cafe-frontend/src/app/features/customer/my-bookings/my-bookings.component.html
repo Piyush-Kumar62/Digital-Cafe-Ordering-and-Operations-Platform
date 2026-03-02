@@ -1,0 +1,29 @@
+<section class="page">
+      <header>
+        <h1>My Bookings</h1>
+        <p>Track your table reservations and status.</p>
+      </header>
+
+      <div class="grid" *ngIf="pagedBookings.length; else empty">
+        <article class="card" *ngFor="let booking of pagedBookings">
+          <h3>{{ booking.bookingNumber || ('Booking #' + booking.id) }}</h3>
+          <p>Cafe: {{ booking.cafeName || ('Cafe #' + booking.cafeId) }}</p>
+          <p>Date: {{ booking.bookingDate }} {{ booking.bookingTime }}</p>
+          <p>Guests: {{ booking.numberOfGuests }}</p>
+          <span class="status">{{ booking.status }}</span>
+        </article>
+      </div>
+
+      <div class="pagination" *ngIf="totalPages > 1">
+        <button (click)="prevPage()" [disabled]="page === 1">Previous</button>
+        <span>Page {{ page }} / {{ totalPages }}</span>
+        <button (click)="nextPage()" [disabled]="page === totalPages">Next</button>
+      </div>
+
+      <ng-template #empty>
+        <div class="empty">
+          No bookings found.
+          <a routerLink="/customer/cafe">Book a table</a>
+        </div>
+      </ng-template>
+    </section>

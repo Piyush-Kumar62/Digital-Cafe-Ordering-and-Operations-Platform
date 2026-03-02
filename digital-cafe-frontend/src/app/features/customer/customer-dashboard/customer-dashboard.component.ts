@@ -31,7 +31,6 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
   upcomingBookings: Booking[] = [];
   user: User | null = null;
 
-  // Chart data
   monthlyBookingTrend: any[] = [];
   orderStatusDistribution: any[] = [];
   monthlySpending: any[] = [];
@@ -102,7 +101,6 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
   private prepareCharts(bookings: Booking[], orders: Order[]): void {
     const monthLabels = this.getLastSixMonths();
 
-    // 1. Monthly Booking Trend (Line Chart)
     const bookingCountsByMonth = bookings.reduce((acc, b) => {
       const date = new Date(b.bookingDate);
       if (Number.isNaN(date.getTime())) return acc;
@@ -116,7 +114,6 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
       series: monthLabels.map(month => ({ name: month, value: bookingCountsByMonth[month] || 0 }))
     }];
 
-    // 2. Order Status Distribution (Pie Chart)
     const orderStatusCounts = orders.reduce((acc, o) => {
       const status = o.status.toString();
       acc[status] = (acc[status] || 0) + 1;
@@ -128,7 +125,6 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
       value: orderStatusCounts[status]
     }));
 
-    // 3. Monthly Spending (Bar Chart)
     const spendingByMonth = orders.reduce((acc, o) => {
       if (!o.createdAt) return acc;
       const date = new Date(o.createdAt);

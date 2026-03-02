@@ -404,9 +404,15 @@
         (click)="navigateToCafe(cafe.id)"
       >
         <div class="cafe-image">
-          <img [src]="getCafeImage(cafe)" [alt]="cafe.name" />
+          <img
+            [src]="getCafeImage(cafe)"
+            [alt]="cafe.name"
+            (error)="
+              $any($event.target).src = '/assets/cafe/cafe-interior-01.jpg'
+            "
+          />
           <div class="cafe-rating">
-            <span>⭐ {{ cafe.rating.toFixed(1) }}</span>
+            <span>⭐ {{ formatCafeRating(cafe) }}</span>
           </div>
         </div>
         <div class="cafe-info">
@@ -473,8 +479,8 @@
           </div>
           <h3>Need instant clarity before you start?</h3>
           <p>
-            These answers cover registration rules, role onboarding, and how platform access works
-            from login to dashboard modules.
+            These answers cover registration rules, role onboarding, and how
+            platform access works from login to dashboard modules.
           </p>
           <p class="faq-total">{{ faqs.length }} quick answers available</p>
           <div class="faq-side-points">
@@ -488,8 +494,9 @@
         <article class="faq-side-note" aria-label="FAQ support note">
           <h4>Still need help?</h4>
           <p>
-            Start with the most common questions first. If you still need support, we can guide
-            you with onboarding, role activation, and account recovery.
+            Start with the most common questions first. If you still need
+            support, we can guide you with onboarding, role activation, and
+            account recovery.
           </p>
           <ul class="faq-side-checklist">
             <li>Email verification help</li>
@@ -515,10 +522,16 @@
             [attr.aria-controls]="'faq-answer-' + i"
           >
             <span class="faq-question-text">{{ faq.question }}</span>
-            <span class="faq-toggle" aria-hidden="true">{{ activeFaqIndex === i ? "−" : "+" }}</span>
+            <span class="faq-toggle" aria-hidden="true">{{
+              activeFaqIndex === i ? "−" : "+"
+            }}</span>
           </button>
 
-          <div class="faq-answer" *ngIf="activeFaqIndex === i" [id]="'faq-answer-' + i">
+          <div
+            class="faq-answer"
+            *ngIf="activeFaqIndex === i"
+            [id]="'faq-answer-' + i"
+          >
             {{ faq.answer }}
           </div>
         </article>
@@ -530,11 +543,3 @@
 <app-cta></app-cta>
 
 <app-footer></app-footer>
-
-
-
-
-
-
-
-

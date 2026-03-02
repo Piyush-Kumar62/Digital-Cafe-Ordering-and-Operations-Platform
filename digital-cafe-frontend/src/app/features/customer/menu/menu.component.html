@@ -7,7 +7,7 @@
     <div class="state" *ngIf="loadingCafes">Loading cafes...</div>
     <div class="cafe-grid" *ngIf="!loadingCafes && cafes.length > 0">
       <article class="cafe-card" *ngFor="let cafe of cafes" (click)="selectCafeCard(cafe.id)" [class.active]="selectedCafeId === cafe.id">
-        <img [src]="cafe.imageUrl || 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1200&q=80'" [alt]="cafe.name" />
+        <img [src]="cafe.imageUrl || 'assets/downloads/unsplash/cafe-cover-default.jpg'" [alt]="cafe.name" />
         <span class="rating">★ {{ (cafe.rating || 0) | number: '1.1-1' }}</span>
         <div class="cafe-content">
           <h3>{{ cafe.name }}</h3>
@@ -143,3 +143,6 @@
     <p class="order-meta">Order #{{ order.orderNumber || order.id }} · Total ${{ order.totalAmount | number: '1.2-2' }}</p>
   </section>
 </section>
+
+
+

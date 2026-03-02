@@ -6,6 +6,8 @@ import { FooterComponent } from "@shared/components/footer/footer.component";
 import { CtaComponent } from "@shared/components/cta/cta.component";
 import { ApiService } from "@core/services/api.service";
 import { Cafe } from "@shared/models/cafe.model";
+import { buildLandingFallbackCafes } from "@shared/data/featured-cafes.data";
+import { environment } from "@environments/environment";
 
 @Component({
   selector: "app-landing",
@@ -24,42 +26,45 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
   featuredCafes: Cafe[] = [];
   loading = true;
   private observer?: IntersectionObserver;
+  private readonly animatableSelector =
+    ".feature-card, .cafe-card, .testimonial-card, .section-header, .timeline-step, .role-card, .workflow-step, .security-card, .faq-item, .metric-box";
 
   features = [
     {
       icon: "🍽️",
-      title: "Easy Ordering",
+      title: "Easy Online Ordering",
       description:
-        "Browse menus and order with just a few taps. Simple, fast, and convenient.",
+        "Browse café menus, select your food, and pre-order before you arrive. Skip the wait completely.",
     },
     {
       icon: "📅",
       title: "Table Booking",
       description:
-        "Reserve your favorite spot in advance. Never wait in line again.",
+        "Reserve your table for a specific date and time slot. Conflict detection ensures no double-bookings.",
     },
     {
       icon: "💳",
-      title: "Secure Payments",
+      title: "Razorpay Payments",
       description:
-        "Multiple payment options with bank-grade security for your peace of mind.",
+        "Pay securely via UPI, Card, Net Banking, or Wallet. All transactions are encrypted end-to-end.",
     },
     {
       icon: "⚡",
-      title: "Real-time Updates",
+      title: "Real-Time Order Tracking",
       description:
-        "Track your order status live. Know exactly when your food is ready.",
+        "WebSocket-powered live order status — watch your order move from Placed → Preparing → Ready → Served.",
     },
     {
-      icon: "👨‍🍳",
-      title: "Chef Dashboard",
+      icon: "🏪",
+      title: "Café Management",
       description:
-        "Streamlined kitchen operations with real-time order management.",
+        "Café owners manage their profile, tables, menu items, and staff from a dedicated operations dashboard.",
     },
     {
-      icon: "📊",
-      title: "Analytics",
-      description: "Powerful insights for café owners to grow their business.",
+      icon: "👥",
+      title: "Multi-Role Platform",
+      description:
+        "Five distinct roles — Admin, Café Owner, Chef, Waiter, and Customer — each with tailored dashboards.",
     },
   ];
 
@@ -357,11 +362,7 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
       });
     }, options);
 
-    // Observe all animatable elements
-    const elements = document.querySelectorAll(
-      ".feature-card, .cafe-card, .testimonial-card, .section-header, .timeline-step, .role-card, .workflow-step, .security-card, .faq-item, .metric-box",
-    );
-    elements.forEach((el) => this.observer?.observe(el));
+    this.observeAnimatableElements();
   }
 
   loadFeaturedCafes(): void {
@@ -369,95 +370,65 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
     this.apiService.getActiveCafes().subscribe({
       next: (cafes) => {
         if (cafes && cafes.length > 0) {
-          this.featuredCafes = cafes.slice(0, 6);
+          // Backend CafeResponse uses openTime/closeTime; Cafe model uses openingTime/closingTime
+          this.featuredCafes = cafes.slice(0, 6).map((c: any) => ({
+            ...c,
+            openingTime: c.openingTime || c.openTime || "",
+            closingTime: c.closingTime || c.closeTime || "",
+          }));
+          this.observeAnimatableElements();
         }
       },
       error: () => {
         // Fallback data already loaded in ngOnInit
+        this.observeAnimatableElements();
       },
     });
   }
 
+  private observeAnimatableElements(): void {
+    // Wait for Angular to paint list content, then observe and reveal.
+    requestAnimationFrame(() => {
+      const elements = document.querySelectorAll(this.animatableSelector);
+      elements.forEach((el) => {
+        el.classList.add("animate-in");
+        this.observer?.observe(el);
+      });
+    });
+  }
+
   getFallbackCafes(): Cafe[] {
-    return [
-      {
-        id: 1,
-        name: "The Morning Brew",
-        description: "Artisan coffee and fresh pastries in a cozy atmosphere",
-        city: "San Francisco",
-        state: "CA",
-        rating: 4.8,
-        openingTime: "7:00 AM",
-        closingTime: "8:00 PM",
-        imageUrl:
-          "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=400&h=300&fit=crop",
-      },
-      {
-        id: 2,
-        name: "Café Delight",
-        description: "Specialty drinks and homemade desserts served daily",
-        city: "Portland",
-        state: "OR",
-        rating: 4.6,
-        openingTime: "6:30 AM",
-        closingTime: "9:00 PM",
-        imageUrl:
-          "https://images.unsplash.com/photo-1445116572660-236099ec97a0?w=400&h=300&fit=crop",
-      },
-      {
-        id: 3,
-        name: "Urban Grind",
-        description: "Modern café with locally roasted beans and quick bites",
-        city: "Seattle",
-        state: "WA",
-        rating: 4.9,
-        openingTime: "6:00 AM",
-        closingTime: "10:00 PM",
-        imageUrl:
-          "https://images.unsplash.com/photo-1493857671505-72967e2e2760?w=400&h=300&fit=crop",
-      },
-      {
-        id: 4,
-        name: "Sunset Coffee House",
-        description:
-          "Relaxing ambiance with organic coffee and healthy options",
-        city: "Austin",
-        state: "TX",
-        rating: 4.7,
-        openingTime: "7:30 AM",
-        closingTime: "7:00 PM",
-        imageUrl:
-          "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=400&h=300&fit=crop",
-      },
-      {
-        id: 5,
-        name: "Bean & Leaf",
-        description: "Coffee and tea specialists with gourmet sandwiches",
-        city: "Denver",
-        state: "CO",
-        rating: 4.5,
-        openingTime: "6:00 AM",
-        closingTime: "8:00 PM",
-        imageUrl:
-          "https://images.unsplash.com/photo-1511920170033-f8396924c348?w=400&h=300&fit=crop",
-      },
-      {
-        id: 6,
-        name: "The Daily Roast",
-        description: "Fresh roasted coffee with breakfast and lunch specials",
-        city: "Boston",
-        state: "MA",
-        rating: 4.8,
-        openingTime: "6:30 AM",
-        closingTime: "6:00 PM",
-        imageUrl:
-          "https://images.unsplash.com/photo-1447933601403-0c6688de566e?w=400&h=300&fit=crop",
-      },
-    ] as Cafe[];
+    return buildLandingFallbackCafes();
   }
 
   getCafeImage(cafe: Cafe): string {
-    return cafe.imageUrl || "https://via.placeholder.com/400x300?text=Cafe";
+    const src = cafe.logoUrl || cafe.imageUrl || (cafe as any).logoUrl || (cafe as any).imageUrl;
+    if (!src) {
+      // No image stored — use logo endpoint as last resort
+      if (cafe.id) {
+        const base = environment.apiUrl.replace(/\/api$/, '');
+        return `${base}/api/cafes/${cafe.id}/logo`;
+      }
+      return '/assets/cafe/cafe-interior-01.jpg';
+    }
+    // Full http/https URL (Unsplash, CDN, etc.) — use directly
+    if (/^https?:\/\//.test(src)) return src;
+    // Backend relative upload path (/uploads/...) — prefix server base
+    if (src.startsWith('/')) {
+      const base = environment.apiUrl.replace(/\/api$/, '');
+      return `${base}${src}`;
+    }
+    // Absolute filesystem path (legacy data) — use logo API endpoint
+    if (cafe.id) {
+      const base = environment.apiUrl.replace(/\/api$/, '');
+      return `${base}/api/cafes/${cafe.id}/logo`;
+    }
+    return '/assets/cafe/cafe-interior-01.jpg';
+  }
+
+  formatCafeRating(cafe: Cafe): string {
+    const ratingValue = Number(cafe.rating);
+    return Number.isFinite(ratingValue) ? ratingValue.toFixed(1) : "N/A";
   }
 
   navigateToCafe(cafeId: number): void {
@@ -475,4 +446,3 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
     this.activeFaqIndex = this.activeFaqIndex === index ? null : index;
   }
 }
-

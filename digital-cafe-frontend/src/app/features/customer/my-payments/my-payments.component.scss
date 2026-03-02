@@ -1,0 +1,11 @@
+.page { padding: 1rem; }
+    header h1 { margin: 0; }
+    header p { color: #64748b; margin: .4rem 0 1rem; }
+    .table-wrap { overflow-x: auto; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; }
+    table { width: 100%; border-collapse: collapse; min-width: 700px; }
+    th, td { text-align: left; border-bottom: 1px solid #e2e8f0; padding: .7rem; }
+    th { color: #475569; font-size: .78rem; text-transform: uppercase; }
+    .status { font-size: .75rem; font-weight: 700; background: #e2e8f0; border-radius: 999px; padding: .2rem .5rem; }
+    .pagination { margin-top: 1rem; display: flex; align-items: center; justify-content: center; gap: .8rem; }
+    .pagination button { border: 1px solid #cbd5e1; background: #fff; border-radius: 8px; padding: .45rem .7rem; }
+    .empty { background: #fff; border: 1px dashed #cbd5e1; border-radius: 12px; padding: 1rem; }

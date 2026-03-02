@@ -1,0 +1,26 @@
+.legal-page {
+        min-height: calc(100vh - 140px);
+        padding: 2rem 1rem;
+        background: linear-gradient(160deg, #0f172a 0%, #1e293b 100%);
+      }
+      .legal-card {
+        max-width: 900px;
+        margin: 0 auto;
+        background: rgba(15, 23, 42, 0.8);
+        border: 1px solid rgba(148, 163, 184, 0.25);
+        border-radius: 16px;
+        padding: 1.5rem;
+        color: #e2e8f0;
+      }
+      h1 {
+        margin: 0 0 1rem 0;
+        color: #f8fafc;
+      }
+      h2 {
+        margin: 1.1rem 0 0.55rem 0;
+        color: #93c5fd;
+      }
+      p, li {
+        color: #cbd5e1;
+        line-height: 1.65;
+      }

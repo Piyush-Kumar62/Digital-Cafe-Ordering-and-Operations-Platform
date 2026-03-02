@@ -1,0 +1,180 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>Welcome — Digital Cafe</title>
+    <style>
+      @media (prefers-color-scheme: dark) {
+        .email-card {
+          background-color: #111827 !important;
+        }
+        .body-text {
+          color: #d1d5db !important;
+        }
+      }
+      @media only screen and (max-width: 600px) {
+        .body-content {
+          padding: 28px 20px !important;
+        }
+      }
+    </style>
+  </head>
+  <body
+    style="
+      margin: 0;
+      padding: 0;
+      background-color: #f3f4f6;
+      background-image: radial-gradient(
+        ellipse at top,
+        #ede9fe 0%,
+        #f3f4f6 60%
+      );
+    "
+  >
+    <table
+      role="presentation"
+      width="100%"
+      cellpadding="0"
+      cellspacing="0"
+      style="background-color: #f3f4f6; padding: 40px 16px"
+    >
+      <tr>
+        <td align="center">
+          <table role="presentation" width="100%" style="max-width: 600px">
+            <tr>
+              <td><div th:replace="~{fragments/header :: header}"></div></td>
+            </tr>
+
+            <tr>
+              <td style="background: #ffffff; padding: 40px; border-radius: 0">
+                <h2
+                  style="
+                    margin: 0 0 4px;
+                    font-family:
+                      -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;,
+                      Roboto, Arial, sans-serif;
+                    font-size: 24px;
+                    font-weight: 700;
+                    color: #111827;
+                  "
+                >
+                  Welcome aboard, <span th:text="${username}">there</span>! 🎉
+                </h2>
+                <p
+                  style="
+                    margin: 0 0 24px;
+                    font-family:
+                      -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;,
+                      Roboto, Arial, sans-serif;
+                    font-size: 15px;
+                    line-height: 1.6;
+                    color: #4b5563;
+                  "
+                >
+                  Your Digital Cafe account has been created successfully. Here
+                  are your login credentials — please keep them safe.
+                </p>
+
+                <!-- Credentials card -->
+                <div
+                  style="
+                    background: #f5f3ff;
+                    border-radius: 12px;
+                    padding: 20px 24px;
+                    margin-bottom: 24px;
+                  "
+                >
+                  <table
+                    role="presentation"
+                    width="100%"
+                    cellpadding="6"
+                    cellspacing="0"
+                  >
+                    <tr>
+                      <td
+                        style="
+                          font-family:
+                            -apple-system, BlinkMacSystemFont,
+                            &quot;Segoe UI&quot;, Roboto, Arial, sans-serif;
+                          font-size: 13px;
+                          color: #6b7280;
+                          font-weight: 500;
+                          width: 100px;
+                        "
+                      >
+                        Email
+                      </td>
+                      <td
+                        style="
+                          font-family:
+                            -apple-system, BlinkMacSystemFont,
+                            &quot;Segoe UI&quot;, Roboto, Arial, sans-serif;
+                          font-size: 13px;
+                          color: #1f2937;
+                          font-weight: 600;
+                        "
+                        th:text="${email}"
+                      >
+                        user@example.com
+                      </td>
+                    </tr>
+                    <tr>
+                      <td
+                        style="
+                          font-family:
+                            -apple-system, BlinkMacSystemFont,
+                            &quot;Segoe UI&quot;, Roboto, Arial, sans-serif;
+                          font-size: 13px;
+                          color: #6b7280;
+                          font-weight: 500;
+                        "
+                      >
+                        Temp Password
+                      </td>
+                      <td
+                        style="
+                          font-family:
+                            &quot;Courier New&quot;, Courier, monospace;
+                          font-size: 15px;
+                          color: #6c4ab6;
+                          font-weight: 700;
+                          letter-spacing: 1px;
+                        "
+                        th:text="${tempPassword}"
+                      >
+                        ••••••••
+                      </td>
+                    </tr>
+                  </table>
+                </div>
+
+                <p
+                  style="
+                    margin: 0 0 24px;
+                    font-family:
+                      -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;,
+                      Roboto, Arial, sans-serif;
+                    font-size: 13px;
+                    color: #9ca3af;
+                  "
+                >
+                  ⚠️ This is a temporary password. You will be required to
+                  change it on first login.
+                </p>
+
+                <div
+                  th:replace="~{fragments/button :: ctaButton(label='Login to Your Account', url=${loginUrl})}"
+                ></div>
+              </td>
+            </tr>
+
+            <tr>
+              <td><div th:replace="~{fragments/footer :: footer}"></div></td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

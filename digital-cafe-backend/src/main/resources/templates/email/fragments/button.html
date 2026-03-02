@@ -1,0 +1,34 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <body>
+    <!--/* ─── Reusable CTA Button Fragment ────────────────────────────────────── */-->
+    <!--/* Usage: <div th:replace="~{fragments/button :: ctaButton(label='Click Me', url=${someUrl})}"></div> */-->
+    <div
+      th:fragment="ctaButton(label, url)"
+      style="text-align: center; margin: 28px 0"
+    >
+      <a
+        th:href="${url}"
+        href="#"
+        style="
+          display: inline-block;
+          background: linear-gradient(135deg, #6c4ab6 0%, #4f46e5 100%);
+          color: #ffffff;
+          font-family:
+            -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto,
+            Arial, sans-serif;
+          font-size: 15px;
+          font-weight: 600;
+          text-decoration: none;
+          padding: 14px 32px;
+          border-radius: 12px;
+          letter-spacing: 0.3px;
+          box-shadow: 0 4px 15px rgba(108, 74, 182, 0.4);
+          mso-padding-alt: 14px 32px;
+        "
+      >
+        <span th:text="${label}">Click Here</span>
+      </a>
+    </div>
+  </body>
+</html>

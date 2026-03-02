@@ -1,0 +1,215 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>Verify Your Email — Digital Cafe</title>
+    <style>
+      @media (prefers-color-scheme: dark) {
+        .email-wrapper {
+          background-color: #1f2937 !important;
+        }
+        .email-card {
+          background-color: #111827 !important;
+        }
+        .body-text {
+          color: #d1d5db !important;
+        }
+        .section-title {
+          color: #f9fafb !important;
+        }
+      }
+      @media only screen and (max-width: 600px) {
+        .email-card {
+          border-radius: 12px !important;
+        }
+        .body-content {
+          padding: 28px 20px !important;
+        }
+      }
+    </style>
+  </head>
+  <body
+    style="
+      margin: 0;
+      padding: 0;
+      background-color: #f3f4f6;
+      background-image: radial-gradient(
+        ellipse at top,
+        #ede9fe 0%,
+        #f3f4f6 60%
+      );
+    "
+  >
+    <table
+      class="email-wrapper"
+      role="presentation"
+      width="100%"
+      cellpadding="0"
+      cellspacing="0"
+      style="background-color: #f3f4f6; padding: 40px 16px"
+    >
+      <tr>
+        <td align="center">
+          <table role="presentation" width="100%" style="max-width: 600px">
+            <!-- HEADER -->
+            <tr>
+              <td>
+                <div th:replace="~{fragments/header :: header}"></div>
+              </td>
+            </tr>
+
+            <!-- BODY -->
+            <tr>
+              <td
+                class="email-card body-content"
+                style="background: #ffffff; padding: 40px; border-radius: 0"
+              >
+                <h2
+                  class="section-title"
+                  style="
+                    margin: 0 0 8px;
+                    font-family:
+                      -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;,
+                      Roboto, Arial, sans-serif;
+                    font-size: 22px;
+                    font-weight: 700;
+                    color: #111827;
+                  "
+                >
+                  Confirm your email address ✉️
+                </h2>
+                <p
+                  class="body-text"
+                  style="
+                    margin: 0 0 20px;
+                    font-family:
+                      -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;,
+                      Roboto, Arial, sans-serif;
+                    font-size: 15px;
+                    line-height: 1.6;
+                    color: #4b5563;
+                  "
+                >
+                  Thanks for joining Digital Cafe! Please click the button below
+                  to verify your email address and activate your account. This
+                  link expires in <strong>24 hours</strong>.
+                </p>
+
+                <!-- CTA -->
+                <div
+                  th:replace="~{fragments/button :: ctaButton(label='Verify My Email', url=${verificationUrl})}"
+                ></div>
+
+                <!-- Fallback URL -->
+                <p
+                  class="body-text"
+                  style="
+                    margin: 20px 0 0;
+                    font-family:
+                      -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;,
+                      Roboto, Arial, sans-serif;
+                    font-size: 12px;
+                    color: #9ca3af;
+                    word-break: break-all;
+                  "
+                >
+                  Or copy this link into your browser:<br />
+                  <a
+                    th:href="${verificationUrl}"
+                    th:text="${verificationUrl}"
+                    style="color: #6c4ab6"
+                    >verification link</a
+                  >
+                </p>
+
+                <!-- Temp password block (staff accounts only) -->
+                <div
+                  th:if="${hasTempPassword}"
+                  style="
+                    margin-top: 28px;
+                    background: #f5f3ff;
+                    border-left: 4px solid #6c4ab6;
+                    border-radius: 0 8px 8px 0;
+                    padding: 16px 20px;
+                  "
+                >
+                  <p
+                    style="
+                      margin: 0 0 6px;
+                      font-family:
+                        -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;,
+                        Roboto, Arial, sans-serif;
+                      font-size: 13px;
+                      font-weight: 600;
+                      color: #6c4ab6;
+                      text-transform: uppercase;
+                      letter-spacing: 0.5px;
+                    "
+                  >
+                    Temporary Password
+                  </p>
+                  <p
+                    style="
+                      margin: 0;
+                      font-family: &quot;Courier New&quot;, Courier, monospace;
+                      font-size: 18px;
+                      font-weight: 700;
+                      color: #1f2937;
+                      letter-spacing: 2px;
+                    "
+                  >
+                    <span th:text="${tempPassword}">••••••••</span>
+                  </p>
+                  <p
+                    style="
+                      margin: 8px 0 0;
+                      font-family:
+                        -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;,
+                        Roboto, Arial, sans-serif;
+                      font-size: 12px;
+                      color: #6b7280;
+                    "
+                  >
+                    Please change this password immediately after your first
+                    login.
+                  </p>
+                </div>
+
+                <hr
+                  style="
+                    border: none;
+                    border-top: 1px solid #f3f4f6;
+                    margin: 32px 0 20px;
+                  "
+                />
+                <p
+                  class="body-text"
+                  style="
+                    margin: 0;
+                    font-family:
+                      -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;,
+                      Roboto, Arial, sans-serif;
+                    font-size: 12px;
+                    color: #9ca3af;
+                  "
+                >
+                  If you did not create an account with Digital Cafe, please
+                  ignore this email.
+                </p>
+              </td>
+            </tr>
+
+            <!-- FOOTER -->
+            <tr>
+              <td>
+                <div th:replace="~{fragments/footer :: footer}"></div>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

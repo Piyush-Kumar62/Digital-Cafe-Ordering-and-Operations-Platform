@@ -1,0 +1,149 @@
+# ================================================================================
+# application-prod.yml – Production configuration for Digital Café Platform
+#
+# IMPORTANT: Never commit real secrets to version control.
+# All sensitive values MUST be provided via environment variables or
+# AWS Secrets Manager / SSM Parameter Store injected as env vars on EC2/ECS.
+# ================================================================================
+
+spring:
+  profiles:
+    active: prod
+  application:
+    name: digital-cafe-backend
+
+  # ─── Database ──────────────────────────────────────────────────────────────────
+  datasource:
+    url: ${DB_URL}              # e.g. jdbc:mysql://your-rds-host:3306/digital_cafe_db?useSSL=true&serverTimezone=UTC
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      idle-timeout: 300000
+      connection-timeout: 20000
+      max-lifetime: 1200000
+
+  # ─── JPA / Hibernate ───────────────────────────────────────────────────────────
+  jpa:
+    hibernate:
+      ddl-auto: none            # CRITICAL: Never use update/create in production. Flyway owns the schema.
+    show-sql: false
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: false
+        dialect: org.hibernate.dialect.MySQLDialect
+        jdbc:
+          batch_size: 25
+        order_inserts: true
+        order_updates: true
+
+  # ─── Flyway ────────────────────────────────────────────────────────────────────
+  flyway:
+    enabled: true
+    baseline-on-migrate: false  # false in prod: migrations must be applied cleanly
+    locations: classpath:db/migration
+    validate-on-migrate: true
+
+  # ─── Email ─────────────────────────────────────────────────────────────────────
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_APP_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+        debug: false
+
+  # ─── WebSocket ─────────────────────────────────────────────────────────────────
+  task:
+    execution:
+      pool:
+        core-size: 10
+        max-size: 20
+        queue-capacity: 200
+
+# ─── JWT ─────────────────────────────────────────────────────────────────────────
+jwt:
+  secret: ${JWT_SECRET}             # Min 256-bit (32 bytes) base64-encoded secret
+  expiration: ${JWT_EXPIRATION:3600000}         # 1h default
+  refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000}  # 7d default
+
+# ─── Payment Gateway ─────────────────────────────────────────────────────────────
+payment:
+  gateway: ${PAYMENT_GATEWAY:RAZORPAY}
+razorpay:
+  key:
+    id: ${RAZORPAY_KEY_ID}
+    secret: ${RAZORPAY_KEY_SECRET}
+
+# ─── Application ─────────────────────────────────────────────────────────────────
+app:
+  frontend:
+    url: ${FRONTEND_URL}            # e.g. https://digitalcafe.example.com
+  name: ${APP_NAME:Digital Cafe Platform}
+  storage:
+    provider: ${APP_STORAGE_PROVIDER:s3}
+  upload:
+    dir: ${APP_UPLOAD_DIR:/var/app/uploads}   # On EC2 use EFS mount or S3 pre-signed URLs
+
+# ─── AWS S3 (for file uploads in production) ─────────────────────────────────────
+aws:
+  s3:
+    bucket: ${S3_BUCKET}
+    region: ${AWS_REGION:ap-south-1}
+  credentials:
+    access-key: ${AWS_ACCESS_KEY_ID}      # Or use IAM instance role (preferred)
+    secret-key: ${AWS_SECRET_ACCESS_KEY}
+
+# ─── Server ──────────────────────────────────────────────────────────────────────
+server:
+  port: ${SERVER_PORT:8080}
+  error:
+    include-message: never          # Never expose internal messages in prod error responses
+    include-binding-errors: never
+    include-stacktrace: never
+    include-exception: false
+
+# ─── Logging ─────────────────────────────────────────────────────────────────────
+logging:
+  level:
+    root: WARN
+    org.springframework.web: INFO
+    org.springframework.security: WARN
+    com.digitalcafe: INFO           # Structured logs from service layer
+    org.hibernate.SQL: WARN         # No SQL query logging in prod
+  pattern:
+    console: "%d{yyyy-MM-dd'T'HH:mm:ssZ} [%thread] %-5level %logger{36} - %msg%n"
+
+# ─── Actuator ────────────────────────────────────────────────────────────────────
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info        # Restrict actuator exposure in prod
+  endpoint:
+    health:
+      show-details: when_authorized
+
+# ─── Swagger (disabled in production) ────────────────────────────────────────────
+springdoc:
+  swagger-ui:
+    enabled: false                  # Never expose Swagger UI in production
+  api-docs:
+    enabled: false
+
+# ─── File Uploads ────────────────────────────────────────────────────────────────
+spring.servlet.multipart:
+  max-file-size: ${MAX_FILE_SIZE:5MB}
+  max-request-size: ${MAX_REQUEST_SIZE:10MB}

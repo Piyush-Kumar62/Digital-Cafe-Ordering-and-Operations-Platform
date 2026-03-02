@@ -1,0 +1,60 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <body>
+    <!--/* ─── Reusable Email Header Fragment ─────────────────────────────────── */-->
+    <div
+      th:fragment="header"
+      style="
+        background: linear-gradient(135deg, #6c4ab6 0%, #4f46e5 100%);
+        border-radius: 20px 20px 0 0;
+        padding: 36px 40px 32px;
+        text-align: center;
+      "
+    >
+      <!-- Logo icon -->
+      <div
+        style="
+          display: inline-block;
+          background: rgba(255, 255, 255, 0.15);
+          border-radius: 16px;
+          width: 64px;
+          height: 64px;
+          line-height: 64px;
+          font-size: 32px;
+          margin-bottom: 16px;
+        "
+      >
+        ☕
+      </div>
+      <!-- Brand name -->
+      <h1
+        style="
+          margin: 0;
+          font-family:
+            -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto,
+            Arial, sans-serif;
+          font-size: 26px;
+          font-weight: 700;
+          color: #ffffff;
+          letter-spacing: -0.5px;
+        "
+      >
+        Digital Cafe
+      </h1>
+      <p
+        style="
+          margin: 6px 0 0;
+          font-family:
+            -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto,
+            Arial, sans-serif;
+          font-size: 13px;
+          color: rgba(255, 255, 255, 0.75);
+          letter-spacing: 1px;
+          text-transform: uppercase;
+        "
+      >
+        Ordering &amp; Operations Platform
+      </p>
+    </div>
+  </body>
+</html>

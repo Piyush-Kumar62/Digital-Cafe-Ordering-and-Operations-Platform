@@ -60,7 +60,7 @@ class PlatformIntegrationTests {
     @Test
     @WithMockUser(username = "customer@test.com", roles = "CUSTOMER")
     void bookingOverlapShouldReturnConflict() throws Exception {
-        User customer = User.builder().id(10L).email("customer@test.com").build();
+        User customer = User.builder().id(10L).email("customer@test.com").isEmailVerified(true).build();
         when(userRepository.findByEmail("customer@test.com")).thenReturn(Optional.of(customer));
         when(bookingService.createBooking(anyLong(), any(BookingRequest.class)))
                 .thenThrow(new BookingConflictException("Table is already booked for this time slot"));
@@ -82,10 +82,12 @@ class PlatformIntegrationTests {
     @Test
     @WithMockUser(username = "customer@test.com", roles = "CUSTOMER")
     void customerCannotAccessOtherCustomerOrders() throws Exception {
-        User customer = User.builder().id(10L).email("customer@test.com").build();
+        User customer = User.builder().id(10L).email("customer@test.com").isEmailVerified(true).build();
         when(userRepository.findByEmail("customer@test.com")).thenReturn(Optional.of(customer));
+        when(orderService.getOrderById(99L))
+                .thenThrow(new com.digitalcafe.exception.AccessDeniedException("You are not allowed to view this order"));
 
-        mockMvc.perform(get("/api/orders/customer/99"))
+        mockMvc.perform(get("/api/orders/99"))
                 .andExpect(status().isForbidden());
     }
 

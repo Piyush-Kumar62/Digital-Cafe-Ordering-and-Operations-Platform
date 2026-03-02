@@ -1,0 +1,180 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>Registration Successful — Digital Cafe</title>
+    <style>
+      @media (prefers-color-scheme: dark) {
+        .email-card {
+          background-color: #111827 !important;
+        }
+        .body-text {
+          color: #d1d5db !important;
+        }
+      }
+      @media only screen and (max-width: 600px) {
+        .body-content {
+          padding: 28px 20px !important;
+        }
+      }
+    </style>
+  </head>
+  <body
+    style="
+      margin: 0;
+      padding: 0;
+      background-color: #f3f4f6;
+      background-image: radial-gradient(
+        ellipse at top,
+        #ede9fe 0%,
+        #f3f4f6 60%
+      );
+    "
+  >
+    <table
+      role="presentation"
+      width="100%"
+      cellpadding="0"
+      cellspacing="0"
+      style="background-color: #f3f4f6; padding: 40px 16px"
+    >
+      <tr>
+        <td align="center">
+          <table role="presentation" width="100%" style="max-width: 600px">
+            <tr>
+              <td><div th:replace="~{fragments/header :: header}"></div></td>
+            </tr>
+
+            <tr>
+              <td style="background: #ffffff; padding: 40px; border-radius: 0">
+                <h2
+                  style="
+                    margin: 0 0 8px;
+                    font-family:
+                      -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;,
+                      Roboto, Arial, sans-serif;
+                    font-size: 24px;
+                    font-weight: 700;
+                    color: #111827;
+                  "
+                >
+                  You're all set, <span th:text="${username}">there</span>! ☕
+                </h2>
+                <p
+                  style="
+                    margin: 0 0 24px;
+                    font-family:
+                      -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;,
+                      Roboto, Arial, sans-serif;
+                    font-size: 15px;
+                    line-height: 1.6;
+                    color: #4b5563;
+                  "
+                >
+                  Your Digital Cafe account is fully set up and ready to use.
+                  Explore cafés near you, place orders, and book tables with
+                  ease.
+                </p>
+
+                <!-- Feature highlights -->
+                <table
+                  role="presentation"
+                  width="100%"
+                  cellpadding="0"
+                  cellspacing="0"
+                  style="margin-bottom: 28px"
+                >
+                  <tr>
+                    <td
+                      style="
+                        padding: 10px;
+                        background: #f5f3ff;
+                        border-radius: 10px;
+                        text-align: center;
+                        width: 30%;
+                      "
+                    >
+                      <div style="font-size: 24px; margin-bottom: 6px">🍽</div>
+                      <p
+                        style="
+                          margin: 0;
+                          font-family:
+                            -apple-system, BlinkMacSystemFont,
+                            &quot;Segoe UI&quot;, Roboto, Arial, sans-serif;
+                          font-size: 12px;
+                          font-weight: 600;
+                          color: #6c4ab6;
+                        "
+                      >
+                        Order Food
+                      </p>
+                    </td>
+                    <td style="width: 5%"></td>
+                    <td
+                      style="
+                        padding: 10px;
+                        background: #f5f3ff;
+                        border-radius: 10px;
+                        text-align: center;
+                        width: 30%;
+                      "
+                    >
+                      <div style="font-size: 24px; margin-bottom: 6px">📅</div>
+                      <p
+                        style="
+                          margin: 0;
+                          font-family:
+                            -apple-system, BlinkMacSystemFont,
+                            &quot;Segoe UI&quot;, Roboto, Arial, sans-serif;
+                          font-size: 12px;
+                          font-weight: 600;
+                          color: #6c4ab6;
+                        "
+                      >
+                        Book Tables
+                      </p>
+                    </td>
+                    <td style="width: 5%"></td>
+                    <td
+                      style="
+                        padding: 10px;
+                        background: #f5f3ff;
+                        border-radius: 10px;
+                        text-align: center;
+                        width: 30%;
+                      "
+                    >
+                      <div style="font-size: 24px; margin-bottom: 6px">⭐</div>
+                      <p
+                        style="
+                          margin: 0;
+                          font-family:
+                            -apple-system, BlinkMacSystemFont,
+                            &quot;Segoe UI&quot;, Roboto, Arial, sans-serif;
+                          font-size: 12px;
+                          font-weight: 600;
+                          color: #6c4ab6;
+                        "
+                      >
+                        Rate Cafés
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+
+                <div
+                  th:replace="~{fragments/button :: ctaButton(label='Explore Digital Cafe', url=${exploreUrl})}"
+                ></div>
+              </td>
+            </tr>
+
+            <tr>
+              <td><div th:replace="~{fragments/footer :: footer}"></div></td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

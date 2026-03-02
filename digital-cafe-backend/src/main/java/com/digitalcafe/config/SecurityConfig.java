@@ -3,6 +3,7 @@ package com.digitalcafe.config;
 import com.digitalcafe.security.CustomUserDetailsService;
 import com.digitalcafe.security.JwtAuthenticationEntryPoint;
 import com.digitalcafe.security.JwtAuthenticationFilter;
+import com.digitalcafe.security.ProfileCompletionFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -34,26 +35,32 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
+    /**
+     * ProfileCompletionFilter: runs after JWT auth to enforce email verification
+     * for CUSTOMER-role requests. Centralized here — no per-controller checks needed.
+     */
+    private final ProfileCompletionFilter profileCompletionFilter;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
-                    .requestMatchers(
-                        "/api/auth/**",
-                        "/api/public/**",
-                        "/api/cafes/active",
-                        "/uploads/**",
-                        "/",
-                        "/health",
-                        "/actuator/**",
-                        "/swagger-ui/**",
-                        "/swagger-ui.html",
-                        "/v3/api-docs/**",
-                        "/v3/api-docs",
-                        "/ws/**"
-                    ).permitAll()
+                        .requestMatchers(
+                                "/api/auth/**",
+                                "/api/public/**",
+                                "/api/cafes/active",
+                                "/uploads/**",
+                                "/",
+                                "/health",
+                                "/actuator/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/v3/api-docs/**",
+                                "/v3/api-docs",
+                                "/ws/**"
+                        ).permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/owner/**").hasRole("CAFE_OWNER")
                         .requestMatchers("/api/chef/**").hasRole("CHEF")
@@ -68,7 +75,9 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authenticationProvider(authenticationProvider())
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                // JWT filter runs first; ProfileCompletionFilter runs after JWT to use the authenticated principal
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(profileCompletionFilter, JwtAuthenticationFilter.class);
 
         return http.build();
     }

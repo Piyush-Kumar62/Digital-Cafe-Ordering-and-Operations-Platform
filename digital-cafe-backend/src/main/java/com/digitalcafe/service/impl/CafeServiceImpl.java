@@ -2,36 +2,35 @@ package com.digitalcafe.service.impl;
 
 import com.digitalcafe.dto.request.CafeRequest;
 import com.digitalcafe.dto.response.CafeResponse;
-import com.digitalcafe.dto.response.PageResponse;
 import com.digitalcafe.dto.response.PublicCafeCardResponse;
 import com.digitalcafe.dto.response.PublicCafeDetailResponse;
+import com.digitalcafe.dto.response.PageResponse;
 import com.digitalcafe.entity.Cafe;
-import com.digitalcafe.entity.MenuItem;
+import com.digitalcafe.entity.CafeGallery;
 import com.digitalcafe.entity.Role;
 import com.digitalcafe.entity.User;
-import com.digitalcafe.exception.AccessDeniedException;
+import com.digitalcafe.exception.BadRequestException;
+import com.digitalcafe.exception.BusinessException;
 import com.digitalcafe.exception.ResourceNotFoundException;
 import com.digitalcafe.mapper.CafeMapper;
+import com.digitalcafe.repository.CafeGalleryRepository;
 import com.digitalcafe.repository.CafeRepository;
-import com.digitalcafe.repository.MenuItemRepository;
 import com.digitalcafe.repository.UserRepository;
 import com.digitalcafe.service.CafeService;
+import com.digitalcafe.storage.FileStorageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * Implementation of CafeService for managing cafe operations.
- */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -39,235 +38,410 @@ public class CafeServiceImpl implements CafeService {
 
     private final CafeRepository cafeRepository;
     private final UserRepository userRepository;
-    private final MenuItemRepository menuItemRepository;
+    private final CafeGalleryRepository cafeGalleryRepository;
+    private final FileStorageService fileStorageService;
     private final CafeMapper cafeMapper;
+
 
     @Override
     @Transactional
-    public CafeResponse createCafe(Long ownerId, CafeRequest request) {
+    public CafeResponse createCafe(Long ownerId, CafeRequest request, MultipartFile logo) {
+
         log.info("Creating cafe for owner ID: {}", ownerId);
 
         User owner = userRepository.findById(ownerId)
                 .orElseThrow(() -> new ResourceNotFoundException("Cafe owner not found with ID: " + ownerId));
 
-        Cafe cafe = cafeMapper.toEntity(request);
+        if (cafeRepository.existsByOwnerId(ownerId)) {
+            // Multiple cafes allowed — no restriction
+        }
+
+        Cafe cafe = new Cafe();
+
+        if (logo != null && !logo.isEmpty()) {
+            try {
+                String logoPath = fileStorageService.uploadFile(logo);
+                cafe.setLogoUrl(logoPath);
+            } catch (BusinessException ex) {
+                log.error("Cafe logo upload failed for owner {}: {}", ownerId, ex.getMessage());
+                throw new BadRequestException("Logo upload failed: " + ex.getMessage());
+            }
+        }
+
+
+        cafe.setName(request.getName());
+        cafe.setAddress(request.getAddress());
+        cafe.setCity(request.getCity());
+        cafe.setPincode(request.getPincode());
+        cafe.setPhoneNumber(request.getPhoneNumber());
+
+
+        cafe.setDescription(request.getDescription());
+        cafe.setEmail(request.getEmail());
+        cafe.setOpenTime(request.getOpeningTime());
+        cafe.setCloseTime(request.getClosingTime());
+
+        cafe.setFssaiNumber(request.getFssaiNumber());
+        cafe.setGstNumber(request.getGstNumber());
+        cafe.setMsmeNumber(request.getMsmeNumber());
+        cafe.setState(request.getState());
+
         cafe.setOwner(owner);
         cafe.setIsActive(true);
 
         Cafe savedCafe = cafeRepository.save(cafe);
+        // Always set user's primary cafe reference to the latest created
+        owner.setCafe(savedCafe);
+        userRepository.save(owner);
+
         log.info("Cafe created successfully with ID: {}", savedCafe.getId());
 
         return cafeMapper.toResponse(savedCafe);
     }
 
+
+
+    @Override
+    public boolean existsByOwnerId(Long ownerId) {
+        return cafeRepository.existsByOwnerId(ownerId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponse<CafeResponse> getCafesByOwner(Long ownerId, Pageable pageable) {
+        Page<Cafe> page = cafeRepository.findByOwnerId(ownerId, pageable);
+        List<CafeResponse> content = page.getContent().stream()
+                .map(cafeMapper::toResponse)
+                .collect(Collectors.toList());
+        return PageResponse.<CafeResponse>builder()
+                .content(content)
+                .pageNumber(page.getNumber())
+                .pageSize(page.getSize())
+                .totalElements(page.getTotalElements())
+                .totalPages(page.getTotalPages())
+                .isFirst(page.isFirst())
+                .isLast(page.isLast())
+                .hasNext(!page.isLast())
+                .hasPrevious(!page.isFirst())
+                .build();
+    }
+
+
     @Override
     @Transactional
-    public CafeResponse updateCafe(Long cafeId, CafeRequest request) {
+    public CafeResponse updateCafe(Long cafeId, CafeRequest request , MultipartFile logo) {
+
         log.info("Updating cafe with ID: {}", cafeId);
-        validateCafeOwnerAccess(cafeId);
 
         Cafe cafe = cafeRepository.findById(cafeId)
                 .orElseThrow(() -> new ResourceNotFoundException("Cafe not found with ID: " + cafeId));
 
+        if (logo != null && !logo.isEmpty()) {
+            try {
+                // Delete old logo if stored
+                if (cafe.getLogoUrl() != null) {
+                    fileStorageService.deleteFile(cafe.getLogoUrl());
+                }
+                String logoPath = fileStorageService.uploadFile(logo);
+                cafe.setLogoUrl(logoPath);
+            } catch (BusinessException ex) {
+                log.error("Logo upload failed during update for cafe {}: {}", cafeId, ex.getMessage());
+                throw new BadRequestException("Logo upload failed: " + ex.getMessage());
+            }
+        }
+
         cafeMapper.updateCafeFromRequest(request, cafe);
+
         Cafe updatedCafe = cafeRepository.save(cafe);
 
-        log.info("Cafe updated successfully with ID: {}", cafeId);
         return cafeMapper.toResponse(updatedCafe);
     }
+
 
     @Override
     @Transactional(readOnly = true)
     public CafeResponse getCafeById(Long cafeId) {
-        log.info("Fetching cafe with ID: {}", cafeId);
 
         Cafe cafe = cafeRepository.findById(cafeId)
                 .orElseThrow(() -> new ResourceNotFoundException("Cafe not found with ID: " + cafeId));
-        validateCafeReadAccess(cafe);
 
         return cafeMapper.toResponse(cafe);
     }
 
+
+    @Override
+    @Transactional(readOnly = true)
+    public CafeResponse getCafeByOwner(Long ownerId) {
+
+        List<Cafe> cafes = cafeRepository.findAllByOwnerIdOrderByCreatedAtDesc(ownerId);
+        if (cafes.isEmpty()) {
+            throw new ResourceNotFoundException("Cafe not found");
+        }
+        return cafeMapper.toResponse(cafes.get(0));
+    }
+
+
     @Override
     @Transactional(readOnly = true)
     public PageResponse<CafeResponse> getAllCafes(Pageable pageable) {
-        log.info("Fetching all cafes with pagination");
-        User actor = getAuthenticatedUser();
-        Page<Cafe> cafePage;
-        if (actor.hasRole(Role.RoleName.ADMIN)) {
-            cafePage = cafeRepository.findAll(pageable);
-        } else if (actor.hasRole(Role.RoleName.CAFE_OWNER)) {
-            List<Cafe> ownCafes = cafeRepository.findByOwnerId(actor.getId());
-            cafePage = new PageImpl<>(ownCafes);
-        } else {
-            throw new AccessDeniedException("You are not allowed to view all cafes");
-        }
-        List<CafeResponse> cafeResponses = cafePage.getContent().stream()
+
+        Page<Cafe> cafePage = cafeRepository.findAll(pageable);
+
+        List<CafeResponse> responses = cafePage.getContent()
+                .stream()
                 .map(cafeMapper::toResponse)
                 .collect(Collectors.toList());
 
         return PageResponse.<CafeResponse>builder()
-                .content(cafeResponses)
+                .content(responses)
                 .pageNumber(cafePage.getNumber())
                 .pageSize(cafePage.getSize())
                 .totalElements(cafePage.getTotalElements())
                 .totalPages(cafePage.getTotalPages())
                 .isLast(cafePage.isLast())
+                .build();
+    }
+
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CafeResponse> getActiveCafes() {
+
+        return cafeRepository.findByIsActive(true)
+                .stream()
+                .map(cafeMapper::toResponse)
+                .collect(Collectors.toList());
+    }
+
+
+    @Override
+    @Transactional
+    public void deleteCafe(Long cafeId) {
+
+        Cafe cafe = cafeRepository.findById(cafeId)
+                .orElseThrow(() -> new ResourceNotFoundException("Cafe not found"));
+
+        if (cafe.getLogoUrl() != null) {
+            fileStorageService.deleteFile(cafe.getLogoUrl());
+        }
+
+        if (cafe.getCoverUrl() != null) {
+            fileStorageService.deleteFile(cafe.getCoverUrl());
+        }
+
+
+        List<CafeGallery> galleries = cafeGalleryRepository.findByCafeId(cafeId);
+        for (CafeGallery g : galleries) {
+            fileStorageService.deleteFile(g.getImageUrl());
+        }
+
+        cafeRepository.delete(cafe);
+    }
+
+
+    @Override
+    @Transactional
+    public CafeResponse toggleCafeStatus(Long cafeId, boolean isActive) {
+
+        Cafe cafe = cafeRepository.findById(cafeId)
+                .orElseThrow(() -> new ResourceNotFoundException("Cafe not found with ID: " + cafeId));
+
+        cafe.setIsActive(isActive);
+
+        return cafeMapper.toResponse(cafeRepository.save(cafe));
+    }
+
+    private User getCurrentOwner() {
+
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new BadRequestException("User not authenticated");
+        }
+
+        String email = authentication.getName();
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("User", "email", email));
+
+
+        if (!user.hasRole(Role.RoleName.CAFE_OWNER)) {
+            throw new BadRequestException("Only cafe owner allowed");
+        }
+
+        return user;
+    }
+
+    @Override
+    public void uploadGallery(Long cafeId, List<MultipartFile> files) {
+
+        Cafe cafe = cafeRepository.findById(cafeId)
+                .orElseThrow(() -> new ResourceNotFoundException("Cafe", "id", cafeId));
+
+        for (MultipartFile file : files) {
+
+            String path = fileStorageService.uploadFile(file);
+
+            CafeGallery gallery = CafeGallery.builder()
+                    .imageUrl(path)
+                    .cafe(cafe)
+                    .build();
+
+            cafeGalleryRepository.save(gallery);
+        }
+    }
+
+    @Override
+    public List<String> getGalleryImages(Long cafeId) {
+
+        return cafeGalleryRepository.findByCafeId(cafeId)
+                .stream()
+                .map(CafeGallery::getImageUrl)
+                .toList();
+    }
+
+    @Override
+    public void deleteGalleryImage(Long imageId) {
+
+        CafeGallery gallery = cafeGalleryRepository.findById(imageId)
+                .orElseThrow(() -> new ResourceNotFoundException("Image", "id", imageId));
+
+        fileStorageService.deleteFile(gallery.getImageUrl());
+
+        cafeGalleryRepository.delete(gallery);
+    }
+
+    @Transactional
+    public void updateLogo(Long cafeId, MultipartFile file) {
+
+        Cafe cafe = cafeRepository.findById(cafeId)
+                .orElseThrow(() -> new ResourceNotFoundException("Cafe not found"));
+
+
+        if (cafe.getLogoUrl() != null) {
+            fileStorageService.deleteFile(cafe.getLogoUrl());
+        }
+
+        String newPath = fileStorageService.uploadFile(file);
+        cafe.setLogoUrl(newPath);
+
+        cafeRepository.save(cafe);
+    }
+
+    @Transactional
+    public void updateCover(Long cafeId, MultipartFile file) {
+
+        Cafe cafe = cafeRepository.findById(cafeId)
+                .orElseThrow(() -> new ResourceNotFoundException("Cafe not found"));
+
+        if (cafe.getCoverUrl() != null) {
+            fileStorageService.deleteFile(cafe.getCoverUrl());
+        }
+
+        String newPath = fileStorageService.uploadFile(file);
+        cafe.setCoverUrl(newPath);
+
+        cafeRepository.save(cafe);
+    }
+
+
+    @Override
+    public CafeResponse getMyCafe() {
+
+        Cafe cafe = getCurrentOwner().getCafe();
+
+        return CafeResponse.builder()
+                .id(cafe.getId())
+                .name(cafe.getName())
+                .description(cafe.getDescription())
+
+                .address(cafe.getAddress())
+                .city(cafe.getCity())
+                .state(cafe.getState())
+                .pincode(cafe.getPincode())
+
+                .phoneNumber(cafe.getPhoneNumber())
+                .email(cafe.getEmail())
+
+
+                .openTime(cafe.getOpenTime())
+                .closeTime(cafe.getCloseTime())
+
+
+                .fssaiNumber(cafe.getFssaiNumber())
+                .gstNumber(cafe.getGstNumber())
+                .msmeNumber(cafe.getMsmeNumber())
+
+
+                .logoUrl(cafe.getLogoUrl())
+                .coverUrl(cafe.getCoverUrl())
+
+                .galleryImages(
+                        cafe.getGalleryImages()
+                                .stream()
+                                .map(CafeGallery::getImageUrl)
+                                .toList()
+                )
+
+                .isActive(cafe.getIsActive())
+                .createdAt(cafe.getCreatedAt())
+
                 .build();
     }
 
     @Override
     @Transactional(readOnly = true)
     public PageResponse<PublicCafeCardResponse> getPublicActiveCafes(Pageable pageable) {
-        Page<Cafe> cafePage = cafeRepository.findByIsActive(true, pageable);
-        List<PublicCafeCardResponse> content = cafePage.getContent().stream()
-                .map(this::toPublicCafeCard)
-                .collect(Collectors.toList());
+        Page<Cafe> cafesPage = cafeRepository.findByIsActiveTrue(pageable);
+        List<PublicCafeCardResponse> responses = cafesPage.getContent().stream()
+                .map(cafe -> PublicCafeCardResponse.builder()
+                        .id(cafe.getId())
+                        .name(cafe.getName())
+                        .description(cafe.getDescription())
+                        .city(cafe.getCity())
+                        .state(cafe.getState())
+                        .logoUrl(cafe.getLogoUrl())
+                        .build())
+                .toList();
 
         return PageResponse.<PublicCafeCardResponse>builder()
-                .content(content)
-                .pageNumber(cafePage.getNumber())
-                .pageSize(cafePage.getSize())
-                .totalElements(cafePage.getTotalElements())
-                .totalPages(cafePage.getTotalPages())
-                .isFirst(cafePage.isFirst())
-                .isLast(cafePage.isLast())
-                .hasNext(cafePage.hasNext())
-                .hasPrevious(cafePage.hasPrevious())
+                .content(responses)
+                .pageNumber(cafesPage.getNumber())
+                .pageSize(cafesPage.getSize())
+                .totalElements(cafesPage.getTotalElements())
+                .totalPages(cafesPage.getTotalPages())
+                .isLast(cafesPage.isLast())
                 .build();
     }
 
     @Override
     @Transactional(readOnly = true)
     public PublicCafeDetailResponse getPublicCafeDetails(Long cafeId) {
-        Cafe cafe = cafeRepository.findByIdAndIsActiveTrue(cafeId)
-                .orElseThrow(() -> new ResourceNotFoundException("Active cafe not found with ID: " + cafeId));
-        List<MenuItem> menuItems = menuItemRepository.findByCafeIdAndIsAvailableTrueAndIsDeletedFalseOrderByCategoryAscNameAsc(cafeId);
+        Cafe cafe = cafeRepository.findById(cafeId)
+                .orElseThrow(() -> new ResourceNotFoundException("Cafe not found"));
+
+        if (!cafe.getIsActive()) {
+            throw new BadRequestException("This cafe is currently not active");
+        }
 
         return PublicCafeDetailResponse.builder()
-                .cafeDetails(toPublicCafeCard(cafe))
-                .menuItems(menuItems.stream()
-                        .map(item -> PublicCafeDetailResponse.PublicMenuItemResponse.builder()
-                                .id(item.getId())
-                                .name(item.getName())
-                                .description(item.getDescription())
-                                .category(item.getCategory() != null ? item.getCategory().name() : null)
-                                .price(item.getPrice())
-                                .imageUrl(item.getImageUrl())
-                                .available(Boolean.TRUE.equals(item.getIsAvailable()))
-                                .build())
-                        .collect(Collectors.toList()))
-                .build();
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<CafeResponse> getActiveCafes() {
-        log.info("Fetching all active cafes");
-
-        List<Cafe> cafes = cafeRepository.findByIsActive(true);
-        return cafes.stream()
-                .map(cafeMapper::toResponse)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<CafeResponse> getCafesByOwnerId(Long ownerId) {
-        log.info("Fetching cafes for owner ID: {}", ownerId);
-        validateOwnerScopedAccess(ownerId);
-
-        List<Cafe> cafes = cafeRepository.findByOwnerId(ownerId);
-        return cafes.stream()
-                .map(cafeMapper::toResponse)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    @Transactional
-    public void deleteCafe(Long cafeId) {
-        log.info("Deleting cafe with ID: {}", cafeId);
-
-        if (!cafeRepository.existsById(cafeId)) {
-            throw new ResourceNotFoundException("Cafe not found with ID: " + cafeId);
-        }
-
-        cafeRepository.deleteById(cafeId);
-        log.info("Cafe deleted successfully with ID: {}", cafeId);
-    }
-
-    @Override
-    @Transactional
-    public CafeResponse toggleCafeStatus(Long cafeId, boolean isActive) {
-        log.info("Toggling cafe status for ID: {} to {}", cafeId, isActive);
-        validateCafeOwnerAccess(cafeId);
-
-        Cafe cafe = cafeRepository.findById(cafeId)
-                .orElseThrow(() -> new ResourceNotFoundException("Cafe not found with ID: " + cafeId));
-
-        cafe.setIsActive(isActive);
-        Cafe updatedCafe = cafeRepository.save(cafe);
-
-        log.info("Cafe status updated successfully");
-        return cafeMapper.toResponse(updatedCafe);
-    }
-
-    private User getAuthenticatedUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || authentication.getName() == null) {
-            throw new AccessDeniedException("Unauthenticated access");
-        }
-        return userRepository.findByEmail(authentication.getName())
-                .orElseThrow(() -> new AccessDeniedException("Authenticated user not found"));
-    }
-
-    private void validateCafeOwnerAccess(Long cafeId) {
-        User actor = getAuthenticatedUser();
-        if (actor.hasRole(Role.RoleName.ADMIN)) {
-            return;
-        }
-        if (!actor.hasRole(Role.RoleName.CAFE_OWNER)) {
-            throw new AccessDeniedException("Only cafe owner can manage cafe details");
-        }
-        Cafe cafe = cafeRepository.findById(cafeId)
-                .orElseThrow(() -> new ResourceNotFoundException("Cafe not found with ID: " + cafeId));
-        if (cafe.getOwner() == null || !actor.getId().equals(cafe.getOwner().getId())) {
-            throw new AccessDeniedException("Cafe owner cannot manage another cafe");
-        }
-    }
-
-    private void validateOwnerScopedAccess(Long ownerId) {
-        User actor = getAuthenticatedUser();
-        if (actor.hasRole(Role.RoleName.ADMIN)) {
-            return;
-        }
-        if (!actor.hasRole(Role.RoleName.CAFE_OWNER) || !actor.getId().equals(ownerId)) {
-            throw new AccessDeniedException("Cafe owner cannot access another owner's cafe list");
-        }
-    }
-
-    private void validateCafeReadAccess(Cafe cafe) {
-        User actor = getAuthenticatedUser();
-        if (actor.hasRole(Role.RoleName.CAFE_OWNER)
-                && (cafe.getOwner() == null || !actor.getId().equals(cafe.getOwner().getId()))) {
-            throw new AccessDeniedException("Cafe owner cannot access another cafe");
-        }
-    }
-
-    private PublicCafeCardResponse toPublicCafeCard(Cafe cafe) {
-        String location = String.join(", ",
-                java.util.stream.Stream.of(cafe.getCity(), cafe.getState())
-                        .filter(v -> v != null && !v.isBlank())
-                        .toList());
-        return PublicCafeCardResponse.builder()
                 .id(cafe.getId())
                 .name(cafe.getName())
-                .location(location)
                 .description(cafe.getDescription())
-                .openTime(cafe.getOpeningTime())
-                .closeTime(cafe.getClosingTime())
-                .rating(cafe.getRating())
-                .imageUrl(cafe.getImageUrl())
+                .address(cafe.getAddress())
+                .city(cafe.getCity())
+                .state(cafe.getState())
+                .pincode(cafe.getPincode())
+                .phoneNumber(cafe.getPhoneNumber())
+                .email(cafe.getEmail())
+                .openTime(cafe.getOpenTime())
+                .closeTime(cafe.getCloseTime())
+                .logoUrl(cafe.getLogoUrl())
+                .coverUrl(cafe.getCoverUrl())
+                .galleryImages(cafe.getGalleryImages().stream().map(CafeGallery::getImageUrl).toList())
+                .createdAt(cafe.getCreatedAt())
                 .build();
     }
 }

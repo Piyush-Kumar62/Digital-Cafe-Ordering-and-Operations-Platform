@@ -67,7 +67,7 @@ public class AdminDashboardService {
         // Order Statistics
         Long totalOrders = orderRepository.count();
         Long todayOrders = orderRepository.countByCreatedAtAfter(startOfDay);
-        Long pendingOrders = orderRepository.countByStatus(Order.OrderStatus.PENDING);
+        Long pendingOrders = orderRepository.countByStatus(Order.OrderStatus.PLACED);
 
         // Revenue Statistics
         Double totalRevenue = calculateTotalRevenue();

@@ -15,10 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-/**
- * Payment service for Razorpay integration.
- * Handles payment creation, verification, and webhook processing.
- */
+
 @Slf4j
 @Service
 public class PaymentService {
@@ -39,9 +36,7 @@ public class PaymentService {
         this.paymentRepository = paymentRepository;
     }
 
-    /**
-     * Initializes Razorpay client if gateway is configured.
-     */
+
     private void initializeRazorpayClient() {
         if (razorpayClient == null && "RAZORPAY".equals(paymentGateway)) {
             try {
@@ -53,9 +48,7 @@ public class PaymentService {
         }
     }
 
-    /**
-     * Creates a payment order.
-     */
+
     @Transactional
     public Payment createPayment(Order order) {
         log.info("Creating payment for order: {}", order.getOrderNumber());
@@ -90,9 +83,7 @@ public class PaymentService {
         return paymentRepository.save(payment);
     }
 
-    /**
-     * Creates Razorpay order.
-     */
+
     private String createRazorpayOrder(Order order) throws RazorpayException {
         JSONObject orderRequest = new JSONObject();
         orderRequest.put("amount", order.getTotalAmount().multiply(new BigDecimal("100")).intValue()); // Amount in paise
@@ -103,9 +94,7 @@ public class PaymentService {
         return razorpayOrder.get("id");
     }
 
-    /**
-     * Verifies and completes payment.
-     */
+
     @Transactional
     public Payment verifyAndCompletePayment(Long paymentId, String paymentGatewayPaymentId, String signature) {
         Payment payment = paymentRepository.findById(paymentId)
@@ -133,9 +122,7 @@ public class PaymentService {
         return paymentRepository.save(payment);
     }
 
-    /**
-     * Verifies Razorpay payment signature.
-     */
+
     private void verifyRazorpaySignature(String orderId, String paymentId, String signature) throws Exception {
         JSONObject options = new JSONObject();
         options.put("razorpay_order_id", orderId);
@@ -150,9 +137,7 @@ public class PaymentService {
         }
     }
 
-    /**
-     * Handles payment failure.
-     */
+
     @Transactional
     public Payment handlePaymentFailure(Long paymentId, String reason) {
         Payment payment = paymentRepository.findById(paymentId)
@@ -162,9 +147,7 @@ public class PaymentService {
         return paymentRepository.save(payment);
     }
 
-    /**
-     * Retrieves payment by order ID.
-     */
+
     public Payment getPaymentByOrderId(Long orderId) {
         return paymentRepository.findByOrderId(orderId)
                 .orElseThrow(() -> new BusinessException("Payment not found for order"));

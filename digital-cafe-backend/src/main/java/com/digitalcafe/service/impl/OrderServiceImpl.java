@@ -5,134 +5,104 @@ import com.digitalcafe.dto.request.OrderStatusUpdateRequest;
 import com.digitalcafe.dto.response.OrderResponse;
 import com.digitalcafe.dto.response.PageResponse;
 import com.digitalcafe.entity.*;
+import com.digitalcafe.exception.BusinessException;
 import com.digitalcafe.exception.ResourceNotFoundException;
 import com.digitalcafe.mapper.OrderMapper;
 import com.digitalcafe.repository.*;
+import com.digitalcafe.service.NotificationService;
 import com.digitalcafe.service.OrderService;
-import com.digitalcafe.websocket.OrderNotification;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
+// Production-grade Order service with strict status transitions, mapped domain violations, and complete audit trails via OrderStatusHistory.
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService {
 
+    private static final Map<Order.OrderStatus, Set<Order.OrderStatus>> ALLOWED_TRANSITIONS =
+            Map.of(
+                Order.OrderStatus.PLACED,     EnumSet.of(Order.OrderStatus.PREPARING, Order.OrderStatus.CANCELLED),
+                Order.OrderStatus.PREPARING,  EnumSet.of(Order.OrderStatus.READY,     Order.OrderStatus.CANCELLED),
+                Order.OrderStatus.READY,      EnumSet.of(Order.OrderStatus.SERVED,    Order.OrderStatus.CANCELLED),
+                Order.OrderStatus.SERVED,     EnumSet.noneOf(Order.OrderStatus.class),
+                Order.OrderStatus.CANCELLED,  EnumSet.noneOf(Order.OrderStatus.class)
+            );
+
     private final OrderRepository orderRepository;
     private final BookingRepository bookingRepository;
     private final MenuItemRepository menuItemRepository;
     private final UserRepository userRepository;
+    private final PaymentRepository paymentRepository;
+    private final OrderStatusHistoryRepository statusHistoryRepository;
+    private final NotificationService notificationService;
     private final OrderMapper orderMapper;
-    private final SimpMessagingTemplate messagingTemplate;
+
 
     @Override
     @Transactional
     public OrderResponse createOrder(Long customerId, OrderRequest request) {
-        log.info("Creating order for customer: {}, booking: {}", customerId, request.getBookingId());
+        log.info("Order creation started: customerId={}, bookingId={}", customerId, request.getBookingId());
 
-        // Validate booking
         Booking booking = bookingRepository.findById(request.getBookingId())
-                .orElseThrow(() -> new ResourceNotFoundException("Booking not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Booking not found: " + request.getBookingId()));
 
-        if (!booking.getCustomer().getId().equals(customerId)) {
-            throw new IllegalArgumentException("Booking does not belong to this customer");
-        }
+        validateBookingOwnership(booking, customerId);
+        validateBookingIsConfirmed(booking);
+        assertNoExistingOrder(booking.getId());
 
-        if (booking.getStatus() != Booking.BookingStatus.CONFIRMED) {
-            throw new IllegalArgumentException("Booking must be confirmed to place an order");
-        }
-
-        // Check if order already exists for this booking
-        if (orderRepository.existsByBookingId(booking.getId())) {
-            throw new IllegalArgumentException("An order already exists for this booking");
-        }
-
-        // Create order
-        Order order = new Order();
-        order.setOrderNumber("ORD-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
-        order.setBooking(booking);
-        order.setCustomer(booking.getCustomer());
-        order.setCafe(booking.getCafe());
-        order.setStatus(Order.OrderStatus.PLACED);
-        order.setSpecialInstructions(request.getSpecialInstructions());
-
-        // Create order items
-        List<OrderItem> orderItems = new ArrayList<>();
-        BigDecimal subtotal = BigDecimal.ZERO;
-
-        for (OrderRequest.OrderItemRequest itemRequest : request.getItems()) {
-            MenuItem menuItem = menuItemRepository.findById(itemRequest.getMenuItemId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Menu item not found: " + itemRequest.getMenuItemId()));
-
-            if (!menuItem.getCafe().getId().equals(booking.getCafe().getId())) {
-                throw new IllegalArgumentException("Menu item does not belong to the booking's cafe");
-            }
-
-            if (!menuItem.getIsAvailable()) {
-                throw new IllegalArgumentException("Menu item is not available: " + menuItem.getName());
-            }
-
-            OrderItem orderItem = new OrderItem();
-            orderItem.setOrder(order);
-            orderItem.setMenuItem(menuItem);
-            orderItem.setQuantity(itemRequest.getQuantity());
-            orderItem.setUnitPrice(menuItem.getPrice());
-            orderItem.setTotalPrice(menuItem.getPrice().multiply(BigDecimal.valueOf(itemRequest.getQuantity())));
-            orderItem.setSpecialInstructions(itemRequest.getSpecialInstructions());
-
-            orderItems.add(orderItem);
-            subtotal = subtotal.add(orderItem.getTotalPrice());
-        }
-
-        order.setOrderItems(orderItems);
-        order.setSubtotal(subtotal);
-
-        // Calculate tax (assuming 10%)
-        BigDecimal tax = subtotal.multiply(BigDecimal.valueOf(0.10));
-        order.setTax(tax);
-
-        // Calculate discount if any
-        order.setDiscount(BigDecimal.ZERO);
-
-        // Calculate total
-        BigDecimal total = subtotal.add(tax).subtract(order.getDiscount());
-        order.setTotalAmount(total);
-
+        Order order = buildOrder(request, booking);
         order = orderRepository.save(order);
-        log.info("Order created successfully: {}", order.getOrderNumber());
 
-        // Send WebSocket notification to chef
-        sendOrderNotification(order, "ORDER_PLACED", "/topic/chef/" + booking.getCafe().getId());
+        log.info("Order created: orderId={}, orderNumber={}, customerId={}, cafeId={}",
+                order.getId(), order.getOrderNumber(), customerId, booking.getCafe().getId());
 
+        notificationService.pushOrderEvent(order, "ORDER_PLACED", "/topic/chef/" + booking.getCafe().getId());
         return orderMapper.toResponse(order);
     }
 
+
     @Override
+    @Transactional(readOnly = true)
     public OrderResponse getOrderById(Long orderId) {
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
-        return orderMapper.toResponse(order);
+        return orderMapper.toResponse(fetchOrder(orderId));
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public OrderResponse getOrderByBookingForCustomer(Long customerId, Long bookingId) {
+        List<Order> orders = orderRepository.findByBookingId(bookingId);
+        return orders.stream()
+                .filter(o -> o.getCustomer().getId().equals(customerId))
+                .findFirst()
+                .map(orderMapper::toResponse)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "No order found for bookingId=" + bookingId + " and customerId=" + customerId));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<OrderResponse> getOrdersByCustomerId(Long customerId) {
-        List<Order> orders = orderRepository.findByCustomerId(customerId);
-        return orderMapper.toResponseList(orders);
+        return orderMapper.toResponseList(orderRepository.findByCustomerId(customerId));
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public List<OrderResponse> getAllOrders() {
+        return orderMapper.toResponseList(orderRepository.findAll());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public PageResponse<OrderResponse> getOrdersByCafeId(Long cafeId, Pageable pageable) {
         Page<Order> page = orderRepository.findByCafeId(cafeId, pageable);
         return PageResponse.<OrderResponse>builder()
@@ -145,146 +115,233 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<OrderResponse> getOrdersByStatus(Long cafeId, Order.OrderStatus status) {
-        List<Order> orders = orderRepository.findByCafeIdAndStatus(cafeId, status);
-        return orderMapper.toResponseList(orders);
+        return orderMapper.toResponseList(orderRepository.findByCafeIdAndStatus(cafeId, status));
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<OrderResponse> getPendingOrdersForChef(Long cafeId) {
+        return orderMapper.toResponseList(orderRepository.findPendingOrdersForChef(cafeId));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<OrderResponse> getReadyOrdersForWaiter(Long cafeId) {
+        return orderMapper.toResponseList(orderRepository.findReadyOrdersForWaiter(cafeId));
+    }
+
 
     @Override
     @Transactional
     public OrderResponse updateOrderStatus(Long orderId, OrderStatusUpdateRequest request) {
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
-
-        Order.OrderStatus newStatus = Order.OrderStatus.valueOf(request.getStatus());
+        Order order = fetchOrder(orderId);
         Order.OrderStatus oldStatus = order.getStatus();
+        Order.OrderStatus newStatus = parseStatus(request.getStatus());
 
-        // Validate status transition
-        validateStatusTransition(oldStatus, newStatus);
-
-        order.setStatus(newStatus);
-
-        // Update timestamps and assign staff based on status
-        switch (newStatus) {
-            case PLACED:
-                // Order is placed, no additional action needed
-                sendOrderNotification(order, "ORDER_PLACED", "/topic/cafe/" + order.getCafe().getId());
-                break;
-
-            case PREPARING:
-                if (order.getPreparingAt() == null) {
-                    order.setPreparingAt(LocalDateTime.now());
-                }
-                if (request.getStaffId() != null) {
-                    User chef = userRepository.findById(request.getStaffId())
-                            .orElseThrow(() -> new ResourceNotFoundException("Chef not found"));
-                    order.setPreparingByChef(chef);
-                }
-                sendOrderNotification(order, "ORDER_PREPARING", "/topic/customer/" + order.getCustomer().getId());
-                break;
-
-            case READY:
-                if (order.getReadyAt() == null) {
-                    order.setReadyAt(LocalDateTime.now());
-                }
-                sendOrderNotification(order, "ORDER_READY", "/topic/waiter/" + order.getCafe().getId());
-                sendOrderNotification(order, "ORDER_READY", "/topic/customer/" + order.getCustomer().getId());
-                break;
-
-            case SERVED:
-                if (order.getServedAt() == null) {
-                    order.setServedAt(LocalDateTime.now());
-                }
-                if (request.getStaffId() != null) {
-                    User waiter = userRepository.findById(request.getStaffId())
-                            .orElseThrow(() -> new ResourceNotFoundException("Waiter not found"));
-                    order.setServedByWaiter(waiter);
-                }
-                sendOrderNotification(order, "ORDER_SERVED", "/topic/customer/" + order.getCustomer().getId());
-                break;
-
-            case CANCELLED:
-                order.setCancelledAt(LocalDateTime.now());
-                order.setCancellationReason(request.getReason());
-                sendOrderNotification(order, "ORDER_CANCELLED", "/topic/customer/" + order.getCustomer().getId());
-                break;
-        }
-
+        validateTransition(oldStatus, newStatus);
+        applyStatusTimestamps(order, newStatus, request);
         order = orderRepository.save(order);
-        log.info("Order {} status updated from {} to {}", order.getOrderNumber(), oldStatus, newStatus);
 
+        persistStatusHistory(order, oldStatus, newStatus, request.getStaffId(), request.getReason());
+        log.info("Order status changed: orderId={}, orderNumber={}, from={}, to={}, by={}",
+                order.getId(), order.getOrderNumber(), oldStatus, newStatus, request.getStaffId());
+
+        emitStatusNotification(order, newStatus);
         return orderMapper.toResponse(order);
     }
 
     @Override
     @Transactional
     public OrderResponse cancelOrder(Long orderId) {
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
+        Order order = fetchOrder(orderId);
+        Order.OrderStatus oldStatus = order.getStatus();
 
-        if (order.getStatus() == Order.OrderStatus.SERVED || order.getStatus() == Order.OrderStatus.CANCELLED) {
-            throw new IllegalArgumentException("Cannot cancel order with status: " + order.getStatus());
+        if (oldStatus == Order.OrderStatus.SERVED || oldStatus == Order.OrderStatus.CANCELLED) {
+            throw new BusinessException("Cannot cancel order in terminal state: " + oldStatus);
         }
 
         order.setStatus(Order.OrderStatus.CANCELLED);
         order.setCancelledAt(LocalDateTime.now());
         order = orderRepository.save(order);
 
-        sendOrderNotification(order, "ORDER_CANCELLED", "/topic/customer/" + order.getCustomer().getId());
-        sendOrderNotification(order, "ORDER_CANCELLED", "/topic/chef/" + order.getCafe().getId());
+        persistStatusHistory(order, oldStatus, Order.OrderStatus.CANCELLED, null, "Cancelled by customer");
+        log.info("Order cancelled: orderId={}, orderNumber={}", order.getId(), order.getOrderNumber());
 
+        notificationService.pushOrderEvent(order, "ORDER_CANCELLED", "/topic/customer/" + order.getCustomer().getId());
+        notificationService.pushOrderEvent(order, "ORDER_CANCELLED", "/topic/chef/" + order.getCafe().getId());
         return orderMapper.toResponse(order);
     }
 
-    @Override
-    public List<OrderResponse> getPendingOrdersForChef(Long cafeId) {
-        List<Order> orders = orderRepository.findPendingOrdersForChef(cafeId);
-        return orderMapper.toResponseList(orders);
-    }
 
     @Override
-    public List<OrderResponse> getReadyOrdersForWaiter(Long cafeId) {
-        List<Order> orders = orderRepository.findReadyOrdersForWaiter(cafeId);
-        return orderMapper.toResponseList(orders);
-    }
+    @Transactional
+    public OrderResponse activateOrderAfterPayment(Long orderId) {
+        Order order = fetchOrder(orderId);
 
-    private void validateStatusTransition(Order.OrderStatus from, Order.OrderStatus to) {
-        // Define valid transitions
-        boolean isValid = false;
-        switch (from) {
-            case PLACED:
-                isValid = to == Order.OrderStatus.PREPARING || to == Order.OrderStatus.CANCELLED;
-                break;
-            case PREPARING:
-                isValid = to == Order.OrderStatus.READY || to == Order.OrderStatus.CANCELLED;
-                break;
-            case READY:
-                isValid = to == Order.OrderStatus.SERVED || to == Order.OrderStatus.CANCELLED;
-                break;
-            case SERVED:
-            case CANCELLED:
-                isValid = false; // Terminal states
-                break;
+        if (order.getStatus() != Order.OrderStatus.PLACED) {
+            log.warn("activateOrderAfterPayment: order {} already in status {}, returning idempotent response",
+                    order.getOrderNumber(), order.getStatus());
+            return orderMapper.toResponse(order);
         }
 
-        if (!isValid) {
-            throw new IllegalArgumentException("Invalid status transition from " + from + " to " + to);
+        Payment payment = paymentRepository.findByOrderId(orderId)
+                .orElseThrow(() -> new BusinessException("No payment record found for orderId=" + orderId));
+
+        if (!payment.isSuccessful()) {
+            log.warn("Payment validation failed: orderId={}, paymentStatus={}", orderId, payment.getStatus());
+            throw new BusinessException(
+                    "Cannot activate order: payment status is " + payment.getStatus() +
+                    ". Only COMPLETED payments can activate kitchen flow.");
+        }
+
+        log.info("Payment validated, activating kitchen flow: orderId={}, paymentId={}, gatewayPaymentId={}",
+                orderId, payment.getId(), payment.getPaymentGatewayPaymentId());
+
+        notificationService.pushOrderEvent(order, "ORDER_PLACED", "/topic/chef/" + order.getCafe().getId());
+        return orderMapper.toResponse(order);
+    }
+
+
+    private Order fetchOrder(Long orderId) {
+        return orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found: " + orderId));
+    }
+
+    private void validateBookingOwnership(Booking booking, Long customerId) {
+        if (!booking.getCustomer().getId().equals(customerId)) {
+            throw new BusinessException("Booking " + booking.getId() + " does not belong to customer " + customerId);
         }
     }
 
-    private void sendOrderNotification(Order order, String notificationType, String destination) {
-        OrderNotification notification = OrderNotification.builder()
-                .orderId(order.getId())
-                .orderNumber(order.getOrderNumber())
-                .cafeId(order.getCafe().getId())
-                .cafeName(order.getCafe().getName())
-                .status(order.getStatus().name())
-                .type(OrderNotification.NotificationType.valueOf(notificationType))
-                .message("Order " + order.getOrderNumber() + " is now " + order.getStatus())
-                .timestamp(LocalDateTime.now())
+    private void validateBookingIsConfirmed(Booking booking) {
+        if (booking.getStatus() != Booking.BookingStatus.CONFIRMED) {
+            throw new BusinessException("Booking must be CONFIRMED to place an order. Current status: " + booking.getStatus());
+        }
+    }
+
+    private void assertNoExistingOrder(Long bookingId) {
+        if (orderRepository.existsByBookingId(bookingId)) {
+            throw new BusinessException("An order already exists for bookingId=" + bookingId);
+        }
+    }
+
+    private Order buildOrder(OrderRequest request, Booking booking) {
+        Order order = new Order();
+        order.setOrderNumber("ORD-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
+        order.setBooking(booking);
+        order.setCustomer(booking.getCustomer());
+        order.setCafe(booking.getCafe());
+        order.setStatus(Order.OrderStatus.PLACED);
+        order.setSpecialInstructions(request.getSpecialInstructions());
+
+        List<OrderItem> items = buildOrderItems(request.getItems(), order, booking.getCafe().getId());
+        order.setOrderItems(items);
+
+        BigDecimal subtotal = items.stream()
+                .map(OrderItem::getTotalPrice)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        order.setSubtotal(subtotal);
+        order.setTax(subtotal.multiply(new BigDecimal("0.10")));
+        order.setDiscount(BigDecimal.ZERO);
+        order.setTotalAmount(subtotal.add(order.getTax()));
+        return order;
+    }
+
+    private List<OrderItem> buildOrderItems(List<OrderRequest.OrderItemRequest> itemRequests,
+                                            Order order, Long cafeId) {
+        return itemRequests.stream().map(itemRequest -> {
+            MenuItem menuItem = menuItemRepository.findById(itemRequest.getMenuItemId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Menu item not found: " + itemRequest.getMenuItemId()));
+
+            if (!menuItem.getCafe().getId().equals(cafeId)) {
+                throw new BusinessException("Menu item " + menuItem.getId() + " does not belong to this cafe");
+            }
+            if (!menuItem.getIsAvailable()) {
+                throw new BusinessException("Menu item is not available: " + menuItem.getName());
+            }
+
+            OrderItem item = new OrderItem();
+            item.setOrder(order);
+            item.setMenuItem(menuItem);
+            item.setQuantity(itemRequest.getQuantity());
+            item.setUnitPrice(menuItem.getPrice());
+            item.setTotalPrice(menuItem.getPrice().multiply(BigDecimal.valueOf(itemRequest.getQuantity())));
+            item.setSpecialInstructions(itemRequest.getSpecialInstructions());
+            return item;
+        }).collect(Collectors.toList());
+    }
+
+    private Order.OrderStatus parseStatus(String status) {
+        try {
+            return Order.OrderStatus.valueOf(status);
+        } catch (IllegalArgumentException e) {
+            throw new BusinessException("Unknown order status: " + status);
+        }
+    }
+
+    private void validateTransition(Order.OrderStatus from, Order.OrderStatus to) {
+        Set<Order.OrderStatus> allowed = ALLOWED_TRANSITIONS.getOrDefault(from, EnumSet.noneOf(Order.OrderStatus.class));
+        if (!allowed.contains(to)) {
+            throw new BusinessException(
+                    "Invalid status transition from " + from + " to " + to +
+                    ". Allowed next states: " + allowed);
+        }
+    }
+
+    private void applyStatusTimestamps(Order order, Order.OrderStatus newStatus, OrderStatusUpdateRequest request) {
+        switch (newStatus) {
+            case PREPARING -> {
+                if (order.getPreparingAt() == null) order.setPreparingAt(LocalDateTime.now());
+                if (request.getStaffId() != null) {
+                    order.setPreparingByChef(userRepository.findById(request.getStaffId())
+                            .orElseThrow(() -> new ResourceNotFoundException("Chef not found: " + request.getStaffId())));
+                }
+            }
+            case READY -> { if (order.getReadyAt() == null) order.setReadyAt(LocalDateTime.now()); }
+            case SERVED -> {
+                if (order.getServedAt() == null) order.setServedAt(LocalDateTime.now());
+                if (request.getStaffId() != null) {
+                    order.setServedByWaiter(userRepository.findById(request.getStaffId())
+                            .orElseThrow(() -> new ResourceNotFoundException("Waiter not found: " + request.getStaffId())));
+                }
+            }
+            case CANCELLED -> {
+                order.setCancelledAt(LocalDateTime.now());
+                order.setCancellationReason(request.getReason());
+            }
+            default -> { /* PLACED – no timestamp action needed */ }
+        }
+        order.setStatus(newStatus);
+    }
+
+    private void emitStatusNotification(Order order, Order.OrderStatus newStatus) {
+        switch (newStatus) {
+            case PLACED     -> notificationService.pushOrderEvent(order, "ORDER_PLACED",    "/topic/cafe/"     + order.getCafe().getId());
+            case PREPARING  -> notificationService.pushOrderEvent(order, "ORDER_PREPARING", "/topic/customer/" + order.getCustomer().getId());
+            case READY      -> {
+                notificationService.pushOrderEvent(order, "ORDER_READY", "/topic/waiter/"   + order.getCafe().getId());
+                notificationService.pushOrderEvent(order, "ORDER_READY", "/topic/customer/" + order.getCustomer().getId());
+            }
+            case SERVED     -> notificationService.pushOrderEvent(order, "ORDER_SERVED",    "/topic/customer/" + order.getCustomer().getId());
+            case CANCELLED  -> {
+                notificationService.pushOrderEvent(order, "ORDER_CANCELLED", "/topic/customer/" + order.getCustomer().getId());
+                notificationService.pushOrderEvent(order, "ORDER_CANCELLED", "/topic/chef/"     + order.getCafe().getId());
+            }
+        }
+    }
+
+    private void persistStatusHistory(Order order, Order.OrderStatus oldStatus,
+                                      Order.OrderStatus newStatus, Long changedByUserId, String reason) {
+        OrderStatusHistory history = OrderStatusHistory.builder()
+                .order(order)
+                .oldStatus(oldStatus)
+                .newStatus(newStatus)
+                .changedByUserId(changedByUserId)
+                .changedAt(LocalDateTime.now())
+                .reason(reason)
                 .build();
-
-        messagingTemplate.convertAndSend(destination, notification);
-        log.debug("Sent notification to {}: {}", destination, notificationType);
+        statusHistoryRepository.save(history);
     }
 }

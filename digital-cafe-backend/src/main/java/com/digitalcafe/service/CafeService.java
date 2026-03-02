@@ -6,6 +6,7 @@ import com.digitalcafe.dto.response.PageResponse;
 import com.digitalcafe.dto.response.PublicCafeCardResponse;
 import com.digitalcafe.dto.response.PublicCafeDetailResponse;
 import org.springframework.data.domain.Pageable;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -14,53 +15,39 @@ import java.util.List;
  */
 public interface CafeService {
 
-    /**
-     * Create a new cafe for a cafe owner
-     */
-    CafeResponse createCafe(Long ownerId, CafeRequest request);
+    CafeResponse createCafe(Long ownerId, CafeRequest request, MultipartFile logo);
 
-    /**
-     * Update cafe information
-     */
-    CafeResponse updateCafe(Long cafeId, CafeRequest request);
+    boolean existsByOwnerId(Long ownerId);
 
-    /**
-     * Get cafe by ID
-     */
+    CafeResponse updateCafe(Long cafeId, CafeRequest request, MultipartFile logo);
+
     CafeResponse getCafeById(Long cafeId);
 
-    /**
-     * Get all cafes with pagination
-     */
+    CafeResponse getCafeByOwner(Long ownerId);
+
+    PageResponse<CafeResponse> getCafesByOwner(Long ownerId, Pageable pageable);
+
     PageResponse<CafeResponse> getAllCafes(Pageable pageable);
 
-    /**
-     * Public list of active cafes for SaaS-style browse page.
-     */
-    PageResponse<PublicCafeCardResponse> getPublicActiveCafes(Pageable pageable);
-
-    /**
-     * Public cafe details with available menu items.
-     */
-    PublicCafeDetailResponse getPublicCafeDetails(Long cafeId);
-
-    /**
-     * Get all active cafes (public endpoint for landing page)
-     */
     List<CafeResponse> getActiveCafes();
 
-    /**
-     * Get cafes owned by a specific owner
-     */
-    List<CafeResponse> getCafesByOwnerId(Long ownerId);
-
-    /**
-     * Delete a cafe
-     */
     void deleteCafe(Long cafeId);
 
-    /**
-     * Activate or deactivate a cafe
-     */
     CafeResponse toggleCafeStatus(Long cafeId, boolean isActive);
+
+    void uploadGallery(Long cafeId, List<MultipartFile> files);
+
+    List<String> getGalleryImages(Long cafeId);
+
+    void deleteGalleryImage(Long imageId);
+
+    void updateLogo(Long cafeId, MultipartFile file);
+
+    void updateCover(Long cafeId, MultipartFile file);
+
+    CafeResponse getMyCafe();
+
+    PageResponse<PublicCafeCardResponse> getPublicActiveCafes(Pageable pageable);
+
+    PublicCafeDetailResponse getPublicCafeDetails(Long cafeId);
 }

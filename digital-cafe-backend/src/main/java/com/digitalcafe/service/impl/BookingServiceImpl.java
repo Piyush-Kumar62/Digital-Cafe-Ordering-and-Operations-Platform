@@ -1,12 +1,16 @@
 package com.digitalcafe.service.impl;
 
 import com.digitalcafe.dto.request.BookingRequest;
+import com.digitalcafe.dto.request.CustomerBookingRequest;
+import com.digitalcafe.dto.response.AvailabilityTableResponse;
 import com.digitalcafe.dto.response.BookingResponse;
 import com.digitalcafe.dto.response.PageResponse;
 import com.digitalcafe.entity.Booking;
 import com.digitalcafe.entity.Cafe;
 import com.digitalcafe.entity.CafeTable;
 import com.digitalcafe.entity.User;
+import com.digitalcafe.exception.BookingConflictException;
+import com.digitalcafe.exception.BusinessException;
 import com.digitalcafe.exception.ResourceNotFoundException;
 import com.digitalcafe.mapper.BookingMapper;
 import com.digitalcafe.repository.BookingRepository;
@@ -16,9 +20,9 @@ import com.digitalcafe.repository.UserRepository;
 import com.digitalcafe.service.BookingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,11 +33,24 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
+/**
+ * Production-grade Booking service implementation.
+ *
+ * Key design decisions:
+ * - Overlap detection uses DB-level interval query (start_time < end AND end_time > start).
+ *   No more hardcoded +2h Java arithmetic — the query respects actual booking durations.
+ * - BusinessException / BookingConflictException used instead of RuntimeException.
+ * - Transactional write methods, readOnly on queries.
+ * - SLF4J structured logs in service layer only.
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class BookingServiceImpl implements BookingService {
+
+    private static final long DEFAULT_BOOKING_DURATION_HOURS = 2L;
 
     private final BookingRepository bookingRepository;
     private final UserRepository userRepository;
@@ -42,78 +59,103 @@ public class BookingServiceImpl implements BookingService {
     private final BookingMapper bookingMapper;
     private final SimpMessagingTemplate messagingTemplate;
 
+
     @Override
     @Transactional
     public BookingResponse createBooking(Long customerId, BookingRequest request) {
-        log.info("Creating booking for customer: {}, cafe: {}, table: {}", customerId, request.getCafeId(), request.getTableId());
+        log.info("Booking creation started: customerId={}, cafeId={}, tableId={}, date={}, time={}",
+                customerId, request.getCafeId(), request.getTableId(),
+                request.getBookingDate(), request.getBookingTime());
 
         LocalDateTime requestedDateTime = LocalDateTime.of(request.getBookingDate(), request.getBookingTime());
         if (requestedDateTime.isBefore(LocalDateTime.now())) {
-            throw new IllegalArgumentException("Booking time slot cannot be in the past");
+            throw new BusinessException("Booking time slot cannot be in the past");
         }
 
-        // Validate customer
-        User customer = userRepository.findById(customerId)
-                .orElseThrow(() -> new ResourceNotFoundException("Customer not found"));
+        User customer = fetchUser(customerId);
+        Cafe cafe = fetchCafe(request.getCafeId());
+        CafeTable table = fetchTable(request.getTableId());
 
-        // Validate cafe
-        Cafe cafe = cafeRepository.findById(request.getCafeId())
-                .orElseThrow(() -> new ResourceNotFoundException("Cafe not found"));
+        validateTableBelongsToCafe(table, cafe.getId());
+        validateTableIsAvailable(table);
+        validateTableCapacity(table, request.getNumberOfGuests());
 
-        // Validate table
-        CafeTable table = tableRepository.findById(request.getTableId())
-                .orElseThrow(() -> new ResourceNotFoundException("Table not found"));
+        LocalTime startTime = request.getBookingTime();
+        LocalTime endTime = startTime.plusHours(DEFAULT_BOOKING_DURATION_HOURS);
 
-        if (!table.getCafe().getId().equals(cafe.getId())) {
-            throw new IllegalArgumentException("Table does not belong to this cafe");
+        if (bookingRepository.existsOverlappingBooking(table.getId(), request.getBookingDate(), startTime, endTime)) {
+            throw new BookingConflictException("Table is already booked for this time slot");
         }
 
-        if (!Boolean.TRUE.equals(table.getIsAvailable())) {
-            throw new IllegalArgumentException("Table is not available");
-        }
-
-        if (table.getCapacity() < request.getNumberOfGuests()) {
-            throw new IllegalArgumentException("Table capacity is insufficient for the number of guests");
-        }
-
-        // Check for booking conflicts
-        if (hasBookingConflict(table.getId(), request.getBookingDate(), request.getBookingTime())) {
-            throw new IllegalArgumentException("Table is already booked for this time slot");
-        }
-
-        // Create booking
-        Booking booking = new Booking();
-        booking.setBookingNumber("BKG-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
-        booking.setCustomer(customer);
-        booking.setCafe(cafe);
-        booking.setTable(table);
-        booking.setBookingDate(request.getBookingDate());
-        booking.setBookingTime(request.getBookingTime());
-        booking.setNumberOfGuests(request.getNumberOfGuests());
-        booking.setSpecialRequests(request.getSpecialRequests());
-        booking.setStatus(Booking.BookingStatus.CONFIRMED);
-
+        Booking booking = buildBooking(customer, cafe, table, request, startTime, endTime);
         booking = bookingRepository.save(booking);
-        log.info("Booking created successfully: {}", booking.getBookingNumber());
+
+        log.info("Booking created: bookingId={}, bookingNumber={}, customerId={}, tableId={}, date={}, slot={}-{}",
+                booking.getId(), booking.getBookingNumber(), customerId,
+                table.getId(), booking.getBookingDate(), startTime, endTime);
+
         notifyTableAvailabilityChanged(booking, "BOOKING_CREATED");
-
         return bookingMapper.toResponse(booking);
     }
 
     @Override
+    @Transactional
+    public BookingResponse createBooking(Long customerId, CustomerBookingRequest request) {
+        log.info("Auto-allocation booking: customerId={}, cafeId={}, date={}, guests={}",
+                customerId, request.getCafeId(), request.getDate(), request.getNumberOfGuests());
+
+        LocalDateTime requestedDateTime = LocalDateTime.of(request.getDate(), request.getTimeSlot());
+        if (requestedDateTime.isBefore(LocalDateTime.now())) {
+            throw new BusinessException("Booking time slot cannot be in the past");
+        }
+
+        User customer = fetchUser(customerId);
+        Cafe cafe = fetchCafe(request.getCafeId());
+
+        LocalTime startTime = request.getTimeSlot();
+        LocalTime endTime = startTime.plusHours(DEFAULT_BOOKING_DURATION_HOURS);
+
+        // Find one available table that fits the guests and has no overlap
+        CafeTable table = tableRepository
+                .findByCafeIdAndCapacityGreaterThanEqual(cafe.getId(), request.getNumberOfGuests())
+                .stream()
+                .filter(t -> Boolean.TRUE.equals(t.getIsAvailable()))
+                .filter(t -> !bookingRepository.existsOverlappingBooking(
+                        t.getId(), request.getDate(), startTime, endTime))
+                .findFirst()
+                .orElseThrow(() -> new BookingConflictException(
+                        "No available tables for " + request.getNumberOfGuests() +
+                        " guests at " + request.getDate() + " " + startTime));
+
+        Booking booking = buildBookingFromCustomerRequest(customer, cafe, table, request, startTime, endTime);
+        booking = bookingRepository.save(booking);
+
+        log.info("Auto-allocation booking created: bookingId={}, tableId={}", booking.getId(), table.getId());
+        notifyTableAvailabilityChanged(booking, "BOOKING_CREATED");
+        return bookingMapper.toResponse(booking);
+    }
+
+
+    @Override
+    @Transactional(readOnly = true)
     public BookingResponse getBookingById(Long bookingId) {
-        Booking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new ResourceNotFoundException("Booking not found"));
-        return bookingMapper.toResponse(booking);
+        return bookingMapper.toResponse(fetchBooking(bookingId));
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<BookingResponse> getBookingsByCustomerId(Long customerId) {
-        List<Booking> bookings = bookingRepository.findByCustomerId(customerId);
-        return bookingMapper.toResponseList(bookings);
+        return bookingMapper.toResponseList(bookingRepository.findByCustomerId(customerId));
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public List<BookingResponse> getAllBookings() {
+        return bookingMapper.toResponseList(bookingRepository.findAll());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public PageResponse<BookingResponse> getBookingsByCafeId(Long cafeId, Pageable pageable) {
         Page<Booking> page = bookingRepository.findByCafeId(cafeId, pageable);
         return PageResponse.<BookingResponse>builder()
@@ -126,92 +168,146 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<BookingResponse> getBookingsByStatus(Long customerId, Booking.BookingStatus status) {
-        List<Booking> bookings = bookingRepository.findByCustomerIdAndStatus(customerId, status);
-        return bookingMapper.toResponseList(bookings);
+        return bookingMapper.toResponseList(bookingRepository.findByCustomerIdAndStatus(customerId, status));
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<AvailabilityTableResponse> getAvailableTablesForSlot(Long cafeId, LocalDate date,
+                                                                      LocalTime time, Integer seatsRequired) {
+        LocalTime endTime = time.plusHours(DEFAULT_BOOKING_DURATION_HOURS);
+        return tableRepository.findByCafeIdAndCapacityGreaterThanEqual(cafeId, seatsRequired)
+                .stream()
+                .filter(t -> Boolean.TRUE.equals(t.getIsAvailable()))
+                .map(t -> AvailabilityTableResponse.builder()
+                        .tableId(t.getId())
+                        .capacity(t.getCapacity())
+                        .isAvailable(!bookingRepository.existsOverlappingBooking(t.getId(), date, time, endTime))
+                        .build())
+                .collect(Collectors.toList());
+    }
+
 
     @Override
     @Transactional
     public BookingResponse cancelBooking(Long bookingId) {
-        Booking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new ResourceNotFoundException("Booking not found"));
+        Booking booking = fetchBooking(bookingId);
 
         if (booking.getStatus() == Booking.BookingStatus.CANCELLED) {
-            throw new IllegalArgumentException("Booking is already cancelled");
+            throw new BusinessException("Booking is already cancelled");
         }
-
         if (booking.getStatus() == Booking.BookingStatus.COMPLETED) {
-            throw new IllegalArgumentException("Cannot cancel a completed booking");
+            throw new BusinessException("Cannot cancel a completed booking");
         }
 
         booking.setStatus(Booking.BookingStatus.CANCELLED);
         booking.setCancelledAt(LocalDateTime.now());
         booking.setCancellationReason("Cancelled by customer");
-
         booking = bookingRepository.save(booking);
-        log.info("Booking cancelled: {}", booking.getBookingNumber());
-        notifyTableAvailabilityChanged(booking, "BOOKING_CANCELLED");
 
+        log.info("Booking cancelled: bookingId={}, bookingNumber={}", booking.getId(), booking.getBookingNumber());
+        notifyTableAvailabilityChanged(booking, "BOOKING_CANCELLED");
         return bookingMapper.toResponse(booking);
     }
 
     @Override
     @Transactional
     public BookingResponse updateBookingStatus(Long bookingId, Booking.BookingStatus status) {
-        Booking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new ResourceNotFoundException("Booking not found"));
-
+        Booking booking = fetchBooking(bookingId);
         booking.setStatus(status);
-
         if (status == Booking.BookingStatus.CANCELLED) {
             booking.setCancelledAt(LocalDateTime.now());
         }
-
         booking = bookingRepository.save(booking);
-        log.info("Booking {} status updated to {}", booking.getBookingNumber(), status);
+        log.info("Booking status updated: bookingId={}, bookingNumber={}, newStatus={}",
+                booking.getId(), booking.getBookingNumber(), status);
         notifyTableAvailabilityChanged(booking, "BOOKING_STATUS_UPDATED");
-
         return bookingMapper.toResponse(booking);
     }
 
-    private boolean hasBookingConflict(Long tableId, LocalDate bookingDate, LocalTime bookingTime) {
-        List<Booking> existingBookings = bookingRepository.findByTableIdAndBookingDate(tableId, bookingDate);
-
-        // Check for time conflicts (assuming 2-hour booking slots)
-        LocalTime startTime = bookingTime;
-        LocalTime endTime = bookingTime.plusHours(2);
-
-        return existingBookings.stream()
-                .filter(b -> b.getStatus() == Booking.BookingStatus.CONFIRMED)
-                .anyMatch(existing -> {
-                    LocalTime existingStart = existing.getBookingTime();
-                    LocalTime existingEnd = existingStart.plusHours(2);
-                    return timeOverlaps(startTime, endTime, existingStart, existingEnd);
-                });
-    }
-
-    private boolean timeOverlaps(LocalTime start1, LocalTime end1, LocalTime start2, LocalTime end2) {
-        return !start1.isAfter(end2) && !start2.isAfter(end1);
-    }
-
     @Override
-    public boolean isTableAvailable(Long tableId, LocalDateTime bookingTime) {
-        LocalDate bookingDate = bookingTime.toLocalDate();
-        LocalTime time = bookingTime.toLocalTime();
+    @Transactional(readOnly = true)
+    public boolean isTableAvailable(Long tableId, LocalDateTime bookingDateTime) {
+        LocalDate date = bookingDateTime.toLocalDate();
+        LocalTime start = bookingDateTime.toLocalTime();
+        LocalTime end = start.plusHours(DEFAULT_BOOKING_DURATION_HOURS);
+        return !bookingRepository.existsOverlappingBooking(tableId, date, start, end);
+    }
 
-        List<Booking> existingBookings = bookingRepository.findByTableIdAndBookingDate(tableId, bookingDate);
 
-        LocalTime startTime = time;
-        LocalTime endTime = time.plusHours(2);
+    private Booking fetchBooking(Long bookingId) {
+        return bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new ResourceNotFoundException("Booking not found: " + bookingId));
+    }
 
-        return existingBookings.stream()
-                .filter(b -> b.getStatus() == Booking.BookingStatus.CONFIRMED)
-                .noneMatch(existing -> {
-                    LocalTime existingStart = existing.getBookingTime();
-                    LocalTime existingEnd = existingStart.plusHours(2);
-                    return timeOverlaps(startTime, endTime, existingStart, existingEnd);
-                });
+    private User fetchUser(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Customer not found: " + userId));
+    }
+
+    private Cafe fetchCafe(Long cafeId) {
+        return cafeRepository.findById(cafeId)
+                .orElseThrow(() -> new ResourceNotFoundException("Cafe not found: " + cafeId));
+    }
+
+    private CafeTable fetchTable(Long tableId) {
+        return tableRepository.findById(tableId)
+                .orElseThrow(() -> new ResourceNotFoundException("Table not found: " + tableId));
+    }
+
+    private void validateTableBelongsToCafe(CafeTable table, Long cafeId) {
+        if (!table.getCafe().getId().equals(cafeId)) {
+            throw new BusinessException("Table " + table.getId() + " does not belong to cafe " + cafeId);
+        }
+    }
+
+    private void validateTableIsAvailable(CafeTable table) {
+        if (!Boolean.TRUE.equals(table.getIsAvailable())) {
+            throw new BusinessException("Table " + table.getId() + " is not available for booking");
+        }
+    }
+
+    private void validateTableCapacity(CafeTable table, Integer guests) {
+        if (table.getCapacity() < guests) {
+            throw new BusinessException("Table capacity (" + table.getCapacity() +
+                    ") is insufficient for " + guests + " guests");
+        }
+    }
+
+    private Booking buildBooking(User customer, Cafe cafe, CafeTable table,
+                                  BookingRequest request, LocalTime startTime, LocalTime endTime) {
+        Booking booking = new Booking();
+        booking.setBookingNumber("BKG-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
+        booking.setCustomer(customer);
+        booking.setCafe(cafe);
+        booking.setTable(table);
+        booking.setBookingDate(request.getBookingDate());
+        booking.setBookingTime(request.getBookingTime());
+        booking.setStartTime(startTime);
+        booking.setEndTime(endTime);
+        booking.setNumberOfGuests(request.getNumberOfGuests());
+        booking.setSpecialRequests(request.getSpecialRequests());
+        booking.setStatus(Booking.BookingStatus.CONFIRMED);
+        return booking;
+    }
+
+    private Booking buildBookingFromCustomerRequest(User customer, Cafe cafe, CafeTable table,
+                                                     CustomerBookingRequest request,
+                                                     LocalTime startTime, LocalTime endTime) {
+        Booking booking = new Booking();
+        booking.setBookingNumber("BKG-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
+        booking.setCustomer(customer);
+        booking.setCafe(cafe);
+        booking.setTable(table);
+        booking.setBookingDate(request.getDate());
+        booking.setBookingTime(request.getTimeSlot());
+        booking.setStartTime(startTime);
+        booking.setEndTime(endTime);
+        booking.setNumberOfGuests(request.getNumberOfGuests());
+        booking.setStatus(Booking.BookingStatus.CONFIRMED);
+        return booking;
     }
 
     private void notifyTableAvailabilityChanged(Booking booking, String eventType) {
@@ -225,10 +321,9 @@ public class BookingServiceImpl implements BookingService {
             payload.put("bookingTime", booking.getBookingTime().toString());
             payload.put("status", booking.getStatus().name());
             payload.put("timestamp", LocalDateTime.now().toString());
-
             messagingTemplate.convertAndSend("/topic/cafe/" + booking.getCafe().getId() + "/tables", payload);
         } catch (Exception e) {
-            log.warn("Failed to publish table availability update for booking {}", booking.getId(), e);
+            log.warn("Failed to publish table availability update for bookingId={}: {}", booking.getId(), e.getMessage());
         }
     }
 }

@@ -17,6 +17,11 @@ public interface TableService {
     TableResponse createTable(Long cafeId, TableRequest request);
 
     /**
+     * Create new table for logged-in owner's cafe
+     */
+    TableResponse createTableForOwner(Long ownerId, TableRequest request);
+
+    /**
      * Update an existing table
      */
     TableResponse updateTable(Long tableId, TableRequest request);
@@ -32,6 +37,11 @@ public interface TableService {
     List<TableResponse> getTablesByCafeId(Long cafeId);
 
     /**
+     * Get all tables for a specific owner
+     */
+    List<TableResponse> getTablesForOwner(Long ownerId);
+
+    /**
      * Get all tables in system
      */
     List<TableResponse> getAllTables();
@@ -40,6 +50,11 @@ public interface TableService {
      * Get available tables for a cafe at a specific time
      */
     List<TableResponse> getAvailableTables(Long cafeId, LocalDateTime bookingTime);
+
+    /**
+     * Get available tables for a owner
+     */
+    List<TableResponse> getAvailableTablesForOwner(Long ownerId);
 
     /**
      * Get available tables for a cafe at a specific time filtered by minimum seat capacity.

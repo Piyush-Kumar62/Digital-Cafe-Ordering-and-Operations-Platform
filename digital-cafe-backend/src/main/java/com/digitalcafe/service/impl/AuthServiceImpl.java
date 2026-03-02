@@ -336,6 +336,15 @@ public class AuthServiceImpl implements AuthService {
     userRepository.save(user);
 
     emailVerificationTokenRepository.delete(verificationToken);
+
+    // For simple-registered users (registrationStatus == null → no admin-approval required),
+    // they are now fully active. Send them a "you're all set" confirmation.
+    if (user.getRegistrationStatus() == null
+        || user.getRegistrationStatus() == User.RegistrationStatus.APPROVED) {
+      String displayName = (user.getDisplayName() != null && !user.getDisplayName().isBlank())
+          ? user.getDisplayName() : user.getUsername();
+      emailService.sendComprehensiveRegistrationSuccess(user.getEmail(), displayName);
+    }
   }
 
   @Override

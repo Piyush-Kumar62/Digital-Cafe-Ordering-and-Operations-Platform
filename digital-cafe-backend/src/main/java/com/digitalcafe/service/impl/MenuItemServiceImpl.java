@@ -26,9 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * Implementation of MenuItemService for managing menu item operations.
- */
+
 @Slf4j
 @Service
 @RequiredArgsConstructor

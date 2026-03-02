@@ -40,12 +40,12 @@ public class ProfileServiceImpl implements ProfileService {
                     return newProfile;
                 });
 
-        // Update basic information
+
         profile.setFirstName(request.getFirstName());
         profile.setLastName(request.getLastName());
         profile.setDateOfBirth(request.getDateOfBirth());
 
-        // Parse gender string to enum
+
         if (request.getGender() != null) {
             profile.setGender(Profile.Gender.valueOf(request.getGender().toUpperCase()));
         }
@@ -53,14 +53,14 @@ public class ProfileServiceImpl implements ProfileService {
         profile.setPhoneNumber(request.getPhoneNumber());
         profile.setProfilePictureUrl(request.getProfilePictureUrl());
 
-        // Update address
+
         if (request.getAddress() != null) {
             var address = profileMapper.toAddressEntity(request.getAddress());
             address.setProfile(profile);
             profile.setAddress(address);
         }
 
-        // Clear and update academic information
+
         if (request.getAcademicInformation() != null && !request.getAcademicInformation().isEmpty()) {
             profile.getAcademicInformation().clear();
             var academicInfos = profileMapper.toAcademicInfoEntityList(request.getAcademicInformation());
@@ -70,7 +70,7 @@ public class ProfileServiceImpl implements ProfileService {
             }
         }
 
-        // Clear and update work experiences
+
         if (request.getWorkExperiences() != null && !request.getWorkExperiences().isEmpty()) {
             profile.getWorkExperiences().clear();
             var workExperiences = profileMapper.toWorkExperienceEntityList(request.getWorkExperiences());
@@ -107,7 +107,7 @@ public class ProfileServiceImpl implements ProfileService {
         Profile profile = profileRepository.findByUserId(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Profile not found for user"));
 
-        // Profile is complete if completion percentage is 100%
+
         return profile.calculateCompletionPercentage() == 100;
     }
 

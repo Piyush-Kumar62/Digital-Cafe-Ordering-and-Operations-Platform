@@ -1,9 +1,10 @@
 package com.digitalcafe.service;
 
-import com.digitalcafe.dto.request.CustomerSelfProfileUpdateDTO;
-import com.digitalcafe.dto.response.CustomerSelfProfileResponseDTO;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.multipart.MultipartFile;
+
+import com.digitalcafe.dto.request.CustomerSelfProfileUpdateDTO;
+import com.digitalcafe.dto.response.CustomerSelfProfileResponseDTO;
 
 public interface CustomerSelfProfileService {
     CustomerSelfProfileResponseDTO getProfile(Authentication authentication);

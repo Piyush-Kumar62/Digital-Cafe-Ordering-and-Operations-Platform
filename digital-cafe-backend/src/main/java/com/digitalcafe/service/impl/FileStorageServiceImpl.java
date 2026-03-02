@@ -51,6 +51,40 @@ public class FileStorageServiceImpl implements FileStorageService {
         }
     }
 
+    @Override
+    public String storeMenuItemImage(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new BadRequestException("Image file is required");
+        }
+        String ct = file.getContentType();
+        if (ct == null || !Set.of("image/png", "image/jpeg", "image/webp", "image/gif").contains(ct)) {
+            throw new BadRequestException("Only PNG, JPEG, WEBP or GIF images are allowed");
+        }
+        if (file.getSize() > 5 * 1024 * 1024) {
+            throw new BadRequestException("Image file size must be 5MB or less");
+        }
+
+        String extension = resolveExtension(ct);
+        String generatedName = UUID.randomUUID() + extension;
+
+        Path menuDir = rootUploadPath.resolve("menu-items").normalize();
+        if (!menuDir.startsWith(rootUploadPath)) {
+            throw new BadRequestException("Invalid upload path");
+        }
+
+        try {
+            Files.createDirectories(menuDir);
+            Path targetPath = menuDir.resolve(generatedName).normalize();
+            if (!targetPath.startsWith(menuDir)) {
+                throw new BadRequestException("Invalid file destination");
+            }
+            Files.copy(file.getInputStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
+            return "/uploads/menu-items/" + generatedName;
+        } catch (IOException e) {
+            throw new BadRequestException("Failed to store menu item image");
+        }
+    }
+
     private void validate(MultipartFile file) {
         if (file == null || file.isEmpty()) {
             throw new BadRequestException("Image file is required");
@@ -66,6 +100,12 @@ public class FileStorageServiceImpl implements FileStorageService {
     }
 
     private String resolveExtension(String contentType) {
-        return "image/png".equals(contentType) ? ".png" : ".jpg";
+        if (contentType == null) return ".jpg";
+        return switch (contentType) {
+            case "image/png"  -> ".png";
+            case "image/webp" -> ".webp";
+            case "image/gif"  -> ".gif";
+            default           -> ".jpg";
+        };
     }
 }

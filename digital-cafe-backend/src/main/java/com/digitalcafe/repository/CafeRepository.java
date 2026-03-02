@@ -8,12 +8,17 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface CafeRepository extends JpaRepository<Cafe, Long> {
     List<Cafe> findByIsActive(Boolean active);
     List<Cafe> findByCity(String city);
-    List<Cafe> findByOwnerId(Long ownerId);
+    Optional<Cafe> findByOwnerId(Long ownerId);
+    List<Cafe> findAllByOwnerId(Long ownerId);
+    List<Cafe> findAllByOwnerIdOrderByCreatedAtDesc(Long ownerId);
+
+    Page<Cafe> findByIsActiveTrue(Pageable pageable);
     List<Cafe> findByOwnerIdAndIsActive(Long ownerId, Boolean active);
     List<Cafe> findByOwner(User owner);
 
@@ -21,8 +26,9 @@ public interface CafeRepository extends JpaRepository<Cafe, Long> {
     Page<Cafe> findByCity(String city, Pageable pageable);
     Page<Cafe> findByOwnerId(Long ownerId, Pageable pageable);
     Page<Cafe> findByIsActive(Boolean active, Pageable pageable);
-    java.util.Optional<Cafe> findByIdAndIsActiveTrue(Long id);
     
     // Dashboard queries
     Long countByIsActive(Boolean active);
+
+    boolean existsByOwnerId(Long ownerId);
 }

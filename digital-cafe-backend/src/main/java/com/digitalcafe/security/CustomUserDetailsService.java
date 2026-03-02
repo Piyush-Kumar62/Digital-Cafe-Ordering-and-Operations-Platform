@@ -30,15 +30,7 @@ public class CustomUserDetailsService implements UserDetailsService {
             throw new UsernameNotFoundException("User account is deactivated");
         }
 
-        return new org.springframework.security.core.userdetails.User(
-                user.getEmail(),
-                user.getPassword(),
-                user.getIsActive(),
-                true,
-                true,
-                true,
-                getAuthorities(user)
-        );
+        return new CustomUserPrincipal(user);
     }
 
     private Collection<? extends GrantedAuthority> getAuthorities(User user) {

@@ -21,9 +21,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("SELECT u FROM User u JOIN u.roles r WHERE r.name = :roleName")
     List<User> findByRoleName(Role.RoleName roleName);
 
-    @Query("SELECT CASE WHEN COUNT(u) > 0 THEN true ELSE false END FROM User u JOIN u.roles r WHERE r.name = :roleName")
-    boolean existsByRoleName(Role.RoleName roleName);
-
     @Query("SELECT u FROM User u JOIN u.roles r WHERE r.name = :roleName")
     Page<User> findByRolesName(String roleName, Pageable pageable);
 
@@ -57,8 +54,24 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     List<User> findTop10ByOrderByCreatedAtDesc();
     List<User> findTop5ByOrderByCreatedAtDesc();
-    Page<User> findAllByOrderByCreatedAtDesc(Pageable pageable);
     
     // Additional dashboard queries
+    // Additional dashboard queries
     Long countByMustResetPassword(Boolean mustResetPassword);
+    
+    @Query("SELECT COUNT(u) > 0 FROM User u JOIN u.roles r WHERE r.name = :roleName")
+    boolean existsByRoleName(Role.RoleName roleName);
+    Page<User> findAllByOrderByCreatedAtDesc(Pageable pageable);
+
+    // ================= Owner Dashboard Correct Counts =================
+
+    Long countByCafeId(Long cafeId);
+
+    Long countByCafeIdAndIsActiveTrue(Long cafeId);
+
+    @Query("SELECT COUNT(u) FROM User u JOIN u.roles r WHERE u.cafe.id = :cafeId AND r.name = :roleName")
+    Long countByCafeIdAndRoleName(Long cafeId, Role.RoleName roleName);
+
+    @Query("SELECT COUNT(u) FROM User u JOIN u.roles r WHERE u.cafe.id = :cafeId AND r.name = :roleName AND u.isActive = true")
+    Long countByCafeIdAndRoleNameAndIsActive(Long cafeId, Role.RoleName roleName);
 }

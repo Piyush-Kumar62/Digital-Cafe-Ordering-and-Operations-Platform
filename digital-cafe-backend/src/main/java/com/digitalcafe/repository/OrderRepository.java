@@ -27,7 +27,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     // Orders for Chef (newly placed orders that need to be prepared)
     @Query("SELECT o FROM Order o WHERE o.cafe.id = :cafeId " +
-           "AND o.status = 'PENDING' " +
+           "AND o.status = 'PLACED' " +
            "ORDER BY o.createdAt ASC")
     List<Order> findPendingOrdersForChef(Long cafeId);
 

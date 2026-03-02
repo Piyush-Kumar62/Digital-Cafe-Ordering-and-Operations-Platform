@@ -9,7 +9,6 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
@@ -54,37 +53,6 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     List<Booking> findByTableIdAndBookingDate(Long tableId, LocalDate bookingDate);
 
     /**
-     * Finds blocking bookings for a given table/date window, excluding terminal statuses.
-     */
-    @Query("SELECT b FROM Booking b WHERE b.table.id = :tableId " +
-           "AND b.bookingDate = :bookingDate " +
-           "AND b.status IN ('BOOKED', 'CONFIRMED', 'CHECKED_IN')")
-    List<Booking> findBlockingBookingsByTableAndDate(
-            @Param("tableId") Long tableId,
-            @Param("bookingDate") LocalDate bookingDate
-    );
-
-    /**
-     * Checks overlapping booking windows for a table/date, excluding terminal and expired bookings.
-     */
-    @Query(value = "SELECT CASE WHEN COUNT(*) > 0 THEN TRUE ELSE FALSE END " +
-            "FROM bookings b " +
-            "WHERE b.table_id = :tableId " +
-            "AND b.booking_date = :bookingDate " +
-            "AND b.status IN ('BOOKED', 'CONFIRMED', 'CHECKED_IN') " +
-            "AND TIMESTAMP(b.booking_date, IFNULL(b.end_time, ADDTIME(b.booking_time, '02:00:00'))) >= :referenceDateTime " +
-            "AND NOT (IFNULL(b.end_time, ADDTIME(b.booking_time, '02:00:00')) <= :startTime " +
-            "OR IFNULL(b.start_time, b.booking_time) >= :endTime)",
-            nativeQuery = true)
-    boolean existsOverlappingBooking(
-            @Param("tableId") Long tableId,
-            @Param("bookingDate") LocalDate bookingDate,
-            @Param("startTime") LocalTime startTime,
-            @Param("endTime") LocalTime endTime,
-            @Param("referenceDateTime") LocalDateTime referenceDateTime
-    );
-
-    /**
      * Finds bookings by status.
      */
     List<Booking> findByStatus(Booking.BookingStatus status);
@@ -95,8 +63,31 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     List<Booking> findByCustomerIdAndStatus(Long customerId, Booking.BookingStatus status);
 
     /**
-     * Checks for conflicting bookings (same table, date, and overlapping time).
+     * Checks for time-slot overlap conflicts using proper interval algebra.
+     * Algorithm: (existingStart < requestedEnd) AND (existingEnd > requestedStart)
+     * This correctly handles partial overlaps and avoids the hardcoded +2h Java workaround.
+     *
+     * Requires start_time and end_time to be populated on existing bookings (not null).
+     * Falls back gracefully: bookings where start_time IS NULL are excluded.
      */
+    @Query("SELECT COUNT(b) > 0 FROM Booking b " +
+           "WHERE b.table.id = :tableId " +
+           "AND b.bookingDate = :bookingDate " +
+           "AND b.startTime < :requestedEnd " +
+           "AND b.endTime > :requestedStart " +
+           "AND b.status NOT IN ('CANCELLED', 'COMPLETED', 'NO_SHOW')")
+    boolean existsOverlappingBooking(
+            @Param("tableId") Long tableId,
+            @Param("bookingDate") java.time.LocalDate bookingDate,
+            @Param("requestedStart") java.time.LocalTime requestedStart,
+            @Param("requestedEnd") java.time.LocalTime requestedEnd
+    );
+
+    /**
+     * Legacy exact-time query kept for backward compatibility with existing calls.
+     * @deprecated Use existsOverlappingBooking() for proper interval overlap detection.
+     */
+    @Deprecated(since = "2.0", forRemoval = false)
     @Query("SELECT COUNT(b) > 0 FROM Booking b WHERE b.table.id = :tableId AND " +
            "b.bookingDate = :bookingDate AND b.bookingTime = :bookingTime AND " +
            "b.status NOT IN ('CANCELLED', 'COMPLETED', 'NO_SHOW')")

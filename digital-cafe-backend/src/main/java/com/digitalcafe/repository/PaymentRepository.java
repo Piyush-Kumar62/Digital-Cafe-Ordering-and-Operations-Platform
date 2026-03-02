@@ -16,6 +16,17 @@ import java.util.Optional;
 public interface PaymentRepository extends JpaRepository<Payment, Long> {
     Optional<Payment> findByTransactionId(String transactionId);
     Optional<Payment> findByOrderId(Long orderId);
+
+    /**
+     * Used for payment idempotency: returns true if a payment with this Razorpay payment ID
+     * has already been processed. Prevents double-activation from duplicate webhook callbacks.
+     */
+    boolean existsByPaymentGatewayPaymentId(String paymentGatewayPaymentId);
+
+    /**
+     * Look up a payment by the Razorpay-generated order ID (created at order initiation).
+     */
+    Optional<Payment> findByPaymentGatewayOrderId(String paymentGatewayOrderId);
     @Query("SELECT p FROM Payment p JOIN FETCH p.order WHERE p.id = :paymentId")
     Optional<Payment> findByIdWithOrder(Long paymentId);
 

@@ -11,6 +11,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   loadingService.show();
   const token = authService.getToken();
 
+  // These endpoints are unauthenticated — skip JWT injection to avoid CORS preflight rejection
   const publicEndpoints = [
     "/auth/login",
     "/auth/register",

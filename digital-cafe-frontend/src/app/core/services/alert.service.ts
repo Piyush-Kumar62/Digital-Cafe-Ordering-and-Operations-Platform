@@ -38,7 +38,6 @@ export class AlertService {
   async confirm(title: string, message: string): Promise<boolean> {
     const swalFn = await this.getSwal();
     if (!swalFn) {
-      console.error('SweetAlert is unavailable. Confirmation dialog cannot be shown.');
       return false;
     }
 
@@ -83,7 +82,6 @@ export class AlertService {
   private async show(type: AlertType, titleOrMessage: string, message?: string): Promise<void> {
     const swalFn = await this.getSwal();
     if (!swalFn) {
-      console.error('SweetAlert is unavailable. Notification not shown as modal.');
       return;
     }
 
@@ -108,8 +106,8 @@ export class AlertService {
         closeOnClickOutside: true,
         closeOnEsc: true,
       });
-    } catch (error) {
-      console.error('SweetAlert display failed:', error);
+    } catch {
+      // SweetAlert threw — fail silently to avoid blocking the UI
     }
   }
 

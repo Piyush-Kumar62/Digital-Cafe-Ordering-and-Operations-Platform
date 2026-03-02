@@ -1,12 +1,8 @@
 import { Routes } from "@angular/router";
-import { authGuard } from "./core/guards/auth.guard";
-import { roleGuard } from "./core/guards/role.guard";
-import { emailVerificationGuard } from "./core/guards/email-verification.guard";
-import { profileCompletionGuard } from "./core/guards/profile-completion.guard";
+import { accessGuard } from "./core/guards/access.guard";
 import { UserRole } from "./shared/models/auth.model";
 
 export const routes: Routes = [
-  // Landing page
   {
     path: "",
     loadComponent: () =>
@@ -15,7 +11,6 @@ export const routes: Routes = [
       ),
   },
 
-  // Public pages
   {
     path: "about",
     loadComponent: () =>
@@ -26,20 +21,6 @@ export const routes: Routes = [
     loadComponent: () =>
       import("./features/contact/contact.component").then(
         (m) => m.ContactComponent,
-      ),
-  },
-  {
-    path: "cafes",
-    loadComponent: () =>
-      import("./features/public/cafe-list/cafe-list.component").then(
-        (m) => m.CafeListComponent,
-      ),
-  },
-  {
-    path: "cafes/:id",
-    loadComponent: () =>
-      import("./features/public/cafe-detail/cafe-detail.component").then(
-        (m) => m.CafeDetailComponent,
       ),
   },
   {
@@ -57,7 +38,6 @@ export const routes: Routes = [
       ),
   },
 
-  // Authentication routes
   {
     path: "auth",
     children: [
@@ -99,14 +79,13 @@ export const routes: Routes = [
     ],
   },
 
-  // Admin routes with layout
   {
     path: "admin",
     loadComponent: () =>
       import("./features/admin/admin-layout/admin-layout.component").then(
         (m) => m.AdminLayoutComponent,
       ),
-    canActivate: [authGuard, roleGuard],
+    canActivate: [accessGuard],
     data: { roles: [UserRole.ADMIN] },
     children: [
       {
@@ -158,92 +137,37 @@ export const routes: Routes = [
             (m) => m.ReportsComponent,
           ),
       },
-      {
-        path: "logs",
-        loadComponent: () =>
-          import("./features/admin/logs/logs.component").then(
-            (m) => m.LogsComponent,
-          ),
-      },
-      {
-        path: "settings",
-        loadComponent: () =>
-          import("./features/admin/settings/settings.component").then(
-            (m) => m.SettingsComponent,
-          ),
-      },
-      {
-        path: "profile",
-        loadComponent: () =>
-          import("./features/admin/profile/admin-profile.component").then(
-            (m) => m.AdminProfileComponent,
-          ),
-      },
-      { path: "", redirectTo: "dashboard", pathMatch: "full" },
-    ],
-  },
-
-  // Café Owner routes
-  {
-    path: "cafe-owner",
-    canActivate: [authGuard, emailVerificationGuard, roleGuard],
-    data: { roles: [UserRole.CAFE_OWNER] },
-    children: [
-      {
-        path: "dashboard",
-        loadComponent: () =>
-          import("./features/cafe-owner/owner-dashboard/owner-dashboard.component").then(
-            (m) => m.OwnerDashboardComponent,
-          ),
-      },
-      {
-        path: "menu",
-        loadComponent: () =>
-          import("./features/cafe-owner/owner-menu/owner-menu.component").then(
-            (m) => m.OwnerMenuComponent,
-          ),
-      },
-      {
-        path: "tables",
-        loadComponent: () =>
-          import("./features/cafe-owner/owner-tables/owner-tables.component").then(
-            (m) => m.OwnerTablesComponent,
-          ),
-      },
-      {
-        path: "staff",
-        loadComponent: () =>
-          import("./features/cafe-owner/owner-staff/owner-staff.component").then(
-            (m) => m.OwnerStaffComponent,
-          ),
-      },
-      {
-        path: "bookings",
-        loadComponent: () =>
-          import("./features/cafe-owner/owner-bookings/owner-bookings.component").then(
-            (m) => m.OwnerBookingsComponent,
-          ),
-      },
-      {
-        path: "orders",
-        loadComponent: () =>
-          import("./features/cafe-owner/owner-orders/owner-orders.component").then(
-            (m) => m.OwnerOrdersComponent,
-          ),
-      },
       { path: "", redirectTo: "dashboard", pathMatch: "full" },
     ],
   },
   {
     path: "owner",
-    canActivate: [authGuard, emailVerificationGuard, roleGuard],
+    loadComponent: () =>
+      import("./features/cafe-owner/owner-layout/owner-layout.component").then(
+        (m) => m.OwnerLayoutComponent,
+      ),
+    canActivate: [accessGuard],
     data: { roles: [UserRole.CAFE_OWNER] },
     children: [
+      {
+        path: "setup",
+        loadComponent: () =>
+          import("./features/cafe-owner/setup-cafe/setup-cafe.component").then(
+            (m) => m.SetupCafeComponent,
+          ),
+      },
+      {
+        path: "cafes",
+        loadComponent: () =>
+          import("./features/cafe-owner/owner-cafes/owner-cafes.component").then(
+            (m) => m.OwnerCafesComponent,
+          ),
+      },
       {
         path: "dashboard",
         loadComponent: () =>
           import("./features/cafe-owner/owner-dashboard/owner-dashboard.component").then(
-            (m) => m.OwnerDashboardComponent,
+            (m) => m.CafeOwnerDashboardComponent,
           ),
       },
       {
@@ -268,6 +192,13 @@ export const routes: Routes = [
           ),
       },
       {
+        path: "orders",
+        loadComponent: () =>
+          import("./features/cafe-owner/owner-orders/owner-orders.component").then(
+            (m) => m.OwnerOrdersComponent,
+          ),
+      },
+      {
         path: "bookings",
         loadComponent: () =>
           import("./features/cafe-owner/owner-bookings/owner-bookings.component").then(
@@ -275,20 +206,22 @@ export const routes: Routes = [
           ),
       },
       {
-        path: "orders",
+        path: "settings",
         loadComponent: () =>
-          import("./features/cafe-owner/owner-orders/owner-orders.component").then(
-            (m) => m.OwnerOrdersComponent,
+          import("./features/cafe-owner/owner-settings/owner-settings.component").then(
+            (m) => m.OwnerSettingsComponent,
           ),
       },
       { path: "", redirectTo: "dashboard", pathMatch: "full" },
     ],
   },
-
-  // Chef routes
   {
     path: "chef",
-    canActivate: [authGuard, emailVerificationGuard, roleGuard],
+    loadComponent: () =>
+      import("./features/chef/chef-layout/chef-layout.component").then(
+        (m) => m.ChefLayoutComponent,
+      ),
+    canActivate: [accessGuard],
     data: { roles: [UserRole.CHEF] },
     children: [
       {
@@ -302,10 +235,13 @@ export const routes: Routes = [
     ],
   },
 
-  // Waiter routes
   {
     path: "waiter",
-    canActivate: [authGuard, emailVerificationGuard, roleGuard],
+    loadComponent: () =>
+      import("./features/waiter/waiter-layout/waiter-layout.component").then(
+        (m) => m.WaiterLayoutComponent,
+      ),
+    canActivate: [accessGuard],
     data: { roles: [UserRole.WAITER] },
     children: [
       {
@@ -321,26 +257,16 @@ export const routes: Routes = [
 
   {
     path: "customer/complete-profile",
-    canActivate: [authGuard, emailVerificationGuard, roleGuard],
-    data: { roles: [UserRole.CUSTOMER] },
+    canActivate: [accessGuard],
+    data: { roles: [UserRole.CUSTOMER], skipProfileCheck: true },
     loadComponent: () =>
       import("./features/customer/complete-profile/complete-profile.component").then(
         (m) => m.CompleteProfileComponent,
       ),
   },
-  // Customer routes
   {
     path: "customer",
-    loadComponent: () =>
-      import("./features/customer/customer-layout/customer-layout.component").then(
-        (m) => m.CustomerLayoutComponent,
-      ),
-    canActivate: [
-      authGuard,
-      emailVerificationGuard,
-      profileCompletionGuard,
-      roleGuard,
-    ],
+    canActivate: [accessGuard],
     data: { roles: [UserRole.CUSTOMER] },
     children: [
       {
@@ -351,16 +277,11 @@ export const routes: Routes = [
           ),
       },
       {
-        path: "cafe",
+        path: "menu",
         loadComponent: () =>
           import("./features/customer/menu/menu.component").then(
             (m) => m.MenuComponent,
           ),
-      },
-      {
-        path: "menu",
-        redirectTo: "cafe",
-        pathMatch: "full",
       },
       {
         path: "cart",
@@ -370,16 +291,11 @@ export const routes: Routes = [
           ),
       },
       {
-        path: "payment/:orderId",
-        loadComponent: () =>
-          import("./features/customer/payment/payment.component").then(
-            (m) => m.PaymentComponent,
-          ),
-      },
-      {
         path: "booking",
-        redirectTo: "cafe",
-        pathMatch: "full",
+        loadComponent: () =>
+          import("./features/customer/booking/booking.component").then(
+            (m) => m.BookingComponent,
+          ),
       },
       {
         path: "order-tracking",
@@ -395,104 +311,61 @@ export const routes: Routes = [
             (m) => m.OrderTrackingComponent,
           ),
       },
+      // Aliases so sidebar/dashboard links work without extra pages
       {
-        path: "my-bookings",
-        loadComponent: () =>
-          import("./features/customer/my-bookings/my-bookings.component").then(
-            (m) => m.MyBookingsComponent,
-          ),
+        path: "cafe",
+        redirectTo: "/cafes",
+        pathMatch: "full",
       },
       {
         path: "my-orders",
-        loadComponent: () =>
-          import("./features/customer/my-orders/my-orders.component").then(
-            (m) => m.MyOrdersComponent,
-          ),
+        redirectTo: "order-tracking",
+        pathMatch: "full",
+      },
+      {
+        path: "my-bookings",
+        redirectTo: "booking",
+        pathMatch: "full",
       },
       {
         path: "payments",
         loadComponent: () =>
-          import("./features/customer/my-payments/my-payments.component").then(
-            (m) => m.MyPaymentsComponent,
+          import("./features/customer/order-tracking/order-tracking.component").then(
+            (m) => m.OrderTrackingComponent,
           ),
       },
       {
         path: "profile",
-        loadComponent: () =>
-          import("./features/customer/my-profile/my-profile.component").then(
-            (m) => m.MyProfileComponent,
-          ),
+        redirectTo: "/customer/complete-profile",
+        pathMatch: "full",
       },
-      {
-        path: "notifications",
-        loadComponent: () =>
-          import("./features/customer/my-notifications/my-notifications.component").then(
-            (m) => m.MyNotificationsComponent,
-          ),
-      },
-      { path: "", redirectTo: "cafe", pathMatch: "full" },
+      { path: "", redirectTo: "dashboard", pathMatch: "full" },
     ],
   },
 
   {
     path: "menu",
-    canActivate: [
-      authGuard,
-      emailVerificationGuard,
-      profileCompletionGuard,
-      roleGuard,
-    ],
+    canActivate: [accessGuard],
     data: { roles: [UserRole.CUSTOMER] },
     loadComponent: () =>
       import("./features/customer/menu/menu.component").then(
         (m) => m.MenuComponent,
       ),
   },
+
+  // ─── Public cafe browsing (accessible to everyone, auth not required) ───
   {
-    path: "cart",
-    canActivate: [
-      authGuard,
-      emailVerificationGuard,
-      profileCompletionGuard,
-      roleGuard,
-    ],
-    data: { roles: [UserRole.CUSTOMER] },
+    path: "cafes",
     loadComponent: () =>
-      import("./features/customer/cart/cart.component").then(
-        (m) => m.CartComponent,
+      import("./features/public/cafe-list/cafe-list.component").then(
+        (m) => m.CafeListComponent,
       ),
   },
   {
-    path: "checkout",
-    canActivate: [
-      authGuard,
-      emailVerificationGuard,
-      profileCompletionGuard,
-      roleGuard,
-    ],
-    data: { roles: [UserRole.CUSTOMER] },
+    path: "cafes/:id",
     loadComponent: () =>
-      import("./features/customer/cart/cart.component").then(
-        (m) => m.CartComponent,
-      ),
-  },
-  {
-    path: "booking",
-    redirectTo: "/customer/cafe",
-    pathMatch: "full",
-  },
-  {
-    path: "orders",
-    canActivate: [
-      authGuard,
-      emailVerificationGuard,
-      profileCompletionGuard,
-      roleGuard,
-    ],
-    data: { roles: [UserRole.CUSTOMER] },
-    loadComponent: () =>
-      import("./features/customer/my-orders/my-orders.component").then(
-        (m) => m.MyOrdersComponent,
+      import("./features/public/cafe-detail/cafe-detail.component").then(
+        (m) => m.CafeDetailComponent,
       ),
   },
 
@@ -504,6 +377,5 @@ export const routes: Routes = [
       ),
   },
 
-  // Fallback route
   { path: "**", redirectTo: "not-found" },
 ];

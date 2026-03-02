@@ -5,16 +5,25 @@ export interface Cafe {
   address: string;
   city: string;
   state: string;
-  zipCode: string;
+  zipCode?: string;
+  pincode?: string;
   phoneNumber: string;
   email: string;
   imageUrl?: string;
-  rating: number;
-  openingTime: string;
-  closingTime: string;
+  logoUrl?: string;
+  coverUrl?: string;
+  rating?: number;
+  openingTime?: string;
+  closingTime?: string;
+  openTime?: string;
+  closeTime?: string;
   isActive: boolean;
-  ownerId: number;
+  ownerId?: number;
   ownerName?: string;
+  galleryImages?: string[];
+  fssaiNumber?: string;
+  gstNumber?: string;
+  msmeNumber?: string;
   createdAt: string;
 }
 
@@ -47,8 +56,11 @@ export interface PublicCafeCard {
   description: string;
   openTime: string;
   closeTime: string;
-  rating: number;
+  rating?: number;
   imageUrl?: string;
+  logoUrl?: string;
+  city?: string;
+  state?: string;
 }
 
 export interface PublicCafeMenuItem {

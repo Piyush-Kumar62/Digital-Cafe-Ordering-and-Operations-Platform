@@ -3,23 +3,10 @@ import { HttpClient, HttpParams } from "@angular/common/http";
 import { Observable } from "rxjs";
 import { map } from "rxjs/operators";
 import { environment } from "@environments/environment";
-import {
-  Cafe,
-  CreateCafeRequest,
-  Table,
-} from "@shared/models/cafe.model";
-import {
-  MenuItem,
-  MenuItemRequest,
-} from "@shared/models/menu.model";
-import {
-  Order,
-  OrderRequest,
-} from "@shared/models/order.model";
-import {
-  Booking,
-  BookingRequest,
-} from "@shared/models/booking.model";
+import { Cafe, CreateCafeRequest, Table } from "@shared/models/cafe.model";
+import { MenuItem, MenuItemRequest } from "@shared/models/menu.model";
+import { Order, OrderRequest } from "@shared/models/order.model";
+import { Booking, BookingRequest } from "@shared/models/booking.model";
 import { Payment, PaymentRequest } from "@shared/models/payment.model";
 import {
   AdminProfile,
@@ -48,7 +35,6 @@ export class ApiService {
 
   constructor(private http: HttpClient) {}
 
-  // ============ Cafe APIs ============
   getAllCafes(): Observable<Cafe[]> {
     return this.http.get<Cafe[]>(`${this.baseUrl}/cafes`);
   }
@@ -79,7 +65,51 @@ export class ApiService {
     return this.http.delete<MessageResponse>(`${this.baseUrl}/cafes/${id}`);
   }
 
-  // ============ Table APIs ============
+  getMyCafe(): Observable<Cafe> {
+    return this.http
+      .get<any>(`${this.baseUrl}/cafes/my-cafe`)
+      .pipe(map((res) => res?.data || res));
+  }
+
+  getMyCafes(page = 0, size = 20): Observable<Cafe[]> {
+    return this.http
+      .get<any>(`${this.baseUrl}/cafes/my-cafes`, { params: { page, size } })
+      .pipe(map((res) => res?.data?.content || res?.content || []));
+  }
+
+  cafeExistsForOwner(): Observable<boolean> {
+    return this.http.get<boolean>(`${this.baseUrl}/cafes/exists`);
+  }
+
+  updateCafeSetup(id: number, data: FormData): Observable<any> {
+    return this.http.put<any>(`${this.baseUrl}/cafes/${id}`, data);
+  }
+
+  createCafeSetup(data: FormData): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/cafes/setup`, data);
+  }
+
+  uploadLogo(cafeId: number, formData: FormData): Observable<any> {
+    return this.http.post<any>(
+      `${this.baseUrl}/cafes/${cafeId}/logo`,
+      formData,
+    );
+  }
+
+  uploadCover(cafeId: number, formData: FormData): Observable<any> {
+    return this.http.post<any>(
+      `${this.baseUrl}/cafes/${cafeId}/cover`,
+      formData,
+    );
+  }
+
+  uploadGallery(cafeId: number, formData: FormData): Observable<any> {
+    return this.http.post<any>(
+      `${this.baseUrl}/cafes/${cafeId}/gallery`,
+      formData,
+    );
+  }
+
   getAllTables(): Observable<Table[]> {
     return this.http
       .get<any>(`${this.baseUrl}/tables`)
@@ -127,7 +157,6 @@ export class ApiService {
       .pipe(map((res: any) => res?.data || res));
   }
 
-  // ============ Menu Item APIs ============
   getAllMenuItems(): Observable<MenuItem[]> {
     return this.http
       .get<any>(`${this.baseUrl}/menu-items`)
@@ -157,7 +186,9 @@ export class ApiService {
     category: string,
   ): Observable<MenuItem[]> {
     return this.http
-      .get<any>(`${this.baseUrl}/menu-items/cafe/${cafeId}/category/${category}`)
+      .get<any>(
+        `${this.baseUrl}/menu-items/cafe/${cafeId}/category/${category}`,
+      )
       .pipe(map((res: any) => res?.data || res || []));
   }
 
@@ -176,10 +207,23 @@ export class ApiService {
       .pipe(map((res: any) => res?.data || res));
   }
 
-  toggleMenuItemAvailability(id: number, isAvailable: boolean): Observable<MenuItem> {
+  uploadMenuItemImage(file: File): Observable<string> {
+    const formData = new FormData();
+    formData.append("file", file);
+    return this.http
+      .post<any>(`${this.baseUrl}/menu-items/upload-image`, formData)
+      .pipe(map((res: any) => res?.data?.imageUrl || ""));
+  }
+
+  toggleMenuItemAvailability(
+    id: number,
+    isAvailable: boolean,
+  ): Observable<MenuItem> {
     const params = new HttpParams().set("isAvailable", String(isAvailable));
     return this.http
-      .patch<any>(`${this.baseUrl}/menu-items/${id}/availability`, null, { params })
+      .patch<any>(`${this.baseUrl}/menu-items/${id}/availability`, null, {
+        params,
+      })
       .pipe(map((res: any) => res?.data || res));
   }
 
@@ -189,7 +233,6 @@ export class ApiService {
     );
   }
 
-  // ============ Order APIs ============
   getAllOrders(): Observable<Order[]> {
     return this.http
       .get<any>(`${this.baseUrl}/orders`)
@@ -224,7 +267,6 @@ export class ApiService {
       .pipe(map((res: any) => res?.data || []));
   }
 
-  // Backward-compatible alias for waiter workflow screens.
   getReadyOrdersForWaiterWorkflow(): Observable<Order[]> {
     return this.http
       .get<any>(`${this.baseUrl}/waiter/ready-orders`)
@@ -247,21 +289,18 @@ export class ApiService {
     });
   }
 
-  // Backward-compatible chef workflow helper.
   getChefOrders(): Observable<Order[]> {
     return this.http
       .get<any>(`${this.baseUrl}/chef/orders`)
       .pipe(map((res: any) => this.unwrapApiData<Order[]>(res, [])));
   }
 
-  // Backward-compatible chef workflow helper.
   markOrderReady(orderId: number): Observable<Order> {
     return this.http
       .put<any>(`${this.baseUrl}/chef/order/${orderId}/ready`, null)
       .pipe(map((res: any) => this.unwrapApiData<Order>(res, res as Order)));
   }
 
-  // Backward-compatible waiter workflow helper.
   markOrderServed(orderId: number): Observable<Order> {
     return this.http
       .put<any>(`${this.baseUrl}/waiter/order/${orderId}/served`, null)
@@ -272,7 +311,6 @@ export class ApiService {
     return this.http.delete<MessageResponse>(`${this.baseUrl}/orders/${id}`);
   }
 
-  // ============ Booking APIs ============
   getAllBookings(): Observable<Booking[]> {
     return this.http
       .get<any>(`${this.baseUrl}/bookings`)
@@ -319,7 +357,6 @@ export class ApiService {
     return this.http.delete<MessageResponse>(`${this.baseUrl}/bookings/${id}`);
   }
 
-  // ============ Payment APIs ============
   createPayment(request: PaymentRequest): Observable<Payment> {
     return this.http.post<Payment>(`${this.baseUrl}/payments`, request);
   }
@@ -332,7 +369,6 @@ export class ApiService {
     return this.http.get<Payment>(`${this.baseUrl}/payments/order/${orderId}`);
   }
 
-  // Backward-compatible customer payments list.
   getMyPayments(): Observable<Payment[]> {
     return this.http
       .get<any>(`${this.baseUrl}/payments/my`)
@@ -349,19 +385,31 @@ export class ApiService {
         paymentGatewayPaymentId,
         signature,
       })
-      .pipe(map((res: any) => this.unwrapApiData<Payment>(res, res as Payment)));
+      .pipe(
+        map((res: any) => this.unwrapApiData<Payment>(res, res as Payment)),
+      );
   }
 
   getAdminProfile(): Observable<AdminProfile> {
     return this.http
       .get<any>(`${this.baseUrl}/users/profile`)
-      .pipe(map((res: any) => this.unwrapApiData<AdminProfile>(res, res as AdminProfile)));
+      .pipe(
+        map((res: any) =>
+          this.unwrapApiData<AdminProfile>(res, res as AdminProfile),
+        ),
+      );
   }
 
-  updateAdminProfile(request: AdminProfileUpdateRequest): Observable<AdminProfile> {
+  updateAdminProfile(
+    request: AdminProfileUpdateRequest,
+  ): Observable<AdminProfile> {
     return this.http
       .put<any>(`${this.baseUrl}/users/profile`, request)
-      .pipe(map((res: any) => this.unwrapApiData<AdminProfile>(res, res as AdminProfile)));
+      .pipe(
+        map((res: any) =>
+          this.unwrapApiData<AdminProfile>(res, res as AdminProfile),
+        ),
+      );
   }
 
   uploadAdminProfileImage(file: File): Observable<ProfileImageUploadResponse> {
@@ -371,7 +419,10 @@ export class ApiService {
       .post<any>(`${this.baseUrl}/users/profile/image`, formData)
       .pipe(
         map((res: any) =>
-          this.unwrapApiData<ProfileImageUploadResponse>(res, res as ProfileImageUploadResponse),
+          this.unwrapApiData<ProfileImageUploadResponse>(
+            res,
+            res as ProfileImageUploadResponse,
+          ),
         ),
       );
   }
@@ -380,14 +431,19 @@ export class ApiService {
     return this.http.delete<void>(`${this.baseUrl}/users/profile/image`);
   }
 
-  uploadCustomerProfileImage(file: File): Observable<ProfileImageUploadResponse> {
+  uploadCustomerProfileImage(
+    file: File,
+  ): Observable<ProfileImageUploadResponse> {
     const formData = new FormData();
     formData.append("file", file);
     return this.http
       .post<any>(`${this.baseUrl}/users/profile/self/image`, formData)
       .pipe(
         map((res: any) =>
-          this.unwrapApiData<ProfileImageUploadResponse>(res, res as ProfileImageUploadResponse),
+          this.unwrapApiData<ProfileImageUploadResponse>(
+            res,
+            res as ProfileImageUploadResponse,
+          ),
         ),
       );
   }
@@ -425,20 +481,17 @@ export class ApiService {
     profileCompletionPercentage?: number;
     lastLogin?: string;
   }> {
-    return this.http
-      .get<any>(`${this.baseUrl}/users/profile/self`)
-      .pipe(
-        map((res: any) =>
-          this.unwrapApiData(res, {
-            firstName: "",
-            lastName: "",
-            displayName: "",
-          }),
-        ),
-      );
+    return this.http.get<any>(`${this.baseUrl}/users/profile/self`).pipe(
+      map((res: any) =>
+        this.unwrapApiData(res, {
+          firstName: "",
+          lastName: "",
+          displayName: "",
+        }),
+      ),
+    );
   }
 
-  // ============ Profile APIs ============
   getProfile(userId: number): Observable<Profile> {
     return this.http.get<Profile>(`${this.baseUrl}/profiles/${userId}`);
   }
@@ -470,7 +523,6 @@ export class ApiService {
     );
   }
 
-  // ============ Dashboard APIs ============
   getAdminDashboard(): Observable<AdminDashboard> {
     return this.http.get<AdminDashboard>(
       `${this.baseUrl}/admin/dashboard/stats`,
@@ -498,14 +550,25 @@ export class ApiService {
     return this.http
       .get<{ data?: any }>(`${this.baseUrl}/cafes`, { params })
       .pipe(
-        map((res: any) => res?.data || { content: [], totalElements: 0, totalPages: 0, pageNumber: 0, pageSize: size }),
+        map(
+          (res: any) =>
+            res?.data || {
+              content: [],
+              totalElements: 0,
+              totalPages: 0,
+              pageNumber: 0,
+              pageSize: size,
+            },
+        ),
       );
   }
 
   toggleCafeStatus(cafeId: number, isActive: boolean): Observable<Cafe> {
     const params = new HttpParams().set("isActive", String(isActive));
     return this.http
-      .patch<{ data?: Cafe }>(`${this.baseUrl}/cafes/${cafeId}/status`, null, { params })
+      .patch<{
+        data?: Cafe;
+      }>(`${this.baseUrl}/cafes/${cafeId}/status`, null, { params })
       .pipe(map((res: any) => res?.data));
   }
 
@@ -536,7 +599,16 @@ export class ApiService {
     return this.http
       .get<{ data?: any }>(`${this.baseUrl}/orders/cafe/${cafeId}`, { params })
       .pipe(
-        map((res: any) => res?.data || { content: [], totalElements: 0, totalPages: 0, pageNumber: 0, pageSize: size }),
+        map(
+          (res: any) =>
+            res?.data || {
+              content: [],
+              totalElements: 0,
+              totalPages: 0,
+              pageNumber: 0,
+              pageSize: size,
+            },
+        ),
       );
   }
 
@@ -559,30 +631,51 @@ export class ApiService {
       .set("sortBy", sortBy)
       .set("sortDirection", sortDirection);
     return this.http
-      .get<{ data?: any }>(`${this.baseUrl}/bookings/cafe/${cafeId}`, { params })
+      .get<{
+        data?: any;
+      }>(`${this.baseUrl}/bookings/cafe/${cafeId}`, { params })
       .pipe(
-        map((res: any) => res?.data || { content: [], totalElements: 0, totalPages: 0, pageNumber: 0, pageSize: size }),
+        map(
+          (res: any) =>
+            res?.data || {
+              content: [],
+              totalElements: 0,
+              totalPages: 0,
+              pageNumber: 0,
+              pageSize: size,
+            },
+        ),
       );
   }
 
-  updateOrderStatusForAdmin(orderId: number, status: string): Observable<Order> {
+  updateOrderStatusForAdmin(
+    orderId: number,
+    status: string,
+  ): Observable<Order> {
     const params = new HttpParams().set("status", status);
     return this.http
-      .put<{ data?: Order }>(`${this.baseUrl}/orders/${orderId}/status`, null, { params })
+      .put<{
+        data?: Order;
+      }>(`${this.baseUrl}/orders/${orderId}/status`, null, { params })
       .pipe(map((res: any) => res?.data));
   }
 
-  updateBookingStatusForAdmin(bookingId: number, status: string): Observable<Booking> {
+  updateBookingStatusForAdmin(
+    bookingId: number,
+    status: string,
+  ): Observable<Booking> {
     const params = new HttpParams().set("status", status);
     return this.http
-      .put<{ data?: Booking }>(`${this.baseUrl}/bookings/${bookingId}/status`, null, { params })
+      .put<{
+        data?: Booking;
+      }>(`${this.baseUrl}/bookings/${bookingId}/status`, null, { params })
       .pipe(map((res: any) => res?.data));
   }
 
   getOwnerDashboard(cafeId: number): Observable<OwnerDashboard> {
-    return this.http.get<OwnerDashboard>(
-      `${this.baseUrl}/dashboard/owner/${cafeId}`,
-    );
+    return this.http
+      .get<{ data?: OwnerDashboard }>(`${this.baseUrl}/owner/dashboard`)
+      .pipe(map((res: any) => res?.data ?? res));
   }
 
   getChefDashboard(cafeId: number): Observable<ChefDashboard> {
@@ -597,7 +690,6 @@ export class ApiService {
     );
   }
 
-  // ============ User Management APIs ============
   getAllUsers(
     page: number = 0,
     size: number = 20,
@@ -629,10 +721,7 @@ export class ApiService {
   }
 
   createCafeOwner(request: any): Observable<any> {
-    return this.http.post<any>(
-      `${this.baseUrl}/admin/cafe-owners`,
-      request,
-    );
+    return this.http.post<any>(`${this.baseUrl}/admin/cafe-owners`, request);
   }
 
   createChef(cafeId: number, request: any): Observable<any> {
@@ -649,6 +738,18 @@ export class ApiService {
     });
   }
 
+  createStaff(data: any): Observable<User> {
+    return this.http
+      .post<any>(`${this.baseUrl}/staff`, data)
+      .pipe(map((res) => res?.data || res));
+  }
+
+  updateStaff(id: number, data: any): Observable<User> {
+    return this.http
+      .put<any>(`${this.baseUrl}/staff/${id}`, data)
+      .pipe(map((res) => res?.data || res));
+  }
+
   getStaffByCafe(cafeId: number): Observable<User[]> {
     return this.http
       .get<{ data?: User[] }>(`${this.baseUrl}/staff/cafe/${cafeId}`)
@@ -663,7 +764,9 @@ export class ApiService {
 
   deactivateStaff(staffId: number): Observable<User> {
     return this.http
-      .patch<{ data?: User }>(`${this.baseUrl}/staff/${staffId}/deactivate`, null)
+      .patch<{
+        data?: User;
+      }>(`${this.baseUrl}/staff/${staffId}/deactivate`, null)
       .pipe(map((res: any) => res?.data));
   }
 
@@ -672,7 +775,9 @@ export class ApiService {
   }
 
   deleteUser(id: number): Observable<MessageResponse> {
-    return this.http.delete<MessageResponse>(`${this.baseUrl}/admin/users/${id}`);
+    return this.http.delete<MessageResponse>(
+      `${this.baseUrl}/admin/users/${id}`,
+    );
   }
 
   activateUser(id: number): Observable<MessageResponse> {
@@ -727,17 +832,19 @@ export class ApiService {
       .set("page", page.toString())
       .set("size", size.toString());
 
-    return this.http.get<any>(`${this.baseUrl}/admin/activities`, { params }).pipe(
-      map((res: any) =>
-        this.unwrapApiData(res, {
-          content: [],
-          totalElements: 0,
-          totalPages: 0,
-          pageNumber: page,
-          pageSize: size,
-        }),
-      ),
-    );
+    return this.http
+      .get<any>(`${this.baseUrl}/admin/activities`, { params })
+      .pipe(
+        map((res: any) =>
+          this.unwrapApiData(res, {
+            content: [],
+            totalElements: 0,
+            totalPages: 0,
+            pageNumber: page,
+            pageSize: size,
+          }),
+        ),
+      );
   }
 
   private unwrapApiData<T>(response: any, fallback: T): T {

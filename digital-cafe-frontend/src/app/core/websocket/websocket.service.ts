@@ -33,6 +33,8 @@ export class WebSocketService {
   private tableAvailabilityUpdates = new BehaviorSubject<any>(null);
   public tableAvailabilityUpdates$ = this.tableAvailabilityUpdates.asObservable();
   private tableAvailabilityDestination: string | null = null;
+  private notificationsStore = new BehaviorSubject<WebSocketMessage[]>([]);
+  public notifications$ = this.notificationsStore.asObservable();
 
   constructor(private authService: AuthService) {}
 
@@ -43,7 +45,6 @@ export class WebSocketService {
 
     const token = this.authService.getToken();
     if (!token) {
-      console.error('Cannot connect to WebSocket: No authentication token');
       return;
     }
 
@@ -65,7 +66,6 @@ export class WebSocketService {
         this.connectionStatus.next(false);
       },
       onStompError: (frame) => {
-        console.error('STOMP error:', frame);
         this.connectionStatus.next(false);
       },
     });
@@ -170,7 +170,6 @@ export class WebSocketService {
 
   sendMessage(destination: string, body: any): void {
     if (!this.client?.connected) {
-      console.error('Cannot send message: WebSocket not connected');
       return;
     }
 
@@ -223,8 +222,8 @@ export class WebSocketService {
         const payload = JSON.parse(message.body);
         const destinationCallbacks = this.destinationCallbacks.get(destination) || [];
         destinationCallbacks.forEach((cb) => cb(payload));
-      } catch (error) {
-        console.error('Error parsing WebSocket message:', error);
+      } catch {
+        // Silently discard malformed WebSocket messages
       }
     });
 
@@ -232,6 +231,14 @@ export class WebSocketService {
   }
 
   private handleNotification(message: any): void {
+    const current = this.notificationsStore.getValue();
+    // Cap in-memory notifications at 50 to avoid unbounded memory growth
+    this.notificationsStore.next([{
+      type: message.type,
+      payload: message.payload,
+      timestamp: message.timestamp ?? new Date().toISOString(),
+    }, ...current].slice(0, 50));
+
     switch (message.type) {
       case 'NEW_ORDER':
         this.orderNotifications.next(message.payload);
@@ -255,8 +262,8 @@ export class WebSocketService {
           const payload = JSON.parse(message.body);
           const callbacks = this.destinationCallbacks.get(destination) || [];
           callbacks.forEach((cb) => cb(payload));
-        } catch (error) {
-          console.error('Error parsing WebSocket message:', error);
+        } catch {
+          // Silently discard malformed WebSocket messages
         }
       });
 

@@ -16,6 +16,13 @@ export interface User {
   profileImageUrl?: string;
   lastLogin?: string;
   createdAt?: string;
+
+  // Staff specific fields
+  joiningDate?: string;
+  experienceYears?: number;
+  shift?: string;
+  govtIdType?: string;
+  govtIdNumber?: string;
 }
 
 export interface AuthResponse {

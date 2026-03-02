@@ -44,6 +44,10 @@ public class MenuItem extends BaseEntity {
     @Column(name = "category", nullable = false, length = 50)
     private Category category;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
+    private MenuCategory menuCategory;
+
     @Column(name = "image_url")
     private String imageUrl;
 

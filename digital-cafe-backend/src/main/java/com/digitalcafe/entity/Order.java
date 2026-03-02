@@ -11,14 +11,15 @@ import java.util.List;
 
 /**
  * Order entity representing food orders associated with bookings.
- * Tracks order status through the workflow: PENDING -> PREPARING -> READY -> SERVED
+ * Tracks order status through the workflow: PLACED -> PREPARING -> READY -> SERVED, with CANCELLED as a terminal state from any non-final status.
  */
 @Entity
 @Table(name = "orders", indexes = {
         @Index(name = "idx_order_number", columnList = "order_number"),
         @Index(name = "idx_customer_order", columnList = "customer_id"),
         @Index(name = "idx_cafe_order", columnList = "cafe_id"),
-        @Index(name = "idx_order_status", columnList = "status")
+        @Index(name = "idx_order_status", columnList = "status"),
+        @Index(name = "idx_orders_cafe_status", columnList = "cafe_id, status")
 })
 @Getter
 @Setter
@@ -67,7 +68,7 @@ public class Order extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
     @Builder.Default
-    private OrderStatus status = OrderStatus.PENDING;
+    private OrderStatus status = OrderStatus.PLACED;
 
     @Column(name = "special_instructions", columnDefinition = "TEXT")
     private String specialInstructions;
@@ -102,11 +103,11 @@ public class Order extends BaseEntity {
     private Payment payment;
 
     public enum OrderStatus {
-        PENDING,      // Order created by customer and queued for kitchen
-        PREPARING,    // Chef is preparing the food
-        READY,        // Food is ready, waiter notified
-        SERVED,       // Food served to customer
-        CANCELLED     // Order cancelled
+        PLACED,       // Order placed by customer, awaiting kitchen pickup (replaces PENDING)
+        PREPARING,    // Chef has accepted and is preparing the food
+        READY,        // Food is ready, waiter notified for delivery
+        SERVED,       // Food served to the customer — terminal state
+        CANCELLED     // Order cancelled — terminal state
     }
 
     /**

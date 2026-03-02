@@ -51,11 +51,26 @@ public class Cafe extends BaseEntity {
     @Column(name = "email", length = 100)
     private String email;
 
-    @Column(name = "opening_time", length = 10)
-    private String openingTime; // Format: HH:MM
+    @Column(name = "open_time", length = 10)
+    private String openTime;   // stored as HH:MM — use getOpenTime() / setOpenTime()
 
-    @Column(name = "closing_time", length = 10)
-    private String closingTime; // Format: HH:MM
+    @Column(name = "close_time", length = 10)
+    private String closeTime;  // stored as HH:MM — use getCloseTime() / setCloseTime()
+
+    @Column(name = "logo_url", length = 255)
+    private String logoUrl;
+
+    @Column(name = "cover_url", length = 255)
+    private String coverUrl;
+
+    @Column(name = "fssai_number", length = 50)
+    private String fssaiNumber;
+
+    @Column(name = "gst_number", length = 30)
+    private String gstNumber;
+
+    @Column(name = "msme_number", length = 30)
+    private String msmeNumber;
 
     @Column(name = "is_active", nullable = false)
     @Builder.Default
@@ -78,6 +93,10 @@ public class Cafe extends BaseEntity {
     @OneToMany(mappedBy = "cafe", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<MenuItem> menuItems = new ArrayList<>();
+
+    @OneToMany(mappedBy = "cafe", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<CafeGallery> galleryImages = new ArrayList<>();
 
     /**
      * Adds a table to the cafe.

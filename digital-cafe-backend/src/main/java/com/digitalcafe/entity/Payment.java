@@ -35,7 +35,7 @@ public class Payment extends BaseEntity {
     @Column(name = "transaction_id", unique = true, length = 100)
     private String transactionId;
 
-    @Column(name = "payment_gateway_order_id", length = 100)
+    @Column(name = "payment_gateway_order_id", length = 100, unique = true)
     private String paymentGatewayOrderId; // Razorpay/Stripe order ID
 
     @Column(name = "payment_gateway_payment_id", length = 100)

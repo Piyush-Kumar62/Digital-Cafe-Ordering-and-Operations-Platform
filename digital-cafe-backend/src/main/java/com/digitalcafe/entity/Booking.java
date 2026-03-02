@@ -20,7 +20,8 @@ import java.time.LocalTime;
         @Index(name = "idx_table_booking", columnList = "table_id"),
         @Index(name = "idx_booking_date", columnList = "booking_date"),
         @Index(name = "idx_booking_date_time", columnList = "booking_date, booking_time"),
-        @Index(name = "idx_booking_date_start_time", columnList = "booking_date, start_time")
+        @Index(name = "idx_booking_date_start_time", columnList = "booking_date, start_time"),
+        @Index(name = "idx_bookings_cafe_date", columnList = "cafe_id, booking_date")
 }, uniqueConstraints = {
         @UniqueConstraint(name = "uk_booking_table_date_time", columnNames = {"table_id", "booking_date", "booking_time"})
 })

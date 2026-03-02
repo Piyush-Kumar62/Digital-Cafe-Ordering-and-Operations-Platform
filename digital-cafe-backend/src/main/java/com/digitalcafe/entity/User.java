@@ -117,6 +117,23 @@ public class User extends BaseEntity {
     @JoinColumn(name = "cafe_id")
     private Cafe cafe;
 
+    // Staff-specific fields (CHEF / WAITER roles)
+    @Column(name = "joining_date")
+    private java.time.LocalDate joiningDate;
+
+    @Column(name = "shift", length = 20)
+    private String shift;
+
+    @Column(name = "experience_years")
+    private Integer experienceYears;
+
+    @Column(name = "govt_id_type", length = 50)
+    private String govtIdType;
+
+    @Column(name = "govt_id_number", length = 100)
+    private String govtIdNumber;
+
+
     /**
      * Checks if user can access the system based on security rules.
      * Access is blocked if profile is incomplete or email is not verified.

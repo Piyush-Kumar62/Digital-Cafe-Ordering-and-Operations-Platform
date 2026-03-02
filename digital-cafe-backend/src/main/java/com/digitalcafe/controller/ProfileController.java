@@ -17,9 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-/**
- * REST controller for user profile management operations.
- */
+
 @RestController
 @RequestMapping("/api/profiles")
 @RequiredArgsConstructor

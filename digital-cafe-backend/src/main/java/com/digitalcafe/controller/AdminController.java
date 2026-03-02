@@ -20,10 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Admin Controller for managing cafe owners and system operations.
- * Only accessible by users with ADMIN role.
- */
+// Manages system-wide operations and cafe owner provisioning.
 @RestController
 @RequestMapping("/api/admin")
 @RequiredArgsConstructor

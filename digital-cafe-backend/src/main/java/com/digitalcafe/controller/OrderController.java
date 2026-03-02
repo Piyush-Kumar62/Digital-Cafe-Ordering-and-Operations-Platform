@@ -7,7 +7,6 @@ import com.digitalcafe.dto.response.OrderResponse;
 import com.digitalcafe.dto.response.PageResponse;
 import com.digitalcafe.entity.Order;
 import com.digitalcafe.entity.User;
-import com.digitalcafe.exception.AccessDeniedException;
 import com.digitalcafe.repository.UserRepository;
 import com.digitalcafe.service.OrderService;
 import jakarta.validation.Valid;
@@ -23,12 +22,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
-/**
- * REST controller for order management operations.
- */
+
 @RestController
 @RequestMapping("/api/orders")
 @RequiredArgsConstructor
@@ -55,34 +50,12 @@ public class OrderController {
         return ResponseEntity.ok(ApiResponse.success("Order retrieved successfully", response));
     }
 
-    @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'CAFE_OWNER')")
-    public ResponseEntity<ApiResponse<List<OrderResponse>>> getAllOrders() {
-        List<OrderResponse> response = orderService.getAllOrders();
-        return ResponseEntity.ok(ApiResponse.success("Orders retrieved successfully", response));
-    }
-
     @GetMapping("/my-orders")
     @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<ApiResponse<List<OrderResponse>>> getMyOrders() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Long customerId = getUserIdFromAuthentication(authentication);
 
-        List<OrderResponse> response = orderService.getOrdersByCustomerId(customerId);
-        return ResponseEntity.ok(ApiResponse.success("Orders retrieved successfully", response));
-    }
-
-    @GetMapping("/customer/{customerId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'CUSTOMER')")
-    public ResponseEntity<ApiResponse<List<OrderResponse>>> getOrdersByCustomerId(@PathVariable Long customerId) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Long authenticatedUserId = getUserIdFromAuthentication(authentication);
-        Set<String> roles = authentication.getAuthorities().stream()
-                .map(a -> a.getAuthority().replace("ROLE_", ""))
-                .collect(Collectors.toSet());
-        if (roles.contains("CUSTOMER") && !authenticatedUserId.equals(customerId)) {
-            throw new AccessDeniedException("Customers can only access their own orders");
-        }
         List<OrderResponse> response = orderService.getOrdersByCustomerId(customerId);
         return ResponseEntity.ok(ApiResponse.success("Orders retrieved successfully", response));
     }
@@ -100,15 +73,6 @@ public class OrderController {
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
 
         PageResponse<OrderResponse> response = orderService.getOrdersByCafeId(cafeId, pageable);
-        return ResponseEntity.ok(ApiResponse.success("Orders retrieved successfully", response));
-    }
-
-    @GetMapping("/cafe/{cafeId}/status/{status}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'CAFE_OWNER', 'CHEF', 'WAITER')")
-    public ResponseEntity<ApiResponse<List<OrderResponse>>> getOrdersByCafeAndStatus(
-            @PathVariable Long cafeId,
-            @PathVariable String status) {
-        List<OrderResponse> response = orderService.getOrdersByStatus(cafeId, Order.OrderStatus.valueOf(status.toUpperCase()));
         return ResponseEntity.ok(ApiResponse.success("Orders retrieved successfully", response));
     }
 
@@ -154,7 +118,7 @@ public class OrderController {
     }
 
     @PutMapping("/{orderId}/prepare")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('CHEF')")
     public ResponseEntity<ApiResponse<OrderResponse>> markOrderPreparing(@PathVariable Long orderId) {
         OrderStatusUpdateRequest request = OrderStatusUpdateRequest.builder()
                 .status(Order.OrderStatus.PREPARING.name())

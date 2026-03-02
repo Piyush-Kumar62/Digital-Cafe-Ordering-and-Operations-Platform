@@ -24,10 +24,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 import java.util.List;
 
-/**
- * REST controller for payment operations.
- * Exposes payment initiation, verification, and retrieval endpoints.
- */
+
 @RestController
 @RequestMapping("/api/payments")
 @RequiredArgsConstructor

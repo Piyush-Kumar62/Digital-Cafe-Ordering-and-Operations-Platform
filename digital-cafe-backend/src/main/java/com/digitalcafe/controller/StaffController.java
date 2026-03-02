@@ -13,9 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-/**
- * REST controller for managing cafe staff (Chef and Waiter).
- */
+
 @RestController
 @RequestMapping("/api/staff")
 @RequiredArgsConstructor
@@ -23,55 +21,57 @@ public class StaffController {
 
     private final UserService userService;
 
-    @PostMapping("/chef")
+
+
+    @PostMapping
     @PreAuthorize("hasRole('CAFE_OWNER')")
-    public ResponseEntity<ApiResponse<UserResponse>> createChef(@Valid @RequestBody CreateStaffRequest request) {
-        UserResponse response = userService.createStaff(request, "CHEF");
+    public ResponseEntity<ApiResponse<UserResponse>> createStaff(
+            @Valid @RequestBody CreateStaffRequest request) {
+
+        UserResponse response = userService.createStaffByOwner(request);
+
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success("Chef created successfully. Credentials sent via email.", response));
+                .body(ApiResponse.success("Staff created successfully. Credentials sent via email.", response));
     }
 
-    @PostMapping("/waiter")
+    @PutMapping("/{staffId}")
     @PreAuthorize("hasRole('CAFE_OWNER')")
-    public ResponseEntity<ApiResponse<UserResponse>> createWaiter(@Valid @RequestBody CreateStaffRequest request) {
-        UserResponse response = userService.createStaff(request, "WAITER");
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success("Waiter created successfully. Credentials sent via email.", response));
+    public ResponseEntity<ApiResponse<UserResponse>> updateStaff(
+            @PathVariable Long staffId,
+            @RequestBody CreateStaffRequest request) {
+
+        UserResponse response = userService.updateStaffByOwner(staffId, request);
+        return ResponseEntity.ok(ApiResponse.success("Staff updated successfully", response));
     }
 
     @GetMapping("/cafe/{cafeId}")
     @PreAuthorize("hasRole('CAFE_OWNER')")
     public ResponseEntity<ApiResponse<List<UserResponse>>> getStaffByCafeId(@PathVariable Long cafeId) {
+
         List<UserResponse> response = userService.getStaffByCafeId(cafeId);
+
         return ResponseEntity.ok(ApiResponse.success("Staff retrieved successfully", response));
     }
 
-    @GetMapping("/cafe/{cafeId}/chefs")
-    @PreAuthorize("hasRole('CAFE_OWNER')")
-    public ResponseEntity<ApiResponse<List<UserResponse>>> getChefsByCafeId(@PathVariable Long cafeId) {
-        List<UserResponse> response = userService.getChefsByCafeId(cafeId);
-        return ResponseEntity.ok(ApiResponse.success("Chefs retrieved successfully", response));
-    }
 
-    @GetMapping("/cafe/{cafeId}/waiters")
-    @PreAuthorize("hasRole('CAFE_OWNER')")
-    public ResponseEntity<ApiResponse<List<UserResponse>>> getWaitersByCafeId(@PathVariable Long cafeId) {
-        List<UserResponse> response = userService.getWaitersByCafeId(cafeId);
-        return ResponseEntity.ok(ApiResponse.success("Waiters retrieved successfully", response));
-    }
 
     @PatchMapping("/{staffId}/activate")
     @PreAuthorize("hasRole('CAFE_OWNER')")
     public ResponseEntity<ApiResponse<UserResponse>> activateStaff(@PathVariable Long staffId) {
+
         UserResponse response = userService.toggleUserStatus(staffId, true);
+
         return ResponseEntity.ok(ApiResponse.success("Staff activated successfully", response));
     }
+
+
 
     @PatchMapping("/{staffId}/deactivate")
     @PreAuthorize("hasRole('CAFE_OWNER')")
     public ResponseEntity<ApiResponse<UserResponse>> deactivateStaff(@PathVariable Long staffId) {
+
         UserResponse response = userService.toggleUserStatus(staffId, false);
+
         return ResponseEntity.ok(ApiResponse.success("Staff deactivated successfully", response));
     }
 }
-

@@ -3,26 +3,29 @@ package com.digitalcafe.controller;
 import com.digitalcafe.dto.request.MenuItemRequest;
 import com.digitalcafe.dto.response.ApiResponse;
 import com.digitalcafe.dto.response.MenuItemResponse;
+import com.digitalcafe.service.FileStorageService;
 import com.digitalcafe.service.MenuItemService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
+import java.util.Map;
 
-/**
- * REST controller for menu item management operations.
- */
+
 @RestController
 @RequestMapping("/api/menu-items")
 @RequiredArgsConstructor
 public class MenuItemController {
 
     private final MenuItemService menuItemService;
+    private final FileStorageService fileStorageService;
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<MenuItemResponse>>> getAllMenuItems() {
@@ -81,5 +84,13 @@ public class MenuItemController {
             @RequestParam boolean isAvailable) {
         MenuItemResponse response = menuItemService.toggleAvailability(menuItemId, isAvailable);
         return ResponseEntity.ok(ApiResponse.success("Menu item availability updated successfully", response));
+    }
+
+    @PostMapping(value = "/upload-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('CAFE_OWNER')")
+    public ResponseEntity<ApiResponse<Map<String, String>>> uploadMenuItemImage(
+            @RequestParam("file") MultipartFile file) {
+        String url = fileStorageService.storeMenuItemImage(file);
+        return ResponseEntity.ok(ApiResponse.success("Image uploaded successfully", Map.of("imageUrl", url)));
     }
 }

@@ -1,18 +1,14 @@
 package com.digitalcafe.controller;
 
 import com.digitalcafe.dto.request.BookingRequest;
-import com.digitalcafe.dto.response.AvailabilityTableResponse;
 import com.digitalcafe.dto.response.ApiResponse;
 import com.digitalcafe.dto.response.BookingResponse;
 import com.digitalcafe.dto.response.PageResponse;
 import com.digitalcafe.entity.Booking;
-import com.digitalcafe.exception.AccessDeniedException;
-import com.digitalcafe.exception.BadRequestException;
 import com.digitalcafe.repository.UserRepository;
 import com.digitalcafe.service.BookingService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -24,14 +20,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Set;
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.util.stream.Collectors;
 
-/**
- * REST controller for booking management operations.
- */
+// Exposes core reservation state mappings and statuses.
 @RestController
 @RequestMapping("/api/bookings")
 @RequiredArgsConstructor
@@ -59,13 +49,6 @@ public class BookingController {
         return ResponseEntity.ok(ApiResponse.success("Booking retrieved successfully", response));
     }
 
-    @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'CAFE_OWNER')")
-    public ResponseEntity<ApiResponse<List<BookingResponse>>> getAllBookings() {
-        List<BookingResponse> response = bookingService.getAllBookings();
-        return ResponseEntity.ok(ApiResponse.success("Bookings retrieved successfully", response));
-    }
-
     @GetMapping("/my-bookings")
     @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<ApiResponse<List<BookingResponse>>> getMyBookings() {
@@ -76,39 +59,10 @@ public class BookingController {
         return ResponseEntity.ok(ApiResponse.success("Bookings retrieved successfully", response));
     }
 
-    @GetMapping("/customer/{customerId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'CUSTOMER')")
-    public ResponseEntity<ApiResponse<List<BookingResponse>>> getBookingsByCustomerId(@PathVariable Long customerId) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Long authenticatedUserId = getUserIdFromAuthentication(authentication);
-        Set<String> roles = authentication.getAuthorities().stream()
-                .map(a -> a.getAuthority().replace("ROLE_", ""))
-                .collect(Collectors.toSet());
-        if (roles.contains("CUSTOMER") && !authenticatedUserId.equals(customerId)) {
-            throw new AccessDeniedException("Customers can only access their own bookings");
-        }
-        List<BookingResponse> response = bookingService.getBookingsByCustomerId(customerId);
-        return ResponseEntity.ok(ApiResponse.success("Bookings retrieved successfully", response));
-    }
-
     @GetMapping("/my")
     @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<ApiResponse<List<BookingResponse>>> getMyBookingsAlias() {
         return getMyBookings();
-    }
-
-    @GetMapping("/availability")
-    @PreAuthorize("hasRole('CUSTOMER')")
-    public ResponseEntity<ApiResponse<List<AvailabilityTableResponse>>> getAvailability(
-            @RequestParam Long cafeId,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-            @RequestParam("time") @DateTimeFormat(pattern = "HH:mm") LocalTime time,
-            @RequestParam(required = false) Integer seats) {
-        if (seats != null && seats <= 0) {
-            throw new BadRequestException("Seats must be greater than zero");
-        }
-        List<AvailabilityTableResponse> response = bookingService.getAvailableTablesForSlot(cafeId, date, time, seats);
-        return ResponseEntity.ok(ApiResponse.success("Availability retrieved successfully", response));
     }
 
     @GetMapping("/cafe/{cafeId}")

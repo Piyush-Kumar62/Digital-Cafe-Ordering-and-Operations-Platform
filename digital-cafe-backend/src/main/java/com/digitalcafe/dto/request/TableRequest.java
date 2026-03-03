@@ -15,9 +15,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class TableRequest {
 
-    @NotBlank(message = "Table number is required")
     @Size(max = 20)
-    private String tableNumber;
+    private String tableNumber;  // optional — auto-assigned when blank
 
     @NotNull(message = "Capacity is required")
     @Min(value = 1, message = "Capacity must be at least 1")

@@ -2,10 +2,7 @@ import { Injectable } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
 import { map, Observable } from "rxjs";
 import { environment } from "@environments/environment";
-import {
-  PublicCafeCard,
-  PublicCafeDetail,
-} from "@shared/models/cafe.model";
+import { PublicCafeCard, PublicCafeDetail } from "@shared/models/cafe.model";
 import { Booking } from "@shared/models/booking.model";
 import { Order } from "@shared/models/order.model";
 import { Payment } from "@shared/models/payment.model";
@@ -27,18 +24,42 @@ interface PageResponse<T> {
 })
 export class CafeBrowseService {
   private apiUrl = environment.apiUrl;
+  /** Backend origin — everything before /api */
+  private backendBase = this.apiUrl.replace(/\/api$/, "");
 
   constructor(private http: HttpClient) {}
 
-  getPublicCafes(page: number, size: number): Observable<PageResponse<PublicCafeCard>> {
+  /**
+   * Converts any image path coming from the backend into a browser-loadable URL:
+   *  - Full http/https URL  → use as-is
+   *  - /uploads/...          → prefix with backend origin (e.g. http://localhost:8080)
+   *  - Absolute filesystem path (Windows C:\ or D:\) → ignore, return ''
+   *  - null/empty            → return ''
+   */
+  resolveImageUrl(src: string | null | undefined): string {
+    if (!src) return "";
+    // Already a full URL (http, https, data:)
+    if (/^(https?:\/\/|data:)/.test(src)) return src;
+    // Relative path starting with / — prefix with backend origin
+    if (src.startsWith("/")) return `${this.backendBase}${src}`;
+    // Absolute filesystem path (contains \ or a drive letter like D:) — discard
+    return "";
+  }
+
+  getPublicCafes(
+    page: number,
+    size: number,
+  ): Observable<PageResponse<PublicCafeCard>> {
     return this.http
-      .get<ApiResponse<any>>(
-        `${this.apiUrl}/public/cafes?page=${page}&size=${size}`,
-      )
+      .get<
+        ApiResponse<any>
+      >(`${this.apiUrl}/public/cafes?page=${page}&size=${size}`)
       .pipe(
         map((res) => {
           const payload = res?.data || {};
-          const content = Array.isArray(payload?.content) ? payload.content : [];
+          const content = Array.isArray(payload?.content)
+            ? payload.content
+            : [];
 
           return {
             content: content.map((item: any) => ({
@@ -49,7 +70,8 @@ export class CafeBrowseService {
               openTime: item.openTime || "",
               closeTime: item.closeTime || "",
               rating: Number(item.rating || 0),
-              imageUrl: item.imageUrl || item.logoUrl || "",
+              imageUrl: this.resolveImageUrl(item.imageUrl || item.logoUrl),
+              logoUrl: this.resolveImageUrl(item.logoUrl || item.imageUrl),
             })),
             pageNumber: Number(payload?.pageNumber ?? page),
             pageSize: Number(payload?.pageSize ?? size),
@@ -75,7 +97,9 @@ export class CafeBrowseService {
               openTime: data.openTime || "",
               closeTime: data.closeTime || "",
               rating: Number(data.rating || 0),
-              imageUrl: data.coverUrl || data.logoUrl || data.imageUrl || "",
+              imageUrl: this.resolveImageUrl(
+                data.coverUrl || data.logoUrl || data.imageUrl,
+              ),
             },
             menuItems: (data.menuItems || []).map((item: any) => ({
               id: item.id,
@@ -83,7 +107,7 @@ export class CafeBrowseService {
               description: item.description || "",
               category: item.category || "OTHER",
               price: Number(item.price || 0),
-              imageUrl: item.imageUrl || "",
+              imageUrl: this.resolveImageUrl(item.imageUrl),
               available: !!item.available,
             })),
           } as PublicCafeDetail;
@@ -102,9 +126,11 @@ export class CafeBrowseService {
       query += `&seats=${seats}`;
     }
     return this.http
-      .get<ApiResponse<Array<{ id: number; tableNumber: string; capacity: number }>>>(
-        `${this.apiUrl}/tables/available?${query}`,
-      )
+      .get<
+        ApiResponse<
+          Array<{ id: number; tableNumber: string; capacity: number }>
+        >
+      >(`${this.apiUrl}/tables/available?${query}`)
       .pipe(map((res) => res?.data || []));
   }
 
@@ -128,7 +154,10 @@ export class CafeBrowseService {
       .pipe(map((res) => res?.data as Order));
   }
 
-  pay(payload: { orderId: number; paymentMethod: string }): Observable<Payment> {
+  pay(payload: {
+    orderId: number;
+    paymentMethod: string;
+  }): Observable<Payment> {
     return this.http
       .post<ApiResponse<Payment>>(`${this.apiUrl}/customer/payments`, payload)
       .pipe(map((res) => res?.data as Payment));

@@ -30,8 +30,8 @@
       <!-- Item image upload -->
       <div class="field img-upload-field">
         <label>Item Photo (optional)</label>
-        <div class="img-preview" *ngIf="imagePreviewUrl || draft.imageUrl">
-          <img [src]="imagePreviewUrl || draft.imageUrl" alt="preview" />
+        <div class="img-preview" *ngIf="imagePreviewUrl">
+          <img [src]="imagePreviewUrl" alt="preview" />
         </div>
         <label class="upload-btn btn-secondary" for="menuItemImage">
           {{ imagePreviewUrl ? "Change Photo" : "Upload Photo" }}
@@ -138,7 +138,7 @@
     <article class="card item" *ngFor="let item of filteredItems">
       <div class="item-img-wrap" *ngIf="item.imageUrl">
         <img
-          [src]="item.imageUrl"
+          [src]="getItemImage(item)"
           [alt]="item.name"
           (error)="$any($event.target).parentElement.style.display = 'none'"
         />

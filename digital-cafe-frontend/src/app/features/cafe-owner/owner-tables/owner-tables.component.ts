@@ -1,20 +1,19 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-import { ApiService } from '@core/services/api.service';
-import { TableService } from '../services/table-service';
-import { Location } from '@angular/common';
+import { Component, OnInit } from "@angular/core";
+import { CommonModule } from "@angular/common";
+import { FormsModule } from "@angular/forms";
+import { Router } from "@angular/router";
+import { ApiService } from "@core/services/api.service";
+import { TableService } from "../services/table-service";
+import { Location } from "@angular/common";
 
 @Component({
-  selector: 'app-owner-tables',
+  selector: "app-owner-tables",
   standalone: true,
   imports: [CommonModule, FormsModule],
-  templateUrl: './owner-tables.component.html',
-  styleUrls: ['./owner-tables.component.scss'],
+  templateUrl: "./owner-tables.component.html",
+  styleUrls: ["./owner-tables.component.scss"],
 })
 export class OwnerTablesComponent implements OnInit {
-
   tables: any[] = [];
   loading = true;
   saving = false;
@@ -24,8 +23,9 @@ export class OwnerTablesComponent implements OnInit {
   isEditMode = false;
 
   formCapacity: number | null = null;
-  formTableNumber: number | null = null;
+  formTableNumber: string = "";
   selectedTableId: number | null = null;
+  formError: string = "";
 
   confirmDeleteId: number | null = null;
 
@@ -39,58 +39,97 @@ export class OwnerTablesComponent implements OnInit {
   ngOnInit(): void {
     this.apiService.cafeExistsForOwner().subscribe({
       next: (exists) => {
-        if (!exists) { this.router.navigate(['/owner/setup']); return; }
+        if (!exists) {
+          this.router.navigate(["/owner/setup"]);
+          return;
+        }
         this.loadTables();
       },
-      error: () => this.router.navigate(['/owner/setup']),
+      error: () => this.router.navigate(["/owner/setup"]),
     });
   }
 
-  goBack(): void { this.location.back(); }
+  goBack(): void {
+    this.location.back();
+  }
 
   loadTables(): void {
     this.loading = true;
     this.tableService.getMyTables().subscribe({
       next: (res: any) => {
-        this.tables = (res.data || res).map((t: any) => ({ ...t, isAvailable: t.isAvailable === true }));
+        this.tables = (res.data || res).map((t: any) => ({
+          ...t,
+          isAvailable: t.isAvailable === true,
+        }));
         this.loading = false;
       },
       error: (err) => {
         this.loading = false;
-        const msg = err?.error?.message?.toLowerCase?.() || err?.message?.toLowerCase?.() || '';
-        if (err?.status === 404 || err?.status === 400 || msg.includes('not found')) {
-          this.router.navigate(['/owner/setup']);
+        const msg =
+          err?.error?.message?.toLowerCase?.() ||
+          err?.message?.toLowerCase?.() ||
+          "";
+        if (
+          err?.status === 404 ||
+          err?.status === 400 ||
+          msg.includes("not found")
+        ) {
+          this.router.navigate(["/owner/setup"]);
         }
       },
     });
   }
 
-  get availableCount(): number { return this.tables.filter((t) => t.isAvailable).length; }
-  get occupiedCount():  number { return this.tables.filter((t) => !t.isAvailable).length; }
+  get availableCount(): number {
+    return this.tables.filter((t) => t.isAvailable).length;
+  }
+  get occupiedCount(): number {
+    return this.tables.filter((t) => !t.isAvailable).length;
+  }
 
   openAddForm(): void {
     this.showForm = true;
     this.isEditMode = false;
     this.formCapacity = null;
-    this.formTableNumber = null;
+    this.formTableNumber = "";
+    this.formError = "";
   }
 
   closeForm(): void {
     this.showForm = false;
     this.formCapacity = null;
-    this.formTableNumber = null;
+    this.formTableNumber = "";
+    this.formError = "";
     this.selectedTableId = null;
   }
 
   addTable(): void {
-    if (!this.formCapacity) return;
+    this.formError = "";
+    if (!this.formCapacity || this.formCapacity < 1) {
+      this.formError = "Seating capacity is required and must be at least 1.";
+      return;
+    }
     this.saving = true;
     const payload: any = { capacity: this.formCapacity };
-    if (this.formTableNumber) payload.tableNumber = this.formTableNumber;
+    if (this.formTableNumber && this.formTableNumber.trim())
+      payload.tableNumber = this.formTableNumber.trim();
     this.tableService.createTable(payload).subscribe({
-      next: () => { this.closeForm(); this.loadTables(); this.saving = false; },
-      error: () => { this.saving = false; },
+      next: () => {
+        this.closeForm();
+        this.loadTables();
+        this.saving = false;
+      },
+      error: () => {
+        this.saving = false;
+      },
     });
+  }
+
+  displayTableNumber(tableNumber: string, index: number): string {
+    if (!tableNumber) return String(index + 1);
+    // Auto-generated numbers look like T1, T2 — show just the digits
+    if (/^T\d+$/.test(tableNumber)) return tableNumber.substring(1);
+    return tableNumber;
   }
 
   startEdit(table: any): void {
@@ -98,29 +137,48 @@ export class OwnerTablesComponent implements OnInit {
     this.isEditMode = true;
     this.selectedTableId = table.id;
     this.formCapacity = table.capacity;
-    this.formTableNumber = table.tableNumber ?? null;
+    this.formTableNumber = table.tableNumber ?? "";
+    this.formError = "";
   }
 
   updateTable(): void {
-    if (!this.formCapacity || !this.selectedTableId) return;
+    this.formError = "";
+    if (!this.formCapacity || this.formCapacity < 1) {
+      this.formError = "Seating capacity is required and must be at least 1.";
+      return;
+    }
+    if (!this.selectedTableId) return;
     this.saving = true;
     const payload: any = { capacity: this.formCapacity };
-    if (this.formTableNumber) payload.tableNumber = this.formTableNumber;
+    if (this.formTableNumber && this.formTableNumber.trim())
+      payload.tableNumber = this.formTableNumber.trim();
     this.tableService.updateTable(this.selectedTableId, payload).subscribe({
-      next: () => { this.closeForm(); this.loadTables(); this.saving = false; },
-      error: () => { this.saving = false; },
+      next: () => {
+        this.closeForm();
+        this.loadTables();
+        this.saving = false;
+      },
+      error: () => {
+        this.saving = false;
+      },
     });
   }
 
   toggleAvailability(table: any): void {
     const newStatus = !table.isAvailable;
     this.tableService.toggleAvailability(table.id, newStatus).subscribe({
-      next: () => { table.isAvailable = newStatus; },
+      next: () => {
+        table.isAvailable = newStatus;
+      },
     });
   }
 
-  askDelete(id: number): void { this.confirmDeleteId = id; }
-  cancelDelete(): void { this.confirmDeleteId = null; }
+  askDelete(id: number): void {
+    this.confirmDeleteId = id;
+  }
+  cancelDelete(): void {
+    this.confirmDeleteId = null;
+  }
 
   confirmDelete(): void {
     if (!this.confirmDeleteId) return;
@@ -131,7 +189,10 @@ export class OwnerTablesComponent implements OnInit {
         this.confirmDeleteId = null;
         this.deleting = null;
       },
-      error: () => { this.deleting = null; this.confirmDeleteId = null; },
+      error: () => {
+        this.deleting = null;
+        this.confirmDeleteId = null;
+      },
     });
   }
 }

@@ -15,8 +15,13 @@
       </p>
     </div>
     <div class="header-actions">
-      <button class="btn-seed" type="button" (click)="openSeedModal()">
-        <i class="bi bi-lightning-fill"></i> Quick Fill from Template
+      <button
+        *ngIf="hasCafe"
+        class="btn-seed"
+        type="button"
+        (click)="openQuickEditModal()"
+      >
+        <i class="bi bi-pencil-square"></i> Quick Edit
       </button>
       <button class="btn-primary" type="button" (click)="openCreate()">
         <i class="bi bi-plus-circle"></i>
@@ -194,16 +199,10 @@
         </div>
       </div>
       <h2>No Café Created Yet</h2>
-      <p>
-        You haven't created your café profile. Start by creating one below, or
-        pick from our 6 featured templates to auto-fill the form instantly.
-      </p>
+      <p>You haven't created your café profile. Start by creating one below.</p>
       <div class="empty-actions">
         <button class="btn-primary" (click)="openCreate()">
           <i class="bi bi-plus-circle"></i> Create My Café
-        </button>
-        <button class="btn-seed" (click)="openSeedModal()">
-          <i class="bi bi-lightning-fill"></i> Use a Template
         </button>
       </div>
     </div>
@@ -499,150 +498,53 @@
       </div>
     </form>
   </section>
-
-  <!-- ============================= SEED / FEATURED CAFES PANEL ============================= -->
-  <section class="seed-panel">
-    <div class="seed-panel-header">
-      <div>
-        <h2><i class="bi bi-stars"></i> 6 Featured Cafés</h2>
-        <p>
-          These are the same cafés showcased on the landing page and visible to
-          customers in real-time. Click any to pre-fill your café form.
-        </p>
-      </div>
-    </div>
-
-    <div class="seed-cafes-grid">
-      <div
-        *ngFor="let seed of featuredSeed; let i = index"
-        class="seed-cafe-card"
-        [class.expanded]="expandedSeedId === seed.id"
-      >
-        <div class="seed-img-wrap">
-          <img
-            [src]="seed.imageUrl"
-            [alt]="seed.name"
-            (error)="
-              $any($event.target).src = 'assets/cafe/cafe-interior-01.jpg'
-            "
-          />
-          <div class="seed-rating-badge">
-            <i class="bi bi-star-fill"></i> {{ seed.rating }}
-          </div>
-        </div>
-        <div class="seed-cafe-info">
-          <div class="seed-title-row">
-            <h3>{{ seed.name }}</h3>
-            <span class="seed-location"
-              ><i class="bi bi-geo-alt-fill"></i> {{ seed.city }},
-              {{ seed.state }}</span
-            >
-          </div>
-          <p class="seed-desc">{{ seed.description }}</p>
-          <div class="seed-hours">
-            <i class="bi bi-clock"></i> {{ seed.openingTime }} –
-            {{ seed.closingTime }}
-          </div>
-          <div class="seed-expanded-details" *ngIf="expandedSeedId === seed.id">
-            <div class="seed-meta">
-              <i class="bi bi-geo-alt"></i> {{ seed.address }}
-            </div>
-            <div class="seed-meta">
-              <i class="bi bi-telephone"></i> {{ seed.phoneNumber }}
-            </div>
-            <div class="seed-meta">
-              <i class="bi bi-shield-check"></i> FSSAI: {{ seed.fssaiNumber }}
-            </div>
-          </div>
-          <div class="seed-actions">
-            <button class="btn-ghost" (click)="toggleSeedExpand(seed.id)">
-              {{ expandedSeedId === seed.id ? "Show Less" : "View Details" }}
-            </button>
-            <button class="btn-seed-fill" (click)="prefillFromSeed(i)">
-              <i class="bi bi-arrow-repeat"></i> Use This Template
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- How cafes show across the platform -->
-  <section class="platform-flow-section">
-    <h2>
-      <i class="bi bi-broadcast"></i> How Your Café Appears Across the Platform
-    </h2>
-    <div class="flow-grid">
-      <div class="flow-card">
-        <div class="flow-icon"><i class="bi bi-house-door-fill"></i></div>
-        <h3>Landing Page</h3>
-        <p>
-          Your café appears in the "Featured Cafés" section visible to all
-          visitors. Active cafés with images rank first.
-        </p>
-      </div>
-      <div class="flow-card">
-        <div class="flow-icon"><i class="bi bi-people-fill"></i></div>
-        <h3>Customer Browse</h3>
-        <p>
-          Customers see your café when browsing available cafés. They can view
-          your full menu and book tables.
-        </p>
-      </div>
-      <div class="flow-card">
-        <div class="flow-icon"><i class="bi bi-journal-bookmark-fill"></i></div>
-        <h3>Menu & Tables</h3>
-        <p>
-          Once you add menu items and tables, customers can pre-order food and
-          book seats in real time.
-        </p>
-      </div>
-      <div class="flow-card">
-        <div class="flow-icon"><i class="bi bi-lightning-charge-fill"></i></div>
-        <h3>Real-Time Updates</h3>
-        <p>
-          All changes you make (status, menu, tables) reflect instantly via
-          WebSocket to customers browsing live.
-        </p>
-      </div>
-    </div>
-  </section>
 </div>
 
-<!-- ============================= SEED QUICK-FILL MODAL ============================= -->
-<div *ngIf="showSeedModal" class="modal-overlay" (click)="closeSeedModal()">
+<!-- ============================= QUICK EDIT MODAL ============================= -->
+<div
+  *ngIf="showQuickEditModal"
+  class="modal-overlay"
+  (click)="closeQuickEditModal()"
+>
   <div class="modal-box" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h2><i class="bi bi-lightning-fill"></i> Choose a Café Template</h2>
-      <button class="btn-close" (click)="closeSeedModal()">
+      <h2><i class="bi bi-pencil-square"></i> Quick Edit – Select a Café</h2>
+      <button class="btn-close" (click)="closeQuickEditModal()">
         <i class="bi bi-x-lg"></i>
       </button>
     </div>
     <p class="modal-subtitle">
-      Select one of the 6 featured cafés to instantly pre-fill your café
-      creation form with real data.
+      Select one of your cafés to instantly load it into the edit form.
     </p>
     <div class="modal-cafes-list">
       <div
-        *ngFor="let seed of featuredSeed; let i = index"
+        *ngFor="let cafe of cafes"
         class="modal-cafe-item"
-        (click)="prefillFromSeed(i)"
+        (click)="selectCafeForEdit(cafe)"
       >
         <img
-          [src]="seed.imageUrl"
-          [alt]="seed.name"
+          [src]="getCafeImage(cafe)"
+          [alt]="$any(cafe).name"
           (error)="$any($event.target).src = 'assets/cafe/cafe-interior-01.jpg'"
         />
         <div class="modal-cafe-text">
-          <strong>{{ seed.name }}</strong>
+          <strong>{{ $any(cafe).name }}</strong>
           <span
-            ><i class="bi bi-geo-alt-fill"></i> {{ seed.city }},
-            {{ seed.state }}</span
+            ><i class="bi bi-geo-alt-fill"></i> {{ $any(cafe).city }},
+            {{ $any(cafe).state }}</span
           >
-          <span
-            ><i class="bi bi-star-fill"></i> {{ seed.rating }} ·
-            {{ seed.openingTime }} – {{ seed.closingTime }}</span
-          >
+          <span>
+            <i class="bi bi-clock"></i>
+            {{ formatTime($any(cafe).openingTime || $any(cafe).openTime) }} –
+            {{ formatTime($any(cafe).closingTime || $any(cafe).closeTime) }}
+            &nbsp;&middot;&nbsp;
+            <span
+              [class.text-success]="$any(cafe).isActive"
+              [class.text-danger]="!$any(cafe).isActive"
+            >
+              {{ $any(cafe).isActive ? "&#9679; Active" : "&#9675; Inactive" }}
+            </span>
+          </span>
         </div>
         <i class="bi bi-arrow-right-circle modal-arrow"></i>
       </div>

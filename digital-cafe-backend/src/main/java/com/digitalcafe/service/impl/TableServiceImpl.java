@@ -45,7 +45,13 @@ public class TableServiceImpl implements TableService {
 
         CafeTable table = tableMapper.toEntity(request);
         table.setCafe(cafe);
-        table.setTableNumber("T" + System.currentTimeMillis());
+        // Use the owner-provided number when supplied; otherwise auto-assign sequentially
+        if (request.getTableNumber() == null || request.getTableNumber().isBlank()) {
+            long count = tableRepository.countByCafeId(cafe.getId());
+            table.setTableNumber("T" + (count + 1));
+        } else {
+            table.setTableNumber(request.getTableNumber().trim());
+        }
         table.setIsAvailable(true);
 
         CafeTable saved = tableRepository.save(table);
@@ -169,7 +175,12 @@ public class TableServiceImpl implements TableService {
                 .orElseThrow(() -> new ResourceNotFoundException("Cafe", "id", cafeId));
         CafeTable table = tableMapper.toEntity(request);
         table.setCafe(cafe);
-        table.setTableNumber("T" + System.currentTimeMillis());
+        if (request.getTableNumber() == null || request.getTableNumber().isBlank()) {
+            long count = tableRepository.countByCafeId(cafe.getId());
+            table.setTableNumber("T" + (count + 1));
+        } else {
+            table.setTableNumber(request.getTableNumber().trim());
+        }
         CafeTable saved = tableRepository.save(table);
         return tableMapper.toResponse(saved);
     }

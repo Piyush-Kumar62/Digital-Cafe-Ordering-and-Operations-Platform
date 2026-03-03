@@ -1,26 +1,26 @@
-import { CommonModule } from '@angular/common';
-import { Component, OnDestroy, OnInit } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-import { Subject, Subscription, interval, takeUntil } from 'rxjs';
-import { AlertService } from '@core/services/alert.service';
-import { WebSocketService } from '@core/websocket/websocket.service';
-import { Booking, BookingRequest } from '@shared/models/booking.model';
-import { Cafe, Table } from '@shared/models/cafe.model';
-import { MenuItem } from '@shared/models/menu.model';
-import { Order, OrderStatus, OrderRequest } from '@shared/models/order.model';
-import { CustomerJourneyService } from '../customer-journey.service';
-import { MenuService } from './menu.service';
-import { CafeBrowseService } from '@features/public/cafe-browse.service';
+import { CommonModule } from "@angular/common";
+import { Component, OnDestroy, OnInit } from "@angular/core";
+import { FormsModule } from "@angular/forms";
+import { Router } from "@angular/router";
+import { Subject, Subscription, interval, takeUntil } from "rxjs";
+import { AlertService } from "@core/services/alert.service";
+import { WebSocketService } from "@core/websocket/websocket.service";
+import { Booking, BookingRequest } from "@shared/models/booking.model";
+import { Cafe, Table } from "@shared/models/cafe.model";
+import { MenuItem } from "@shared/models/menu.model";
+import { Order, OrderStatus, OrderRequest } from "@shared/models/order.model";
+import { CustomerJourneyService } from "../customer-journey.service";
+import { MenuService } from "./menu.service";
+import { CafeBrowseService } from "@features/public/cafe-browse.service";
 
 type CartLine = { item: MenuItem; quantity: number };
 
 @Component({
-  selector: 'app-menu',
+  selector: "app-menu",
   standalone: true,
   imports: [CommonModule, FormsModule],
-  templateUrl: './menu.component.html',
-  styleUrls: ['./menu.component.scss'],
+  templateUrl: "./menu.component.html",
+  styleUrls: ["./menu.component.scss"],
 })
 export class MenuComponent implements OnInit, OnDestroy {
   cafes: Cafe[] = [];
@@ -30,13 +30,13 @@ export class MenuComponent implements OnInit, OnDestroy {
   loadingCafes = false;
 
   selectedCafeId: number | null = null;
-  selectedDate = '';
-  selectedTime = '';
+  selectedDate = "";
+  selectedTime = "";
   selectedTableId: number | null = null;
   guestsCount = 2;
-  searchText = '';
-  selectedCategory = 'ALL';
-  categories: string[] = ['ALL'];
+  searchText = "";
+  selectedCategory = "ALL";
+  categories: string[] = ["ALL"];
 
   activeBooking: Booking | null = null;
   activeOrder: Order | null = null;
@@ -54,31 +54,6 @@ export class MenuComponent implements OnInit, OnDestroy {
     OrderStatus.PREPARING,
     OrderStatus.READY,
     OrderStatus.SERVED,
-  ];
-
-  private readonly fallbackImages: Record<string, string> = {
-    APPETIZER: 'assets/downloads/unsplash/menu-appetizer.jpg',
-    MAIN_COURSE: 'assets/downloads/unsplash/menu-main-course.jpg',
-    DESSERT: 'assets/downloads/unsplash/menu-dessert.jpg',
-    BEVERAGE: 'assets/downloads/unsplash/menu-beverage.jpg',
-    COFFEE: 'assets/downloads/unsplash/menu-coffee.jpg',
-    SNACK: 'assets/downloads/unsplash/menu-snack.jpg',
-    SNACKS: 'assets/downloads/unsplash/menu-snack.jpg',
-    DEFAULT: 'assets/downloads/unsplash/menu-default.jpg',
-  };
-  private readonly itemKeywordImages: Array<{ keywords: string[]; image: string }> = [
-    { keywords: ['pizza'], image: 'assets/downloads/menu-items/pizza.jpg' },
-    { keywords: ['burger'], image: 'assets/downloads/menu-items/burger.jpg' },
-    { keywords: ['pasta', 'spaghetti', 'macaroni'], image: 'assets/downloads/menu-items/pasta.jpg' },
-    { keywords: ['sandwich', 'sub', 'panini'], image: 'assets/downloads/menu-items/sandwich.jpg' },
-    { keywords: ['fries', 'french fries', 'chips'], image: 'assets/downloads/menu-items/fries.jpg' },
-    { keywords: ['salad'], image: 'assets/downloads/menu-items/salad.jpg' },
-    { keywords: ['cake', 'pastry', 'brownie'], image: 'assets/downloads/menu-items/cake.jpg' },
-    { keywords: ['ice cream', 'gelato', 'sundae'], image: 'assets/downloads/menu-items/ice-cream.jpg' },
-    { keywords: ['coffee', 'espresso', 'latte', 'cappuccino', 'americano', 'mocha'], image: 'assets/downloads/menu-items/coffee.jpg' },
-    { keywords: ['tea', 'chai', 'green tea'], image: 'assets/downloads/menu-items/tea.jpg' },
-    { keywords: ['juice'], image: 'assets/downloads/menu-items/juice.jpg' },
-    { keywords: ['smoothie', 'shake', 'milkshake'], image: 'assets/downloads/menu-items/smoothie.jpg' },
   ];
 
   constructor(
@@ -100,7 +75,9 @@ export class MenuComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     if (this.orderTopicSub && this.activeOrder?.id) {
-      this.webSocketService.unsubscribe(`/topic/customer-order/${this.activeOrder.id}`);
+      this.webSocketService.unsubscribe(
+        `/topic/customer-order/${this.activeOrder.id}`,
+      );
     }
     this.destroy$.next();
     this.destroy$.complete();
@@ -110,11 +87,12 @@ export class MenuComponent implements OnInit, OnDestroy {
     const query = this.searchText.trim().toLowerCase();
     return this.menuItems.filter((item) => {
       const categoryMatch =
-        this.selectedCategory === 'ALL' || (item.category || '').toUpperCase() === this.selectedCategory;
+        this.selectedCategory === "ALL" ||
+        (item.category || "").toUpperCase() === this.selectedCategory;
       const textMatch =
         !query ||
-        (item.name || '').toLowerCase().includes(query) ||
-        (item.description || '').toLowerCase().includes(query);
+        (item.name || "").toLowerCase().includes(query) ||
+        (item.description || "").toLowerCase().includes(query);
       return categoryMatch && textMatch;
     });
   }
@@ -124,7 +102,10 @@ export class MenuComponent implements OnInit, OnDestroy {
   }
 
   get cartTotal(): number {
-    return this.cart.reduce((sum, line) => sum + line.item.price * line.quantity, 0);
+    return this.cart.reduce(
+      (sum, line) => sum + line.item.price * line.quantity,
+      0,
+    );
   }
 
   get cartItemsCount(): number {
@@ -139,28 +120,14 @@ export class MenuComponent implements OnInit, OnDestroy {
   }
 
   getMenuImage(item: MenuItem): string {
-    if (item.imageUrl && (/^https?:\/\//i.test(item.imageUrl) || item.imageUrl.startsWith('assets/'))) {
-      return item.imageUrl;
-    }
-    const keywordImage = this.resolveImageByName(item?.name);
-    if (keywordImage) {
-      return keywordImage;
-    }
-    return this.fallbackImages[(item.category || '').toUpperCase()] || this.fallbackImages['DEFAULT'];
+    return this.cafeBrowseService.resolveImageUrl(item.imageUrl) || "";
   }
 
   onImageError(event: Event): void {
     const img = event.target as HTMLImageElement;
     if (!img) return;
     img.onerror = null;
-    img.src = this.fallbackImages['DEFAULT'];
-  }
-
-  private resolveImageByName(name?: string): string | null {
-    const value = (name || '').toLowerCase();
-    if (!value) return null;
-    const match = this.itemKeywordImages.find((entry) => entry.keywords.some((key) => value.includes(key)));
-    return match?.image ?? null;
+    img.style.display = "none";
   }
 
   onCafeChange(cafeIdValue: string | number): void {
@@ -198,15 +165,22 @@ export class MenuComponent implements OnInit, OnDestroy {
 
   setSelectedQuantity(itemId: number, value: string): void {
     const qty = Number(value);
-    this.quantitySelection[itemId] = Number.isFinite(qty) && qty > 0 ? Math.min(qty, 10) : 1;
+    this.quantitySelection[itemId] =
+      Number.isFinite(qty) && qty > 0 ? Math.min(qty, 10) : 1;
   }
 
   increaseSelectedQuantity(itemId: number): void {
-    this.quantitySelection[itemId] = Math.min(this.getSelectedQuantity(itemId) + 1, 10);
+    this.quantitySelection[itemId] = Math.min(
+      this.getSelectedQuantity(itemId) + 1,
+      10,
+    );
   }
 
   decreaseSelectedQuantity(itemId: number): void {
-    this.quantitySelection[itemId] = Math.max(this.getSelectedQuantity(itemId) - 1, 1);
+    this.quantitySelection[itemId] = Math.max(
+      this.getSelectedQuantity(itemId) - 1,
+      1,
+    );
   }
 
   addToCart(item: MenuItem): void {
@@ -240,8 +214,13 @@ export class MenuComponent implements OnInit, OnDestroy {
   }
 
   bookTable(): void {
-    if (!this.selectedCafeId || !this.selectedDate || !this.selectedTime || !this.selectedTableId) {
-      this.alertService.error('Please select date, time, and table to book.');
+    if (
+      !this.selectedCafeId ||
+      !this.selectedDate ||
+      !this.selectedTime ||
+      !this.selectedTableId
+    ) {
+      this.alertService.error("Please select date, time, and table to book.");
       return;
     }
 
@@ -254,31 +233,37 @@ export class MenuComponent implements OnInit, OnDestroy {
     };
 
     this.bookingInProgress = true;
-    this.alertService.loading('Booking table. Please wait.');
+    this.alertService.loading("Booking table. Please wait.");
     this.menuService.createBooking(payload).subscribe({
       next: (booking) => {
         this.activeBooking = booking;
         this.journeyService.setActiveBooking(booking);
         this.bookingInProgress = false;
         this.alertService.close();
-        this.alertService.success('Table Booked', 'Table booked successfully. You can now place your order.');
+        this.alertService.success(
+          "Table Booked",
+          "Table booked successfully. You can now place your order.",
+        );
       },
       error: (error) => {
         this.bookingInProgress = false;
         this.alertService.close();
-        this.alertService.error('Booking Failed', error?.error?.message || 'Failed to book table');
+        this.alertService.error(
+          "Booking Failed",
+          error?.error?.message || "Failed to book table",
+        );
       },
     });
   }
 
   placeOrder(): void {
     if (!this.activeBooking?.id) {
-      this.alertService.error('Booking is required before placing order.');
+      this.alertService.error("Booking is required before placing order.");
       return;
     }
 
     if (this.cart.length === 0) {
-      this.alertService.error('Cart is empty.');
+      this.alertService.error("Cart is empty.");
       return;
     }
 
@@ -291,34 +276,42 @@ export class MenuComponent implements OnInit, OnDestroy {
     };
 
     this.orderInProgress = true;
-    this.alertService.loading('Placing your order. Please wait.');
+    this.alertService.loading("Placing your order. Please wait.");
     this.menuService.createOrder(payload).subscribe({
       next: (order) => {
         this.activeOrder = order;
         this.cart = [];
         this.orderInProgress = false;
         this.alertService.close();
-        this.alertService.success('Order Placed', 'Proceed to payment to notify kitchen.');
+        this.alertService.success(
+          "Order Placed",
+          "Proceed to payment to notify kitchen.",
+        );
         this.subscribeToCustomerOrderTopic(order.id);
-        this.router.navigate(['/customer/payment', order.id]);
+        this.router.navigate(["/customer/payment", order.id]);
       },
       error: (error) => {
         this.orderInProgress = false;
         this.alertService.close();
-        this.alertService.error('Order Failed', error?.error?.message || 'Failed to place order');
+        this.alertService.error(
+          "Order Failed",
+          error?.error?.message || "Failed to place order",
+        );
       },
     });
   }
 
-  getStepState(step: OrderStatus): 'done' | 'active' | 'pending' {
+  getStepState(step: OrderStatus): "done" | "active" | "pending" {
     if (!this.activeOrder) {
-      return 'pending';
+      return "pending";
     }
-    const currentIndex = this.orderSteps.indexOf(this.activeOrder.status as OrderStatus);
+    const currentIndex = this.orderSteps.indexOf(
+      this.activeOrder.status as OrderStatus,
+    );
     const stepIndex = this.orderSteps.indexOf(step);
-    if (stepIndex < currentIndex) return 'done';
-    if (stepIndex === currentIndex) return 'active';
-    return 'pending';
+    if (stepIndex < currentIndex) return "done";
+    if (stepIndex === currentIndex) return "active";
+    return "pending";
   }
 
   private loadCafes(): void {
@@ -330,20 +323,20 @@ export class MenuComponent implements OnInit, OnDestroy {
           this.cafes = cards.map((card) => ({
             id: card.id,
             name: card.name,
-            description: card.description || '',
-            address: card.location || '',
-            city: card.location || '',
-            state: '',
-            zipCode: '',
-            phoneNumber: '',
-            email: '',
+            description: card.description || "",
+            address: card.location || "",
+            city: card.location || "",
+            state: "",
+            zipCode: "",
+            phoneNumber: "",
+            email: "",
             imageUrl: card.imageUrl,
             rating: card.rating || 0,
-            openingTime: card.openTime || '',
-            closingTime: card.closeTime || '',
+            openingTime: card.openTime || "",
+            closingTime: card.closeTime || "",
             isActive: true,
             ownerId: 0,
-            createdAt: '',
+            createdAt: "",
           }));
           this.afterCafesLoaded();
           return;
@@ -365,7 +358,7 @@ export class MenuComponent implements OnInit, OnDestroy {
               },
               error: () => {
                 this.loadingCafes = false;
-                this.alertService.error('Unable to load cafes.');
+                this.alertService.error("Unable to load cafes.");
               },
             });
           },
@@ -377,7 +370,7 @@ export class MenuComponent implements OnInit, OnDestroy {
               },
               error: () => {
                 this.loadingCafes = false;
-                this.alertService.error('Unable to load cafes.');
+                this.alertService.error("Unable to load cafes.");
               },
             });
           },
@@ -399,7 +392,7 @@ export class MenuComponent implements OnInit, OnDestroy {
               },
               error: () => {
                 this.loadingCafes = false;
-                this.alertService.error('Unable to load cafes.');
+                this.alertService.error("Unable to load cafes.");
               },
             });
           },
@@ -411,7 +404,7 @@ export class MenuComponent implements OnInit, OnDestroy {
               },
               error: () => {
                 this.loadingCafes = false;
-                this.alertService.error('Unable to load cafes.');
+                this.alertService.error("Unable to load cafes.");
               },
             });
           },
@@ -441,9 +434,9 @@ export class MenuComponent implements OnInit, OnDestroy {
         const publicItems = (detail?.menuItems || []).map((item) => ({
           id: item.id,
           name: item.name,
-          description: item.description || '',
+          description: item.description || "",
           price: Number(item.price || 0),
-          category: item.category || 'OTHER',
+          category: item.category || "OTHER",
           imageUrl: item.imageUrl,
           isAvailable: !!item.available,
           cafeId: this.selectedCafeId as number,
@@ -452,8 +445,14 @@ export class MenuComponent implements OnInit, OnDestroy {
         if (publicItems.length > 0) {
           this.menuItems = publicItems;
           this.categories = [
-            'ALL',
-            ...Array.from(new Set(this.menuItems.map((m) => (m.category || '').toUpperCase()).filter(Boolean))),
+            "ALL",
+            ...Array.from(
+              new Set(
+                this.menuItems
+                  .map((m) => (m.category || "").toUpperCase())
+                  .filter(Boolean),
+              ),
+            ),
           ];
           this.loadingMenu = false;
           return;
@@ -464,17 +463,26 @@ export class MenuComponent implements OnInit, OnDestroy {
           next: (items) => {
             this.menuItems = (items || []).map((item) => ({
               ...item,
+              imageUrl:
+                this.cafeBrowseService.resolveImageUrl(item.imageUrl) ||
+                item.imageUrl,
               isAvailable: !!item.isAvailable,
             }));
             this.categories = [
-              'ALL',
-              ...Array.from(new Set(this.menuItems.map((m) => (m.category || '').toUpperCase()).filter(Boolean))),
+              "ALL",
+              ...Array.from(
+                new Set(
+                  this.menuItems
+                    .map((m) => (m.category || "").toUpperCase())
+                    .filter(Boolean),
+                ),
+              ),
             ];
             this.loadingMenu = false;
           },
           error: () => {
             this.loadingMenu = false;
-            this.alertService.error('Unable to load menu items.');
+            this.alertService.error("Unable to load menu items.");
           },
         });
       },
@@ -484,17 +492,26 @@ export class MenuComponent implements OnInit, OnDestroy {
           next: (items) => {
             this.menuItems = (items || []).map((item) => ({
               ...item,
+              imageUrl:
+                this.cafeBrowseService.resolveImageUrl(item.imageUrl) ||
+                item.imageUrl,
               isAvailable: !!item.isAvailable,
             }));
             this.categories = [
-              'ALL',
-              ...Array.from(new Set(this.menuItems.map((m) => (m.category || '').toUpperCase()).filter(Boolean))),
+              "ALL",
+              ...Array.from(
+                new Set(
+                  this.menuItems
+                    .map((m) => (m.category || "").toUpperCase())
+                    .filter(Boolean),
+                ),
+              ),
             ];
             this.loadingMenu = false;
           },
           error: () => {
             this.loadingMenu = false;
-            this.alertService.error('Unable to load menu items.');
+            this.alertService.error("Unable to load menu items.");
           },
         });
       },
@@ -508,19 +525,31 @@ export class MenuComponent implements OnInit, OnDestroy {
     }
 
     this.loadingTables = true;
-    this.menuService.getAvailableTables(this.selectedCafeId, this.selectedDate, this.selectedTime, this.guestsCount).subscribe({
-      next: (tables) => {
-        this.availableTables = tables || [];
-        if (!this.availableTables.some((t) => t.id === this.selectedTableId)) {
-          this.selectedTableId = this.availableTables.length > 0 ? this.availableTables[0].id : null;
-        }
-        this.loadingTables = false;
-      },
-      error: () => {
-        this.availableTables = [];
-        this.loadingTables = false;
-      },
-    });
+    this.menuService
+      .getAvailableTables(
+        this.selectedCafeId,
+        this.selectedDate,
+        this.selectedTime,
+        this.guestsCount,
+      )
+      .subscribe({
+        next: (tables) => {
+          this.availableTables = tables || [];
+          if (
+            !this.availableTables.some((t) => t.id === this.selectedTableId)
+          ) {
+            this.selectedTableId =
+              this.availableTables.length > 0
+                ? this.availableTables[0].id
+                : null;
+          }
+          this.loadingTables = false;
+        },
+        error: () => {
+          this.availableTables = [];
+          this.loadingTables = false;
+        },
+      });
   }
 
   onBookingDateOrTimeChange(): void {
@@ -540,12 +569,22 @@ export class MenuComponent implements OnInit, OnDestroy {
   }
 
   getCafeLocation(cafe: Cafe): string {
-    return [cafe.city, cafe.state].filter(Boolean).join(', ');
+    return [cafe.city, cafe.state].filter(Boolean).join(", ");
+  }
+
+  categoryLabel(cat: string): string {
+    if (!cat || cat === "ALL") return "All Categories";
+    return cat
+      .replace(/_/g, " ")
+      .toLowerCase()
+      .replace(/\b\w/g, (c) => c.toUpperCase());
   }
 
   private subscribeToCustomerOrderTopic(orderId: number): void {
     if (this.orderTopicSub && this.activeOrder?.id) {
-      this.webSocketService.unsubscribe(`/topic/customer-order/${this.activeOrder.id}`);
+      this.webSocketService.unsubscribe(
+        `/topic/customer-order/${this.activeOrder.id}`,
+      );
     }
 
     this.orderTopicSub = this.webSocketService
@@ -590,15 +629,11 @@ export class MenuComponent implements OnInit, OnDestroy {
 
   private bootstrapDateTimeDefaults(): void {
     const now = new Date();
-    const date = now.toISOString().split('T')[0];
+    const date = now.toISOString().split("T")[0];
     const time = new Date(now.getTime() + 60 * 60 * 1000);
-    const hh = String(time.getHours()).padStart(2, '0');
-    const mm = String(Math.floor(time.getMinutes() / 30) * 30).padStart(2, '0');
+    const hh = String(time.getHours()).padStart(2, "0");
+    const mm = String(Math.floor(time.getMinutes() / 30) * 30).padStart(2, "0");
     this.selectedDate = date;
     this.selectedTime = `${hh}:${mm}`;
   }
 }
-
-
-
-

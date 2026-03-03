@@ -50,18 +50,20 @@ $amber: #f59e0b;
 }
 
 .back-btn {
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.08);
   border: 1px solid $border;
-  color: $text-secondary;
-  padding: 8px 14px;
+  color: $text-primary;
+  padding: 8px 16px;
   border-radius: 8px;
   cursor: pointer;
   font-size: 13px;
+  font-weight: 600;
   white-space: nowrap;
   transition: all 0.2s;
   &:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: $text-primary;
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.2);
   }
 }
 
@@ -138,7 +140,8 @@ $amber: #f59e0b;
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: $text-muted;
+  color: $text-secondary;
+  font-weight: 600;
 }
 
 .chip-total {
@@ -249,11 +252,11 @@ $amber: #f59e0b;
 
 // ── Table Card ────────────────────────────────────────────
 .table-card {
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(255, 255, 255, 0.06);
   border-radius: 16px;
   padding: 18px;
-  border: 1px solid $border;
-  border-top: 3px solid $border;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-top: 3px solid rgba(255, 255, 255, 0.12);
   transition: all 0.25s ease;
   position: relative;
   overflow: hidden;
@@ -533,6 +536,19 @@ $amber: #f59e0b;
   color: $red;
 }
 
+.form-error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #f87171;
+  font-size: 12.5px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-top: -6px;
+}
+
 .modal-footer {
   display: flex;
   justify-content: flex-end;
@@ -675,6 +691,52 @@ $amber: #f59e0b;
   .card-header h2 {
     color: #0f172a;
   }
+  .page-title {
+    color: #0f172a;
+  }
+  .page-subtitle {
+    color: #64748b;
+  }
+  .back-btn {
+    color: #0f172a;
+    background: rgba(0, 0, 0, 0.05);
+    border-color: #e2e8f0;
+    &:hover {
+      background: rgba(0, 0, 0, 0.1);
+    }
+  }
+  .stat-chip {
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+  }
+  .chip-label {
+    color: #64748b;
+  }
+  .chip-total .chip-value {
+    color: #4f46e5;
+  }
+  .table-card {
+    background: #f8fafc;
+    border-color: #e2e8f0;
+    border-top-color: #e2e8f0;
+
+    &.card-available {
+      border-top-color: $green;
+    }
+    &.card-occupied {
+      border-top-color: $red;
+    }
+    &:hover {
+      background: #ede9fe;
+      box-shadow: 0 8px 24px rgba(99, 102, 241, 0.12);
+    }
+  }
+  .table-number {
+    color: #0f172a;
+  }
+  .seats-row {
+    color: #475569;
+  }
   .table-cell {
     background: #f8fafc;
     border-color: #e2e8f0;
@@ -693,10 +755,5 @@ $amber: #f59e0b;
     background: rgba(16, 185, 129, 0.08);
     border-color: #10b981;
     color: #14532d;
-  }
-  .stat-chip {
-    background: #f1f5f9;
-    color: #0f172a;
-    border: 1px solid #e2e8f0;
   }
 }

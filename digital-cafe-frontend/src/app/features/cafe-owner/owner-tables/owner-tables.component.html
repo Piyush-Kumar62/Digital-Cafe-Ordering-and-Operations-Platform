@@ -112,7 +112,7 @@
       >
         <div class="card-top">
           <div class="table-number">
-            Table #{{ table.tableNumber ?? i + 1 }}
+            Table #{{ displayTableNumber(table.tableNumber, i) }}
           </div>
           <span
             class="status-badge"
@@ -216,12 +216,15 @@
     </div>
     <div class="modal-body">
       <div class="form-group">
-        <label>Table Number <span class="opt">(optional)</span></label>
+        <label
+          >Table Number
+          <span class="opt">(optional — auto-assigned if blank)</span></label
+        >
         <input
-          type="number"
+          type="text"
           [(ngModel)]="formTableNumber"
-          min="1"
-          placeholder="Auto-assigned if blank"
+          placeholder="e.g. 1, A4, VIP-2"
+          maxlength="20"
         />
       </div>
       <div class="form-group">
@@ -230,8 +233,27 @@
           type="number"
           [(ngModel)]="formCapacity"
           min="1"
+          max="20"
           placeholder="e.g. 4"
         />
+      </div>
+      <div class="form-error" *ngIf="formError">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="14"
+          height="14"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
+          />
+        </svg>
+        {{ formError }}
       </div>
     </div>
     <div class="modal-footer">

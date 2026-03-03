@@ -11,7 +11,6 @@ import {
 import { ApiService } from "@core/services/api.service";
 import { AlertService } from "@core/services/alert.service";
 import { Cafe } from "@shared/models/cafe.model";
-import { FEATURED_CAFE_SEED } from "@shared/data/featured-cafes.data";
 import { environment } from "@environments/environment";
 
 @Component({
@@ -34,8 +33,21 @@ export class OwnerCafesComponent implements OnInit {
     return this.cafes[0] || null;
   }
 
-  // Seed cafes preview panel (same 6 shown on landing page)
-  featuredSeed = FEATURED_CAFE_SEED;
+  // Quick-edit modal (owner's real cafés)
+  showQuickEditModal = false;
+
+  openQuickEditModal(): void {
+    this.showQuickEditModal = true;
+  }
+
+  closeQuickEditModal(): void {
+    this.showQuickEditModal = false;
+  }
+
+  selectCafeForEdit(cafe: Cafe): void {
+    this.showQuickEditModal = false;
+    this.openEdit(cafe);
+  }
 
   // Edit / Create form
   showForm = false;
@@ -44,12 +56,6 @@ export class OwnerCafesComponent implements OnInit {
   selectedFile: File | null = null;
   previewUrl: string | null = null;
   cafeForm!: FormGroup;
-  expandedSeedId: number | null = null;
-
-  // Quick-seed modal
-  showSeedModal = false;
-  seedLoading = false;
-  seedIndex: number | null = null;
 
   constructor(
     private fb: FormBuilder,
@@ -112,13 +118,6 @@ export class OwnerCafesComponent implements OnInit {
     return `${base}/api/cafes/${cafe.id}/logo`;
   }
 
-  getCafeImageBySeedId(id: number): string {
-    return (
-      this.featuredSeed.find((s) => s.id === id)?.imageUrl ||
-      "assets/cafe/cafe-interior-01.jpg"
-    );
-  }
-
   formatRating(cafe: Cafe | null): string {
     if (!cafe) return "–";
     const r = (cafe as any).rating;
@@ -135,7 +134,6 @@ export class OwnerCafesComponent implements OnInit {
     this.selectedFile = null;
     this.previewUrl = null;
     this.showForm = true;
-    this.showSeedModal = false;
   }
 
   openEdit(cafe: Cafe): void {
@@ -157,14 +155,9 @@ export class OwnerCafesComponent implements OnInit {
       gstNumber: c.gstNumber,
       msmeNumber: c.msmeNumber,
     });
-    if (c.imageUrl) {
-      this.previewUrl = c.imageUrl;
-    } else {
-      const base = environment.apiUrl.replace(/\/api$/, "");
-      this.previewUrl = `${base}/api/cafes/${c.id}/logo`;
-    }
+    // Always resolve through getCafeImage so /uploads/ paths get the host prefix
+    this.previewUrl = this.getCafeImage(cafe);
     this.showForm = true;
-    this.showSeedModal = false;
   }
 
   closeForm(): void {
@@ -258,45 +251,6 @@ export class OwnerCafesComponent implements OnInit {
       },
       error: () => this.alertService.error("Failed to update cafe status."),
     });
-  }
-
-  // ======================== SEED QUICK-FILL ========================
-
-  openSeedModal(): void {
-    this.showSeedModal = true;
-    this.showForm = false;
-  }
-
-  closeSeedModal(): void {
-    this.showSeedModal = false;
-    this.seedIndex = null;
-  }
-
-  prefillFromSeed(index: number): void {
-    const seed = this.featuredSeed[index];
-    if (!seed) return;
-    this.isEditMode = false; // seeds always create a new cafe
-    this.editingCafe = null;
-    this.cafeForm.patchValue({
-      name: seed.name,
-      description: seed.description,
-      address: seed.address,
-      city: seed.city,
-      state: seed.state,
-      landmark: seed.landmark,
-      phoneNumber: seed.phoneNumber,
-      pincode: seed.pincode,
-      openingTime: this.to24h(seed.openingTime),
-      closingTime: this.to24h(seed.closingTime),
-      fssaiNumber: seed.fssaiNumber,
-    });
-    this.previewUrl = seed.imageUrl;
-    this.showSeedModal = false;
-    this.showForm = true;
-  }
-
-  toggleSeedExpand(id: number): void {
-    this.expandedSeedId = this.expandedSeedId === id ? null : id;
   }
 
   // ======================== UTILS ========================

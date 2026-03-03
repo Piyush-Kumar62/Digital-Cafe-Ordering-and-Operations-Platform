@@ -76,10 +76,15 @@
       >
         <div class="mini-cafe-img-wrap">
           <img
-            [src]="cafe.imageUrl || '/assets/cafe/cafe-interior-01.jpg'"
+            [src]="
+              cafe.imageUrl ||
+              'assets/downloads/unsplash/cafe-cover-default.jpg'
+            "
             [alt]="cafe.name"
             loading="lazy"
-            onerror="this.src = '/assets/cafe/cafe-interior-01.jpg'"
+            onerror="
+              this.src = 'assets/downloads/unsplash/cafe-cover-default.jpg'
+            "
           />
         </div>
         <div class="mini-cafe-body">

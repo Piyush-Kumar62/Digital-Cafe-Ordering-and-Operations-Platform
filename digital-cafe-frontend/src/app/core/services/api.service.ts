@@ -32,8 +32,25 @@ import { MessageResponse, User } from "@shared/models/auth.model";
 })
 export class ApiService {
   private baseUrl = environment.apiUrl;
+  readonly backendBase = environment.apiUrl.replace(/\/api$/, "");
 
   constructor(private http: HttpClient) {}
+
+  /**
+   * Converts any image path returned by the backend into a browser-loadable URL.
+   *  - Already an http(s)/data URL → returned as-is
+   *  - Starts with /            → prefixed with backend origin (e.g. http://localhost:8080)
+   *  - Absolute filesystem path → discarded (returns '')
+   *  - null / empty             → returns ''
+   */
+  resolveImageUrl(src: string | null | undefined): string {
+    if (!src) return "";
+    if (/^(https?:\/\/|data:)/.test(src)) return src;
+    if (src.startsWith("/")) return `${this.backendBase}${src}`;
+    // Absolute filesystem path (Windows drive letter or backslash) — discard
+    if (/^[A-Za-z]:[/\\]/.test(src) || src.startsWith("\\\\")) return "";
+    return src;
+  }
 
   getAllCafes(): Observable<Cafe[]> {
     return this.http.get<Cafe[]>(`${this.baseUrl}/cafes`);

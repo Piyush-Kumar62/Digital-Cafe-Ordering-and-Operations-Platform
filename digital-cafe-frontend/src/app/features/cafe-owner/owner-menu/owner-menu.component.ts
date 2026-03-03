@@ -121,7 +121,8 @@ export class OwnerMenuComponent implements OnInit {
   openEdit(item: MenuItem): void {
     this.isEditMode = true;
     this.editingItemId = item.id;
-    this.imagePreviewUrl = (item as any).imageUrl || null;
+    this.imagePreviewUrl =
+      this.apiService.resolveImageUrl((item as any).imageUrl) || null;
     this.selectedImageFile = null;
     this.draft = {
       name: item.name,
@@ -170,7 +171,12 @@ export class OwnerMenuComponent implements OnInit {
     this.saving = true;
 
     const doSave = (imageUrl?: string) => {
-      if (imageUrl) this.draft.imageUrl = imageUrl;
+      if (imageUrl) {
+        this.draft.imageUrl = imageUrl; // store relative path for backend
+        // update preview to the resolved full URL
+        this.imagePreviewUrl =
+          this.apiService.resolveImageUrl(imageUrl) || null;
+      }
       const obs =
         this.isEditMode && this.editingItemId != null
           ? this.apiService.updateMenuItem(this.editingItemId, this.draft)
@@ -232,6 +238,14 @@ export class OwnerMenuComponent implements OnInit {
   }
 
   categoryLabel(cat: string): string {
-    return cat.replace(/_/g, " ");
+    return cat
+      .replace(/_/g, " ")
+      .toLowerCase()
+      .replace(/\b\w/g, (c) => c.toUpperCase());
+  }
+
+  /** Returns a browser-loadable URL for a menu item's image. */
+  getItemImage(item: MenuItem): string {
+    return this.apiService.resolveImageUrl((item as any).imageUrl) || "";
   }
 }

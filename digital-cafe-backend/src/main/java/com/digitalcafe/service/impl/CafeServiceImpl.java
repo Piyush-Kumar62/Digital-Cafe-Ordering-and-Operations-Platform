@@ -78,8 +78,8 @@ public class CafeServiceImpl implements CafeService {
 
         cafe.setDescription(request.getDescription());
         cafe.setEmail(request.getEmail());
-        cafe.setOpenTime(request.getOpeningTime());
-        cafe.setCloseTime(request.getClosingTime());
+        cafe.setOpenTime(request.getOpenTime());
+        cafe.setCloseTime(request.getCloseTime());
 
         cafe.setFssaiNumber(request.getFssaiNumber());
         cafe.setGstNumber(request.getGstNumber());
@@ -402,7 +402,11 @@ public class CafeServiceImpl implements CafeService {
                         .description(cafe.getDescription())
                         .city(cafe.getCity())
                         .state(cafe.getState())
+                        .openTime(cafe.getOpenTime())
+                        .closeTime(cafe.getCloseTime())
+                        .rating(cafe.getRating())
                         .logoUrl(cafe.getLogoUrl())
+                        .imageUrl(cafe.getLogoUrl())  // imageUrl = logo for card display
                         .build())
                 .toList();
 

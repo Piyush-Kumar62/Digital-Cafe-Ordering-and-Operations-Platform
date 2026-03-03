@@ -1,6 +1,8 @@
 package com.digitalcafe.service.impl;
 
 import com.digitalcafe.exception.BadRequestException;
+import com.digitalcafe.exception.FileTooLargeException;
+import com.digitalcafe.exception.InvalidFileTypeException;
 import com.digitalcafe.service.FileStorageService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -90,12 +92,16 @@ public class FileStorageServiceImpl implements FileStorageService {
             throw new BadRequestException("Image file is required");
         }
 
-        if (!ALLOWED_CONTENT_TYPES.contains(file.getContentType())) {
-            throw new BadRequestException("Only PNG or JPEG images are allowed");
+        String contentType = file.getContentType();
+        if (contentType == null || !ALLOWED_CONTENT_TYPES.contains(contentType)) {
+            throw new InvalidFileTypeException(
+                    contentType != null ? contentType : "unknown",
+                    ALLOWED_CONTENT_TYPES
+            );
         }
 
         if (file.getSize() > MAX_PROFILE_IMAGE_SIZE) {
-            throw new BadRequestException("Image file size must be 2MB or less");
+            throw new FileTooLargeException(MAX_PROFILE_IMAGE_SIZE);
         }
     }
 

@@ -46,10 +46,10 @@ public class CafeRequest {
     private String email;
 
     @Pattern(regexp = "^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$", message = "Opening time must be in HH:MM format")
-    private String openingTime;
+    private String openTime;
 
     @Pattern(regexp = "^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$", message = "Closing time must be in HH:MM format")
-    private String closingTime;
+    private String closeTime;
 
     private String imageUrl;
 

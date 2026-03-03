@@ -102,13 +102,13 @@ export class OwnerCafesComponent implements OnInit {
     const src = cafe?.logoUrl || cafe?.imageUrl;
     if (src) {
       if (/^https?:\/\//.test(src)) return src;
-      if (src.startsWith('/')) {
-        const base = environment.apiUrl.replace(/\/api$/, '');
+      if (src.startsWith("/")) {
+        const base = environment.apiUrl.replace(/\/api$/, "");
         return `${base}${src}`;
       }
       // Absolute filesystem path (legacy) — fall through to logo endpoint
     }
-    const base = environment.apiUrl.replace(/\/api$/, '');
+    const base = environment.apiUrl.replace(/\/api$/, "");
     return `${base}/api/cafes/${cafe.id}/logo`;
   }
 
@@ -205,8 +205,8 @@ export class OwnerCafesComponent implements OnInit {
       landmark: raw.landmark?.trim() || "",
       phoneNumber: this.normalizeDigits(raw.phoneNumber),
       pincode: String(raw.pincode || "").trim(),
-      openTime: this.normalizeTime(raw.openingTime),
-      closeTime: this.normalizeTime(raw.closingTime),
+      openTime: this.normalizeTime(raw.openingTime) || null,
+      closeTime: this.normalizeTime(raw.closingTime) || null,
       fssaiNumber: raw.fssaiNumber?.trim() || "",
       gstNumber: raw.gstNumber?.trim() || "",
       msmeNumber: raw.msmeNumber?.trim() || "",
@@ -324,10 +324,14 @@ export class OwnerCafesComponent implements OnInit {
     return this.normalizeTime(val || "");
   }
 
-  formatTime(val: string): string {
-    if (!val) return "–";
+  formatTime(val: string | null | undefined): string {
+    if (!val || val.trim() === "") return "";
     if (/AM|PM/i.test(val)) return val;
-    const [h, m] = val.split(":").map(Number);
+    const parts = val.split(":");
+    if (parts.length < 2) return val;
+    const h = parseInt(parts[0], 10);
+    const m = parseInt(parts[1], 10);
+    if (isNaN(h) || isNaN(m)) return val;
     const ampm = h >= 12 ? "PM" : "AM";
     const hour = h % 12 || 12;
     return `${hour}:${String(m).padStart(2, "0")} ${ampm}`;

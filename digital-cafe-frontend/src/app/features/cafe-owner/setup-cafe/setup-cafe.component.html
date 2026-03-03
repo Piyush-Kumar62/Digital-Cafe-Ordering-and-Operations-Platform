@@ -24,6 +24,16 @@
           />
         </div>
 
+        <!-- Description -->
+        <div class="form-group">
+          <label>Description <span class="optional">(optional)</span></label>
+          <textarea
+            formControlName="description"
+            placeholder="Tell customers what makes your café special…"
+            rows="3"
+          ></textarea>
+        </div>
+
         <!-- Address -->
         <div class="form-group">
           <label>Address</label>
@@ -34,7 +44,7 @@
           />
         </div>
 
-        <!-- City + Landmark -->
+        <!-- City + State -->
         <div class="form-row">
           <div class="form-group">
             <label>City</label>
@@ -42,13 +52,19 @@
           </div>
 
           <div class="form-group">
-            <label>Landmark</label>
-            <input
-              type="text"
-              formControlName="landmark"
-              placeholder="Nearby landmark"
-            />
+            <label>State</label>
+            <input type="text" formControlName="state" placeholder="State" />
           </div>
+        </div>
+
+        <!-- Landmark -->
+        <div class="form-group">
+          <label>Landmark <span class="optional">(optional)</span></label>
+          <input
+            type="text"
+            formControlName="landmark"
+            placeholder="Nearby landmark"
+          />
         </div>
 
         <!-- Phone + Pincode -->

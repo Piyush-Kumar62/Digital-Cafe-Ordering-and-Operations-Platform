@@ -1,21 +1,20 @@
-import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { ApiService } from '@core/services/api.service';
-import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule } from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router';
-import { AlertService } from '@core/services/alert.service';
-import { environment } from '@environments/environment';
+import { Component, OnInit } from "@angular/core";
+import { FormBuilder, FormGroup, Validators } from "@angular/forms";
+import { ApiService } from "@core/services/api.service";
+import { CommonModule } from "@angular/common";
+import { ReactiveFormsModule } from "@angular/forms";
+import { Router, ActivatedRoute } from "@angular/router";
+import { AlertService } from "@core/services/alert.service";
+import { environment } from "@environments/environment";
 
 @Component({
-  selector: 'app-setup-cafe',
+  selector: "app-setup-cafe",
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
-  templateUrl: './setup-cafe.component.html',
-  styleUrls: ['./setup-cafe.component.scss']
+  templateUrl: "./setup-cafe.component.html",
+  styleUrls: ["./setup-cafe.component.scss"],
 })
 export class SetupCafeComponent implements OnInit {
-
   cafeId: number | null = null;
   isEditMode = false;
 
@@ -25,35 +24,39 @@ export class SetupCafeComponent implements OnInit {
   previewUrl: string | null = null;
 
   loading = false;
-  successMessage = '';
+  successMessage = "";
 
   constructor(
     private fb: FormBuilder,
     private apiService: ApiService,
     private route: ActivatedRoute,
     private router: Router,
-    private alertService: AlertService
+    private alertService: AlertService,
   ) {}
 
   ngOnInit(): void {
-
     this.cafeForm = this.fb.group({
-      name: ['', [Validators.required, Validators.maxLength(100)]],
-      address: ['', [Validators.required, Validators.maxLength(300)]],
-      city: ['', [Validators.required, Validators.maxLength(100)]],
-      landmark: [''],
-      phoneNumber: ['', [Validators.required, Validators.pattern(/^[0-9+\-\s()]{10,20}$/)]],
-      pincode: ['', [Validators.required, Validators.maxLength(10)]],
-      openingTime: [''],
-      closingTime: [''],
-      fssaiNumber: [''],
-      gstNumber: [''],
-      msmeNumber: ['']
+      name: ["", [Validators.required, Validators.maxLength(100)]],
+      description: ["", [Validators.maxLength(500)]],
+      address: ["", [Validators.required, Validators.maxLength(300)]],
+      city: ["", [Validators.required, Validators.maxLength(100)]],
+      state: ["", [Validators.required, Validators.maxLength(100)]],
+      landmark: [""],
+      phoneNumber: [
+        "",
+        [Validators.required, Validators.pattern(/^[0-9+\-\s()]{10,20}$/)],
+      ],
+      pincode: ["", [Validators.required, Validators.maxLength(10)]],
+      openingTime: [""],
+      closingTime: [""],
+      fssaiNumber: [""],
+      gstNumber: [""],
+      msmeNumber: [""],
     });
 
-    this.route.queryParams.subscribe(params => {
-      if (params['id']) {
-        this.cafeId = +params['id'];
+    this.route.queryParams.subscribe((params) => {
+      if (params["id"]) {
+        this.cafeId = +params["id"];
         this.isEditMode = true;
         this.loadCafeForEdit();
       }
@@ -61,7 +64,6 @@ export class SetupCafeComponent implements OnInit {
   }
 
   onFileChange(event: any): void {
-
     const file = event.target.files[0];
     if (!file) return;
 
@@ -75,20 +77,20 @@ export class SetupCafeComponent implements OnInit {
   }
 
   loadCafeForEdit(): void {
-
     if (!this.cafeId) return;
 
     this.loading = true;
 
     this.apiService.getCafeById(this.cafeId).subscribe({
       next: (res: any) => {
-
         const cafe = res.data ? res.data : res;
 
         this.cafeForm.patchValue({
           name: cafe.name,
+          description: cafe.description || "",
           address: cafe.address,
           city: cafe.city,
+          state: cafe.state || "",
           landmark: cafe.landmark,
           phoneNumber: cafe.phoneNumber,
           pincode: cafe.pincode,
@@ -96,7 +98,7 @@ export class SetupCafeComponent implements OnInit {
           closingTime: cafe.closeTime,
           fssaiNumber: cafe.fssaiNumber,
           gstNumber: cafe.gstNumber,
-          msmeNumber: cafe.msmeNumber
+          msmeNumber: cafe.msmeNumber,
         });
 
         if (cafe.logoUrl) {
@@ -107,14 +109,13 @@ export class SetupCafeComponent implements OnInit {
         this.loading = false;
       },
       error: () => {
-        this.alertService.error('Failed to load cafe');
+        this.alertService.error("Failed to load cafe");
         this.loading = false;
-      }
+      },
     });
   }
 
   submit(): void {
-
     if (this.cafeForm.invalid) {
       this.cafeForm.markAllAsTouched();
       this.alertService.error("Please fill all required fields correctly.");
@@ -144,14 +145,16 @@ export class SetupCafeComponent implements OnInit {
 
     const payload: any = {
       name: String(raw.name || "").trim(),
+      description: String(raw.description || "").trim() || undefined,
       address: String(raw.address || "").trim(),
       city: String(raw.city || "").trim(),
+      state: String(raw.state || "").trim() || undefined,
       phoneNumber,
       pincode,
     };
 
-    if (openingTime) payload.openingTime = openingTime;
-    if (closingTime) payload.closingTime = closingTime;
+    if (openingTime) payload.openTime = openingTime;
+    if (closingTime) payload.closeTime = closingTime;
 
     const optionalFields = ["fssaiNumber", "gstNumber", "msmeNumber"];
     optionalFields.forEach((field) => {
@@ -162,52 +165,46 @@ export class SetupCafeComponent implements OnInit {
     const formData = new FormData();
 
     formData.append(
-      'data',
-      new Blob(
-        [JSON.stringify(payload)],
-        { type: 'application/json' }
-      )
+      "data",
+      new Blob([JSON.stringify(payload)], { type: "application/json" }),
     );
 
     if (this.selectedFile) {
-      formData.append('logo', this.selectedFile);
+      formData.append("logo", this.selectedFile);
     }
 
     this.loading = true;
 
     if (this.isEditMode && this.cafeId) {
-
       this.apiService.updateCafeSetup(this.cafeId, formData).subscribe({
         next: () => {
-          this.alertService.success('Cafe updated', 'Cafe updated successfully');
-          this.router.navigate(['/owner/settings']);
+          this.alertService.success(
+            "Cafe updated",
+            "Cafe updated successfully",
+          );
+          this.router.navigate(["/owner/settings"]);
         },
         error: (err) => {
-          this.alertService.error('Update failed', this.resolveApiError(err));
+          this.alertService.error("Update failed", this.resolveApiError(err));
           this.loading = false;
-        }
+        },
       });
-
-    }
-
-    else {
-
+    } else {
       this.apiService.createCafeSetup(formData).subscribe({
         next: () => {
-          this.successMessage = 'Café created successfully!';
+          this.successMessage = "Café created successfully!";
           this.cafeForm.reset();
           this.previewUrl = null;
 
           setTimeout(() => {
-            this.router.navigate(['/owner/settings']);
+            this.router.navigate(["/owner/settings"]);
           }, 500);
         },
         error: (err) => {
-          this.alertService.error('Creation failed', this.resolveApiError(err));
+          this.alertService.error("Creation failed", this.resolveApiError(err));
           this.loading = false;
-        }
+        },
       });
-
     }
   }
 
@@ -249,6 +246,10 @@ export class SetupCafeComponent implements OnInit {
       const firstKey = Object.keys(fieldErrors)[0];
       if (firstKey) return fieldErrors[firstKey];
     }
-    return err?.error?.message || err?.message || "Please check your input and try again.";
+    return (
+      err?.error?.message ||
+      err?.message ||
+      "Please check your input and try again."
+    );
   }
 }

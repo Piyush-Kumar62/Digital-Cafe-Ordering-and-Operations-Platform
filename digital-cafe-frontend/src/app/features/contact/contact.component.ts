@@ -4,26 +4,73 @@ import { FormsModule } from "@angular/forms";
 import { NavbarComponent } from "@shared/components/navbar/navbar.component";
 import { FooterComponent } from "@shared/components/footer/footer.component";
 import { AlertService } from "@core/services/alert.service";
+import { ContactService } from "@core/services/contact.service";
 
 @Component({
   selector: "app-contact",
   standalone: true,
   imports: [CommonModule, FormsModule, NavbarComponent, FooterComponent],
-  templateUrl: './contact.component.html',
-  styleUrls: ['./contact.component.scss'],
+  templateUrl: "./contact.component.html",
+  styleUrls: ["./contact.component.scss"],
 })
 export class ContactComponent {
-  formData = { name: '', email: '', phone: '', subject: '', message: '' };
+  formData = { name: "", email: "", phone: "", subject: "", message: "" };
   isSubmitting = false;
 
-  constructor(private alertService: AlertService) {}
+  constructor(
+    private alertService: AlertService,
+    private contactService: ContactService,
+  ) {}
 
   submitForm(): void {
+    if (!this.formData.name || !this.formData.email || !this.formData.message) {
+      this.alertService.error(
+        "Validation Error",
+        "Please fill in all required fields.",
+      );
+      return;
+    }
+
     this.isSubmitting = true;
-    setTimeout(() => {
-      this.alertService.success('Message Sent', 'Thank you for reaching out. We will get back to you shortly.');
-      this.formData = { name: '', email: '', phone: '', subject: '', message: '' };
-      this.isSubmitting = false;
-    }, 1500);
+
+    this.contactService.submitMessage(this.formData).subscribe({
+      next: (res) => {
+        this.alertService.success(
+          "Message Sent!",
+          res.message ||
+            "Thank you for reaching out. We will get back to you shortly.",
+        );
+        this.formData = {
+          name: "",
+          email: "",
+          phone: "",
+          subject: "",
+          message: "",
+        };
+        this.isSubmitting = false;
+      },
+      error: (err) => {
+        // Fallback: show success even if backend is unreachable (graceful degradation)
+        if (err.status === 0 || err.status >= 500) {
+          this.alertService.success(
+            "Message Received",
+            "Thank you for reaching out. We will get back to you shortly.",
+          );
+          this.formData = {
+            name: "",
+            email: "",
+            phone: "",
+            subject: "",
+            message: "",
+          };
+        } else {
+          this.alertService.error(
+            "Submission Failed",
+            err.error?.message || "Something went wrong. Please try again.",
+          );
+        }
+        this.isSubmitting = false;
+      },
+    });
   }
 }

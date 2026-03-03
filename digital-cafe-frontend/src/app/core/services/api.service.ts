@@ -392,7 +392,7 @@ export class ApiService {
 
   getAdminProfile(): Observable<AdminProfile> {
     return this.http
-      .get<any>(`${this.baseUrl}/users/profile`)
+      .get<any>(`${this.baseUrl}/admin/profile`)
       .pipe(
         map((res: any) =>
           this.unwrapApiData<AdminProfile>(res, res as AdminProfile),
@@ -404,7 +404,7 @@ export class ApiService {
     request: AdminProfileUpdateRequest,
   ): Observable<AdminProfile> {
     return this.http
-      .put<any>(`${this.baseUrl}/users/profile`, request)
+      .put<any>(`${this.baseUrl}/admin/profile`, request)
       .pipe(
         map((res: any) =>
           this.unwrapApiData<AdminProfile>(res, res as AdminProfile),
@@ -416,7 +416,7 @@ export class ApiService {
     const formData = new FormData();
     formData.append("file", file);
     return this.http
-      .post<any>(`${this.baseUrl}/users/profile/image`, formData)
+      .post<any>(`${this.baseUrl}/admin/profile/image`, formData)
       .pipe(
         map((res: any) =>
           this.unwrapApiData<ProfileImageUploadResponse>(
@@ -428,7 +428,7 @@ export class ApiService {
   }
 
   deleteAdminProfileImage(): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/users/profile/image`);
+    return this.http.delete<void>(`${this.baseUrl}/admin/profile/image`);
   }
 
   uploadCustomerProfileImage(

@@ -1,145 +1,200 @@
 <app-navbar></app-navbar>
-    <div class="about-hero">
-      <div class="about-hero-content">
-        <div class="about-hero-icon">☕</div>
-        <h1 class="about-title">About Digital Café Platform</h1>
-        <p class="about-hero-tagline">
-          Revolutionizing café management for the digital era-seamless, secure,
-          and smart.
-        </p>
-      </div>
+
+<div class="about-hero">
+  <div class="about-hero-bg">
+    <img
+      src="assets/cafe/cafe-ambience-cozy.jpg"
+      alt=""
+      class="about-hero-img"
+    />
+    <div class="about-hero-overlay"></div>
+  </div>
+  <div class="about-hero-content">
+    <span class="about-eyebrow">
+      <i class="bi bi-info-circle-fill"></i>&nbsp; Our Story
+    </span>
+    <div class="about-hero-icon">
+      <i class="bi bi-cup-hot-fill"></i>
     </div>
-    <div class="about-container">
-      <div class="about-content">
-        <div class="about-section mission-section">
-          <h2><span class="section-icon">🚀</span> Our Mission</h2>
+    <h1 class="about-title">About Digital Café Platform</h1>
+    <p class="about-hero-tagline">
+      Revolutionizing café management for the digital era — seamless, secure,
+      and smart.
+    </p>
+  </div>
+</div>
+
+<div class="about-container">
+  <div class="about-content">
+    <!-- Mission -->
+    <div class="about-section mission-section">
+      <h2>
+        <span class="section-icon"
+          ><i class="bi bi-rocket-takeoff-fill"></i
+        ></span>
+        Our Mission
+      </h2>
+      <p>
+        Digital Café Platform is designed to revolutionize the way cafés
+        operate, providing a comprehensive solution for managing orders,
+        operations, and customer experiences in the modern digital age.
+      </p>
+    </div>
+
+    <!-- What We Offer -->
+    <div class="about-section features-section">
+      <h2>
+        <span class="section-icon"><i class="bi bi-stars"></i></span>
+        What We Offer
+      </h2>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon"><i class="bi bi-bag-check-fill"></i></div>
+          <h3>Order Management</h3>
           <p>
-            Digital Café Platform is designed to revolutionize the way cafés
-            operate, providing a comprehensive solution for managing orders,
-            operations, and customer experiences in the modern digital age.
+            Streamline your ordering process with our intuitive system that
+            handles dine-in, takeaway, and delivery orders seamlessly.
           </p>
         </div>
-        <div class="about-section features-section">
-          <h2><span class="section-icon">✨</span> What We Offer</h2>
-          <div class="features-grid">
-            <div class="feature-card">
-              <div class="feature-icon">🍽️</div>
-              <h3>Order Management</h3>
-              <p>
-                Streamline your ordering process with our intuitive system that
-                handles dine-in, takeaway, and delivery orders seamlessly.
-              </p>
-            </div>
-            <div class="feature-card">
-              <div class="feature-icon">📊</div>
-              <h3>Real-time Analytics</h3>
-              <p>
-                Get insights into your business with comprehensive dashboards
-                showing sales, popular items, and customer trends.
-              </p>
-            </div>
-            <div class="feature-card">
-              <div class="feature-icon">👥</div>
-              <h3>Staff Management</h3>
-              <p>
-                Efficiently manage your team with role-based access control for
-                admins, chefs, waiters, and cafe owners.
-              </p>
-            </div>
-            <div class="feature-card">
-              <div class="feature-icon">🔒</div>
-              <h3>Secure & Reliable</h3>
-              <p>
-                Built with security-first approach using JWT authentication and
-                role-based authorization.
-              </p>
-            </div>
-          </div>
-        </div>
-        <div class="about-section tech-section">
-          <h2><span class="section-icon">🛠️</span> Our Technology</h2>
+        <div class="feature-card">
+          <div class="feature-icon"><i class="bi bi-bar-chart-fill"></i></div>
+          <h3>Real-time Analytics</h3>
           <p>
-            Built with cutting-edge technologies including
-            <span class="highlight">Spring Boot</span> for the backend and
-            <span class="highlight">Angular</span> for the frontend, ensuring a
-            robust, scalable, and maintainable solution.
+            Get insights into your business with comprehensive dashboards
+            showing sales, popular items, and customer trends.
           </p>
-          <div class="tech-stack">
-            <span class="tech-badge"
-              ><img
-                src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/spring/spring-original.svg"
-                alt="Spring Boot"
-              />Spring Boot</span
-            >
-            <span class="tech-badge"
-              ><img
-                src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/angularjs/angularjs-original.svg"
-                alt="Angular"
-              />Angular</span
-            >
-            <span class="tech-badge"
-              ><img
-                src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/mysql/mysql-original.svg"
-                alt="MySQL"
-              />MySQL</span
-            >
-            <span class="tech-badge"
-              ><img
-                src="https://img.icons8.com/ios-filled/50/228be6/websocket.png"
-                alt="WebSocket"
-                onerror="this.style.display='none'"
-              />WebSocket</span
-            >
-            <span class="tech-badge"
-              ><img
-                src="https://img.icons8.com/ios-filled/50/228be6/jwt.png"
-                alt="JWT"
-                onerror="this.style.display='none'"
-              />JWT</span
-            >
-            <span class="tech-badge"
-              ><img
-                src="assets/downloads/icons/api-settings.png"
-                alt="REST API"
-                onerror="this.style.display='none'"
-              />REST API</span
-            >
-          </div>
         </div>
-        <div class="about-section serve-section">
-          <h2><span class="section-icon">🤝</span> Who We Serve</h2>
-          <ul class="serve-list">
-            <li>
-              <strong>Café Owners:</strong> Manage multiple cafés, staff, and
-              operations from a single dashboard
-            </li>
-            <li>
-              <strong>Café Managers:</strong> Oversee daily operations and
-              monitor performance metrics
-            </li>
-            <li>
-              <strong>Chefs:</strong> Receive and manage orders in real-time
-              with kitchen display system
-            </li>
-            <li>
-              <strong>Waiters:</strong> Take orders efficiently and track table
-              status
-            </li>
-            <li>
-              <strong>Customers:</strong> Browse menu, place orders, and track
-              order status
-            </li>
-          </ul>
-        </div>
-        <div class="about-section cta-section">
-          <h2>Ready to Transform Your Café?</h2>
+        <div class="feature-card">
+          <div class="feature-icon"><i class="bi bi-people-fill"></i></div>
+          <h3>Staff Management</h3>
           <p>
-            Join us in revolutionizing café management with modern technology.
+            Efficiently manage your team with role-based access control for
+            admins, chefs, waiters, and cafe owners.
           </p>
-          <a routerLink="/auth/register" class="cta-button"
-            >Get Started Today</a
-          >
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon"><i class="bi bi-shield-lock-fill"></i></div>
+          <h3>Secure &amp; Reliable</h3>
+          <p>
+            Built with a security-first approach using JWT authentication and
+            role-based authorization.
+          </p>
         </div>
       </div>
     </div>
-    <app-footer></app-footer>
+
+    <!-- Technology -->
+    <div class="about-section tech-section">
+      <h2>
+        <span class="section-icon"
+          ><i class="bi bi-gear-wide-connected"></i
+        ></span>
+        Our Technology
+      </h2>
+      <p>
+        Built with cutting-edge technologies including
+        <span class="highlight">Spring Boot</span> for the backend and
+        <span class="highlight">Angular</span> for the frontend, ensuring a
+        robust, scalable, and maintainable solution.
+      </p>
+      <div class="tech-stack">
+        <span class="tech-badge">
+          <img
+            src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/spring/spring-original.svg"
+            alt="Spring Boot"
+          />Spring Boot
+        </span>
+        <span class="tech-badge">
+          <img
+            src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/angularjs/angularjs-original.svg"
+            alt="Angular"
+          />Angular
+        </span>
+        <span class="tech-badge">
+          <img
+            src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/mysql/mysql-original.svg"
+            alt="MySQL"
+          />MySQL
+        </span>
+        <span class="tech-badge">
+          <i
+            class="bi bi-lightning-charge-fill"
+            style="color: #fbbf24; font-size: 1.1rem"
+          ></i>
+          WebSocket
+        </span>
+        <span class="tech-badge">
+          <i
+            class="bi bi-key-fill"
+            style="color: #fbbf24; font-size: 1.1rem"
+          ></i>
+          JWT Auth
+        </span>
+        <span class="tech-badge">
+          <i
+            class="bi bi-diagram-3-fill"
+            style="color: #fbbf24; font-size: 1.1rem"
+          ></i>
+          REST API
+        </span>
+      </div>
+    </div>
+
+    <!-- Who We Serve -->
+    <div class="about-section serve-section">
+      <h2>
+        <span class="section-icon"><i class="bi bi-handshake-fill"></i></span>
+        Who We Serve
+      </h2>
+      <ul class="serve-list">
+        <li>
+          <i class="bi bi-building"></i>
+          <div>
+            <strong>Café Owners:</strong> Manage multiple cafés, staff, and
+            operations from a single dashboard
+          </div>
+        </li>
+        <li>
+          <i class="bi bi-person-badge-fill"></i>
+          <div>
+            <strong>Café Managers:</strong> Oversee daily operations and monitor
+            performance metrics
+          </div>
+        </li>
+        <li>
+          <i class="bi bi-egg-fried"></i>
+          <div>
+            <strong>Chefs:</strong> Receive and manage orders in real-time with
+            kitchen display system
+          </div>
+        </li>
+        <li>
+          <i class="bi bi-person-walking"></i>
+          <div>
+            <strong>Waiters:</strong> Take orders efficiently and track table
+            status
+          </div>
+        </li>
+        <li>
+          <i class="bi bi-person-heart"></i>
+          <div>
+            <strong>Customers:</strong> Browse menu, place orders, and track
+            order status
+          </div>
+        </li>
+      </ul>
+    </div>
+
+    <!-- CTA -->
+    <div class="about-section cta-section">
+      <div class="cta-icon"><i class="bi bi-cup-hot"></i></div>
+      <h2>Ready to Transform Your Café?</h2>
+      <p>Join us in revolutionizing café management with modern technology.</p>
+      <a routerLink="/auth/register" class="cta-button">
+        Get Started Today <i class="bi bi-arrow-right"></i>
+      </a>
+    </div>
+  </div>
+</div>
+
+<app-footer></app-footer>

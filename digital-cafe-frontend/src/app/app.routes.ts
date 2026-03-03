@@ -137,6 +137,27 @@ export const routes: Routes = [
             (m) => m.ReportsComponent,
           ),
       },
+      {
+        path: "profile",
+        loadComponent: () =>
+          import("./features/admin/profile/admin-profile.component").then(
+            (m) => m.AdminProfileComponent,
+          ),
+      },
+      {
+        path: "settings",
+        loadComponent: () =>
+          import("./features/admin/settings/settings.component").then(
+            (m) => m.SettingsComponent,
+          ),
+      },
+      {
+        path: "logs",
+        loadComponent: () =>
+          import("./features/admin/logs/logs.component").then(
+            (m) => m.LogsComponent,
+          ),
+      },
       { path: "", redirectTo: "dashboard", pathMatch: "full" },
     ],
   },

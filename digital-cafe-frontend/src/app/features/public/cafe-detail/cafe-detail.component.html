@@ -1,10 +1,20 @@
 <section class="detail-page" *ngIf="!loading && cafe as data">
   <header class="banner">
-    <img [src]="data.cafeDetails.imageUrl || 'assets/downloads/unsplash/cafe-detail-hero.jpg'" [alt]="data.cafeDetails.name" />
+    <img
+      [src]="
+        data.cafeDetails.imageUrl ||
+        'assets/downloads/unsplash/cafe-detail-hero.jpg'
+      "
+      [alt]="data.cafeDetails.name"
+    />
     <div class="overlay">
       <p class="location">{{ data.cafeDetails.location }}</p>
       <h1>{{ data.cafeDetails.name }}</h1>
-      <p class="meta">★ {{ data.cafeDetails.rating || 0 | number: "1.1-1" }} · {{ data.cafeDetails.openTime }} - {{ data.cafeDetails.closeTime }}</p>
+      <p class="meta">
+        ★ {{ data.cafeDetails.rating || 0 | number: "1.1-1" }} ·
+        {{ fmt12h(data.cafeDetails.openTime) || "Hours TBD" }} –
+        {{ fmt12h(data.cafeDetails.closeTime) }}
+      </p>
     </div>
   </header>
 
@@ -13,15 +23,29 @@
     <div class="booking-grid">
       <label>
         Date
-        <input type="date" [(ngModel)]="selectedDate" (change)="onSlotChange()" />
+        <input
+          type="date"
+          [(ngModel)]="selectedDate"
+          (change)="onSlotChange()"
+        />
       </label>
       <label>
         Time
-        <input type="time" [(ngModel)]="selectedTime" (change)="onSlotChange()" />
+        <input
+          type="time"
+          [(ngModel)]="selectedTime"
+          (change)="onSlotChange()"
+        />
       </label>
       <label>
         Guests
-        <input type="number" min="1" max="20" [(ngModel)]="guests" (change)="onSlotChange()" />
+        <input
+          type="number"
+          min="1"
+          max="20"
+          [(ngModel)]="guests"
+          (change)="onSlotChange()"
+        />
       </label>
       <div class="availability">
         <p>Tables available</p>
@@ -37,7 +61,13 @@
   <section class="layout">
     <section class="menu-grid">
       <article class="item-card" *ngFor="let item of data.menuItems">
-        <img [src]="item.imageUrl || 'assets/downloads/unsplash/cafe-detail-item-default.jpg'" [alt]="item.name" />
+        <img
+          [src]="
+            item.imageUrl ||
+            'assets/downloads/unsplash/cafe-detail-item-default.jpg'
+          "
+          [alt]="item.name"
+        />
         <div class="body">
           <h3>{{ item.name }}</h3>
           <p>{{ item.description || "No description available." }}</p>
@@ -47,11 +77,32 @@
           </div>
           <div class="actions">
             <div class="qty-control">
-              <button type="button" (click)="decrementQuantity(item.id)" [disabled]="!item.available">-</button>
-              <input type="number" min="1" max="10" [value]="getQuantity(item.id)" (input)="setQuantity(item.id, $any($event.target).value)" [disabled]="!item.available" />
-              <button type="button" (click)="incrementQuantity(item.id)" [disabled]="!item.available">+</button>
+              <button
+                type="button"
+                (click)="decrementQuantity(item.id)"
+                [disabled]="!item.available"
+              >
+                -
+              </button>
+              <input
+                type="number"
+                min="1"
+                max="10"
+                [value]="getQuantity(item.id)"
+                (input)="setQuantity(item.id, $any($event.target).value)"
+                [disabled]="!item.available"
+              />
+              <button
+                type="button"
+                (click)="incrementQuantity(item.id)"
+                [disabled]="!item.available"
+              >
+                +
+              </button>
             </div>
-            <button (click)="addToCart(item)" [disabled]="!item.available">Add to Cart</button>
+            <button (click)="addToCart(item)" [disabled]="!item.available">
+              Add to Cart
+            </button>
           </div>
         </div>
       </article>
@@ -67,8 +118,12 @@
         <button (click)="removeFromCart(line.item.id)">-</button>
       </div>
       <p class="empty" *ngIf="cartItems.length === 0">Cart is empty.</p>
-      <p class="total">Total: <strong>${{ cartTotal$ | async | number: "1.2-2" }}</strong></p>
-      <button (click)="placeOrder()" [disabled]="orderInProgress || !bookingId">{{ orderInProgress ? "Placing..." : "Place Order" }}</button>
+      <p class="total">
+        Total: <strong>${{ cartTotal$ | async | number: "1.2-2" }}</strong>
+      </p>
+      <button (click)="placeOrder()" [disabled]="orderInProgress || !bookingId">
+        {{ orderInProgress ? "Placing..." : "Place Order" }}
+      </button>
       <p class="status" *ngIf="orderId">Order placed: #{{ orderId }}</p>
 
       <label class="payment">
@@ -80,12 +135,11 @@
           <option value="CASH">Cash</option>
         </select>
       </label>
-      <button (click)="payNow()" [disabled]="paymentInProgress || !orderId">{{ paymentInProgress ? "Processing..." : "Make Payment" }}</button>
+      <button (click)="payNow()" [disabled]="paymentInProgress || !orderId">
+        {{ paymentInProgress ? "Processing..." : "Make Payment" }}
+      </button>
     </aside>
   </section>
 </section>
 
 <div class="state" *ngIf="loading">Loading cafe details...</div>
-
-
-

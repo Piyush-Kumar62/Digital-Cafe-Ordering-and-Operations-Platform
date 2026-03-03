@@ -76,57 +76,65 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
   navigationItems: NavigationItem[] = [
     {
       label: "Dashboard",
-      icon: "dashboard",
+      icon: "cup-hot",
       route: "/admin/dashboard",
       active: true,
     },
     {
       label: "User Management",
-      icon: "users",
+      icon: "people-fill",
       route: "/admin/users",
     },
     {
       label: "Café Management",
-      icon: "store",
+      icon: "shop-window",
       route: "/admin/cafes",
     },
     {
       label: "Orders",
-      icon: "shopping-cart",
+      icon: "receipt-cutoff",
       route: "/admin/orders",
     },
     {
       label: "Bookings",
-      icon: "calendar",
+      icon: "calendar2-check",
       route: "/admin/bookings",
     },
     {
       label: "Analytics",
-      icon: "chart-bar",
+      icon: "graph-up-arrow",
       route: "/admin/analytics",
     },
     {
       label: "Reports",
-      icon: "document",
+      icon: "file-earmark-bar-graph",
       route: "/admin/reports",
     },
     {
       label: "Settings",
-      icon: "cog",
+      icon: "sliders",
       route: "/admin/settings",
+    },
+    {
+      label: "Logs",
+      icon: "journal-code",
+      route: "/admin/logs",
     },
   ];
 
   private readonly iconClassMap: Record<string, string> = {
-    dashboard: "bi bi-speedometer2 w-6 h-6 text-lg",
-    users: "bi bi-people w-6 h-6 text-lg",
-    store: "bi bi-shop w-6 h-6 text-lg",
-    "shopping-cart": "bi bi-cart3 w-6 h-6 text-lg",
-    calendar: "bi bi-calendar-event w-6 h-6 text-lg",
-    "chart-bar": "bi bi-bar-chart-line w-6 h-6 text-lg",
-    document: "bi bi-file-earmark-text w-6 h-6 text-lg",
+    "cup-hot": "bi bi-cup-hot-fill w-6 h-6 text-lg",
+    "people-fill": "bi bi-people-fill w-6 h-6 text-lg",
+    "shop-window": "bi bi-shop-window w-6 h-6 text-lg",
+    "receipt-cutoff": "bi bi-receipt-cutoff w-6 h-6 text-lg",
+    "calendar2-check": "bi bi-calendar2-check w-6 h-6 text-lg",
+    "graph-up-arrow": "bi bi-graph-up-arrow w-6 h-6 text-lg",
+    "file-earmark-bar-graph":
+      "bi bi-file-earmark-bar-graph-fill w-6 h-6 text-lg",
+    sliders: "bi bi-sliders w-6 h-6 text-lg",
+    "journal-code": "bi bi-journal-code w-6 h-6 text-lg",
+    // legacy keys kept for safety
     "clipboard-list": "bi bi-card-checklist w-6 h-6 text-lg",
-    cog: "bi bi-gear w-6 h-6 text-lg",
   };
 
   constructor(
@@ -148,7 +156,9 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.currentUser = this.authService.currentUserValue;
-    this.adminProfileImage = this.resolveImageUrl(this.currentUser?.avatarUrl || "");
+    this.adminProfileImage = this.resolveImageUrl(
+      this.currentUser?.avatarUrl || "",
+    );
     this.currentUserSub = this.authService.currentUser.subscribe((user) => {
       this.currentUser = user;
       this.adminProfileImage = this.resolveImageUrl(user?.avatarUrl || "");
@@ -198,7 +208,10 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
     this.profileDropdownOpen = false;
     this.notificationDropdownOpen = !this.notificationDropdownOpen;
     if (this.notificationDropdownOpen) {
-      this.notifications = this.notifications.map((item) => ({ ...item, read: true }));
+      this.notifications = this.notifications.map((item) => ({
+        ...item,
+        read: true,
+      }));
     }
   }
   goToLanding(): void {
@@ -211,8 +224,11 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
   }
   @HostListener("document:click", ["$event"])
   onDocumentClick(event: MouseEvent): void {
-    const clickedInsideProfile = this.profileContainer?.nativeElement?.contains(event.target) || false;
-    const clickedInsideNotification = this.notificationContainer?.nativeElement?.contains(event.target) || false;
+    const clickedInsideProfile =
+      this.profileContainer?.nativeElement?.contains(event.target) || false;
+    const clickedInsideNotification =
+      this.notificationContainer?.nativeElement?.contains(event.target) ||
+      false;
 
     if (!clickedInsideProfile) {
       this.profileDropdownOpen = false;
@@ -368,7 +384,8 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
     this.profileWsSub = this.webSocketService
       .watchDestination<AdminProfile>(this.wsDestination)
       .subscribe({
-        next: (profile) => this.ngZone.run(() => this.applyAdminProfileToHeader(profile)),
+        next: (profile) =>
+          this.ngZone.run(() => this.applyAdminProfileToHeader(profile)),
       });
   }
 
@@ -382,14 +399,16 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
     this.adminNotificationSub = this.webSocketService
       .watchDestination<any>(this.notificationDestination)
       .subscribe({
-        next: (payload) => this.ngZone.run(() => this.pushNotification(payload)),
+        next: (payload) =>
+          this.ngZone.run(() => this.pushNotification(payload)),
       });
 
     this.globalNotificationDestination = "/user/queue/notifications";
     this.adminNotificationGlobalSub = this.webSocketService
       .watchDestination<any>(this.globalNotificationDestination)
       .subscribe({
-        next: (payload) => this.ngZone.run(() => this.pushNotification(payload)),
+        next: (payload) =>
+          this.ngZone.run(() => this.pushNotification(payload)),
       });
   }
 
@@ -405,7 +424,9 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
       lastName: profile.lastName || current.lastName,
       avatarUrl: profile.profileImageUrl || "",
     });
-    this.adminProfileImage = this.resolveImageUrl(profile.profileImageUrl || "");
+    this.adminProfileImage = this.resolveImageUrl(
+      profile.profileImageUrl || "",
+    );
   }
 
   private resolveImageUrl(value: string): string {
@@ -421,8 +442,14 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
 
   private normalizeNotification(payload: any): AdminHeaderNotification {
     const title = payload?.title || "Platform Update";
-    const message = payload?.message || payload?.description || "A new event requires your attention.";
-    const severity = (payload?.severity || "info") as "info" | "warning" | "error";
+    const message =
+      payload?.message ||
+      payload?.description ||
+      "A new event requires your attention.";
+    const severity = (payload?.severity || "info") as
+      | "info"
+      | "warning"
+      | "error";
     const timestamp = payload?.timestamp || new Date().toISOString();
 
     return {

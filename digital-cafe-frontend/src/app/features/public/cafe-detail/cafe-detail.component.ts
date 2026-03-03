@@ -9,7 +9,10 @@ import { MenuItem } from "@shared/models/menu.model";
 import { PaymentMethod } from "@shared/models/payment.model";
 import { map, Observable, take } from "rxjs";
 import { CafeBrowseService } from "../cafe-browse.service";
-import { PublicCafeDetail, PublicCafeMenuItem } from "@shared/models/cafe.model";
+import {
+  PublicCafeDetail,
+  PublicCafeMenuItem,
+} from "@shared/models/cafe.model";
 
 @Component({
   selector: "app-cafe-detail",
@@ -44,7 +47,9 @@ export class CafeDetailComponent implements OnInit {
     private alertService: AlertService,
   ) {
     this.cartItems$ = this.cartService.cart$.pipe(map((cart) => cart.items));
-    this.cartTotal$ = this.cartService.cart$.pipe(map((cart) => cart.totalPrice));
+    this.cartTotal$ = this.cartService.cart$.pipe(
+      map((cart) => cart.totalPrice),
+    );
   }
 
   ngOnInit(): void {
@@ -70,7 +75,8 @@ export class CafeDetailComponent implements OnInit {
 
   setQuantity(menuId: number, value: string): void {
     const numeric = Number(value);
-    this.quantityMap[menuId] = Number.isFinite(numeric) && numeric > 0 ? Math.min(numeric, 10) : 1;
+    this.quantityMap[menuId] =
+      Number.isFinite(numeric) && numeric > 0 ? Math.min(numeric, 10) : 1;
   }
 
   getQuantity(menuId: number): number {
@@ -116,7 +122,9 @@ export class CafeDetailComponent implements OnInit {
       return;
     }
     if (!this.authService.isAuthenticated || !this.authService.isCustomer()) {
-      this.router.navigate(["/auth/login"], { queryParams: { returnUrl: this.router.url } });
+      this.router.navigate(["/auth/login"], {
+        queryParams: { returnUrl: this.router.url },
+      });
       return;
     }
     this.bookingInProgress = true;
@@ -135,7 +143,9 @@ export class CafeDetailComponent implements OnInit {
         },
         error: (err) => {
           this.bookingInProgress = false;
-          this.alertService.error(err?.error?.message || "Unable to book table.");
+          this.alertService.error(
+            err?.error?.message || "Unable to book table.",
+          );
         },
       });
   }
@@ -146,37 +156,44 @@ export class CafeDetailComponent implements OnInit {
       return;
     }
     this.orderInProgress = true;
-    this.cartItems$.pipe(
-      take(1),
-      map((items) => items.filter((line) => line.quantity > 0)),
-    ).subscribe({
-      next: (lines) => {
-        if (lines.length === 0) {
+    this.cartItems$
+      .pipe(
+        take(1),
+        map((items) => items.filter((line) => line.quantity > 0)),
+      )
+      .subscribe({
+        next: (lines) => {
+          if (lines.length === 0) {
+            this.orderInProgress = false;
+            this.alertService.error("Cart is empty.");
+            return;
+          }
+          this.cafeBrowseService
+            .createOrder({
+              bookingId: this.bookingId as number,
+              items: lines.map((line) => ({
+                menuId: line.item.id,
+                quantity: line.quantity,
+              })),
+            })
+            .subscribe({
+              next: (order) => {
+                this.orderInProgress = false;
+                this.orderId = order.id;
+                this.alertService.success("Order placed successfully.");
+              },
+              error: (err) => {
+                this.orderInProgress = false;
+                this.alertService.error(
+                  err?.error?.message || "Unable to place order.",
+                );
+              },
+            });
+        },
+        error: () => {
           this.orderInProgress = false;
-          this.alertService.error("Cart is empty.");
-          return;
-        }
-        this.cafeBrowseService
-          .createOrder({
-            bookingId: this.bookingId as number,
-            items: lines.map((line) => ({ menuId: line.item.id, quantity: line.quantity })),
-          })
-          .subscribe({
-            next: (order) => {
-              this.orderInProgress = false;
-              this.orderId = order.id;
-              this.alertService.success("Order placed successfully.");
-            },
-            error: (err) => {
-              this.orderInProgress = false;
-              this.alertService.error(err?.error?.message || "Unable to place order.");
-            },
-          });
-      },
-      error: () => {
-        this.orderInProgress = false;
-      },
-    });
+        },
+      });
   }
 
   payNow(): void {
@@ -213,7 +230,12 @@ export class CafeDetailComponent implements OnInit {
       return;
     }
     this.cafeBrowseService
-      .getTableAvailability(this.cafe.cafeDetails.id, this.selectedDate, this.selectedTime, this.guests)
+      .getTableAvailability(
+        this.cafe.cafeDetails.id,
+        this.selectedDate,
+        this.selectedTime,
+        this.guests,
+      )
       .subscribe({
         next: (tables) => {
           this.availableTables = tables.length;
@@ -231,6 +253,18 @@ export class CafeDetailComponent implements OnInit {
     this.selectedTime = `${hh}:${mm}`;
   }
 
+  fmt12h(val: string | null | undefined): string {
+    if (!val || !val.includes(":")) return "";
+    const [hStr, mStr] = val.split(":");
+    let h = parseInt(hStr, 10);
+    const m = parseInt(mStr, 10);
+    if (isNaN(h) || isNaN(m)) return "";
+    const ampm = h >= 12 ? "PM" : "AM";
+    if (h === 0) h = 12;
+    else if (h > 12) h -= 12;
+    return `${h}:${String(m).padStart(2, "0")} ${ampm}`;
+  }
+
   private mapPaymentMethod(method: PaymentMethod): string {
     switch (method) {
       case PaymentMethod.CARD:
@@ -245,5 +279,3 @@ export class CafeDetailComponent implements OnInit {
     }
   }
 }
-
-

@@ -1,10 +1,11 @@
-import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, throwError } from 'rxjs';
-import { catchError, tap } from 'rxjs/operators';
-import { environment } from '@environments/environment';
+import { Injectable } from "@angular/core";
+import { HttpClient } from "@angular/common/http";
+import { BehaviorSubject, Observable, throwError } from "rxjs";
+import { catchError, tap } from "rxjs/operators";
+import { environment } from "@environments/environment";
 import {
   AuthResponse,
+  CafeOwnerRegisterRequest,
   ChangePasswordRequest,
   LoginRequest,
   SimpleRegisterRequest,
@@ -14,21 +15,21 @@ import {
   User,
   UserRole,
   MessageResponse,
-} from '@shared/models/auth.model';
+} from "@shared/models/auth.model";
 
 @Injectable({
-  providedIn: 'root',
+  providedIn: "root",
 })
 export class AuthService {
   private currentUserSubject: BehaviorSubject<User | null>;
   public currentUser: Observable<User | null>;
   private apiUrl = `${environment.apiUrl}/auth`;
 
-  constructor(
-    private http: HttpClient,
-  ) {
+  constructor(private http: HttpClient) {
     const storedUser = localStorage.getItem(environment.userKey);
-    this.currentUserSubject = new BehaviorSubject<User | null>(storedUser ? JSON.parse(storedUser) : null);
+    this.currentUserSubject = new BehaviorSubject<User | null>(
+      storedUser ? JSON.parse(storedUser) : null,
+    );
     this.currentUser = this.currentUserSubject.asObservable();
   }
 
@@ -73,19 +74,48 @@ export class AuthService {
   }
 
   simpleRegister(request: SimpleRegisterRequest): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.apiUrl}/simple-register`, request).pipe(
-      tap((response) => this.handleAuthResponse(response)),
-      catchError(this.handleError),
-    );
+    return this.http
+      .post<AuthResponse>(`${this.apiUrl}/simple-register`, request)
+      .pipe(
+        tap((response) => this.handleAuthResponse(response)),
+        catchError(this.handleError),
+      );
   }
 
   register(request: RegisterRequest): Observable<RegisterResponse> {
-    return this.http.post<RegisterResponse>(`${this.apiUrl}/register`, request).pipe(catchError(this.handleError));
+    return this.http
+      .post<RegisterResponse>(`${this.apiUrl}/register`, request)
+      .pipe(catchError(this.handleError));
   }
 
   // Govt ID proof is validated server-side; the file parameter is reserved for future upload flow
-  registerWithGovtId(request: RegisterRequest, _govtIdProof: File): Observable<RegisterResponse> {
+  registerWithGovtId(
+    request: RegisterRequest,
+    _govtIdProof: File,
+  ): Observable<RegisterResponse> {
     return this.register(request);
+  }
+
+  /**
+   * Café owner self-registration.
+   * Sends a multipart/form-data request: JSON data blob + optional logo file.
+   * POST /api/auth/register/cafe-owner
+   */
+  registerCafeOwner(
+    request: CafeOwnerRegisterRequest,
+    logo?: File,
+  ): Observable<AuthResponse> {
+    const formData = new FormData();
+    const dataBlob = new Blob([JSON.stringify(request)], {
+      type: "application/json",
+    });
+    formData.append("data", dataBlob);
+    if (logo) {
+      formData.append("logo", logo);
+    }
+    return this.http
+      .post<AuthResponse>(`${this.apiUrl}/register/cafe-owner`, formData)
+      .pipe(catchError(this.handleError));
   }
 
   login(request: LoginRequest): Observable<AuthResponse> {
@@ -105,28 +135,41 @@ export class AuthService {
 
   resendVerificationEmail(email: string): Observable<MessageResponse> {
     return this.http
-      .post<MessageResponse>(`${this.apiUrl}/resend-verification`, null, { params: { email } })
+      .post<MessageResponse>(`${this.apiUrl}/resend-verification`, null, {
+        params: { email },
+      })
       .pipe(catchError(this.handleError));
   }
 
   forgotPassword(email: string): Observable<MessageResponse> {
     return this.http
-      .post<MessageResponse>(`${this.apiUrl}/forgot-password`, null, { params: { email } })
+      .post<MessageResponse>(`${this.apiUrl}/forgot-password`, null, {
+        params: { email },
+      })
       .pipe(catchError(this.handleError));
   }
 
-  resetPassword(token: string, request: PasswordResetRequest): Observable<MessageResponse> {
+  resetPassword(
+    token: string,
+    request: PasswordResetRequest,
+  ): Observable<MessageResponse> {
     return this.http
-      .post<MessageResponse>(`${this.apiUrl}/reset-password`, request, { params: { token } })
+      .post<MessageResponse>(`${this.apiUrl}/reset-password`, request, {
+        params: { token },
+      })
       .pipe(catchError(this.handleError));
   }
 
   changePassword(request: ChangePasswordRequest): Observable<MessageResponse> {
-    return this.http.post<MessageResponse>(`${this.apiUrl}/change-password`, request).pipe(catchError(this.handleError));
+    return this.http
+      .post<MessageResponse>(`${this.apiUrl}/change-password`, request)
+      .pipe(catchError(this.handleError));
   }
 
   getCurrentUser(): Observable<MessageResponse> {
-    return this.http.get<MessageResponse>(`${this.apiUrl}/me`).pipe(catchError(this.handleError));
+    return this.http
+      .get<MessageResponse>(`${this.apiUrl}/me`)
+      .pipe(catchError(this.handleError));
   }
 
   logout(): void {
@@ -155,8 +198,8 @@ export class AuthService {
       id: response.userId,
       username: response.username,
       email: response.email,
-      firstName: '',
-      lastName: '',
+      firstName: "",
+      lastName: "",
       roles: response.roles,
       isEmailVerified: response.isEmailVerified,
       isProfileComplete: response.isProfileComplete,
@@ -176,34 +219,33 @@ export class AuthService {
   public getRoleDashboardRoute(): string {
     const user = this.currentUserValue;
     if (!user || !user.roles || user.roles.length === 0) {
-      return '/auth/login';
+      return "/auth/login";
     }
 
     if (this.isAdmin()) {
-      return '/admin/dashboard';
+      return "/admin/dashboard";
     } else if (this.isCafeOwner()) {
       // Directs Cafe Owners to login page logic; dashboard will handle redirect if no cafe exists
-      return '/owner/dashboard';
+      return "/owner/dashboard";
     } else if (this.isChef()) {
-      return '/chef/dashboard';
+      return "/chef/dashboard";
     } else if (this.isWaiter()) {
-      return '/waiter/dashboard';
+      return "/waiter/dashboard";
     } else if (this.isCustomer()) {
-      return '/customer/cafe';
+      return "/customer/cafe";
     }
 
-    return '/auth/login';
+    return "/auth/login";
   }
 
   private handleError(error: any): Observable<never> {
-    let errorMessage = 'An error occurred';
+    let errorMessage = "An error occurred";
 
     if (error.error instanceof ErrorEvent) {
       errorMessage = error.error.message;
     } else {
       errorMessage = error.error?.message || error.message || errorMessage;
     }
-
 
     return throwError(() => new Error(errorMessage));
   }

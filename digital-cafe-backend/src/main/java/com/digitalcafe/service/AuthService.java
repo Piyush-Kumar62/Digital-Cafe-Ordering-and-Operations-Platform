@@ -1,5 +1,6 @@
 package com.digitalcafe.service;
 
+import com.digitalcafe.dto.request.CafeOwnerRegisterRequest;
 import com.digitalcafe.dto.request.LoginRequest;
 import com.digitalcafe.dto.request.SimpleRegisterRequest;
 import com.digitalcafe.dto.request.RegisterRequest;
@@ -12,6 +13,7 @@ public interface AuthService {
     AuthResponse register(SimpleRegisterRequest request);
     RegisterResponse comprehensiveRegister(RegisterRequest request);
     RegisterResponse comprehensiveRegisterWithGovtId(RegisterRequest request, MultipartFile govtIdProof);
+    AuthResponse registerCafeOwner(CafeOwnerRegisterRequest request, MultipartFile logo);
     AuthResponse login(LoginRequest request);
     void verifyEmail(String token);
     void resendVerificationEmail(String email);

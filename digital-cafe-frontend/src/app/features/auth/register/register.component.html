@@ -1,24 +1,65 @@
 <app-navbar></app-navbar>
 
 <div
-  class="h-screen flex items-center justify-center register-auth-container text-white overflow-hidden"
+  class="min-h-screen flex items-center justify-center register-auth-container text-white py-8"
 >
   <div
-    class="max-w-3xl w-full register-auth-card backdrop-blur-xl rounded-2xl shadow-2xl mx-4"
+    class="max-w-5xl w-full mx-4 xl:mx-auto register-auth-card backdrop-blur-xl rounded-2xl shadow-2xl register-card-grid"
   >
-    <div class="p-6 md:p-8">
+    <!-- ╔══════════════════════════════════════╗
+         ║  LEFT: Ambience image panel          ║
+         ╚══════════════════════════════════════╝ -->
+    <div class="register-image-panel">
+      <img
+        src="assets/coffee/barista-latte-art.jpg"
+        alt="Barista crafting coffee"
+        class="register-panel-image"
+      />
+      <div class="register-panel-overlay">
+        <div class="register-panel-brand">
+          <i class="bi bi-cup-hot-fill register-panel-icon"></i>
+          <span class="register-panel-title">Digital Caf&eacute;</span>
+        </div>
+        <p class="register-panel-tagline">
+          Join our community of caf&eacute; owners and coffee lovers powering
+          the future of dining.
+        </p>
+        <blockquote class="register-panel-quote">
+          <i class="bi bi-quote me-1"></i>
+          Managing my caf&eacute; has never been this easy.
+          <cite>&mdash; Caf&eacute; Owner, Mumbai</cite>
+        </blockquote>
+      </div>
+    </div>
+    <!-- ╔══════════════════════════════════════╗
+         ║  RIGHT: Form content                 ║
+         ╚══════════════════════════════════════╝ -->
+    <div class="p-6 md:p-8 register-form-side">
       <!-- Card Header -->
       <div class="text-center mb-6">
         <h2 class="text-2xl md:text-3xl font-bold text-white mb-2">
-          <i class="bi bi-person-plus me-2"></i>Create Your Account
+          <i
+            [class]="
+              isCafeOwnerMode
+                ? 'bi bi-shop-window me-2'
+                : 'bi bi-person-plus me-2'
+            "
+          ></i>
+          <span *ngIf="!isCafeOwnerMode">Create Your Account</span>
+          <span *ngIf="isCafeOwnerMode">Register Your Caf&eacute;</span>
         </h2>
         <p class="text-slate-400 text-sm">
-          Complete your registration in 5 simple steps
+          <ng-container *ngIf="!isCafeOwnerMode"
+            >Complete your registration in 5 simple steps</ng-container
+          >
+          <ng-container *ngIf="isCafeOwnerMode"
+            >Set up your caf&eacute; account in 3 easy steps</ng-container
+          >
         </p>
       </div>
 
-      <!-- Progress Indicator -->
-      <div class="mb-6">
+      <!-- Progress Indicator — only for 5-step CUSTOMER form -->
+      <div class="mb-6" *ngIf="!isCafeOwnerMode">
         <div class="flex items-center justify-center space-x-2 md:space-x-4">
           <div
             *ngFor="let step of [1, 2, 3, 4, 5]; let i = index"
@@ -55,8 +96,11 @@
         <i class="bi bi-check-circle me-2"></i>{{ successMessage }}
       </div>
 
-      <!-- Form Steps -->
-      <form (ngSubmit)="currentStep === totalSteps ? onSubmit() : nextStep()">
+      <!-- CUSTOMER 5-step form (hidden when CAFÉ OWNER mode is active) -->
+      <form
+        *ngIf="!isCafeOwnerMode"
+        (ngSubmit)="currentStep === totalSteps ? onSubmit() : nextStep()"
+      >
         <!-- Step 1: Basic Information -->
         <div *ngIf="currentStep === 1" class="step-content">
           <h4 class="text-lg font-semibold mb-4 flex items-center">
@@ -83,16 +127,22 @@
             <div>
               <label for="role" class="form-label">Role *</label>
               <div class="input-group">
-                <span class="input-group-text"><i class="bi bi-shield"></i></span>
+                <span class="input-group-text"
+                  ><i class="bi bi-shield"></i
+                ></span>
                 <select
                   class="form-control"
                   id="role"
                   [(ngModel)]="role"
                   name="role"
+                  (ngModelChange)="onRoleChange()"
                   required
                 >
-                  <option *ngFor="let roleOption of roleOptions" [value]="roleOption">
-                    {{ roleOption.replace('_', ' ') | titlecase }}
+                  <option
+                    *ngFor="let roleOption of roleOptions"
+                    [value]="roleOption"
+                  >
+                    {{ roleOption.replace("_", " ") | titlecase }}
                   </option>
                 </select>
               </div>
@@ -209,9 +259,12 @@
               </div>
             </div>
             <div>
-              <label for="dateOfBirth" class="form-label">Date of Birth *</label>
+              <label for="dateOfBirth" class="form-label"
+                >Date of Birth *</label
+              >
               <div class="input-group">
-                <span class="input-group-text"><i class="bi bi-calendar-event"></i></span
+                <span class="input-group-text"
+                  ><i class="bi bi-calendar-event"></i></span
                 ><input
                   type="date"
                   class="form-control"
@@ -291,7 +344,8 @@
             <div>
               <label for="plotNumber" class="form-label">Plot Number *</label>
               <div class="input-group">
-                <span class="input-group-text"><i class="bi bi-geo-alt"></i></span
+                <span class="input-group-text"
+                  ><i class="bi bi-geo-alt"></i></span
                 ><input
                   type="text"
                   class="form-control"
@@ -602,19 +656,508 @@
         </div>
       </form>
 
+      <hr class="my-4 border-slate-700" *ngIf="!isCafeOwnerMode" />
+
+      <!-- ═══════════════════════════════════════════════════════════════
+           CAFÉ OWNER 3-STEP REGISTRATION
+      ═══════════════════════════════════════════════════════════════ -->
+      <ng-container *ngIf="isCafeOwnerMode">
+        <!-- Café Owner Step Progress Indicator -->
+        <div class="mb-6">
+          <div class="flex items-center justify-center space-x-2 md:space-x-4">
+            <div
+              *ngFor="let step of [1, 2, 3]"
+              class="step-indicator"
+              [class]="getCafeStepClass(step)"
+              [class.clickable]="step <= cafeCurrentStep"
+              (click)="
+                step <= cafeCurrentStep ? (cafeCurrentStep = step) : null
+              "
+            >
+              <div class="step-number">
+                <i [class]="getCafeStepIcon(step)"></i>
+              </div>
+              <div class="step-label hidden md:block">
+                <span *ngIf="step === 1">Owner Info</span>
+                <span *ngIf="step === 2">Café Details</span>
+                <span *ngIf="step === 3">Legal &amp; Logo</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <form
+          (ngSubmit)="
+            cafeCurrentStep === cafeTotalSteps
+              ? onCafeOwnerSubmit()
+              : cafeNextStep()
+          "
+        >
+          <!-- ── STEP 1: Owner Information ──────────────────────────── -->
+          <div *ngIf="cafeCurrentStep === 1" class="step-content">
+            <h4 class="text-lg font-semibold mb-4 flex items-center">
+              <i class="bi bi-person-circle me-3"></i>Owner Information
+            </h4>
+
+            <!-- Role switcher so they can go back to Customer -->
+            <div class="mb-4">
+              <label for="cafeOwnerRole" class="form-label"
+                >Registration Type *</label
+              >
+              <div class="input-group">
+                <span class="input-group-text"
+                  ><i class="bi bi-shield"></i
+                ></span>
+                <select
+                  class="form-control"
+                  id="cafeOwnerRole"
+                  [(ngModel)]="role"
+                  name="cafeOwnerRole"
+                  (ngModelChange)="onRoleChange()"
+                  required
+                >
+                  <option *ngFor="let ro of roleOptions" [value]="ro">
+                    {{ ro.replace("_", " ") | titlecase }}
+                  </option>
+                </select>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label for="ownerFirstName" class="form-label"
+                  >First Name *</label
+                >
+                <div class="input-group">
+                  <span class="input-group-text"
+                    ><i class="bi bi-person"></i
+                  ></span>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="ownerFirstName"
+                    [(ngModel)]="ownerInfo.firstName"
+                    name="ownerFirstName"
+                    placeholder="Enter first name"
+                    required
+                  />
+                </div>
+              </div>
+              <div>
+                <label for="ownerLastName" class="form-label"
+                  >Last Name *</label
+                >
+                <div class="input-group">
+                  <span class="input-group-text"
+                    ><i class="bi bi-person"></i
+                  ></span>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="ownerLastName"
+                    [(ngModel)]="ownerInfo.lastName"
+                    name="ownerLastName"
+                    placeholder="Enter last name"
+                    required
+                  />
+                </div>
+              </div>
+              <div class="col-span-1 md:col-span-2">
+                <label for="ownerEmail" class="form-label"
+                  >Email Address *</label
+                >
+                <div class="input-group">
+                  <span class="input-group-text"
+                    ><i class="bi bi-envelope"></i
+                  ></span>
+                  <input
+                    type="email"
+                    class="form-control"
+                    id="ownerEmail"
+                    [(ngModel)]="ownerInfo.email"
+                    name="ownerEmail"
+                    placeholder="Enter your email address"
+                    required
+                  />
+                </div>
+              </div>
+              <div class="col-span-1 md:col-span-2">
+                <label for="ownerPhoneNumber" class="form-label"
+                  >Personal Phone
+                  <span class="text-slate-400 text-xs">(optional)</span></label
+                >
+                <div class="input-group">
+                  <span class="input-group-text"
+                    ><i class="bi bi-phone"></i
+                  ></span>
+                  <input
+                    type="tel"
+                    class="form-control"
+                    id="ownerPhoneNumber"
+                    [(ngModel)]="ownerInfo.ownerPhoneNumber"
+                    name="ownerPhoneNumber"
+                    placeholder="10-digit mobile number"
+                    maxlength="10"
+                  />
+                </div>
+                <small class="text-slate-400 text-xs"
+                  >Your personal contact number (not the caf&eacute; business
+                  phone)</small
+                >
+              </div>
+            </div>
+
+            <!-- Temp-password info note -->
+            <div class="register-temp-pw-note mt-4">
+              <i class="bi bi-envelope-check me-2"></i>
+              <div>
+                <strong>No password needed!</strong> A secure temporary password
+                will be emailed to you after your registration is approved. You
+                can reset it on your first login.
+              </div>
+            </div>
+          </div>
+
+          <!-- ── STEP 2: Café Business Details ──────────────────────────── -->
+          <div *ngIf="cafeCurrentStep === 2" class="step-content">
+            <h4 class="text-lg font-semibold mb-4 flex items-center">
+              <i class="bi bi-shop-window me-3"></i>Café Business Details
+            </h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label for="cafeName" class="form-label">Café Name *</label>
+                <div class="input-group">
+                  <span class="input-group-text"
+                    ><i class="bi bi-cup-hot-fill"></i
+                  ></span>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="cafeName"
+                    [(ngModel)]="cafeDetails.cafeName"
+                    name="cafeName"
+                    placeholder="Enter your café name"
+                    required
+                  />
+                </div>
+              </div>
+              <div>
+                <label for="cafePhoneNumber" class="form-label"
+                  >Business Phone *</label
+                >
+                <div class="input-group">
+                  <span class="input-group-text"
+                    ><i class="bi bi-telephone"></i
+                  ></span>
+                  <input
+                    type="tel"
+                    class="form-control"
+                    id="cafePhoneNumber"
+                    [(ngModel)]="cafeDetails.phoneNumber"
+                    name="cafePhoneNumber"
+                    placeholder="10-digit mobile number"
+                    maxlength="10"
+                    required
+                  />
+                </div>
+              </div>
+              <div class="col-span-1 md:col-span-2">
+                <label for="cafeDescription" class="form-label"
+                  >Description
+                  <span class="text-slate-400 text-xs">(optional)</span></label
+                >
+                <div class="input-group">
+                  <span class="input-group-text"
+                    ><i class="bi bi-chat-text"></i
+                  ></span>
+                  <textarea
+                    class="form-control"
+                    id="cafeDescription"
+                    [(ngModel)]="cafeDetails.description"
+                    name="cafeDescription"
+                    placeholder="Tell customers what makes your café special"
+                    rows="2"
+                  ></textarea>
+                </div>
+              </div>
+              <div class="col-span-1 md:col-span-2">
+                <label for="cafeAddress" class="form-label"
+                  >Street Address *</label
+                >
+                <div class="input-group">
+                  <span class="input-group-text"
+                    ><i class="bi bi-geo-alt"></i
+                  ></span>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="cafeAddress"
+                    [(ngModel)]="cafeDetails.address"
+                    name="cafeAddress"
+                    placeholder="Building, street, landmark"
+                    required
+                  />
+                </div>
+              </div>
+              <div>
+                <label for="cafeCity" class="form-label">City *</label>
+                <div class="input-group">
+                  <span class="input-group-text"
+                    ><i class="bi bi-building"></i
+                  ></span>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="cafeCity"
+                    [(ngModel)]="cafeDetails.city"
+                    name="cafeCity"
+                    placeholder="City"
+                    required
+                  />
+                </div>
+              </div>
+              <div>
+                <label for="cafeState" class="form-label"
+                  >State
+                  <span class="text-slate-400 text-xs">(optional)</span></label
+                >
+                <div class="input-group">
+                  <span class="input-group-text"
+                    ><i class="bi bi-geo"></i
+                  ></span>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="cafeState"
+                    [(ngModel)]="cafeDetails.state"
+                    name="cafeState"
+                    placeholder="State"
+                  />
+                </div>
+              </div>
+              <div>
+                <label for="cafePincode" class="form-label">Pincode *</label>
+                <div class="input-group">
+                  <span class="input-group-text"
+                    ><i class="bi bi-mailbox"></i
+                  ></span>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="cafePincode"
+                    [(ngModel)]="cafeDetails.pincode"
+                    name="cafePincode"
+                    placeholder="6-digit pincode"
+                    maxlength="6"
+                    required
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- Operating Hours -->
+            <p
+              class="text-xs text-slate-400 mt-4 mb-3 font-medium uppercase tracking-wide"
+            >
+              Operating Hours
+              <span class="normal-case font-normal">(optional)</span>
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label for="cafeOpenTime" class="form-label"
+                  >Opening Time</label
+                >
+                <div class="input-group">
+                  <span class="input-group-text"
+                    ><i class="bi bi-sunrise"></i
+                  ></span>
+                  <input
+                    type="time"
+                    class="form-control"
+                    id="cafeOpenTime"
+                    [(ngModel)]="cafeDetails.openTime"
+                    name="cafeOpenTime"
+                  />
+                </div>
+              </div>
+              <div>
+                <label for="cafeCloseTime" class="form-label"
+                  >Closing Time</label
+                >
+                <div class="input-group">
+                  <span class="input-group-text"
+                    ><i class="bi bi-sunset"></i
+                  ></span>
+                  <input
+                    type="time"
+                    class="form-control"
+                    id="cafeCloseTime"
+                    [(ngModel)]="cafeDetails.closeTime"
+                    name="cafeCloseTime"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── STEP 3: Legal & Compliance + Café Logo ───────────────── -->
+          <div *ngIf="cafeCurrentStep === 3" class="step-content">
+            <h4 class="text-lg font-semibold mb-1 flex items-center">
+              <i class="bi bi-shield-check me-3"></i>Legal &amp; Compliance
+            </h4>
+            <p class="text-xs text-slate-400 mb-4">
+              All fields in this step are optional &mdash; providing them speeds
+              up admin approval.
+            </p>
+
+            <!-- Registration Numbers -->
+            <p
+              class="text-xs text-slate-400 mb-3 font-medium uppercase tracking-wide"
+            >
+              Registration Numbers
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <div>
+                <label for="cafeFssai" class="form-label">FSSAI Number</label>
+                <div class="input-group">
+                  <span class="input-group-text"
+                    ><i class="bi bi-card-checklist"></i
+                  ></span>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="cafeFssai"
+                    [(ngModel)]="cafeDetails.fssaiNumber"
+                    name="cafeFssai"
+                    placeholder="FSSAI licence no."
+                  />
+                </div>
+              </div>
+              <div>
+                <label for="cafeGst" class="form-label">GST Number</label>
+                <div class="input-group">
+                  <span class="input-group-text"
+                    ><i class="bi bi-receipt"></i
+                  ></span>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="cafeGst"
+                    [(ngModel)]="cafeDetails.gstNumber"
+                    name="cafeGst"
+                    placeholder="GST registration no."
+                  />
+                </div>
+              </div>
+              <div>
+                <label for="cafeMsme" class="form-label">MSME Number</label>
+                <div class="input-group">
+                  <span class="input-group-text"
+                    ><i class="bi bi-building-check"></i
+                  ></span>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="cafeMsme"
+                    [(ngModel)]="cafeDetails.msmeNumber"
+                    name="cafeMsme"
+                    placeholder="MSME registration no."
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- Logo Upload -->
+            <p
+              class="text-xs text-slate-400 mb-3 font-medium uppercase tracking-wide"
+            >
+              Café Logo
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+              <div>
+                <label for="cafeLogo" class="form-label">Upload Logo</label>
+                <div class="input-group">
+                  <span class="input-group-text"
+                    ><i class="bi bi-upload"></i
+                  ></span>
+                  <input
+                    type="file"
+                    class="form-control"
+                    id="cafeLogo"
+                    (change)="onCafeLogoSelect($event)"
+                    name="cafeLogo"
+                    accept=".jpg,.jpeg,.png"
+                  />
+                </div>
+                <small class="text-slate-400 text-xs"
+                  >JPG or PNG · Max 2 MB</small
+                >
+              </div>
+              <div
+                *ngIf="showCafeLogoPreview && cafeLogoPreview"
+                class="flex justify-center"
+              >
+                <div class="text-center">
+                  <img
+                    [src]="cafeLogoPreview"
+                    alt="Café logo preview"
+                    class="cafe-logo-preview rounded-lg shadow"
+                  />
+                  <p class="text-xs text-slate-400 mt-1">Preview</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Navigation Buttons (same layout as customer form) -->
+          <div
+            class="mt-6 pt-4 border-t border-slate-700 flex justify-between items-center"
+          >
+            <button
+              type="button"
+              class="btn btn-outline-secondary"
+              (click)="cafePreviousStep()"
+              [disabled]="cafeCurrentStep === 1"
+            >
+              <i class="bi bi-arrow-left me-1"></i>Previous
+            </button>
+            <div class="step-info text-xs font-medium text-slate-400">
+              Step {{ cafeCurrentStep }} of {{ cafeTotalSteps }}
+            </div>
+            <button
+              type="submit"
+              class="btn btn-primary"
+              [disabled]="isLoading"
+            >
+              <span
+                *ngIf="cafeCurrentStep < cafeTotalSteps"
+                class="flex items-center"
+              >
+                Next<i class="bi bi-arrow-right ms-1"></i>
+              </span>
+              <span
+                *ngIf="cafeCurrentStep === cafeTotalSteps && !isLoading"
+                class="flex items-center"
+              >
+                <i class="bi bi-shop-window me-1"></i>Register
+              </span>
+              <span *ngIf="isLoading" class="flex items-center">
+                <span class="spinner-border spinner-border-sm me-1"></span
+                >Submitting...
+              </span>
+            </button>
+          </div>
+        </form>
+      </ng-container>
+
       <hr class="my-4 border-slate-700" />
 
       <div class="text-center register-login-footer">
         <p>
           Already have an account?
-          <a
-            routerLink="/auth/login"
-            class="register-login-link"
-            >Login</a
-          >
+          <a routerLink="/auth/login" class="register-login-link">Login</a>
         </p>
       </div>
     </div>
   </div>
 </div>
-

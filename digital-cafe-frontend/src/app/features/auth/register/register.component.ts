@@ -12,6 +12,7 @@ import {
   WorkExperience,
   CtcInfo,
   RegisterRequest,
+  CafeOwnerRegisterRequest,
 } from "../../../shared/models/auth.model";
 
 @Component({
@@ -87,6 +88,41 @@ export class RegisterComponent implements OnInit {
   roleOptions = ["CUSTOMER", "CAFE_OWNER"];
   currentYear = new Date().getFullYear();
 
+  // ── Café Owner Registration ────────────────────────────────────────────────
+  // Only active when role === 'CAFE_OWNER'.  The 5-step customer form is hidden.
+
+  isCafeOwnerMode = false;
+
+  ownerInfo = {
+    firstName: "",
+    lastName: "",
+    email: "",
+    ownerPhoneNumber: "", // personal mobile number
+  };
+
+  cafeDetails = {
+    cafeName: "",
+    description: "",
+    address: "",
+    city: "",
+    state: "",
+    pincode: "",
+    phoneNumber: "",
+    openTime: "",
+    closeTime: "",
+    fssaiNumber: "",
+    gstNumber: "",
+    msmeNumber: "",
+  };
+
+  cafeLogoFile: File | null = null;
+  cafeLogoPreview: string | null = null;
+  showCafeLogoPreview = false;
+
+  // Café owner step tracking (3 steps)
+  cafeCurrentStep = 1;
+  cafeTotalSteps = 3;
+
   constructor(
     private authService: AuthService,
     private router: Router,
@@ -95,6 +131,217 @@ export class RegisterComponent implements OnInit {
 
   ngOnInit() {
     this.role = "CUSTOMER";
+  }
+
+  /** Called whenever the role dropdown changes value */
+  onRoleChange() {
+    this.isCafeOwnerMode = this.role === "CAFE_OWNER";
+    this.cafeCurrentStep = 1;
+    this.errorMessage = "";
+    this.successMessage = "";
+  }
+
+  // ── Café owner step navigation ─────────────────────────────────────────────
+  cafeNextStep() {
+    if (this.validateCafeStep(this.cafeCurrentStep)) {
+      this.cafeCurrentStep++;
+      this.errorMessage = "";
+    } else {
+      this.alertService.warning("Validation Error", this.errorMessage);
+    }
+  }
+
+  cafePreviousStep() {
+    if (this.cafeCurrentStep > 1) {
+      this.cafeCurrentStep--;
+      this.errorMessage = "";
+    }
+  }
+
+  getCafeStepIcon(step: number): string {
+    if (step < this.cafeCurrentStep) return "bi-check-circle-fill";
+    if (step === this.cafeCurrentStep) return "bi-circle-fill";
+    return "bi-circle";
+  }
+
+  getCafeStepClass(step: number): string {
+    if (step < this.cafeCurrentStep) return "completed";
+    if (step === this.cafeCurrentStep) return "active";
+    return "pending";
+  }
+
+  validateCafeStep(step: number): boolean {
+    this.errorMessage = "";
+    switch (step) {
+      case 1:
+        return this.validateCafeStep1();
+      case 2:
+        return this.validateCafeStep2();
+      default:
+        return true; // step 3 is all optional
+    }
+  }
+
+  validateCafeStep1(): boolean {
+    if (!this.ownerInfo.firstName.trim() || !this.ownerInfo.lastName.trim()) {
+      this.errorMessage = "First name and last name are required";
+      return false;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!this.ownerInfo.email || !emailRegex.test(this.ownerInfo.email)) {
+      this.errorMessage = "Please enter a valid email address";
+      return false;
+    }
+    // ownerPhoneNumber is optional; validate format if provided
+    if (
+      this.ownerInfo.ownerPhoneNumber.trim() &&
+      !/^[6-9][0-9]{9}$/.test(this.ownerInfo.ownerPhoneNumber.trim())
+    ) {
+      this.errorMessage = "Please enter a valid 10-digit Indian mobile number";
+      return false;
+    }
+    return true;
+  }
+
+  validateCafeStep2(): boolean {
+    if (!this.cafeDetails.cafeName.trim()) {
+      this.errorMessage = "Café name is required";
+      return false;
+    }
+    if (
+      !this.cafeDetails.phoneNumber.trim() ||
+      !/^[6-9][0-9]{9}$/.test(this.cafeDetails.phoneNumber)
+    ) {
+      this.errorMessage = "Please enter a valid 10-digit Indian mobile number";
+      return false;
+    }
+    if (!this.cafeDetails.address.trim()) {
+      this.errorMessage = "Café address is required";
+      return false;
+    }
+    if (!this.cafeDetails.city.trim()) {
+      this.errorMessage = "City is required";
+      return false;
+    }
+    if (
+      !this.cafeDetails.pincode.trim() ||
+      !/^[0-9]{6}$/.test(this.cafeDetails.pincode)
+    ) {
+      this.errorMessage = "Please enter a valid 6-digit pincode";
+      return false;
+    }
+    return true;
+  }
+  // ──────────────────────────────────────────────────────────────────────────
+
+  onCafeLogoSelect(event: Event) {
+    const input = event.currentTarget as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      this.cafeLogoFile = input.files[0];
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        this.cafeLogoPreview = e.target?.result as string;
+        this.showCafeLogoPreview = true;
+      };
+      reader.readAsDataURL(this.cafeLogoFile);
+    }
+  }
+
+  validateCafeOwnerForm(): boolean {
+    this.errorMessage = "";
+
+    if (!this.ownerInfo.firstName.trim() || !this.ownerInfo.lastName.trim()) {
+      this.errorMessage = "First name and last name are required";
+      return false;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!this.ownerInfo.email || !emailRegex.test(this.ownerInfo.email)) {
+      this.errorMessage = "Please enter a valid email address";
+      return false;
+    }
+    if (!this.cafeDetails.cafeName.trim()) {
+      this.errorMessage = "Café name is required";
+      return false;
+    }
+    if (!this.cafeDetails.address.trim()) {
+      this.errorMessage = "Café address is required";
+      return false;
+    }
+    if (!this.cafeDetails.city.trim()) {
+      this.errorMessage = "City is required";
+      return false;
+    }
+    if (
+      !this.cafeDetails.pincode.trim() ||
+      !/^[0-9]{6}$/.test(this.cafeDetails.pincode)
+    ) {
+      this.errorMessage = "Please enter a valid 6-digit pincode";
+      return false;
+    }
+    if (
+      !this.cafeDetails.phoneNumber.trim() ||
+      !/^[6-9][0-9]{9}$/.test(this.cafeDetails.phoneNumber)
+    ) {
+      this.errorMessage = "Please enter a valid 10-digit Indian mobile number";
+      return false;
+    }
+    return true;
+  }
+
+  onCafeOwnerSubmit() {
+    if (!this.validateCafeOwnerForm()) {
+      this.alertService.warning("Validation Error", this.errorMessage);
+      return;
+    }
+
+    this.isLoading = true;
+    this.errorMessage = "";
+    this.alertService.loading("Creating your café account. Please wait.");
+
+    const payload: CafeOwnerRegisterRequest = {
+      firstName: this.ownerInfo.firstName.trim(),
+      lastName: this.ownerInfo.lastName.trim(),
+      email: this.ownerInfo.email.trim(),
+      ownerPhoneNumber: this.ownerInfo.ownerPhoneNumber.trim() || undefined,
+      cafeName: this.cafeDetails.cafeName.trim(),
+      description: this.cafeDetails.description.trim() || undefined,
+      address: this.cafeDetails.address.trim(),
+      city: this.cafeDetails.city.trim(),
+      state: this.cafeDetails.state.trim() || undefined,
+      pincode: this.cafeDetails.pincode.trim(),
+      phoneNumber: this.cafeDetails.phoneNumber.trim(),
+      openTime: this.cafeDetails.openTime || undefined,
+      closeTime: this.cafeDetails.closeTime || undefined,
+      fssaiNumber: this.cafeDetails.fssaiNumber.trim() || undefined,
+      gstNumber: this.cafeDetails.gstNumber.trim() || undefined,
+      msmeNumber: this.cafeDetails.msmeNumber.trim() || undefined,
+    };
+
+    this.authService
+      .registerCafeOwner(payload, this.cafeLogoFile ?? undefined)
+      .subscribe({
+        next: (response) => {
+          this.isLoading = false;
+          this.alertService.close();
+          this.successMessage =
+            response.message ||
+            "Registration successful! Please verify your email.";
+          this.alertService.success(
+            "Registration Successful",
+            this.successMessage,
+          );
+          setTimeout(() => {
+            this.router.navigate(["/auth/login"]);
+          }, 2500);
+        },
+        error: (error) => {
+          this.isLoading = false;
+          this.alertService.close();
+          this.errorMessage =
+            error.message || "Registration failed. Please try again.";
+          this.alertService.error("Registration Failed", this.errorMessage);
+        },
+      });
   }
 
   onFileSelect(event: Event) {
@@ -153,7 +400,8 @@ export class RegisterComponent implements OnInit {
       return false;
     }
     if (this.role !== "CUSTOMER" && this.role !== "CAFE_OWNER") {
-      this.errorMessage = "Only CUSTOMER or CAFE OWNER roles are valid for registration";
+      this.errorMessage =
+        "Only CUSTOMER or CAFE OWNER roles are valid for registration";
       return false;
     }
     if (!this.govtIdType) {
@@ -353,8 +601,12 @@ export class RegisterComponent implements OnInit {
         this.isLoading = false;
         this.alertService.close();
         this.successMessage =
-          response.message || "Registration successful. Awaiting admin approval.";
-        this.alertService.success("Registration Successful", this.successMessage);
+          response.message ||
+          "Registration successful. Awaiting admin approval.";
+        this.alertService.success(
+          "Registration Successful",
+          this.successMessage,
+        );
         setTimeout(() => {
           this.router.navigate(["/auth/login"]);
         }, 2000);
@@ -362,7 +614,8 @@ export class RegisterComponent implements OnInit {
       error: (error) => {
         this.isLoading = false;
         this.alertService.close();
-        this.errorMessage = error.message || "Registration failed. Please try again.";
+        this.errorMessage =
+          error.message || "Registration failed. Please try again.";
         this.alertService.error("Registration Failed", this.errorMessage);
       },
     });
@@ -385,5 +638,3 @@ export class RegisterComponent implements OnInit {
     return step <= this.currentStep;
   }
 }
-
-

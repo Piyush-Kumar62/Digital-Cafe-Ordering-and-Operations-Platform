@@ -137,3 +137,35 @@ export enum UserRole {
   WAITER = "ROLE_WAITER",
   CUSTOMER = "ROLE_CUSTOMER",
 }
+/**
+ * Request body for café owner self-registration.
+ * Sent as a JSON blob in a multipart/form-data request (part name "data").
+ * An optional "logo" file part can accompany this.
+ * NOTE: No password field — a secure temporary password is auto-generated
+ * server-side and emailed to the owner. They must reset it on first login.
+ */
+export interface CafeOwnerRegisterRequest {
+  // Owner personal info
+  firstName: string;
+  lastName: string;
+  email: string;
+  ownerPhoneNumber?: string; // personal mobile (optional)
+
+  // Café details
+  cafeName: string;
+  description?: string;
+  address: string;
+  city: string;
+  state?: string;
+  pincode: string;
+  phoneNumber: string; // café business phone
+
+  // Operating hours (optional)
+  openTime?: string;
+  closeTime?: string;
+
+  // Legal / compliance numbers (optional)
+  fssaiNumber?: string;
+  gstNumber?: string;
+  msmeNumber?: string;
+}

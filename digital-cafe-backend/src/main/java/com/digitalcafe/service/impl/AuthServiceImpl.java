@@ -13,6 +13,7 @@ import com.digitalcafe.service.AuthService;
 import com.digitalcafe.service.AdminProfileService;
 import com.digitalcafe.service.DocumentStorageService;
 import com.digitalcafe.service.EmailService;
+import com.digitalcafe.service.FileStorageService;
 import com.digitalcafe.util.PasswordGenerator;
 import com.digitalcafe.websocket.RealtimeNotification;
 import com.digitalcafe.websocket.WebSocketNotificationService;
@@ -47,6 +48,7 @@ public class AuthServiceImpl implements AuthService {
   private final EmailService emailService;
   private final DocumentStorageService documentStorageService;
   private final AdminProfileService adminProfileService;
+  private final FileStorageService fileStorageService;
   private final UserAccessPolicy userAccessPolicy;
   private final WebSocketNotificationService webSocketNotificationService;
 
@@ -112,7 +114,95 @@ public class AuthServiceImpl implements AuthService {
   public RegisterResponse comprehensiveRegisterWithGovtId(RegisterRequest request, MultipartFile govtIdProof) {
     return comprehensiveRegisterInternal(request, govtIdProof);
   }
+  @Override
+  @Transactional
+  public AuthResponse registerCafeOwner(CafeOwnerRegisterRequest request, MultipartFile logo) {
 
+    if (userRepository.existsByEmail(request.getEmail())) {
+      throw new BadRequestException("Email already registered");
+    }
+
+    Role cafeOwnerRole = roleRepository.findByName(Role.RoleName.CAFE_OWNER)
+        .orElseThrow(() -> new ResourceNotFoundException("Role", "name", "CAFE_OWNER"));
+
+    // Generate a secure temporary password — owner must reset on first login
+    String tempPassword = PasswordGenerator.generateTemporaryPassword();
+
+    User user = new User();
+    user.setEmail(request.getEmail());
+    user.setUsername(request.getEmail());
+    user.setFirstName(request.getFirstName());
+    user.setLastName(request.getLastName());
+    user.setDisplayName((request.getFirstName() + " " + request.getLastName()).trim());
+    user.setPassword(passwordEncoder.encode(tempPassword));
+    user.setIsActive(false);                                         // activated after admin approval
+    user.setIsEmailVerified(false);
+    user.setIsProfileComplete(true);
+    user.setProfileCompletionPercentage(100);
+    user.setMustResetPassword(true);                                 // force password reset on first login
+    user.setIsTempPassword(true);
+    user.setRegistrationStatus(User.RegistrationStatus.PENDING_APPROVAL);
+    // Store owner's personal phone number if provided
+    if (request.getOwnerPhoneNumber() != null && !request.getOwnerPhoneNumber().isBlank()) {
+      user.setPhoneNumber(request.getOwnerPhoneNumber());
+    }
+    user.getRoles().add(cafeOwnerRole);
+
+    user = userRepository.save(user);
+
+    // Optionally store the café logo
+    String logoUrl = null;
+    if (logo != null && !logo.isEmpty()) {
+      logoUrl = fileStorageService.storeMenuItemImage(logo);
+    }
+
+    // Create the Café entity and link it to this owner
+    Cafe cafe = new Cafe();
+    cafe.setName(request.getCafeName());
+    cafe.setDescription(request.getDescription());
+    cafe.setAddress(request.getAddress());
+    cafe.setCity(request.getCity());
+    cafe.setState(request.getState());
+    cafe.setPincode(request.getPincode());
+    cafe.setPhoneNumber(request.getPhoneNumber());
+    cafe.setOpenTime(request.getOpenTime());
+    cafe.setCloseTime(request.getCloseTime());
+    cafe.setFssaiNumber(request.getFssaiNumber());
+    cafe.setGstNumber(request.getGstNumber());
+    cafe.setMsmeNumber(request.getMsmeNumber());
+    cafe.setIsActive(false);                                         // activated by admin after review
+    cafe.setOwner(user);
+    if (logoUrl != null) {
+      cafe.setLogoUrl(logoUrl);
+    }
+    cafeRepository.save(cafe);
+
+    // Email verification token
+    EmailVerificationToken token = new EmailVerificationToken();
+    token.setToken(UUID.randomUUID().toString());
+    token.setUser(user);
+    token.setExpiresAt(LocalDateTime.now().plusHours(24));
+    emailVerificationTokenRepository.save(token);
+
+    // Send verification email with temp password so owner can log in after admin approval
+    emailService.sendVerificationEmail(user.getEmail(), token.getToken(), tempPassword);
+
+    // Notify admins in real time
+    webSocketNotificationService.notifyAdmins(RealtimeNotification.builder()
+        .type("CAFE_OWNER_REGISTERED")
+        .title("New Café Owner Registration")
+        .message("Café owner registered: " + user.getEmail() + "  |  Café: " + request.getCafeName())
+        .severity("info")
+        .entityType("USER")
+        .entityId(user.getId())
+        .timestamp(LocalDateTime.now())
+        .build());
+
+    return AuthResponse.builder()
+        .message("Registration successful! Please verify your email. Your account and café will be activated after admin review.")
+        .email(user.getEmail())
+        .build();
+  }
   private RegisterResponse comprehensiveRegisterInternal(RegisterRequest request, MultipartFile govtIdProof) {
     if (userRepository.existsByEmail(request.getPersonalDetails().getEmail())
         || userRepository.existsByUsername(request.getUsername())) {

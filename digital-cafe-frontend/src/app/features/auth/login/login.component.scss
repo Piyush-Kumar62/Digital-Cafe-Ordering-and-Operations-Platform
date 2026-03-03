@@ -25,20 +25,37 @@
 }
 
 .auth-container {
-  height: 100vh;
   min-height: 100vh;
   box-sizing: border-box;
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 1.25rem;
+  /* Push content below the fixed 76px navbar; extra 12px breathing room */
+  padding: 90px 1.25rem 2rem;
   position: relative;
-  overflow: hidden;
+  overflow-x: hidden;
   background:
-    radial-gradient(circle at 14% 18%, rgba(56, 189, 248, 0.24), transparent 34%),
-    radial-gradient(circle at 86% 16%, rgba(129, 140, 248, 0.2), transparent 35%),
-    radial-gradient(circle at 72% 84%, rgba(16, 185, 129, 0.16), transparent 33%),
-    linear-gradient(150deg, var(--login-bg-1) 0%, var(--login-bg-2) 46%, var(--login-bg-3) 100%);
+    radial-gradient(
+      circle at 14% 18%,
+      rgba(56, 189, 248, 0.24),
+      transparent 34%
+    ),
+    radial-gradient(
+      circle at 86% 16%,
+      rgba(129, 140, 248, 0.2),
+      transparent 35%
+    ),
+    radial-gradient(
+      circle at 72% 84%,
+      rgba(16, 185, 129, 0.16),
+      transparent 33%
+    ),
+    linear-gradient(
+      150deg,
+      var(--login-bg-1) 0%,
+      var(--login-bg-2) 46%,
+      var(--login-bg-3) 100%
+    );
 }
 
 .auth-container::before,
@@ -85,20 +102,9 @@
   animation: cardIn 0.45s ease-out;
 }
 
+/* Gradient border lives on the full layout wrapper, not the card half */
 .auth-card::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 1.2px;
-  background: linear-gradient(120deg, rgba(56, 189, 248, 0.9), rgba(99, 102, 241, 0.7), rgba(34, 197, 94, 0.55));
-  -webkit-mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  opacity: 0.78;
-  pointer-events: none;
+  display: none; /* suppressed — wrapper carries the gradient border */
 }
 
 .auth-header {
@@ -147,7 +153,10 @@
   border: 1px solid var(--input-border);
   border-radius: 11px;
   font-size: 0.98rem;
-  transition: border-color 0.22s ease, box-shadow 0.22s ease, transform 0.16s ease;
+  transition:
+    border-color 0.22s ease,
+    box-shadow 0.22s ease,
+    transform 0.16s ease;
   outline: none;
   color: var(--text-main);
   background: var(--input-bg);
@@ -191,7 +200,9 @@
   font-size: 1.15rem;
   padding: 0;
   opacity: 0.72;
-  transition: opacity 0.22s ease, transform 0.22s ease;
+  transition:
+    opacity 0.22s ease,
+    transform 0.22s ease;
 }
 
 .password-toggle:hover {
@@ -220,7 +231,10 @@
   font-weight: 700;
   border-radius: 11px;
   cursor: pointer;
-  transition: transform 0.22s ease, box-shadow 0.22s ease, filter 0.22s ease;
+  transition:
+    transform 0.22s ease,
+    box-shadow 0.22s ease,
+    filter 0.22s ease;
   margin-top: 0.45rem;
   box-shadow: 0 10px 24px rgba(59, 130, 246, 0.28);
 }
@@ -297,9 +311,7 @@
 
 @media (max-width: 640px) {
   .auth-container {
-    height: 100vh;
-    min-height: 100vh;
-    padding: 0.9rem;
+    padding: 88px 0.9rem 1.5rem;
   }
 
   .auth-card {
@@ -313,5 +325,156 @@
 
   .auth-subtitle {
     font-size: 0.9rem;
+  }
+}
+
+/* ── Two-column layout: image panel (left) + form card (right) ───── */
+
+.auth-layout-wrapper {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  max-width: 880px;
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow: 0 26px 60px rgba(2, 6, 23, 0.65);
+  position: relative;
+  isolation: isolate;
+}
+
+/* Full-card gradient border — wraps BOTH the image panel and the form */
+.auth-layout-wrapper::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: linear-gradient(
+    135deg,
+    rgba(56, 189, 248, 1),
+    rgba(99, 102, 241, 0.85),
+    rgba(16, 185, 129, 0.7),
+    rgba(56, 189, 248, 1)
+  );
+  background-size: 300% 300%;
+  animation: borderShift 6s ease infinite;
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0.9;
+  pointer-events: none;
+  z-index: 10;
+}
+
+@keyframes borderShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Left: Cinematic coffee image */
+.auth-image-panel {
+  display: none; // hidden on mobile
+  flex: 0 0 42%;
+  position: relative;
+  overflow: hidden;
+  min-height: 540px;
+
+  @media (min-width: 768px) {
+    display: block;
+  }
+}
+
+.auth-panel-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  filter: brightness(0.5) saturate(1.15);
+  transition: transform 8s ease;
+
+  .auth-image-panel:hover & {
+    transform: scale(1.04);
+  }
+}
+
+.auth-panel-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 2rem;
+  background: linear-gradient(
+    to top,
+    rgba(6, 12, 30, 0.92) 0%,
+    rgba(6, 12, 30, 0.42) 55%,
+    transparent 100%
+  );
+}
+
+.auth-panel-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+}
+
+.auth-panel-icon {
+  font-size: 1.7rem;
+  color: #f59e0b;
+  filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.55));
+}
+
+.auth-panel-title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #f8fafc;
+  letter-spacing: -0.02em;
+}
+
+.auth-panel-tagline {
+  font-size: 0.88rem;
+  color: rgba(248, 250, 252, 0.8);
+  line-height: 1.58;
+  margin-bottom: 1.1rem;
+}
+
+.auth-panel-quote {
+  font-size: 0.8rem;
+  color: rgba(248, 250, 252, 0.65);
+  border-left: 2px solid #f59e0b;
+  padding-left: 0.7rem;
+  margin: 0;
+  font-style: italic;
+  line-height: 1.6;
+
+  cite {
+    display: block;
+    margin-top: 0.3rem;
+    font-style: normal;
+    font-size: 0.72rem;
+    color: rgba(248, 250, 252, 0.48);
+  }
+}
+
+/* Right: form card - fills remaining space */
+.auth-card {
+  flex: 1;
+  max-width: 100%; // override standalone max-width
+  border-radius: 0 22px 22px 0; // only right corners rounded when beside image
+
+  @media (max-width: 767px) {
+    border-radius: 22px; // fully rounded when no image panel
   }
 }

@@ -1,11 +1,8 @@
 package com.digitalcafe.controller;
 
-import com.digitalcafe.dto.request.AdminProfileUpdateDTO;
 import com.digitalcafe.dto.request.CustomerSelfProfileUpdateDTO;
-import com.digitalcafe.dto.response.AdminProfileResponseDTO;
 import com.digitalcafe.dto.response.ProfileImageUploadResponseDTO;
 import com.digitalcafe.dto.response.CustomerSelfProfileResponseDTO;
-import com.digitalcafe.service.AdminProfileService;
 import com.digitalcafe.service.CustomerSelfProfileService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -16,45 +13,16 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+/**
+ * REST controller for authenticated user (customer) self-profile management.
+ * Admin profile is managed by AdminProfileController at /api/admin/profile.
+ */
 @RestController
 @RequestMapping("/api/users/profile")
 @RequiredArgsConstructor
 public class UserProfileController {
 
-    private final AdminProfileService adminProfileService;
     private final CustomerSelfProfileService customerSelfProfileService;
-
-    @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<AdminProfileResponseDTO> getProfile(Authentication authentication) {
-        return ResponseEntity.ok(adminProfileService.getAuthenticatedAdminProfile(authentication));
-    }
-
-    @PutMapping
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<AdminProfileResponseDTO> updateProfile(
-            Authentication authentication,
-            @Valid @RequestBody AdminProfileUpdateDTO request
-    ) {
-        return ResponseEntity.ok(adminProfileService.updateAuthenticatedAdminProfile(authentication, request));
-    }
-
-    @PostMapping(value = "/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ProfileImageUploadResponseDTO> uploadProfileImage(
-            Authentication authentication,
-            @RequestParam("file") MultipartFile file
-    ) {
-        String imageUrl = adminProfileService.updateAuthenticatedAdminProfileImage(authentication, file);
-        return ResponseEntity.ok(new ProfileImageUploadResponseDTO(imageUrl));
-    }
-
-    @DeleteMapping("/image")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> deleteProfileImage(Authentication authentication) {
-        adminProfileService.removeAuthenticatedAdminProfileImage(authentication);
-        return ResponseEntity.noContent().build();
-    }
 
     @GetMapping("/self")
     @PreAuthorize("isAuthenticated()")

@@ -31,11 +31,12 @@ public class OrderServiceImpl implements OrderService {
 
     private static final Map<Order.OrderStatus, Set<Order.OrderStatus>> ALLOWED_TRANSITIONS =
             Map.of(
-                Order.OrderStatus.PLACED,     EnumSet.of(Order.OrderStatus.PREPARING, Order.OrderStatus.CANCELLED),
-                Order.OrderStatus.PREPARING,  EnumSet.of(Order.OrderStatus.READY,     Order.OrderStatus.CANCELLED),
-                Order.OrderStatus.READY,      EnumSet.of(Order.OrderStatus.SERVED,    Order.OrderStatus.CANCELLED),
-                Order.OrderStatus.SERVED,     EnumSet.noneOf(Order.OrderStatus.class),
-                Order.OrderStatus.CANCELLED,  EnumSet.noneOf(Order.OrderStatus.class)
+                Order.OrderStatus.PENDING_PAYMENT, EnumSet.of(Order.OrderStatus.PLACED, Order.OrderStatus.CANCELLED),
+                Order.OrderStatus.PLACED,          EnumSet.of(Order.OrderStatus.PREPARING, Order.OrderStatus.CANCELLED),
+                Order.OrderStatus.PREPARING,       EnumSet.of(Order.OrderStatus.READY,     Order.OrderStatus.CANCELLED),
+                Order.OrderStatus.READY,           EnumSet.of(Order.OrderStatus.SERVED,    Order.OrderStatus.CANCELLED),
+                Order.OrderStatus.SERVED,          EnumSet.noneOf(Order.OrderStatus.class),
+                Order.OrderStatus.CANCELLED,       EnumSet.noneOf(Order.OrderStatus.class)
             );
 
     private final OrderRepository orderRepository;
@@ -63,10 +64,10 @@ public class OrderServiceImpl implements OrderService {
         Order order = buildOrder(request, booking);
         order = orderRepository.save(order);
 
-        log.info("Order created: orderId={}, orderNumber={}, customerId={}, cafeId={}",
+        log.info("Order created (PENDING_PAYMENT): orderId={}, orderNumber={}, customerId={}, cafeId={}",
                 order.getId(), order.getOrderNumber(), customerId, booking.getCafe().getId());
-
-        notificationService.pushOrderEvent(order, "ORDER_PLACED", "/topic/chef/" + booking.getCafe().getId());
+        // ⚠️ Do NOT notify chef here — order is not paid yet.
+        // Chef notification fires in activateOrderAfterPayment() after payment is verified.
         return orderMapper.toResponse(order);
     }
 
@@ -180,7 +181,8 @@ public class OrderServiceImpl implements OrderService {
     public OrderResponse activateOrderAfterPayment(Long orderId) {
         Order order = fetchOrder(orderId);
 
-        if (order.getStatus() != Order.OrderStatus.PLACED) {
+        // Idempotency: if already PLACED or beyond, payment was already processed
+        if (order.getStatus() != Order.OrderStatus.PENDING_PAYMENT) {
             log.warn("activateOrderAfterPayment: order {} already in status {}, returning idempotent response",
                     order.getOrderNumber(), order.getStatus());
             return orderMapper.toResponse(order);
@@ -196,10 +198,21 @@ public class OrderServiceImpl implements OrderService {
                     ". Only COMPLETED payments can activate kitchen flow.");
         }
 
-        log.info("Payment validated, activating kitchen flow: orderId={}, paymentId={}, gatewayPaymentId={}",
+        // Transition: PENDING_PAYMENT → PLACED
+        order.setStatus(Order.OrderStatus.PLACED);
+        order.setPlacedAt(LocalDateTime.now());
+        order = orderRepository.save(order);
+
+        persistStatusHistory(order, Order.OrderStatus.PENDING_PAYMENT, Order.OrderStatus.PLACED,
+                order.getCustomer().getId(), "Payment verified — order activated");
+
+        log.info("Payment verified, order PLACED in kitchen queue: orderId={}, paymentId={}, gatewayPaymentId={}",
                 orderId, payment.getId(), payment.getPaymentGatewayPaymentId());
 
+        // Now it is safe to notify the chef
         notificationService.pushOrderEvent(order, "ORDER_PLACED", "/topic/chef/" + order.getCafe().getId());
+        // Also notify the customer that their order is confirmed
+        notificationService.pushOrderEvent(order, "ORDER_CONFIRMED", "/topic/customer/" + order.getCustomer().getId());
         return orderMapper.toResponse(order);
     }
 
@@ -233,7 +246,7 @@ public class OrderServiceImpl implements OrderService {
         order.setBooking(booking);
         order.setCustomer(booking.getCustomer());
         order.setCafe(booking.getCafe());
-        order.setStatus(Order.OrderStatus.PLACED);
+        order.setStatus(Order.OrderStatus.PENDING_PAYMENT);
         order.setSpecialInstructions(request.getSpecialInstructions());
 
         List<OrderItem> items = buildOrderItems(request.getItems(), order, booking.getCafe().getId());
@@ -311,13 +324,14 @@ public class OrderServiceImpl implements OrderService {
                 order.setCancelledAt(LocalDateTime.now());
                 order.setCancellationReason(request.getReason());
             }
-            default -> { /* PLACED – no timestamp action needed */ }
+            default -> { /* PLACED / PENDING_PAYMENT – no timestamp action needed */ }
         }
         order.setStatus(newStatus);
     }
 
     private void emitStatusNotification(Order order, Order.OrderStatus newStatus) {
         switch (newStatus) {
+            case PENDING_PAYMENT -> { /* no external notification — awaiting payment */ }
             case PLACED     -> notificationService.pushOrderEvent(order, "ORDER_PLACED",    "/topic/cafe/"     + order.getCafe().getId());
             case PREPARING  -> notificationService.pushOrderEvent(order, "ORDER_PREPARING", "/topic/customer/" + order.getCustomer().getId());
             case READY      -> {

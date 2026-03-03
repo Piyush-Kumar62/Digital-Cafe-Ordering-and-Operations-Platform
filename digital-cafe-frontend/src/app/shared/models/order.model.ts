@@ -56,14 +56,15 @@ export interface OrderItemRequest {
 }
 
 export enum OrderStatus {
-  PENDING = 'PENDING',
-  PREPARING = 'PREPARING',
-  READY = 'READY',
-  SERVED = 'SERVED',
-  CANCELLED = 'CANCELLED',
+  PENDING_PAYMENT = "PENDING_PAYMENT", // Awaiting payment — NOT in kitchen
+  PLACED = "PLACED", // Paid — visible to chef
+  PREPARING = "PREPARING",
+  READY = "READY",
+  SERVED = "SERVED",
+  CANCELLED = "CANCELLED",
 }
 
 export enum OrderType {
-  DINE_IN = 'DINE_IN',
-  TAKEAWAY = 'TAKEAWAY',
+  DINE_IN = "DINE_IN",
+  TAKEAWAY = "TAKEAWAY",
 }

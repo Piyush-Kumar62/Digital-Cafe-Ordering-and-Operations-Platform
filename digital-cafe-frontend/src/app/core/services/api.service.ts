@@ -407,6 +407,14 @@ export class ApiService {
       );
   }
 
+  markPaymentFailed(paymentId: number, reason: string): Observable<Payment> {
+    return this.http
+      .post<any>(`${this.baseUrl}/payments/${paymentId}/fail`, { reason })
+      .pipe(
+        map((res: any) => this.unwrapApiData<Payment>(res, res as Payment)),
+      );
+  }
+
   getAdminProfile(): Observable<AdminProfile> {
     return this.http
       .get<any>(`${this.baseUrl}/admin/profile`)

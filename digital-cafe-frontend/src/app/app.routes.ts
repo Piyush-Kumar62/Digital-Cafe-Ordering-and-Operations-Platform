@@ -332,6 +332,13 @@ export const routes: Routes = [
             (m) => m.OrderTrackingComponent,
           ),
       },
+      {
+        path: "payment/:orderId",
+        loadComponent: () =>
+          import("./features/customer/payment/payment.component").then(
+            (m) => m.PaymentComponent,
+          ),
+      },
       // Aliases so sidebar/dashboard links work without extra pages
       {
         path: "cafe",

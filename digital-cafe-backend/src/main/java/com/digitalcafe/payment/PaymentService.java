@@ -53,6 +53,18 @@ public class PaymentService {
     public Payment createPayment(Order order) {
         log.info("Creating payment for order: {}", order.getOrderNumber());
 
+        // Idempotency: if a COMPLETED or PENDING payment already exists, return it
+        paymentRepository.findByOrderId(order.getId()).ifPresent(existing -> {
+            if (existing.getStatus() == Payment.PaymentStatus.COMPLETED) {
+                throw new BusinessException("Payment already completed for order " + order.getOrderNumber());
+            }
+            if (existing.getStatus() == Payment.PaymentStatus.PENDING || existing.getStatus() == Payment.PaymentStatus.PROCESSING) {
+                throw new BusinessException("A payment is already in progress for order " + order.getOrderNumber() +
+                        ". Use existing paymentId=" + existing.getId());
+            }
+            // FAILED payments: allow retry — fall through to create a new one
+        });
+
         Payment payment = Payment.builder()
                 .order(order)
                 .amount(order.getTotalAmount())
@@ -102,6 +114,12 @@ public class PaymentService {
 
         if (payment.getStatus() == Payment.PaymentStatus.COMPLETED) {
             throw new BusinessException("Payment already completed");
+        }
+
+        // Prevent duplicate gateway payment ID (webhook replay / double-click)
+        if (paymentGatewayPaymentId != null && !paymentGatewayPaymentId.startsWith("SIM-")
+                && paymentRepository.existsByPaymentGatewayPaymentId(paymentGatewayPaymentId)) {
+            throw new BusinessException("This payment has already been processed (duplicate gateway payment ID)");
         }
 
         if ("RAZORPAY".equals(paymentGateway)) {

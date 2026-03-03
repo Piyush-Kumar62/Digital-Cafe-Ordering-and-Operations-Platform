@@ -103,11 +103,12 @@ public class Order extends BaseEntity {
     private Payment payment;
 
     public enum OrderStatus {
-        PLACED,       // Order placed by customer, awaiting kitchen pickup (replaces PENDING)
-        PREPARING,    // Chef has accepted and is preparing the food
-        READY,        // Food is ready, waiter notified for delivery
-        SERVED,       // Food served to the customer — terminal state
-        CANCELLED     // Order cancelled — terminal state
+        PENDING_PAYMENT, // Order created but awaiting successful payment — NOT visible to chef
+        PLACED,          // Payment confirmed — ORDER enters kitchen queue
+        PREPARING,       // Chef has accepted and is preparing the food
+        READY,           // Food is ready, waiter notified for delivery
+        SERVED,          // Food served to the customer — terminal state
+        CANCELLED        // Order cancelled — terminal state
     }
 
     /**

@@ -50,7 +50,8 @@ export class MenuComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
   readonly orderSteps: OrderStatus[] = [
-    OrderStatus.PENDING,
+    OrderStatus.PENDING_PAYMENT,
+    OrderStatus.PLACED,
     OrderStatus.PREPARING,
     OrderStatus.READY,
     OrderStatus.SERVED,

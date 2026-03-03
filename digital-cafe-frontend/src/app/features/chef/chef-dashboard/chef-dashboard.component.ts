@@ -1,19 +1,19 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { ApiService } from '@core/services/api.service';
-import { AuthService } from '@core/auth/auth.service';
-import { WebSocketService } from '@core/websocket/websocket.service';
-import { CardComponent } from '@shared/components/card/card.component';
-import { Order, OrderStatus } from '@shared/models/order.model';
-import { AlertService } from '@core/services/alert.service';
-import { Subject, takeUntil } from 'rxjs';
+import { Component, OnInit, OnDestroy } from "@angular/core";
+import { CommonModule } from "@angular/common";
+import { ApiService } from "@core/services/api.service";
+import { AuthService } from "@core/auth/auth.service";
+import { WebSocketService } from "@core/websocket/websocket.service";
+import { CardComponent } from "@shared/components/card/card.component";
+import { Order, OrderStatus } from "@shared/models/order.model";
+import { AlertService } from "@core/services/alert.service";
+import { Subject, takeUntil } from "rxjs";
 
 @Component({
-  selector: 'app-chef-dashboard',
+  selector: "app-chef-dashboard",
   standalone: true,
   imports: [CommonModule, CardComponent],
-  templateUrl: './chef-dashboard.component.html',
-  styleUrls: ['./chef-dashboard.component.scss'],
+  templateUrl: "./chef-dashboard.component.html",
+  styleUrls: ["./chef-dashboard.component.scss"],
 })
 export class ChefDashboardComponent implements OnInit, OnDestroy {
   pendingOrders: Order[] = [];
@@ -49,39 +49,52 @@ export class ChefDashboardComponent implements OnInit, OnDestroy {
         this.categorizeOrders(orders);
       },
       error: (error) => {
-        this.alertService.error('Load Failed', 'Unable to load kitchen orders.');
+        this.alertService.error(
+          "Load Failed",
+          "Unable to load kitchen orders.",
+        );
       },
     });
   }
 
   categorizeOrders(orders: Order[]): void {
-    this.pendingOrders = orders.filter((o) => o.status === OrderStatus.PENDING);
-    this.preparingOrders = orders.filter((o) => o.status === OrderStatus.PREPARING);
+    this.pendingOrders = orders.filter((o) => o.status === OrderStatus.PLACED);
+    this.preparingOrders = orders.filter(
+      (o) => o.status === OrderStatus.PREPARING,
+    );
     this.readyOrders = orders.filter((o) => o.status === OrderStatus.READY);
   }
 
   subscribeToOrderUpdates(): void {
-    this.webSocketService.orderNotifications$.pipe(takeUntil(this.destroy$)).subscribe((order) => {
-      if (order) {
-        this.alertService.info(`New order received: #${order.orderNumber}`);
-        this.loadOrders();
-      }
-    });
+    this.webSocketService.orderNotifications$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((order) => {
+        if (order) {
+          this.alertService.info(`New order received: #${order.orderNumber}`);
+          this.loadOrders();
+        }
+      });
   }
 
   updateOrderStatus(orderId: number, status: string): void {
-    this.alertService.loading('Updating order status. Please wait.');
+    this.alertService.loading("Updating order status. Please wait.");
     const request$ = this.apiService.markOrderReady(orderId);
 
     request$.subscribe({
       next: () => {
         this.alertService.close();
-        this.alertService.success('Status Updated', `Order status updated to ${status}.`);
+        this.alertService.success(
+          "Status Updated",
+          `Order status updated to ${status}.`,
+        );
         this.loadOrders();
       },
       error: (error) => {
         this.alertService.close();
-        this.alertService.error('Update Failed', 'Failed to update order status');
+        this.alertService.error(
+          "Update Failed",
+          "Failed to update order status",
+        );
       },
     });
   }

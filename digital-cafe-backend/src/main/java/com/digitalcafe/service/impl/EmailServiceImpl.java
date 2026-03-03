@@ -2,6 +2,7 @@ package com.digitalcafe.service.impl;
 
 import com.digitalcafe.email.EmailTemplateType;
 import com.digitalcafe.service.EmailService;
+import jakarta.annotation.PostConstruct;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
@@ -30,8 +31,14 @@ public class EmailServiceImpl implements EmailService {
 
     private final SpringTemplateEngine templateEngine;
 
-    @Value("${spring.mail.username}")
+    @Value("${spring.mail.username:}")
     private String fromEmail;
+
+    @Value("${spring.mail.password:}")
+    private String mailPassword;
+
+    @Value("${app.email.enabled:true}")
+    private boolean emailEnabled;
 
     @Value("${app.email.from-name:Digital Cafe Team}")
     private String fromName;
@@ -41,6 +48,27 @@ public class EmailServiceImpl implements EmailService {
 
     @Value("${app.email.support-url:http://localhost:4200/contact}")
     private String supportUrl;
+
+    // ── Startup validation ───────────────────────────────────────────────────
+
+    @PostConstruct
+    public void validateEmailConfig() {
+        boolean credentialsMissing = fromEmail.isBlank() || mailPassword.isBlank()
+                || fromEmail.equals("noreply@digitalcafe.com");
+        if (!emailEnabled) {
+            log.warn("[Email] Email sending is DISABLED (app.email.enabled=false). No emails will be sent.");
+        } else if (credentialsMissing) {
+            log.warn("=================================================================");
+            log.warn("[Email] ⚠️  EMAIL CREDENTIALS NOT CONFIGURED — emails will NOT be sent!");
+            log.warn("[Email] To enable emails, create digital-cafe-backend/.env and set:");
+            log.warn("[Email]   MAIL_USERNAME=your-gmail@gmail.com");
+            log.warn("[Email]   MAIL_APP_PASSWORD=xxxx xxxx xxxx xxxx  (Gmail App Password)");
+            log.warn("[Email] Guide: https://myaccount.google.com/apppasswords");
+            log.warn("=================================================================");
+        } else {
+            log.info("[Email] ✅ Email configured — sending from: {}", fromEmail);
+        }
+    }
 
     // ── EmailService implementation ──────────────────────────────────────────
 
@@ -141,6 +169,16 @@ public class EmailServiceImpl implements EmailService {
             EmailTemplateType templateType,
             Map<String, Object> variables) {
 
+        // Guard: skip silently if not configured rather than throwing a cryptic SMTP auth error
+        if (!emailEnabled) {
+            log.debug("[Email] SKIP (disabled) {} -> {}", templateType, to);
+            return;
+        }
+        if (fromEmail.isBlank() || mailPassword.isBlank() || fromEmail.equals("noreply@digitalcafe.com")) {
+            log.warn("[Email] SKIP (no credentials) {} -> {} | Set MAIL_USERNAME + MAIL_APP_PASSWORD in .env", templateType, to);
+            return;
+        }
+
         try {
             variables.put("currentYear", Year.now().getValue());
             variables.put("frontendUrl", frontendUrl);
@@ -164,10 +202,10 @@ public class EmailServiceImpl implements EmailService {
             helper.setText("", html);
 
             mailSender.send(message);
-            log.info("[Email] Sent {} -> {}", templateType, to);
+            log.info("[Email] ✅ Sent {} -> {}", templateType, to);
 
         } catch (Exception e) {
-            log.error("[Email] Failed to send {} -> {}: {}", templateType, to, e.getMessage(), e);
+            log.error("[Email] ❌ Failed to send {} -> {}: {}", templateType, to, e.getMessage(), e);
         }
     }
 

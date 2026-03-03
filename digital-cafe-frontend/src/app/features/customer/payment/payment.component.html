@@ -1,50 +1,102 @@
 <div class="container mx-auto px-4 py-8 max-w-3xl">
-  <h1 class="text-3xl font-extrabold text-gray-800 mb-6 text-center">Order Payment</h1>
+  <h1 class="text-3xl font-extrabold text-gray-800 mb-6 text-center">
+    Complete Your Payment
+  </h1>
 
-  <div *ngIf="loading" class="bg-white rounded-lg shadow p-8 text-center text-gray-600">
-    Loading payment details...
+  <div
+    *ngIf="loading"
+    class="bg-white rounded-lg shadow p-8 text-center text-gray-600"
+  >
+    Loading payment details…
   </div>
 
   <div *ngIf="!loading && order" class="bg-white rounded-lg shadow p-6">
+    <!-- Order Summary -->
     <div class="mb-6">
       <p class="text-sm text-gray-500">Order</p>
-      <p class="text-xl font-bold text-gray-900">#{{ order.orderNumber || order.id }}</p>
+      <p class="text-xl font-bold text-gray-900">
+        #{{ order.orderNumber || order.id }}
+      </p>
     </div>
 
     <div class="mb-6 border rounded-lg p-4 bg-gray-50">
       <div class="flex justify-between text-sm mb-2">
         <span class="text-gray-600">Subtotal</span>
-        <span>${{ order.subtotal || 0 | number:'1.2-2' }}</span>
+        <span>₹{{ order.subtotal || 0 | number: "1.2-2" }}</span>
       </div>
       <div class="flex justify-between text-sm mb-2">
-        <span class="text-gray-600">Tax</span>
-        <span>${{ order.tax || 0 | number:'1.2-2' }}</span>
+        <span class="text-gray-600">Tax (10%)</span>
+        <span>₹{{ order.tax || 0 | number: "1.2-2" }}</span>
       </div>
-      <div class="flex justify-between text-lg font-bold">
+      <div class="flex justify-between text-lg font-bold border-t pt-2 mt-2">
         <span>Total</span>
-        <span>${{ order.totalAmount | number:'1.2-2' }}</span>
+        <span class="text-indigo-700"
+          >₹{{ order.totalAmount | number: "1.2-2" }}</span
+        >
       </div>
     </div>
 
-    <div *ngIf="payment?.status === PaymentStatus.COMPLETED" class="mb-6 p-4 rounded bg-green-50 border border-green-200 text-green-700">
-      Payment already completed for this order.
+    <!-- Already paid -->
+    <div
+      *ngIf="payment?.status === PaymentStatus.COMPLETED"
+      class="mb-6 p-4 rounded bg-green-50 border border-green-200 text-green-700 text-center"
+    >
+      ✅ Payment already completed for this order.
     </div>
 
+    <!-- Payment failed info -->
+    <div
+      *ngIf="payment?.status === PaymentStatus.FAILED"
+      class="mb-6 p-4 rounded bg-red-50 border border-red-200 text-red-700"
+    >
+      ❌ Previous payment attempt failed. You can try again.
+    </div>
+
+    <!-- Method selector (only when not yet paid) -->
     <div *ngIf="payment?.status !== PaymentStatus.COMPLETED" class="mb-6">
-      <label class="block text-sm font-medium text-gray-700 mb-2">Payment Method</label>
-      <select [(ngModel)]="selectedMethod" class="w-full border rounded-md px-3 py-2">
-        <option *ngFor="let method of methods" [value]="method">{{ method }}</option>
-      </select>
+      <label class="block text-sm font-medium text-gray-700 mb-2"
+        >Payment Method</label
+      >
+      <div class="grid grid-cols-3 gap-3">
+        <button
+          *ngFor="let method of methods"
+          (click)="selectedMethod = method"
+          [class.ring-2]="selectedMethod === method"
+          [class.ring-indigo-500]="selectedMethod === method"
+          class="py-2 px-3 border rounded-lg text-sm font-medium text-gray-700 hover:bg-indigo-50 transition"
+        >
+          {{ method }}
+        </button>
+      </div>
     </div>
 
+    <!-- Security note -->
+    <p
+      *ngIf="payment?.status !== PaymentStatus.COMPLETED"
+      class="text-xs text-gray-400 mb-4 text-center"
+    >
+      🔒 Secure payment powered by Razorpay. Your card details are never stored.
+    </p>
+
+    <!-- Actions -->
     <div class="flex justify-between items-center">
-      <a routerLink="/customer/cart" class="text-gray-600 hover:text-gray-900 font-medium">Back to Cart</a>
+      <a
+        routerLink="/customer/cart"
+        class="text-gray-600 hover:text-gray-900 font-medium"
+        >← Back to Cart</a
+      >
       <button
         (click)="payNow()"
         [disabled]="processing"
-        class="bg-indigo-600 text-white font-semibold py-2 px-5 rounded-md hover:bg-indigo-700 disabled:opacity-60"
+        class="bg-indigo-600 text-white font-semibold py-2 px-6 rounded-md hover:bg-indigo-700 disabled:opacity-60 transition"
       >
-        {{ payment?.status === PaymentStatus.COMPLETED ? 'Go To Tracking' : (processing ? 'Processing...' : 'Pay Now') }}
+        {{
+          payment?.status === PaymentStatus.COMPLETED
+            ? "View Order Tracking"
+            : processing
+              ? "Processing…"
+              : "Pay ₹" + (order.totalAmount | number: "1.2-2")
+        }}
       </button>
     </div>
   </div>

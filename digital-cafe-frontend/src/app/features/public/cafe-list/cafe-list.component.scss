@@ -1,122 +1,480 @@
+// ─── Global host ────────────────────────────────────────────────────────────
 :host {
   display: block;
 }
 
-.cafe-list-page {
+// ─── Page wrapper ────────────────────────────────────────────────────────────
+.cafe-page {
   min-height: 100vh;
-  padding: 1.25rem;
-  background:
-    radial-gradient(circle at 10% 15%, rgba(6, 182, 212, 0.25), transparent 30%),
-    radial-gradient(circle at 90% 90%, rgba(22, 163, 74, 0.2), transparent 28%),
-    linear-gradient(150deg, #f8fafc, #ecfeff);
-  color: #0f172a;
+  background: linear-gradient(160deg, #0b1220 0%, #111827 60%, #1a1005 100%);
+  color: #f1f5f9;
 }
 
-.hero {
-  border-radius: 22px;
-  padding: 1.4rem;
-  margin-bottom: 1.2rem;
-  color: #e2e8f0;
-  background: linear-gradient(130deg, #0f172a, #155e75);
-  box-shadow: 0 16px 38px rgba(15, 23, 42, 0.3);
-}
-
-.eyebrow {
-  margin: 0;
-  font-size: 0.72rem;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-}
-
-.hero h1 {
-  margin: 0.3rem 0 0.4rem;
-}
-
-.hero p {
-  margin: 0;
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1rem;
-}
-
-.card {
+// ─── Hero ────────────────────────────────────────────────────────────────────
+.cafe-hero {
   position: relative;
-  border-radius: 18px;
-  overflow: hidden;
-  background: #fff;
-  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.14);
-  border: 1px solid #e2e8f0;
-  cursor: pointer;
-  transition: transform 0.22s ease, box-shadow 0.22s ease;
-}
-
-.card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 20px 34px rgba(15, 23, 42, 0.2);
-}
-
-.card img {
-  width: 100%;
-  height: 190px;
-  object-fit: cover;
-}
-
-.rating {
-  position: absolute;
-  top: 0.7rem;
-  right: 0.7rem;
-  border-radius: 999px;
-  background: #fef9c3;
-  color: #854d0e;
-  font-size: 0.74rem;
-  font-weight: 700;
-  padding: 0.25rem 0.55rem;
-}
-
-.content {
-  padding: 0.95rem;
-}
-
-.content h3 {
-  margin: 0 0 0.35rem;
-}
-
-.location {
-  margin: 0;
-  color: #0f766e;
-  font-weight: 600;
-}
-
-.description {
-  margin: 0.55rem 0;
-  color: #475569;
-  min-height: 2.6rem;
-}
-
-.time {
-  margin: 0;
-  color: #334155;
-  font-weight: 600;
-}
-
-.pager {
-  margin-top: 1rem;
+  min-height: 520px;
   display: flex;
-  gap: 0.8rem;
+  align-items: center;
+  overflow: hidden;
+}
+
+.cafe-hero-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.cafe-hero-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 60%;
+  filter: brightness(0.38) saturate(0.7);
+}
+
+.cafe-hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(11, 18, 32, 0.3) 0%,
+    rgba(11, 18, 32, 0.72) 70%,
+    #0b1220 100%
+  );
+}
+
+.cafe-hero-content {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 100px 2rem 3.5rem;
+  text-align: center;
+}
+
+.cafe-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: 999px;
+  padding: 0.36rem 0.9rem;
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  color: #fbbf24;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  margin-bottom: 1.2rem;
+}
+
+.cafe-hero-title {
+  font-size: clamp(2.2rem, 5vw, 3.6rem);
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  color: #fff;
+  margin: 0 0 1rem;
+  text-shadow: 0 4px 24px rgba(0, 0, 0, 0.45);
+}
+
+.cafe-hero-sub {
+  font-size: 1.18rem;
+  color: #cbd5e1;
+  max-width: 580px;
+  margin: 0 auto 2rem;
+  line-height: 1.65;
+}
+
+// ─── Search bar ──────────────────────────────────────────────────────────────
+.cafe-search-bar {
+  position: relative;
+  max-width: 540px;
+  margin: 0 auto 2rem;
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1.5px solid rgba(245, 158, 11, 0.35);
+  border-radius: 14px;
+  backdrop-filter: blur(12px);
+  overflow: hidden;
+  transition: border-color 0.25s;
+
+  &:focus-within {
+    border-color: #f59e0b;
+    background: rgba(255, 255, 255, 0.14);
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.18);
+  }
+}
+
+.cafe-search-icon {
+  color: #f59e0b;
+  font-size: 1.1rem;
+  padding: 0 0.75rem 0 1rem;
+  flex-shrink: 0;
+}
+
+.cafe-search-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  padding: 0.85rem 0.5rem;
+  font-size: 0.975rem;
+  color: #f1f5f9;
+
+  &::placeholder {
+    color: #94a3b8;
+  }
+}
+
+.cafe-search-badge {
+  background: #f59e0b;
+  color: #0b1220;
+  font-size: 0.72rem;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 0.25rem 0.65rem;
+  margin: 0 0.6rem;
+  white-space: nowrap;
+}
+
+// ─── Hero Stats ──────────────────────────────────────────────────────────────
+.cafe-hero-stats {
+  display: flex;
+  justify-content: center;
+  gap: 2.5rem;
+  flex-wrap: wrap;
+}
+
+.cafe-stat {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #fbbf24;
+  font-size: 0.9rem;
+  font-weight: 600;
+
+  i {
+    font-size: 1rem;
+  }
+}
+
+// ─── Grid Section ────────────────────────────────────────────────────────────
+.cafe-grid-section {
+  padding: 2.5rem 2rem 4rem;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+// ─── Loading state ───────────────────────────────────────────────────────────
+.cafe-state {
+  text-align: center;
+  padding: 5rem 1rem;
+  color: #94a3b8;
+
+  p {
+    margin-top: 1.2rem;
+    font-size: 1.05rem;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.cafe-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid rgba(245, 158, 11, 0.2);
+  border-top-color: #f59e0b;
+  border-radius: 50%;
+  margin: 0 auto;
+  animation: spin 0.75s linear infinite;
+}
+
+// ─── Empty state ─────────────────────────────────────────────────────────────
+.cafe-empty {
+  text-align: center;
+  padding: 5rem 1rem;
+  color: #94a3b8;
+
+  h3 {
+    margin: 1rem 0 0.5rem;
+    color: #e2e8f0;
+    font-size: 1.4rem;
+  }
+
+  p {
+    margin: 0;
+    font-size: 0.95rem;
+  }
+}
+
+.cafe-empty-icon {
+  font-size: 4rem;
+  color: #f59e0b;
+  opacity: 0.6;
+}
+
+// ─── Card Grid ───────────────────────────────────────────────────────────────
+.cafe-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.6rem;
+}
+
+// ─── Cafe Card ───────────────────────────────────────────────────────────────
+.cafe-card {
+  position: relative;
+  border-radius: 20px;
+  overflow: hidden;
+  background: linear-gradient(160deg, #1e293b, #162032);
+  border: 1px solid rgba(245, 158, 11, 0.15);
+  cursor: pointer;
+  transition:
+    transform 0.28s ease,
+    box-shadow 0.28s ease,
+    border-color 0.28s ease;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  outline: none;
+
+  &:hover,
+  &:focus {
+    transform: translateY(-7px);
+    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.5);
+    border-color: rgba(245, 158, 11, 0.45);
+  }
+}
+
+// ─── Card Image ──────────────────────────────────────────────────────────────
+.cafe-card-img-wrap {
+  position: relative;
+  height: 200px;
+  overflow: hidden;
+}
+
+.cafe-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+
+  .cafe-card:hover & {
+    transform: scale(1.07);
+  }
+}
+
+.cafe-card-img-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    transparent 50%,
+    rgba(22, 32, 50, 0.75) 100%
+  );
+}
+
+// ─── Rating badge ────────────────────────────────────────────────────────────
+.cafe-rating {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: rgba(251, 191, 36, 0.92);
+  color: #431407;
+  font-size: 0.78rem;
+  font-weight: 800;
+  padding: 0.3rem 0.65rem;
+  border-radius: 999px;
+  backdrop-filter: blur(6px);
+
+  i {
+    font-size: 0.68rem;
+  }
+
+  &--new {
+    background: rgba(100, 116, 139, 0.75);
+    color: #f8fafc;
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+  }
+}
+
+// ─── Card Body ───────────────────────────────────────────────────────────────
+.cafe-card-body {
+  padding: 1.25rem 1.3rem 1.35rem;
+}
+
+.cafe-card-name {
+  margin: 0 0 0.45rem;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #f1f5f9;
+  line-height: 1.25;
+}
+
+.cafe-card-location {
+  margin: 0 0 0.6rem;
+  font-size: 0.84rem;
+  color: #fbbf24;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+
+  i {
+    font-size: 0.8rem;
+  }
+}
+
+.cafe-card-desc {
+  margin: 0 0 1rem;
+  font-size: 0.875rem;
+  color: #94a3b8;
+  line-height: 1.55;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.cafe-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  padding-top: 0.8rem;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.cafe-card-time {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  color: #94a3b8;
+
+  i {
+    color: #f59e0b;
+  }
+}
+
+.cafe-card-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  font-size: 0.83rem;
+  font-weight: 700;
+  color: #f59e0b;
+  letter-spacing: 0.01em;
+  transition: gap 0.2s;
+
+  .cafe-card:hover & {
+    gap: 0.45rem;
+  }
+}
+
+// ─── Pagination ──────────────────────────────────────────────────────────────
+.cafe-pager {
+  display: flex;
   align-items: center;
   justify-content: center;
+  gap: 1.5rem;
+  margin-top: 3rem;
+  flex-wrap: wrap;
 }
 
-.pager button {
-  border: 0;
-  border-radius: 10px;
-  padding: 0.45rem 0.9rem;
+.cafe-pager-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: linear-gradient(135deg, #d97706, #b45309);
   color: #fff;
-  background: linear-gradient(95deg, #0369a1, #0891b2);
+  border: none;
+  border-radius: 12px;
+  padding: 0.6rem 1.5rem;
+  font-size: 0.88rem;
+  font-weight: 700;
   cursor: pointer;
+  transition:
+    opacity 0.2s,
+    transform 0.2s;
+
+  &:hover:not(:disabled) {
+    opacity: 0.88;
+    transform: translateY(-2px);
+  }
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+.cafe-pager-info {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 0.85rem;
+}
+
+.cafe-pager-dots {
+  display: flex;
+  gap: 0.45rem;
+  justify-content: center;
+  margin-top: 0.45rem;
+}
+
+.cafe-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  transition:
+    background 0.25s,
+    transform 0.25s;
+
+  &.active {
+    background: #f59e0b;
+    transform: scale(1.35);
+  }
+}
+
+// ─── Responsive ──────────────────────────────────────────────────────────────
+@media (max-width: 768px) {
+  .cafe-hero-content {
+    padding: 90px 1.25rem 2.5rem;
+  }
+
+  .cafe-hero-stats {
+    gap: 1.25rem;
+  }
+
+  .cafe-grid-section {
+    padding: 2rem 1rem 3rem;
+  }
+
+  .cafe-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .cafe-pager {
+    flex-direction: column;
+    gap: 1rem;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1100px) {
+  .cafe-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 .pager button:disabled {
@@ -142,5 +500,33 @@
 
   .grid {
     grid-template-columns: 1fr;
+  }
+}
+
+.cafe-retry-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 1.25rem;
+  padding: 0.65rem 1.5rem;
+  background: linear-gradient(135deg, #d97706, #b45309);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    opacity 0.2s,
+    transform 0.2s;
+
+  &:hover {
+    opacity: 0.88;
+    transform: translateY(-2px);
+  }
+
+  &:active {
+    transform: translateY(0);
+    opacity: 1;
   }
 }

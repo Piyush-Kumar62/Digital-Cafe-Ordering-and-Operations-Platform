@@ -1,32 +1,192 @@
-<section class="cafe-list-page">
-  <header class="hero">
-    <p class="eyebrow">Digital Cafe Platform</p>
-    <h1>Browse Cafes</h1>
-    <p>Pick a cafe, select your slot, pre-order items, and checkout smoothly.</p>
-  </header>
+<app-navbar></app-navbar>
 
-  <div class="state" *ngIf="loading">Loading cafes...</div>
-  <div class="state" *ngIf="!loading && cafes.length === 0">No cafes available right now.</div>
+<div class="cafe-page">
+  <!-- ═══ HERO ════════════════════════════════════════════════════════════ -->
+  <section class="cafe-hero">
+    <div class="cafe-hero-bg">
+      <img
+        src="assets/cafe/cafe-interior-01.jpg"
+        alt=""
+        class="cafe-hero-img"
+      />
+      <div class="cafe-hero-overlay"></div>
+    </div>
+    <div class="cafe-hero-content">
+      <span class="cafe-eyebrow">
+        <i class="bi bi-cup-hot-fill"></i>&nbsp; Digital Café Platform
+      </span>
+      <h1 class="cafe-hero-title">Discover Your Perfect Café</h1>
+      <p class="cafe-hero-sub">
+        Browse handpicked cafés, pre-order your favourites, and skip the wait.
+      </p>
 
-  <section class="grid" *ngIf="!loading && cafes.length > 0">
-    <article class="card" *ngFor="let cafe of cafes" (click)="openCafe(cafe.id)">
-      <img [src]="cafe.imageUrl || 'assets/downloads/unsplash/cafe-cover-default.jpg'" [alt]="cafe.name" />
-      <span class="rating">★ {{ cafe.rating || 0 | number: "1.1-1" }}</span>
-      <div class="content">
-        <h3>{{ cafe.name }}</h3>
-        <p class="location">{{ cafe.location }}</p>
-        <p class="description">{{ cafe.description || "No description available." }}</p>
-        <p class="time">{{ cafe.openTime }} - {{ cafe.closeTime }}</p>
+      <!-- Search bar -->
+      <div class="cafe-search-bar">
+        <i class="bi bi-search cafe-search-icon"></i>
+        <input
+          type="text"
+          class="cafe-search-input"
+          placeholder="Search by name, city or keyword…"
+          [(ngModel)]="searchQuery"
+          autocomplete="off"
+        />
+        <span class="cafe-search-badge" *ngIf="searchQuery">
+          {{ filteredCafes.length }} result{{
+            filteredCafes.length !== 1 ? "s" : ""
+          }}
+        </span>
       </div>
-    </article>
+
+      <!-- Quick stats -->
+      <div class="cafe-hero-stats">
+        <div class="cafe-stat">
+          <i class="bi bi-shop"></i>
+          <span>{{ cafes.length }}+ Cafés</span>
+        </div>
+        <div class="cafe-stat">
+          <i class="bi bi-geo-alt"></i>
+          <span>Multiple Cities</span>
+        </div>
+        <div class="cafe-stat">
+          <i class="bi bi-clock"></i>
+          <span>Open Now</span>
+        </div>
+      </div>
+    </div>
   </section>
 
-  <footer class="pager" *ngIf="totalPages > 1">
-    <button (click)="previous()" [disabled]="page === 0">Previous</button>
-    <span>Page {{ page + 1 }} of {{ totalPages }}</span>
-    <button (click)="next()" [disabled]="page + 1 >= totalPages">Next</button>
-  </footer>
-</section>
+  <!-- ═══ GRID SECTION ════════════════════════════════════════════════════ -->
+  <section class="cafe-grid-section">
+    <!-- Loading state -->
+    <div class="cafe-state" *ngIf="loading">
+      <div class="cafe-spinner"></div>
+      <p>Fetching cafés near you…</p>
+    </div>
 
+    <!-- Error state -->
+    <div class="cafe-empty" *ngIf="!loading && error">
+      <i class="bi bi-wifi-off cafe-empty-icon"></i>
+      <h3>Could not reach the server</h3>
+      <p>Check your connection or try again.</p>
+      <button class="cafe-retry-btn" (click)="retry()">
+        <i class="bi bi-arrow-clockwise"></i> Retry
+      </button>
+    </div>
 
+    <!-- Empty state -->
+    <div
+      class="cafe-empty"
+      *ngIf="!loading && !error && filteredCafes.length === 0"
+    >
+      <i class="bi bi-cup-hot cafe-empty-icon"></i>
+      <h3>No cafés found</h3>
+      <p *ngIf="searchQuery">
+        Try a different search term or clear the filter.
+      </p>
+      <p *ngIf="!searchQuery">
+        No cafés are available right now. Check back soon!
+      </p>
+    </div>
 
+    <!-- Card grid -->
+    <div
+      class="cafe-grid"
+      *ngIf="!loading && !error && filteredCafes.length > 0"
+    >
+      <article
+        class="cafe-card"
+        *ngFor="let cafe of filteredCafes"
+        (click)="openCafe(cafe.id)"
+        tabindex="0"
+        (keydown.enter)="openCafe(cafe.id)"
+        role="button"
+        [attr.aria-label]="'View ' + cafe.name"
+      >
+        <!-- Image -->
+        <div class="cafe-card-img-wrap">
+          <img
+            [src]="cafe.imageUrl || 'assets/cafe/cafe-interior-pexels-01.jpg'"
+            [alt]="cafe.name"
+            class="cafe-card-img"
+            loading="lazy"
+            onerror="this.src = 'assets/cafe/cafe-interior-pexels-01.jpg'"
+          />
+          <div class="cafe-card-img-overlay"></div>
+          <!-- Rating badge: only show when a real rating exists -->
+          <span class="cafe-rating" *ngIf="cafe.rating && cafe.rating > 0">
+            <i class="bi bi-star-fill"></i>
+            {{ cafe.rating | number: "1.1-1" }}
+          </span>
+          <span
+            class="cafe-rating cafe-rating--new"
+            *ngIf="!cafe.rating || cafe.rating === 0"
+          >
+            New
+          </span>
+        </div>
+
+        <!-- Content -->
+        <div class="cafe-card-body">
+          <h3 class="cafe-card-name">{{ cafe.name }}</h3>
+
+          <p class="cafe-card-location" *ngIf="cafe.location">
+            <i class="bi bi-geo-alt-fill"></i> {{ cafe.location }}
+          </p>
+
+          <p class="cafe-card-desc">
+            {{ cafe.description || "A wonderful café experience awaits you." }}
+          </p>
+
+          <div class="cafe-card-footer">
+            <span class="cafe-card-time">
+              <i class="bi bi-clock"></i>
+              <ng-container *ngIf="cafe.openTime || cafe.closeTime">
+                {{ fmt12h(cafe.openTime) || "—" }} –
+                {{ fmt12h(cafe.closeTime) || "—" }}
+              </ng-container>
+              <ng-container *ngIf="!cafe.openTime && !cafe.closeTime">
+                Hours not specified
+              </ng-container>
+            </span>
+            <span class="cafe-card-cta">
+              View Menu <i class="bi bi-arrow-right-short"></i>
+            </span>
+          </div>
+        </div>
+      </article>
+    </div>
+
+    <!-- Pagination -->
+    <div
+      class="cafe-pager"
+      *ngIf="!loading && !error && totalPages > 1 && !searchQuery"
+    >
+      <button
+        class="cafe-pager-btn"
+        (click)="previous()"
+        [disabled]="page === 0"
+      >
+        <i class="bi bi-chevron-left"></i> Previous
+      </button>
+      <div class="cafe-pager-info">
+        <span>Page {{ page + 1 }} of {{ totalPages }}</span>
+        <div class="cafe-pager-dots">
+          <span
+            *ngFor="let p of [].constructor(totalPages); let i = index"
+            class="cafe-dot"
+            [class.active]="i === page"
+          ></span>
+        </div>
+      </div>
+      <button
+        class="cafe-pager-btn"
+        (click)="next()"
+        [disabled]="page + 1 >= totalPages"
+      >
+        Next <i class="bi bi-chevron-right"></i>
+      </button>
+    </div>
+  </section>
+</div>
+
+<app-footer></app-footer>

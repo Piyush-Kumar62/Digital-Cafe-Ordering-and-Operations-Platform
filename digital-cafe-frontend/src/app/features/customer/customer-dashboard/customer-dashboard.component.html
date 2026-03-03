@@ -52,6 +52,62 @@
     </app-chart>
   </div>
 
+  <!-- Available Cafés (realtime) -->
+  <div class="available-cafes-container available-cafes-card">
+    <h3>Available Cafés</h3>
+    <p
+      class="cafes-subtitle"
+      *ngIf="!loadingCafes && availableCafes.length > 0"
+    >
+      Click a café to browse its menu and book a table
+    </p>
+
+    <div class="cafes-loading" *ngIf="loadingCafes">Loading cafés…</div>
+
+    <div class="cafes-list" *ngIf="!loadingCafes && availableCafes.length > 0">
+      <div
+        class="mini-cafe-card"
+        *ngFor="let cafe of availableCafes"
+        (click)="goToMenu(cafe.id)"
+        tabindex="0"
+        (keydown.enter)="goToMenu(cafe.id)"
+        role="button"
+        [attr.aria-label]="'Browse ' + cafe.name"
+      >
+        <div class="mini-cafe-img-wrap">
+          <img
+            [src]="cafe.imageUrl || '/assets/cafe/cafe-interior-01.jpg'"
+            [alt]="cafe.name"
+            loading="lazy"
+            onerror="this.src = '/assets/cafe/cafe-interior-01.jpg'"
+          />
+        </div>
+        <div class="mini-cafe-body">
+          <span class="mini-cafe-name">{{ cafe.name }}</span>
+          <span class="mini-cafe-location" *ngIf="cafe.location"
+            >📍 {{ cafe.location }}</span
+          >
+          <span class="mini-cafe-hours" *ngIf="cafe.openTime || cafe.closeTime">
+            🕐 {{ fmt12h(cafe.openTime) }} – {{ fmt12h(cafe.closeTime) }}
+          </span>
+          <span class="mini-cafe-rating" *ngIf="cafe.rating && cafe.rating > 0"
+            >⭐ {{ cafe.rating | number: "1.1-1" }}</span
+          >
+        </div>
+        <span class="mini-cafe-cta">View Menu →</span>
+      </div>
+    </div>
+
+    <div
+      class="cafes-empty"
+      *ngIf="!loadingCafes && availableCafes.length === 0"
+    >
+      No cafés active right now. Check back soon!
+    </div>
+
+    <a routerLink="/cafes" class="cafes-browse-all">Browse all cafés →</a>
+  </div>
+
   <!-- Quick Actions -->
   <div class="quick-actions-container quick-actions-card">
     <h3>Quick Actions</h3>

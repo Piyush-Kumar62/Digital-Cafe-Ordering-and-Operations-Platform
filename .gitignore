@@ -65,6 +65,10 @@ digital-cafe-backend/test_logs.txt
 digital-cafe-backend/.env
 .env
 
+# Dev application config — contains fallback DB password and JWT secret
+digital-cafe-backend/src/main/resources/application.properties
+digital-cafe-backend/src/main/resources/application.properties.example
+
 # Database session files
 *.session.sql
 

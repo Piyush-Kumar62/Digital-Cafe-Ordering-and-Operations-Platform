@@ -1191,6 +1191,68 @@
   line-height: 1.6;
 }
 
+// "New" badge when a cafe has no rating yet
+.cafe-rating-new {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  color: #f8fafc;
+  background: rgba(100, 116, 139, 0.75);
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+}
+
+// Muted text when hours not entered
+.hours-unknown {
+  opacity: 0.55;
+}
+
+// "View Menu →" link inside each landing cafe card
+.cafe-card-cta {
+  margin-top: 0.9rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #f59e0b;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: letter-spacing 0.2s;
+
+  .cafe-card:hover & {
+    letter-spacing: 0.06em;
+  }
+}
+
+// "Browse All Cafés →" button below the grid
+.cafes-view-all {
+  text-align: center;
+  margin-top: 2.5rem;
+}
+
+.view-all-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.75rem 2rem;
+  background: linear-gradient(135deg, #d97706, #b45309);
+  color: #fff;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-decoration: none;
+  letter-spacing: 0.02em;
+  transition:
+    opacity 0.2s,
+    transform 0.2s;
+
+  &:hover {
+    opacity: 0.88;
+    transform: translateY(-2px);
+    color: #fff;
+    text-decoration: none;
+  }
+}
+
 // Testimonials
 .testimonials-grid {
   display: grid;

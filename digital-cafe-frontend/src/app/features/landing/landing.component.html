@@ -405,29 +405,51 @@
       >
         <div class="cafe-image">
           <img
-            [src]="getCafeImage(cafe)"
+            [src]="cafe.imageUrl || '/assets/cafe/cafe-interior-01.jpg'"
             [alt]="cafe.name"
             (error)="
               $any($event.target).src = '/assets/cafe/cafe-interior-01.jpg'
             "
           />
           <div class="cafe-rating">
-            <span>⭐ {{ formatCafeRating(cafe) }}</span>
+            <span *ngIf="cafe.rating && cafe.rating > 0"
+              >⭐ {{ cafe.rating | number: "1.1-1" }}</span
+            >
+            <span
+              *ngIf="!cafe.rating || cafe.rating === 0"
+              class="cafe-rating-new"
+              >New</span
+            >
           </div>
         </div>
         <div class="cafe-info">
           <h3 class="cafe-name">{{ cafe.name }}</h3>
-          <p class="cafe-location">📍 {{ cafe.city }}, {{ cafe.state }}</p>
-          <p class="cafe-description">{{ cafe.description }}</p>
+          <p class="cafe-location">📍 {{ cafe.location || "—" }}</p>
+          <p class="cafe-description">
+            {{ cafe.description || "A wonderful café experience awaits you." }}
+          </p>
           <div class="cafe-hours">
-            <span>🕐 {{ cafe.openingTime }} - {{ cafe.closingTime }}</span>
+            <span *ngIf="cafe.openTime || cafe.closeTime">
+              🕐 {{ fmt12h(cafe.openTime) || "—" }} –
+              {{ fmt12h(cafe.closeTime) || "—" }}
+            </span>
+            <span
+              *ngIf="!cafe.openTime && !cafe.closeTime"
+              class="hours-unknown"
+              >🕐 Hours not specified</span
+            >
           </div>
+          <div class="cafe-card-cta">View Menu →</div>
         </div>
       </div>
     </div>
 
     <div *ngIf="!loading && featuredCafes.length === 0" class="empty-state">
-      <p>No cafés available at the moment. Check back soon!</p>
+      <p>No cafés available right now. Check back soon!</p>
+    </div>
+
+    <div *ngIf="!loading && featuredCafes.length > 0" class="cafes-view-all">
+      <a routerLink="/cafes" class="view-all-btn">Browse All Cafés →</a>
     </div>
   </div>
 </section>

@@ -5,9 +5,10 @@ import { NavbarComponent } from "@shared/components/navbar/navbar.component";
 import { FooterComponent } from "@shared/components/footer/footer.component";
 import { CtaComponent } from "@shared/components/cta/cta.component";
 import { ApiService } from "@core/services/api.service";
-import { Cafe } from "@shared/models/cafe.model";
-import { buildLandingFallbackCafes } from "@shared/data/featured-cafes.data";
-import { environment } from "@environments/environment";
+import { PublicCafeCard } from "@shared/models/cafe.model";
+import { CafeBrowseService } from "@features/public/cafe-browse.service";
+import { Subject, interval, of } from "rxjs";
+import { takeUntil, startWith, switchMap, catchError } from "rxjs/operators";
 
 @Component({
   selector: "app-landing",
@@ -23,9 +24,10 @@ import { environment } from "@environments/environment";
   styleUrls: ["./landing.component.scss"],
 })
 export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
-  featuredCafes: Cafe[] = [];
+  featuredCafes: PublicCafeCard[] = [];
   loading = true;
   private observer?: IntersectionObserver;
+  private destroy$ = new Subject<void>();
   private readonly animatableSelector =
     ".feature-card, .cafe-card, .testimonial-card, .section-header, .timeline-step, .role-card, .workflow-step, .security-card, .faq-item, .metric-box";
 
@@ -327,14 +329,30 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
 
   constructor(
     private apiService: ApiService,
+    private cafeBrowseService: CafeBrowseService,
     private router: Router,
   ) {}
 
   ngOnInit(): void {
-    // Load fallback data immediately, then try API
-    this.featuredCafes = this.getFallbackCafes();
-    this.loading = false;
-    this.loadFeaturedCafes();
+    // Poll every 30s — public endpoint, no auth required
+    interval(30_000)
+      .pipe(
+        startWith(0),
+        switchMap(() => {
+          this.loading = this.featuredCafes.length === 0; // show spinner only on first load
+          return this.cafeBrowseService
+            .getPublicCafes(0, 6)
+            .pipe(catchError(() => of(null)));
+        }),
+        takeUntil(this.destroy$),
+      )
+      .subscribe((res) => {
+        if (res && res.content.length > 0) {
+          this.featuredCafes = res.content;
+        }
+        this.loading = false;
+        this.observeAnimatableElements();
+      });
   }
 
   ngAfterViewInit(): void {
@@ -346,6 +364,8 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.observer) {
       this.observer.disconnect();
     }
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   setupScrollAnimations(): void {
@@ -365,27 +385,6 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
     this.observeAnimatableElements();
   }
 
-  loadFeaturedCafes(): void {
-    // Try to load from API, but fallback data is already showing
-    this.apiService.getActiveCafes().subscribe({
-      next: (cafes) => {
-        if (cafes && cafes.length > 0) {
-          // Backend CafeResponse uses openTime/closeTime; Cafe model uses openingTime/closingTime
-          this.featuredCafes = cafes.slice(0, 6).map((c: any) => ({
-            ...c,
-            openingTime: c.openingTime || c.openTime || "",
-            closingTime: c.closingTime || c.closeTime || "",
-          }));
-          this.observeAnimatableElements();
-        }
-      },
-      error: () => {
-        // Fallback data already loaded in ngOnInit
-        this.observeAnimatableElements();
-      },
-    });
-  }
-
   private observeAnimatableElements(): void {
     // Wait for Angular to paint list content, then observe and reveal.
     requestAnimationFrame(() => {
@@ -397,42 +396,40 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  getFallbackCafes(): Cafe[] {
-    return buildLandingFallbackCafes();
+  loadFeaturedCafes(): void {
+    // kept for backward-compat; actual polling is in ngOnInit
   }
 
-  getCafeImage(cafe: Cafe): string {
-    const src = cafe.logoUrl || cafe.imageUrl || (cafe as any).logoUrl || (cafe as any).imageUrl;
-    if (!src) {
-      // No image stored — use logo endpoint as last resort
-      if (cafe.id) {
-        const base = environment.apiUrl.replace(/\/api$/, '');
-        return `${base}/api/cafes/${cafe.id}/logo`;
-      }
-      return '/assets/cafe/cafe-interior-01.jpg';
-    }
-    // Full http/https URL (Unsplash, CDN, etc.) — use directly
+  getFallbackCafes(): PublicCafeCard[] {
+    return [];
+  }
+
+  getCafeImage(cafe: PublicCafeCard): string {
+    const src = cafe.imageUrl || cafe.logoUrl;
+    if (!src) return "/assets/cafe/cafe-interior-01.jpg";
     if (/^https?:\/\//.test(src)) return src;
-    // Backend relative upload path (/uploads/...) — prefix server base
-    if (src.startsWith('/')) {
-      const base = environment.apiUrl.replace(/\/api$/, '');
-      return `${base}${src}`;
-    }
-    // Absolute filesystem path (legacy data) — use logo API endpoint
-    if (cafe.id) {
-      const base = environment.apiUrl.replace(/\/api$/, '');
-      return `${base}/api/cafes/${cafe.id}/logo`;
-    }
-    return '/assets/cafe/cafe-interior-01.jpg';
+    return src;
   }
 
-  formatCafeRating(cafe: Cafe): string {
-    const ratingValue = Number(cafe.rating);
-    return Number.isFinite(ratingValue) ? ratingValue.toFixed(1) : "N/A";
+  formatCafeRating(cafe: PublicCafeCard): string {
+    const v = Number(cafe.rating);
+    return v > 0 ? v.toFixed(1) : "New";
+  }
+
+  /** "HH:MM" → "H:MM AM/PM" */
+  fmt12h(val: string | undefined | null): string {
+    if (!val) return "";
+    const m = val.match(/^(\d{1,2}):(\d{2})$/);
+    if (!m) return val;
+    let h = Number(m[1]);
+    const min = m[2];
+    const meridian = h >= 12 ? "PM" : "AM";
+    h = h % 12 || 12;
+    return `${h}:${min} ${meridian}`;
   }
 
   navigateToCafe(cafeId: number): void {
-    this.router.navigate(["/menu"], { queryParams: { cafeId } });
+    this.router.navigate(["/cafes", cafeId]);
   }
 
   scrollToSection(sectionId: string): void {

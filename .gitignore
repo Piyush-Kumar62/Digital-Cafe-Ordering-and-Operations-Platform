@@ -98,3 +98,10 @@ docs/sql
 digital-cafe-frontend/Dockerfile
 digital-cafe-frontend/nginx.conf
 digital-cafe-frontend/src/assets
+docs/assets
+docs/images
+docs/diagrams
+docs/sql
+docs/file-storage-and-cafe-setup.md
+docs/PRODUCTION_DATABASE_SCHEMA_ANALYSIS.md
+docs/JPA_ENTITY_STRUCTURE_BLUEPRINT.md

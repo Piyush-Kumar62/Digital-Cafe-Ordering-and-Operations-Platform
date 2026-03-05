@@ -7,10 +7,10 @@ target/
 ### Log files ###
 *.log
 logs/
-application-prod.yml
+application-deployment.yml
 application-local.yml
 application.properties
-application-prod.properties
+application-deployment.properties
 application-dev.properties
 application-*.properties
 sample-data.sql
@@ -50,7 +50,7 @@ build/
 
 ### Sensitive Configuration Files ###
 src/main/resources/application.properties
-src/main/resources/application-prod.properties
+src/main/resources/application-deployment.properties
 src/main/resources/application-local.properties
 *-secret.properties
 src/main/resources/sample-data.sql
@@ -96,4 +96,4 @@ Thumbs.db
 
 .env
 /sample-data.sql
-/application-prod.yml
+/application-deployment.yml

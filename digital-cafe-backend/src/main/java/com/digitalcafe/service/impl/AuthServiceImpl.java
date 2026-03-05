@@ -186,6 +186,8 @@ public class AuthServiceImpl implements AuthService {
 
     // Send verification email with temp password so owner can log in after admin approval
     emailService.sendVerificationEmail(user.getEmail(), token.getToken(), tempPassword);
+    // Also send a welcome email so the owner sees their credentials clearly
+    emailService.sendWelcomeEmail(user.getEmail(), user.getDisplayName(), tempPassword, "Café Owner", "/owner/dashboard");
 
     // Notify admins in real time
     webSocketNotificationService.notifyAdmins(RealtimeNotification.builder()
@@ -326,7 +328,7 @@ public class AuthServiceImpl implements AuthService {
     passwordResetTokenRepository.save(passwordResetToken);
 
     emailService.sendVerificationEmail(user.getEmail(), verificationToken.getToken(), tempPassword);
-    emailService.sendWelcomeEmail(user.getEmail(), user.getUsername(), tempPassword);
+    emailService.sendWelcomeEmail(user.getEmail(), user.getUsername(), tempPassword, "Customer", "/cafes");
     emailService.sendPasswordResetEmail(user.getEmail(), passwordResetToken.getToken());
     webSocketNotificationService.notifyAdmins(RealtimeNotification.builder()
         .type("REGISTRATION_PENDING")
@@ -384,6 +386,15 @@ public class AuthServiceImpl implements AuthService {
     SecurityContextHolder.getContext().setAuthentication(authentication);
 
     adminProfileService.markLastLoginAndBroadcast(user.getId());
+
+    // Send login notification email to let the user know their account was accessed
+    String displayName = (user.getDisplayName() != null && !user.getDisplayName().isBlank())
+        ? user.getDisplayName() : user.getUsername();
+    String loginTime = java.time.format.DateTimeFormatter
+        .ofPattern("dd MMM yyyy, hh:mm a")
+        .withZone(java.time.ZoneId.of("UTC"))
+        .format(java.time.Instant.now()) + " UTC";
+    emailService.sendLoginNotification(user.getEmail(), displayName, loginTime);
 
     String accessToken = jwtUtil.generateToken(authentication);
     String refreshToken = jwtUtil.generateRefreshToken(authentication);
@@ -574,7 +585,7 @@ public class AuthServiceImpl implements AuthService {
       return user.getCafe().getId();
     }
     if (user.hasRole(Role.RoleName.CAFE_OWNER)) {
-      return cafeRepository.findByOwnerId(user.getId()).stream()
+      return cafeRepository.findByOwner(user).stream()
           .findFirst()
           .map(Cafe::getId)
           .orElse(null);

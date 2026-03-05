@@ -39,6 +39,7 @@ public class ProfileCompletionFilter extends OncePerRequestFilter {
             "/api/auth",
             "/api/profile",
             "/api/users/me",
+            "/api/users/profile",
             "/api/public",
             "/swagger-ui",
             "/v3/api-docs",
@@ -78,6 +79,13 @@ public class ProfileCompletionFilter extends OncePerRequestFilter {
             log.warn("Blocked unverified customer: email={}, uri={}", email, request.getRequestURI());
             writeError(response, HttpStatus.FORBIDDEN, "EMAIL_NOT_VERIFIED",
                     "Please verify your email before accessing this resource.");
+            return;
+        }
+
+        if (!Boolean.TRUE.equals(user.getIsProfileComplete())) {
+            log.warn("Blocked incomplete-profile customer: email={}, uri={}", email, request.getRequestURI());
+            writeError(response, HttpStatus.FORBIDDEN, "PROFILE_INCOMPLETE",
+                    "Please complete your profile before accessing this resource.");
             return;
         }
 

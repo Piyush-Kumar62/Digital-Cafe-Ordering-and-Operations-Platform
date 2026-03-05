@@ -40,7 +40,7 @@ public class EmailConfig {
         resolver.setSuffix(".html");
         resolver.setTemplateMode(TemplateMode.HTML);
         resolver.setCharacterEncoding(StandardCharsets.UTF_8.name());
-        resolver.setCacheable(true);         // enable caching in production
+        resolver.setCacheable(true);         // enable caching in deployment
         resolver.setCacheTTLMs(3_600_000L); // re-read template every 1 hour
         resolver.setOrder(1);
         resolver.setCheckExistence(false);

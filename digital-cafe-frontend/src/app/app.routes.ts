@@ -252,6 +252,27 @@ export const routes: Routes = [
             (m) => m.ChefDashboardComponent,
           ),
       },
+      {
+        path: "orders",
+        loadComponent: () =>
+          import("./features/chef/chef-orders/chef-orders.component").then(
+            (m) => m.ChefOrdersComponent,
+          ),
+      },
+      {
+        path: "order-history",
+        loadComponent: () =>
+          import("./features/chef/chef-order-history/chef-order-history.component").then(
+            (m) => m.ChefOrderHistoryComponent,
+          ),
+      },
+      {
+        path: "profile",
+        loadComponent: () =>
+          import("./features/chef/chef-profile/chef-profile.component").then(
+            (m) => m.ChefProfileComponent,
+          ),
+      },
       { path: "", redirectTo: "dashboard", pathMatch: "full" },
     ],
   },
@@ -272,6 +293,13 @@ export const routes: Routes = [
             (m) => m.WaiterDashboardComponent,
           ),
       },
+      {
+        path: "profile",
+        loadComponent: () =>
+          import("./features/waiter/waiter-profile/waiter-profile.component").then(
+            (m) => m.WaiterProfileComponent,
+          ),
+      },
       { path: "", redirectTo: "dashboard", pathMatch: "full" },
     ],
   },
@@ -287,6 +315,10 @@ export const routes: Routes = [
   },
   {
     path: "customer",
+    loadComponent: () =>
+      import("./features/customer/customer-layout/customer-layout.component").then(
+        (m) => m.CustomerLayoutComponent,
+      ),
     canActivate: [accessGuard],
     data: { roles: [UserRole.CUSTOMER] },
     children: [
@@ -339,10 +371,23 @@ export const routes: Routes = [
             (m) => m.PaymentComponent,
           ),
       },
-      // Aliases so sidebar/dashboard links work without extra pages
+      {
+        path: "browse-cafes",
+        loadComponent: () =>
+          import("./features/customer/browse-cafes/browse-cafes.component").then(
+            (m) => m.BrowseCafesComponent,
+          ),
+      },
+      {
+        path: "browse-cafes/:id",
+        loadComponent: () =>
+          import("./features/public/cafe-detail/cafe-detail.component").then(
+            (m) => m.CafeDetailComponent,
+          ),
+      },
       {
         path: "cafe",
-        redirectTo: "/cafes",
+        redirectTo: "browse-cafes",
         pathMatch: "full",
       },
       {
@@ -352,20 +397,31 @@ export const routes: Routes = [
       },
       {
         path: "my-bookings",
-        redirectTo: "booking",
-        pathMatch: "full",
+        loadComponent: () =>
+          import("./features/customer/my-bookings/my-bookings.component").then(
+            (m) => m.MyBookingsComponent,
+          ),
       },
       {
         path: "payments",
         loadComponent: () =>
-          import("./features/customer/order-tracking/order-tracking.component").then(
-            (m) => m.OrderTrackingComponent,
+          import("./features/customer/my-payments/my-payments.component").then(
+            (m) => m.MyPaymentsComponent,
           ),
       },
       {
         path: "profile",
-        redirectTo: "/customer/complete-profile",
-        pathMatch: "full",
+        loadComponent: () =>
+          import("./features/customer/my-profile/my-profile.component").then(
+            (m) => m.MyProfileComponent,
+          ),
+      },
+      {
+        path: "notifications",
+        loadComponent: () =>
+          import("./features/customer/my-notifications/my-notifications.component").then(
+            (m) => m.MyNotificationsComponent,
+          ),
       },
       { path: "", redirectTo: "dashboard", pathMatch: "full" },
     ],

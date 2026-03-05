@@ -82,16 +82,31 @@ export class ApiService {
     return this.http.delete<MessageResponse>(`${this.baseUrl}/cafes/${id}`);
   }
 
+  private resolveCafeImages(cafe: any): Cafe {
+    if (!cafe) return cafe;
+    return {
+      ...cafe,
+      logoUrl: this.resolveImageUrl(cafe.logoUrl),
+      coverUrl: this.resolveImageUrl(cafe.coverUrl),
+      imageUrl: this.resolveImageUrl(cafe.imageUrl || cafe.logoUrl),
+    };
+  }
+
   getMyCafe(): Observable<Cafe> {
     return this.http
       .get<any>(`${this.baseUrl}/cafes/my-cafe`)
-      .pipe(map((res) => res?.data || res));
+      .pipe(map((res) => this.resolveCafeImages(res?.data || res)));
   }
 
   getMyCafes(page = 0, size = 20): Observable<Cafe[]> {
     return this.http
       .get<any>(`${this.baseUrl}/cafes/my-cafes`, { params: { page, size } })
-      .pipe(map((res) => res?.data?.content || res?.content || []));
+      .pipe(
+        map((res) => {
+          const cafes: any[] = res?.data?.content || res?.content || [];
+          return cafes.map((c) => this.resolveCafeImages(c));
+        }),
+      );
   }
 
   cafeExistsForOwner(): Observable<boolean> {
@@ -310,6 +325,12 @@ export class ApiService {
     return this.http
       .get<any>(`${this.baseUrl}/chef/orders`)
       .pipe(map((res: any) => this.unwrapApiData<Order[]>(res, [])));
+  }
+
+  markOrderPreparing(orderId: number): Observable<Order> {
+    return this.http
+      .put<any>(`${this.baseUrl}/chef/order/${orderId}/preparing`, null)
+      .pipe(map((res: any) => this.unwrapApiData<Order>(res, res as Order)));
   }
 
   markOrderReady(orderId: number): Observable<Order> {

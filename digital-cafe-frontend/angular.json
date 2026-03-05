@@ -38,11 +38,11 @@
             "scripts": []
           },
           "configurations": {
-            "production": {
+            "deployment": {
               "fileReplacements": [
                 {
                   "replace": "src/environments/environment.ts",
-                  "with": "src/environments/environment.production.ts"
+                  "with": "src/environments/environment.deployment.ts"
                 }
               ],
               "budgets": [
@@ -75,13 +75,13 @@
               "sourceMap": true
             }
           },
-          "defaultConfiguration": "production"
+          "defaultConfiguration": "deployment"
         },
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
-            "production": {
-              "buildTarget": "digital-cafe-frontend:build:production"
+            "deployment": {
+              "buildTarget": "digital-cafe-frontend:build:deployment"
             },
             "development": {
               "buildTarget": "digital-cafe-frontend:build:development"

@@ -1,5 +1,5 @@
 export const environment = {
-  production: false,
+  deployment: false,
   apiUrl: "http://localhost:8080/api",
   wsUrl: "http://localhost:8080/ws",
   appName: "Digital Café Platform",

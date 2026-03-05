@@ -232,7 +232,7 @@ export class AuthService {
     } else if (this.isWaiter()) {
       return "/waiter/dashboard";
     } else if (this.isCustomer()) {
-      return "/customer/cafe";
+      return "/customer/dashboard";
     }
 
     return "/auth/login";

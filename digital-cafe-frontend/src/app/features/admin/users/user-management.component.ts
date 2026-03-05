@@ -25,6 +25,35 @@ export class UserManagementComponent implements OnInit {
   ownerLastName = "";
   ownerEmail = "";
 
+  pageIndex = 0;
+  readonly pageSize = 10;
+
+  get pagedUsers(): User[] {
+    return this.filteredUsers.slice(
+      this.pageIndex * this.pageSize,
+      (this.pageIndex + 1) * this.pageSize,
+    );
+  }
+  get totalElements(): number {
+    return this.filteredUsers.length;
+  }
+  get totalPages(): number {
+    return Math.max(1, Math.ceil(this.totalElements / this.pageSize));
+  }
+  get rangeStart(): number {
+    return this.totalElements === 0 ? 0 : this.pageIndex * this.pageSize + 1;
+  }
+  get rangeEnd(): number {
+    return Math.min((this.pageIndex + 1) * this.pageSize, this.totalElements);
+  }
+  get allPages(): number[] {
+    return Array.from({ length: this.totalPages }, (_, i) => i);
+  }
+  goToPage(page: number): void {
+    if (page < 0 || page >= this.totalPages) return;
+    this.pageIndex = page;
+  }
+
   constructor(
     private apiService: ApiService,
     private alertService: AlertService,
@@ -62,32 +91,35 @@ export class UserManagementComponent implements OnInit {
     }
 
     this.creatingOwner = true;
-    this.apiService.createCafeOwner({
-      firstName,
-      lastName,
-      email,
-    }).subscribe({
-      next: () => {
-        this.creatingOwner = false;
-        this.ownerFirstName = "";
-        this.ownerLastName = "";
-        this.ownerEmail = "";
-        this.alertService.success(
-          "Cafe owner created successfully. Credentials sent via email.",
-        );
-        this.roleFilter = "CAFE_OWNER";
-        this.refresh();
-      },
-      error: (error) => {
-        this.creatingOwner = false;
-        this.alertService.error(
-          error?.message || "Failed to create cafe owner",
-        );
-      },
-    });
+    this.apiService
+      .createCafeOwner({
+        firstName,
+        lastName,
+        email,
+      })
+      .subscribe({
+        next: () => {
+          this.creatingOwner = false;
+          this.ownerFirstName = "";
+          this.ownerLastName = "";
+          this.ownerEmail = "";
+          this.alertService.success(
+            "Cafe owner created successfully. Credentials sent via email.",
+          );
+          this.roleFilter = "CAFE_OWNER";
+          this.refresh();
+        },
+        error: (error) => {
+          this.creatingOwner = false;
+          this.alertService.error(
+            error?.message || "Failed to create cafe owner",
+          );
+        },
+      });
   }
 
   applyFilters(): void {
+    this.pageIndex = 0;
     const query = this.searchText.trim().toLowerCase();
     this.filteredUsers = this.users.filter((u) => {
       const status = this.getStatus(u);
@@ -96,7 +128,8 @@ export class UserManagementComponent implements OnInit {
       );
       const roleOk =
         this.roleFilter === "ALL" || normalizedRoles.includes(this.roleFilter);
-      const statusOk = this.statusFilter === "ALL" || status === this.statusFilter;
+      const statusOk =
+        this.statusFilter === "ALL" || status === this.statusFilter;
       const textOk =
         !query ||
         (u.username || "").toLowerCase().includes(query) ||
@@ -106,7 +139,10 @@ export class UserManagementComponent implements OnInit {
   }
 
   async approve(user: User): Promise<void> {
-    const confirmed = await this.alertService.confirm("Approve User", `Approve ${user.username}?`);
+    const confirmed = await this.alertService.confirm(
+      "Approve User",
+      `Approve ${user.username}?`,
+    );
     if (!confirmed) {
       return;
     }
@@ -114,18 +150,27 @@ export class UserManagementComponent implements OnInit {
     this.apiService.approveUser(user.id).subscribe({
       next: () => {
         this.alertService.close();
-        this.alertService.success("User Approved", "User approved successfully. Email sent.");
+        this.alertService.success(
+          "User Approved",
+          "User approved successfully. Email sent.",
+        );
         this.refresh();
       },
       error: (error) => {
         this.alertService.close();
-        this.alertService.error("Approve Failed", error?.message || "Approve failed");
+        this.alertService.error(
+          "Approve Failed",
+          error?.message || "Approve failed",
+        );
       },
     });
   }
 
   async reject(user: User): Promise<void> {
-    const confirmed = await this.alertService.confirm("Reject User", `Reject ${user.username}?`);
+    const confirmed = await this.alertService.confirm(
+      "Reject User",
+      `Reject ${user.username}?`,
+    );
     if (!confirmed) {
       return;
     }
@@ -133,18 +178,27 @@ export class UserManagementComponent implements OnInit {
     this.apiService.rejectUser(user.id).subscribe({
       next: () => {
         this.alertService.close();
-        this.alertService.success("User Rejected", "User rejected successfully. Email sent.");
+        this.alertService.success(
+          "User Rejected",
+          "User rejected successfully. Email sent.",
+        );
         this.refresh();
       },
       error: (error) => {
         this.alertService.close();
-        this.alertService.error("Reject Failed", error?.message || "Reject failed");
+        this.alertService.error(
+          "Reject Failed",
+          error?.message || "Reject failed",
+        );
       },
     });
   }
 
   async activate(user: User): Promise<void> {
-    const confirmed = await this.alertService.confirm("Activate User", `Activate ${user.username}?`);
+    const confirmed = await this.alertService.confirm(
+      "Activate User",
+      `Activate ${user.username}?`,
+    );
     if (!confirmed) {
       return;
     }
@@ -157,13 +211,19 @@ export class UserManagementComponent implements OnInit {
       },
       error: (error) => {
         this.alertService.close();
-        this.alertService.error("Activation Failed", error?.message || "Activate failed");
+        this.alertService.error(
+          "Activation Failed",
+          error?.message || "Activate failed",
+        );
       },
     });
   }
 
   async deactivate(user: User): Promise<void> {
-    const confirmed = await this.alertService.confirm("Deactivate User", `Deactivate ${user.username}?`);
+    const confirmed = await this.alertService.confirm(
+      "Deactivate User",
+      `Deactivate ${user.username}?`,
+    );
     if (!confirmed) {
       return;
     }
@@ -176,7 +236,10 @@ export class UserManagementComponent implements OnInit {
       },
       error: (error) => {
         this.alertService.close();
-        this.alertService.error("Deactivation Failed", error?.message || "Deactivate failed");
+        this.alertService.error(
+          "Deactivation Failed",
+          error?.message || "Deactivate failed",
+        );
       },
     });
   }
@@ -189,8 +252,3 @@ export class UserManagementComponent implements OnInit {
     return (user.username || user.email || "U").charAt(0).toUpperCase();
   }
 }
-
-
-
-
-

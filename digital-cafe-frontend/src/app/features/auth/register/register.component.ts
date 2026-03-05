@@ -237,7 +237,14 @@ export class RegisterComponent implements OnInit {
   onCafeLogoSelect(event: Event) {
     const input = event.currentTarget as HTMLInputElement;
     if (input.files && input.files[0]) {
-      this.cafeLogoFile = input.files[0];
+      const file = input.files[0];
+      const twoMb = 2 * 1024 * 1024;
+      if (file.size > twoMb) {
+        this.errorMessage = "Cafe logo must be 2MB or less";
+        input.value = "";
+        return;
+      }
+      this.cafeLogoFile = file;
       const reader = new FileReader();
       reader.onload = (e) => {
         this.cafeLogoPreview = e.target?.result as string;
@@ -348,7 +355,14 @@ export class RegisterComponent implements OnInit {
     const element = event.currentTarget as HTMLInputElement;
     let fileList: FileList | null = element.files;
     if (fileList) {
-      this.govtIdProof = fileList[0];
+      const file = fileList[0];
+      const twoMb = 2 * 1024 * 1024;
+      if (file.size > twoMb) {
+        this.errorMessage = "Government ID file must be 2MB or less";
+        element.value = "";
+        return;
+      }
+      this.govtIdProof = file;
     }
   }
 

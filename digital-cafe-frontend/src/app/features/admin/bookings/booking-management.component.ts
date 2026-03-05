@@ -10,8 +10,8 @@ import { Cafe } from "@shared/models/cafe.model";
   selector: "app-booking-management",
   standalone: true,
   imports: [CommonModule, FormsModule],
-  templateUrl: './booking-management.component.html',
-  styleUrls: ['./booking-management.component.scss'],
+  templateUrl: "./booking-management.component.html",
+  styleUrls: ["./booking-management.component.scss"],
 })
 export class BookingManagementComponent implements OnInit, OnDestroy {
   cafes: Cafe[] = [];
@@ -23,6 +23,26 @@ export class BookingManagementComponent implements OnInit, OnDestroy {
   refreshTimer: any = null;
   refreshSeconds = 15;
 
+  pageIndex = 0;
+  readonly pageSize = 10;
+  totalElements = 0;
+  totalPages = 0;
+
+  get rangeStart(): number {
+    return this.totalElements === 0 ? 0 : this.pageIndex * this.pageSize + 1;
+  }
+  get rangeEnd(): number {
+    return Math.min((this.pageIndex + 1) * this.pageSize, this.totalElements);
+  }
+  get allPages(): number[] {
+    return Array.from({ length: Math.max(this.totalPages, 1) }, (_, i) => i);
+  }
+  goToPage(page: number): void {
+    if (page < 0 || page >= this.totalPages) return;
+    this.pageIndex = page;
+    this.loadBookings();
+  }
+
   constructor(
     private apiService: ApiService,
     private alertService: AlertService,
@@ -32,7 +52,10 @@ export class BookingManagementComponent implements OnInit, OnDestroy {
     const saved = Number(localStorage.getItem("admin_refresh_seconds") || 15);
     this.refreshSeconds = Number.isNaN(saved) ? 15 : Math.max(5, saved);
     this.loadCafes();
-    this.refreshTimer = setInterval(() => this.loadBookings(), this.refreshSeconds * 1000);
+    this.refreshTimer = setInterval(
+      () => this.loadBookings(),
+      this.refreshSeconds * 1000,
+    );
   }
 
   ngOnDestroy(): void {
@@ -46,26 +69,38 @@ export class BookingManagementComponent implements OnInit, OnDestroy {
         if (!this.selectedCafeId && this.cafes.length) {
           this.selectedCafeId = this.cafes[0].id;
         }
+        this.pageIndex = 0;
         this.loadBookings();
       },
-      error: (error) => this.alertService.error(error?.message || "Failed to load cafes"),
+      error: (error) =>
+        this.alertService.error(error?.message || "Failed to load cafes"),
     });
   }
 
   loadBookings(): void {
     if (!this.selectedCafeId) return;
     this.loading = true;
-    this.apiService.getCafeBookingsForAdmin(this.selectedCafeId, 0, 200).subscribe({
-      next: (res) => {
-        this.bookings = res.content || [];
-        this.bookings.forEach((b) => (this.statusMap[b.id] = this.statusMap[b.id] || b.status));
-        this.loading = false;
-      },
-      error: (error) => {
-        this.loading = false;
-        this.alertService.error(error?.message || "Failed to load bookings");
-      },
-    });
+    this.apiService
+      .getCafeBookingsForAdmin(
+        this.selectedCafeId,
+        this.pageIndex,
+        this.pageSize,
+      )
+      .subscribe({
+        next: (res) => {
+          this.bookings = res.content || [];
+          this.totalElements = res.totalElements || 0;
+          this.totalPages = res.totalPages || 0;
+          this.bookings.forEach(
+            (b) => (this.statusMap[b.id] = this.statusMap[b.id] || b.status),
+          );
+          this.loading = false;
+        },
+        error: (error) => {
+          this.loading = false;
+          this.alertService.error(error?.message || "Failed to load bookings");
+        },
+      });
   }
 
   updateStatus(booking: Booking): void {
@@ -75,14 +110,14 @@ export class BookingManagementComponent implements OnInit, OnDestroy {
         this.alertService.success("Booking status updated.");
         this.loadBookings();
       },
-      error: (error) => this.alertService.error(error?.message || "Status update failed"),
+      error: (error) =>
+        this.alertService.error(error?.message || "Status update failed"),
     });
   }
 
   getBookingNumber(booking: Booking): string {
-    const value = (booking as unknown as { bookingNumber?: string }).bookingNumber;
+    const value = (booking as unknown as { bookingNumber?: string })
+      .bookingNumber;
     return value || String(booking.id);
   }
 }
-
-

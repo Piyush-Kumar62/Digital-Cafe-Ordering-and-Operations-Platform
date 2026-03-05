@@ -401,6 +401,8 @@
   object-fit: cover;
   object-position: center;
   filter: brightness(0.5) saturate(1.15);
+  will-change: transform;
+  transform: translateZ(0);
   transition: transform 8s ease;
 
   .auth-image-panel:hover & {

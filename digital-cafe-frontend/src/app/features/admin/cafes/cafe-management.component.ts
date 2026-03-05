@@ -9,14 +9,43 @@ import { Cafe } from "@shared/models/cafe.model";
   selector: "app-cafe-management",
   standalone: true,
   imports: [CommonModule, FormsModule],
-  templateUrl: './cafe-management.component.html',
-  styleUrls: ['./cafe-management.component.scss'],
+  templateUrl: "./cafe-management.component.html",
+  styleUrls: ["./cafe-management.component.scss"],
 })
 export class CafeManagementComponent implements OnInit {
   cafes: Cafe[] = [];
   filteredCafes: Cafe[] = [];
   loading = false;
   searchText = "";
+
+  pageIndex = 0;
+  readonly pageSize = 10;
+
+  get pagedCafes(): Cafe[] {
+    return this.filteredCafes.slice(
+      this.pageIndex * this.pageSize,
+      (this.pageIndex + 1) * this.pageSize,
+    );
+  }
+  get totalElements(): number {
+    return this.filteredCafes.length;
+  }
+  get totalPages(): number {
+    return Math.max(1, Math.ceil(this.totalElements / this.pageSize));
+  }
+  get rangeStart(): number {
+    return this.totalElements === 0 ? 0 : this.pageIndex * this.pageSize + 1;
+  }
+  get rangeEnd(): number {
+    return Math.min((this.pageIndex + 1) * this.pageSize, this.totalElements);
+  }
+  get allPages(): number[] {
+    return Array.from({ length: this.totalPages }, (_, i) => i);
+  }
+  goToPage(page: number): void {
+    if (page < 0 || page >= this.totalPages) return;
+    this.pageIndex = page;
+  }
 
   constructor(
     private apiService: ApiService,
@@ -43,6 +72,7 @@ export class CafeManagementComponent implements OnInit {
   }
 
   applyFilter(): void {
+    this.pageIndex = 0;
     const q = this.searchText.trim().toLowerCase();
     this.filteredCafes = this.cafes.filter((c) => {
       if (!q) return true;
@@ -69,12 +99,18 @@ export class CafeManagementComponent implements OnInit {
     this.apiService.toggleCafeStatus(cafe.id, !cafe.isActive).subscribe({
       next: () => {
         this.alertService.close();
-        this.alertService.success("Cafe Status Updated", "Cafe status updated successfully.");
+        this.alertService.success(
+          "Cafe Status Updated",
+          "Cafe status updated successfully.",
+        );
         this.loadCafes();
       },
       error: (error) => {
         this.alertService.close();
-        this.alertService.error("Status Update Failed", error?.message || "Status update failed");
+        this.alertService.error(
+          "Status Update Failed",
+          error?.message || "Status update failed",
+        );
       },
     });
   }
@@ -94,10 +130,11 @@ export class CafeManagementComponent implements OnInit {
       },
       error: (error) => {
         this.alertService.close();
-        this.alertService.error("Delete Failed", error?.message || "Delete failed");
+        this.alertService.error(
+          "Delete Failed",
+          error?.message || "Delete failed",
+        );
       },
     });
   }
 }
-
-

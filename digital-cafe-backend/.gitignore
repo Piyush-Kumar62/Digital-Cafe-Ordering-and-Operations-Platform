@@ -7,7 +7,13 @@ target/
 ### Log files ###
 *.log
 logs/
-
+application-prod.yml
+application-local.yml
+application.properties
+application-prod.properties
+application-dev.properties
+application-*.properties
+sample-data.sql
 ### Maven ###
 .mvn/wrapper/maven-wrapper.jar
 .mvn/timing.properties
@@ -51,6 +57,11 @@ src/main/resources/sample-data.sql
 target/classes/application.properties
 target/classes/sample-data.sql
 Digital_Cafe_API.postman_collection.json
+### Security — auth tokens and test artifacts (never commit) ###
+login.json
+token.txt
+nul
+
 ### Internal Documentation (Not for GitHub) ###
 PUSH_GUIDE.md
 PROJECT_DOCUMENTATION.md
@@ -84,3 +95,5 @@ Thumbs.db
 *~.nib
 
 .env
+/sample-data.sql
+/application-prod.yml

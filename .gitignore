@@ -16,7 +16,7 @@ ehthumbs.db
 *.swp
 *.swo
 *~
-
+.properties
 # Environment/secrets
 .env
 .env.local
@@ -60,6 +60,19 @@ digital-cafe-backend/clean_compile_output2.txt
 digital-cafe-backend/maven_output.txt
 digital-cafe-backend/single_test_log.txt
 digital-cafe-backend/test_logs.txt
+
+# Security — auth tokens and test artifacts (never commit)
+digital-cafe-backend/login.json
+digital-cafe-backend/token.txt
+digital-cafe-backend/nul
+nul
+
+# Ad-hoc test scripts (local only)
+test_apis.sh
+test_dashboard.sh
+test_full_flow.sh
+test_full_flow.sh
+test_output.txt
 
 # Sensitive / environment-specific config (local only)
 digital-cafe-backend/.env

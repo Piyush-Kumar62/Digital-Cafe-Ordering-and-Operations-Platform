@@ -60,6 +60,9 @@ public class S3FileStorageService implements FileStorageService {
         if (file == null || file.isEmpty()) {
             throw new BusinessException("Cannot upload empty file");
         }
+        if (file.getSize() > 2 * 1024 * 1024) {
+            throw new BusinessException("File size must be 2MB or less");
+        }
 
         try {
             String extension = getExtension(file.getOriginalFilename());

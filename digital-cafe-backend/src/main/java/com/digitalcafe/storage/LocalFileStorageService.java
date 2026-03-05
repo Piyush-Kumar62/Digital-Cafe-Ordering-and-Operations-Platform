@@ -17,7 +17,7 @@ import java.util.UUID;
 /**
  * Default local-disk implementation of FileStorageService.
  *
- * In production, this should be swapped with an S3-backed implementation.
+ * In deployment, this should be swapped with an S3-backed implementation.
  * The upload.dir property is set to an EFS or persistent volume mount on EC2/ECS.
  */
 @Slf4j
@@ -32,6 +32,9 @@ public class LocalFileStorageService implements FileStorageService {
     public String uploadFile(MultipartFile file) {
         if (file == null || file.isEmpty()) {
             throw new BusinessException("Cannot upload empty file");
+        }
+        if (file.getSize() > 2 * 1024 * 1024) {
+            throw new BusinessException("File size must be 2MB or less");
         }
 
         try {

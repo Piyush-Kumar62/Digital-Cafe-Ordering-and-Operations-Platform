@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 
 @Slf4j
@@ -169,5 +170,37 @@ public class PaymentService {
     public Payment getPaymentByOrderId(Long orderId) {
         return paymentRepository.findByOrderId(orderId)
                 .orElseThrow(() -> new BusinessException("Payment not found for order"));
+    }
+
+    /**
+     * Fetch payment by ID (throws if not found).
+     */
+    public Payment findById(Long paymentId) {
+        return paymentRepository.findById(paymentId)
+                .orElseThrow(() -> new BusinessException("Payment not found"));
+    }
+
+    /**
+     * Fetch payment by ID with order eagerly loaded (throws if not found).
+     */
+    public Payment findByIdWithOrder(Long paymentId) {
+        return paymentRepository.findByIdWithOrder(paymentId)
+                .orElseThrow(() -> new BusinessException("Payment not found"));
+    }
+
+    /**
+     * Returns all payments belonging to the given customer.
+     */
+    @Transactional(readOnly = true)
+    public List<Payment> getPaymentsByCustomerId(Long customerId) {
+        return paymentRepository.findByCustomerId(customerId);
+    }
+
+    /**
+     * Returns the customer ID that owns a given payment, for authorization checks.
+     */
+    public Long getCustomerIdByPaymentId(Long paymentId) {
+        return paymentRepository.findCustomerIdByPaymentId(paymentId)
+                .orElseThrow(() -> new BusinessException("Payment not found"));
     }
 }

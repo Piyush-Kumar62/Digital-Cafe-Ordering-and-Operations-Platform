@@ -20,6 +20,7 @@ public enum EmailTemplateType {
     VERIFY_EMAIL("verify-email"),
     RESET_PASSWORD("reset-password"),
     PASSWORD_CHANGED("password-changed"),
+    LOGIN_NOTIFICATION("login-notification"),
 
     // ── Onboarding ──────────────────────────────────────────────────────────
     WELCOME("welcome"),

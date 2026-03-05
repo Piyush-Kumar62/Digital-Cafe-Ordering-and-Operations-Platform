@@ -42,53 +42,115 @@
       <tr>
         <td align="center">
           <table role="presentation" width="100%" style="max-width: 600px">
+            <!-- Header -->
             <tr>
               <td><div th:replace="~{fragments/header :: header}"></div></td>
             </tr>
 
+            <!-- Hero banner -->
             <tr>
-              <td style="background: #ffffff; padding: 40px; border-radius: 0">
+              <td
+                style="
+                  background: linear-gradient(135deg, #6c4ab6 0%, #4f46e5 100%);
+                  padding: 32px 40px 28px;
+                  text-align: center;
+                "
+              >
+                <div style="font-size: 52px; margin-bottom: 12px">
+                  &#127881;
+                </div>
                 <h2
                   style="
-                    margin: 0 0 4px;
+                    margin: 0 0 6px;
                     font-family:
                       -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;,
                       Roboto, Arial, sans-serif;
                     font-size: 24px;
                     font-weight: 700;
-                    color: #111827;
+                    color: #fff;
                   "
                 >
-                  Welcome aboard, <span th:text="${username}">there</span>! 🎉
+                  Welcome aboard, <span th:text="${username}">there</span>!
                 </h2>
+                <!-- Role badge -->
+                <span
+                  style="
+                    display: inline-block;
+                    background: rgba(255, 255, 255, 0.2);
+                    color: #fff;
+                    font-family:
+                      -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;,
+                      Roboto, Arial, sans-serif;
+                    font-size: 11px;
+                    font-weight: 600;
+                    letter-spacing: 1px;
+                    text-transform: uppercase;
+                    padding: 4px 14px;
+                    border-radius: 20px;
+                    margin-top: 8px;
+                  "
+                  th:text="${role != null ? role : 'User'}"
+                  >User</span
+                >
+              </td>
+            </tr>
+
+            <!-- Body -->
+            <tr>
+              <td
+                class="email-card body-content"
+                style="
+                  background: #ffffff;
+                  padding: 36px 40px;
+                  border-radius: 0;
+                "
+              >
                 <p
+                  class="body-text"
                   style="
                     margin: 0 0 24px;
                     font-family:
                       -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;,
                       Roboto, Arial, sans-serif;
                     font-size: 15px;
-                    line-height: 1.6;
+                    line-height: 1.7;
                     color: #4b5563;
                   "
                 >
-                  Your Digital Cafe account has been created successfully. Here
-                  are your login credentials — please keep them safe.
+                  Your Digital Cafe account has been created. Below are your
+                  login credentials &mdash; please keep them safe and
+                  <strong>change your password on first sign-in.</strong>
                 </p>
 
                 <!-- Credentials card -->
                 <div
                   style="
                     background: #f5f3ff;
+                    border: 1px solid #e9d5ff;
                     border-radius: 12px;
                     padding: 20px 24px;
-                    margin-bottom: 24px;
+                    margin-bottom: 28px;
                   "
                 >
+                  <p
+                    style="
+                      margin: 0 0 14px;
+                      font-family:
+                        -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;,
+                        Roboto, Arial, sans-serif;
+                      font-size: 11px;
+                      font-weight: 700;
+                      color: #6c4ab6;
+                      text-transform: uppercase;
+                      letter-spacing: 1px;
+                    "
+                  >
+                    Your Login Credentials
+                  </p>
                   <table
                     role="presentation"
                     width="100%"
-                    cellpadding="6"
+                    cellpadding="7"
                     cellspacing="0"
                   >
                     <tr>
@@ -100,7 +162,7 @@
                           font-size: 13px;
                           color: #6b7280;
                           font-weight: 500;
-                          width: 100px;
+                          width: 110px;
                         "
                       >
                         Email
@@ -130,45 +192,250 @@
                           font-weight: 500;
                         "
                       >
-                        Temp Password
+                        Password
                       </td>
                       <td
                         style="
                           font-family:
                             &quot;Courier New&quot;, Courier, monospace;
-                          font-size: 15px;
+                          font-size: 17px;
                           color: #6c4ab6;
                           font-weight: 700;
-                          letter-spacing: 1px;
+                          letter-spacing: 2px;
                         "
                         th:text="${tempPassword}"
                       >
-                        ••••••••
+                        &#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;
                       </td>
                     </tr>
                   </table>
+                  <p
+                    style="
+                      margin: 12px 0 0;
+                      font-family:
+                        -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;,
+                        Roboto, Arial, sans-serif;
+                      font-size: 12px;
+                      color: #9ca3af;
+                    "
+                  >
+                    &#9888;&#65039; Temporary password &mdash; you will be
+                    prompted to create a new one on first login.
+                  </p>
                 </div>
 
+                <!-- Steps -->
                 <p
                   style="
-                    margin: 0 0 24px;
+                    margin: 0 0 14px;
                     font-family:
                       -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;,
                       Roboto, Arial, sans-serif;
-                    font-size: 13px;
-                    color: #9ca3af;
+                    font-size: 12px;
+                    font-weight: 700;
+                    color: #374151;
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
                   "
                 >
-                  ⚠️ This is a temporary password. You will be required to
-                  change it on first login.
+                  What to do next
                 </p>
+                <table
+                  role="presentation"
+                  width="100%"
+                  cellpadding="0"
+                  cellspacing="0"
+                  style="margin-bottom: 28px"
+                >
+                  <tr>
+                    <td
+                      style="padding: 10px 0; border-bottom: 1px solid #f3f4f6"
+                    >
+                      <table
+                        role="presentation"
+                        cellpadding="0"
+                        cellspacing="0"
+                      >
+                        <tr>
+                          <td
+                            style="
+                              width: 30px;
+                              height: 30px;
+                              background: #ede9fe;
+                              border-radius: 50%;
+                              text-align: center;
+                              line-height: 30px;
+                              font-size: 13px;
+                              font-family: sans-serif;
+                              color: #6c4ab6;
+                              font-weight: 700;
+                            "
+                          >
+                            1
+                          </td>
+                          <td
+                            style="
+                              padding-left: 12px;
+                              font-family:
+                                -apple-system, BlinkMacSystemFont,
+                                &quot;Segoe UI&quot;, Roboto, Arial, sans-serif;
+                              font-size: 14px;
+                              color: #374151;
+                            "
+                          >
+                            Check your inbox and
+                            <strong>verify your email address.</strong>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td
+                      style="padding: 10px 0; border-bottom: 1px solid #f3f4f6"
+                    >
+                      <table
+                        role="presentation"
+                        cellpadding="0"
+                        cellspacing="0"
+                      >
+                        <tr>
+                          <td
+                            style="
+                              width: 30px;
+                              height: 30px;
+                              background: #ede9fe;
+                              border-radius: 50%;
+                              text-align: center;
+                              line-height: 30px;
+                              font-size: 13px;
+                              font-family: sans-serif;
+                              color: #6c4ab6;
+                              font-weight: 700;
+                            "
+                          >
+                            2
+                          </td>
+                          <td
+                            style="
+                              padding-left: 12px;
+                              font-family:
+                                -apple-system, BlinkMacSystemFont,
+                                &quot;Segoe UI&quot;, Roboto, Arial, sans-serif;
+                              font-size: 14px;
+                              color: #374151;
+                            "
+                          >
+                            <strong>Sign in</strong> with the credentials above.
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 10px 0">
+                      <table
+                        role="presentation"
+                        cellpadding="0"
+                        cellspacing="0"
+                      >
+                        <tr>
+                          <td
+                            style="
+                              width: 30px;
+                              height: 30px;
+                              background: #ede9fe;
+                              border-radius: 50%;
+                              text-align: center;
+                              line-height: 30px;
+                              font-size: 13px;
+                              font-family: sans-serif;
+                              color: #6c4ab6;
+                              font-weight: 700;
+                            "
+                          >
+                            3
+                          </td>
+                          <td
+                            style="
+                              padding-left: 12px;
+                              font-family:
+                                -apple-system, BlinkMacSystemFont,
+                                &quot;Segoe UI&quot;, Roboto, Arial, sans-serif;
+                              font-size: 14px;
+                              color: #374151;
+                            "
+                          >
+                            Head to your <strong>dashboard</strong> and set a
+                            new secure password.
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
 
-                <div
-                  th:replace="~{fragments/button :: ctaButton(label='Login to Your Account', url=${loginUrl})}"
-                ></div>
+                <!-- CTA buttons -->
+                <table
+                  role="presentation"
+                  width="100%"
+                  cellpadding="0"
+                  cellspacing="0"
+                >
+                  <tr>
+                    <td style="text-align: center; padding-bottom: 12px">
+                      <a
+                        th:href="${loginUrl}"
+                        href="#"
+                        style="
+                          display: inline-block;
+                          background: linear-gradient(
+                            135deg,
+                            #6c4ab6 0%,
+                            #4f46e5 100%
+                          );
+                          color: #fff;
+                          font-family:
+                            -apple-system, BlinkMacSystemFont,
+                            &quot;Segoe UI&quot;, Roboto, Arial, sans-serif;
+                          font-size: 15px;
+                          font-weight: 600;
+                          text-decoration: none;
+                          padding: 14px 36px;
+                          border-radius: 12px;
+                          box-shadow: 0 4px 15px rgba(108, 74, 182, 0.4);
+                        "
+                        >Sign In Now</a
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="text-align: center">
+                      <a
+                        th:href="${dashboardUrl}"
+                        href="#"
+                        style="
+                          display: inline-block;
+                          border: 2px solid #6c4ab6;
+                          color: #6c4ab6;
+                          font-family:
+                            -apple-system, BlinkMacSystemFont,
+                            &quot;Segoe UI&quot;, Roboto, Arial, sans-serif;
+                          font-size: 14px;
+                          font-weight: 600;
+                          text-decoration: none;
+                          padding: 12px 28px;
+                          border-radius: 12px;
+                        "
+                        >Go to My Dashboard</a
+                      >
+                    </td>
+                  </tr>
+                </table>
               </td>
             </tr>
 
+            <!-- Footer -->
             <tr>
               <td><div th:replace="~{fragments/footer :: footer}"></div></td>
             </tr>

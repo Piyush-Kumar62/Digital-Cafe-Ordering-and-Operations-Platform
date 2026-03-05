@@ -1,31 +1,5 @@
 package com.digitalcafe.integration;
 
-import com.digitalcafe.dto.request.BookingRequest;
-import com.digitalcafe.dto.response.BookingResponse;
-import com.digitalcafe.dto.response.OrderResponse;
-import com.digitalcafe.dto.response.PageResponse;
-import com.digitalcafe.entity.Booking;
-import com.digitalcafe.entity.User;
-import com.digitalcafe.exception.BookingConflictException;
-import com.digitalcafe.repository.UserRepository;
-import com.digitalcafe.service.BookingService;
-import com.digitalcafe.service.OrderService;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.web.servlet.MockMvc;
-
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.util.List;
-import java.util.Optional;
-
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.verify;
@@ -36,6 +10,29 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.List;
+import java.util.Optional;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.web.servlet.MockMvc;
+
+import com.digitalcafe.dto.request.BookingRequest;
+import com.digitalcafe.entity.User;
+import com.digitalcafe.exception.BookingConflictException;
+import com.digitalcafe.repository.UserRepository;
+import com.digitalcafe.service.BookingService;
+import com.digitalcafe.service.OrderService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -60,7 +57,7 @@ class PlatformIntegrationTests {
     @Test
     @WithMockUser(username = "customer@test.com", roles = "CUSTOMER")
     void bookingOverlapShouldReturnConflict() throws Exception {
-        User customer = User.builder().id(10L).email("customer@test.com").isEmailVerified(true).build();
+        User customer = User.builder().id(10L).email("customer@test.com").isEmailVerified(true).isProfileComplete(true).build();
         when(userRepository.findByEmail("customer@test.com")).thenReturn(Optional.of(customer));
         when(bookingService.createBooking(anyLong(), any(BookingRequest.class)))
                 .thenThrow(new BookingConflictException("Table is already booked for this time slot"));
@@ -82,7 +79,7 @@ class PlatformIntegrationTests {
     @Test
     @WithMockUser(username = "customer@test.com", roles = "CUSTOMER")
     void customerCannotAccessOtherCustomerOrders() throws Exception {
-        User customer = User.builder().id(10L).email("customer@test.com").isEmailVerified(true).build();
+        User customer = User.builder().id(10L).email("customer@test.com").isEmailVerified(true).isProfileComplete(true).build();
         when(userRepository.findByEmail("customer@test.com")).thenReturn(Optional.of(customer));
         when(orderService.getOrderById(99L))
                 .thenThrow(new com.digitalcafe.exception.AccessDeniedException("You are not allowed to view this order"));
@@ -130,6 +127,8 @@ class PlatformIntegrationTests {
                 .cafe(com.digitalcafe.entity.Cafe.builder().id(5L).build())
                 .build();
         when(userRepository.findByEmail("chef@test.com")).thenReturn(Optional.of(chef));
+        // Controller fetches both PLACED (new) and PREPARING (in-progress) orders
+        when(orderService.getOrdersByStatus(5L, com.digitalcafe.entity.Order.OrderStatus.PLACED)).thenReturn(List.of());
         when(orderService.getOrdersByStatus(5L, com.digitalcafe.entity.Order.OrderStatus.PREPARING)).thenReturn(List.of());
 
         mockMvc.perform(get("/api/chef/orders"))
@@ -137,6 +136,7 @@ class PlatformIntegrationTests {
                 .andExpect(jsonPath("$.data").isArray())
                 .andExpect(jsonPath("$.data.length()").value(0));
 
+        verify(orderService).getOrdersByStatus(5L, com.digitalcafe.entity.Order.OrderStatus.PLACED);
         verify(orderService).getOrdersByStatus(5L, com.digitalcafe.entity.Order.OrderStatus.PREPARING);
         verifyNoMoreInteractions(orderService);
     }

@@ -24,6 +24,7 @@ public class PublicCafeDetailResponse {
     private String email;
     private String openTime;
     private String closeTime;
+    private Double rating;
     private String logoUrl;
     private String coverUrl;
     private List<String> galleryImages;

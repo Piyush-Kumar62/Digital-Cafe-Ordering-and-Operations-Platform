@@ -224,7 +224,7 @@ public class GlobalExceptionHandler {
                 LocalDateTime.now(),
                 HttpStatus.PAYLOAD_TOO_LARGE.value(),
                 "Payload Too Large",
-                "Uploaded file is too large. Maximum allowed size is 10MB.",
+                "Uploaded file is too large. Maximum allowed size is 2MB.",
                 request.getDescription(false).replace("uri=", "")
         );
         return new ResponseEntity<>(errorResponse, HttpStatus.PAYLOAD_TOO_LARGE);
@@ -263,7 +263,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGlobalException(
             Exception ex, WebRequest request) {
-        log.error("Unexpected error occurred", ex);
+        log.error("Unexpected error occurred [{}]: {}", ex.getClass().getName(), ex.getMessage(), ex);
 
         ErrorResponse errorResponse = new ErrorResponse(
                 LocalDateTime.now(),

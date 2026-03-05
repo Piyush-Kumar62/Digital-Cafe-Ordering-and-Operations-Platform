@@ -45,7 +45,11 @@ public abstract class BaseEntity {
 
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
+        // Only set if not already populated — allows seeders/tests to supply
+        // historical timestamps rather than always stamping now().
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
         updatedAt = LocalDateTime.now();
     }
 

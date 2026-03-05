@@ -8,7 +8,7 @@ import java.util.List;
  *
  * Implementation can be swapped between:
  * - Local disk (dev)
- * - AWS S3 pre-signed URLs (prod)
+ * - AWS S3 pre-signed URLs (deployment)
  */
 public interface FileStorageService {
 

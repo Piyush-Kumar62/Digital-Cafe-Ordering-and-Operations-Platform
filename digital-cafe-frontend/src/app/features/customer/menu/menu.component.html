@@ -154,7 +154,7 @@
           <h3>{{ item.name }}</h3>
           <p>{{ item.description || "No description available." }}</p>
           <div class="dish-meta">
-            <strong>${{ item.price | number: "1.2-2" }}</strong>
+            <strong>₹{{ item.price | number: "1.2-2" }}</strong>
             <small>{{ categoryLabel(item.category) }}</small>
           </div>
           <div class="qty-row">
@@ -202,7 +202,7 @@
         <div class="cart-line" *ngFor="let line of cart">
           <div>
             <strong>{{ line.item.name }}</strong>
-            <p>${{ line.item.price | number: "1.2-2" }}</p>
+            <p>₹{{ line.item.price | number: "1.2-2" }}</p>
           </div>
           <div class="qty-buttons">
             <button (click)="decreaseCartItem(line.item.id)">-</button>
@@ -216,7 +216,7 @@
       </ng-template>
       <div class="cart-footer">
         <p>
-          Total <strong>${{ cartTotal | number: "1.2-2" }}</strong>
+          Total <strong>₹{{ cartTotal | number: "1.2-2" }}</strong>
         </p>
         <button
           class="order-btn"
@@ -246,7 +246,7 @@
       </div>
     </div>
     <p class="order-meta">
-      Order #{{ order.orderNumber || order.id }} · Total ${{
+      Order #{{ order.orderNumber || order.id }} · Total ₹{{
         order.totalAmount | number: "1.2-2"
       }}
     </p>

@@ -1,3 +1,4 @@
+<!-- Profile completion warning -->
 <div
   class="profile-warning"
   *ngIf="
@@ -6,12 +7,15 @@
     user.profileCompletionPercentage < 100
   "
 >
-  <h2>Complete Your Profile</h2>
-  <p>
-    Your profile is only {{ user.profileCompletionPercentage }}% complete.
-    Please complete your profile to unlock all features.
-  </p>
-  <button routerLink="/customer/complete-profile">Complete Profile</button>
+  <span class="material-icons warn-icon">warning</span>
+  <div class="warn-body">
+    <strong>Complete Your Profile</strong>
+    <p>
+      Your profile is {{ user.profileCompletionPercentage }}% complete. Finish
+      it to unlock all features.
+    </p>
+  </div>
+  <a routerLink="/customer/complete-profile" class="warn-btn">Complete Now</a>
 </div>
 
 <div class="dashboard-grid" *ngIf="!loading; else loadingState">
@@ -52,92 +56,44 @@
     </app-chart>
   </div>
 
-  <!-- Available Cafés (realtime) -->
-  <div class="available-cafes-container available-cafes-card">
-    <h3>Available Cafés</h3>
-    <p
-      class="cafes-subtitle"
-      *ngIf="!loadingCafes && availableCafes.length > 0"
-    >
-      Click a café to browse its menu and book a table
-    </p>
-
-    <div class="cafes-loading" *ngIf="loadingCafes">Loading cafés…</div>
-
-    <div class="cafes-list" *ngIf="!loadingCafes && availableCafes.length > 0">
-      <div
-        class="mini-cafe-card"
-        *ngFor="let cafe of availableCafes"
-        (click)="goToMenu(cafe.id)"
-        tabindex="0"
-        (keydown.enter)="goToMenu(cafe.id)"
-        role="button"
-        [attr.aria-label]="'Browse ' + cafe.name"
-      >
-        <div class="mini-cafe-img-wrap">
-          <img
-            [src]="
-              cafe.imageUrl ||
-              'assets/downloads/unsplash/cafe-cover-default.jpg'
-            "
-            [alt]="cafe.name"
-            loading="lazy"
-            onerror="
-              this.src = 'assets/downloads/unsplash/cafe-cover-default.jpg'
-            "
-          />
-        </div>
-        <div class="mini-cafe-body">
-          <span class="mini-cafe-name">{{ cafe.name }}</span>
-          <span class="mini-cafe-location" *ngIf="cafe.location"
-            >📍 {{ cafe.location }}</span
-          >
-          <span class="mini-cafe-hours" *ngIf="cafe.openTime || cafe.closeTime">
-            🕐 {{ fmt12h(cafe.openTime) }} – {{ fmt12h(cafe.closeTime) }}
-          </span>
-          <span class="mini-cafe-rating" *ngIf="cafe.rating && cafe.rating > 0"
-            >⭐ {{ cafe.rating | number: "1.1-1" }}</span
-          >
-        </div>
-        <span class="mini-cafe-cta">View Menu →</span>
-      </div>
-    </div>
-
-    <div
-      class="cafes-empty"
-      *ngIf="!loadingCafes && availableCafes.length === 0"
-    >
-      No cafés active right now. Check back soon!
-    </div>
-
-    <a routerLink="/cafes" class="cafes-browse-all">Browse all cafés →</a>
-  </div>
-
-  <!-- Quick Actions -->
-  <div class="quick-actions-container quick-actions-card">
-    <h3>Quick Actions</h3>
+  <!-- ── Quick Actions ──────────────────────────────────────────── -->
+  <div class="section-card quick-actions-card">
+    <h3 class="section-title">
+      <span class="material-icons">flash_on</span> Quick Actions
+    </h3>
     <div class="quick-actions">
-      <button
-        routerLink="/cafes"
-        [disabled]="
-          user &&
-          user.profileCompletionPercentage &&
-          user.profileCompletionPercentage < 100
-        "
-      >
-        Book New Table
-      </button>
-      <button routerLink="/cafes">Browse Cafes</button>
-      <button routerLink="/customer/order-tracking">Track Current Order</button>
-      <button routerLink="/customer/my-orders">My Orders</button>
-      <button routerLink="/customer/payments">My Payments</button>
-      <button routerLink="/customer/complete-profile">Update Profile</button>
+      <a routerLink="/customer/browse-cafes" class="qa-btn qa-primary">
+        <span class="material-icons">storefront</span>
+        Browse Cafés
+      </a>
+      <a routerLink="/customer/booking" class="qa-btn qa-teal">
+        <span class="material-icons">book_online</span>
+        My Bookings
+      </a>
+      <a routerLink="/customer/order-tracking" class="qa-btn qa-violet">
+        <span class="material-icons">receipt_long</span>
+        My Orders
+      </a>
+      <a routerLink="/customer/payments" class="qa-btn qa-orange">
+        <span class="material-icons">payment</span>
+        My Payments
+      </a>
+      <a routerLink="/customer/profile" class="qa-btn qa-indigo">
+        <span class="material-icons">person</span>
+        My Profile
+      </a>
+      <a routerLink="/customer/notifications" class="qa-btn qa-rose">
+        <span class="material-icons">notifications</span>
+        Notifications
+      </a>
     </div>
   </div>
 
-  <!-- Recent Activity -->
-  <div class="recent-activity-container recent-activity-card">
-    <h3>Recent Activity</h3>
+  <!-- ── Recent Activity ────────────────────────────────────────── -->
+  <div class="section-card recent-activity-card">
+    <h3 class="section-title">
+      <span class="material-icons">history</span> Recent Activity
+    </h3>
     <div class="activity-tables">
       <div class="activity-table">
         <h4>Recent Bookings</h4>
@@ -164,7 +120,10 @@
               </td>
             </tr>
             <tr *ngIf="upcomingBookings.length === 0">
-              <td colspan="4">No upcoming bookings.</td>
+              <td colspan="4" class="empty-row">
+                No bookings yet.
+                <a routerLink="/customer/browse-cafes">Browse cafés →</a>
+              </td>
             </tr>
           </tbody>
         </table>
@@ -200,8 +159,8 @@
 </div>
 
 <ng-template #loadingState>
-  <div class="loading">
-    <!-- Skeleton loader can be implemented here -->
-    <p>Loading dashboard...</p>
+  <div class="loading-page">
+    <div class="loading-spinner"></div>
+    <p>Loading your dashboard…</p>
   </div>
 </ng-template>

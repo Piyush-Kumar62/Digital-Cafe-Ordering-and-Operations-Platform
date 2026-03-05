@@ -1,9 +1,8 @@
 import { Component, OnDestroy, OnInit } from "@angular/core";
 import { CommonModule } from "@angular/common";
-import { RouterModule, Router } from "@angular/router";
+import { RouterModule } from "@angular/router";
 import { Subject, forkJoin } from "rxjs";
-import { takeUntil, catchError } from "rxjs/operators";
-import { of } from "rxjs";
+import { takeUntil } from "rxjs/operators";
 import { ApiService } from "@core/services/api.service";
 import { Booking, BookingStatus } from "@shared/models/booking.model";
 import { Order, OrderStatus } from "@shared/models/order.model";
@@ -11,8 +10,6 @@ import { CardComponent } from "@shared/components/card/card";
 import { ChartComponent } from "@shared/components/chart/chart";
 import { AuthService } from "@core/auth/auth.service";
 import { User } from "@shared/models/auth.model";
-import { CafeBrowseService } from "@features/public/cafe-browse.service";
-import { PublicCafeCard } from "@shared/models/cafe.model";
 
 @Component({
   selector: "app-customer-dashboard",
@@ -23,8 +20,6 @@ import { PublicCafeCard } from "@shared/models/cafe.model";
 })
 export class CustomerDashboardComponent implements OnInit, OnDestroy {
   loading = true;
-  availableCafes: PublicCafeCard[] = [];
-  loadingCafes = true;
   summaryStats: {
     title: string;
     value: string;
@@ -44,15 +39,12 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
 
   constructor(
     private apiService: ApiService,
-    private cafeBrowseService: CafeBrowseService,
     private authService: AuthService,
-    private router: Router,
   ) {}
 
   ngOnInit(): void {
     this.authService.currentUser.subscribe((user) => (this.user = user));
     this.loadDashboardData();
-    this.loadAvailableCafes();
   }
 
   ngOnDestroy(): void {
@@ -242,33 +234,5 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
       default:
         return "neutral";
     }
-  }
-
-  private loadAvailableCafes(): void {
-    this.cafeBrowseService
-      .getPublicCafes(0, 100)
-      .pipe(
-        catchError(() => of(null)),
-        takeUntil(this.destroy$),
-      )
-      .subscribe((res) => {
-        this.availableCafes = res?.content || [];
-        this.loadingCafes = false;
-      });
-  }
-
-  goToMenu(cafeId: number): void {
-    this.router.navigate(["/cafes", cafeId]);
-  }
-
-  fmt12h(val: string | undefined | null): string {
-    if (!val) return "";
-    const m = val.match(/^(\d{1,2}):(\d{2})$/);
-    if (!m) return val;
-    let h = Number(m[1]);
-    const min = m[2];
-    const meridian = h >= 12 ? "PM" : "AM";
-    h = h % 12 || 12;
-    return `${h}:${min} ${meridian}`;
   }
 }

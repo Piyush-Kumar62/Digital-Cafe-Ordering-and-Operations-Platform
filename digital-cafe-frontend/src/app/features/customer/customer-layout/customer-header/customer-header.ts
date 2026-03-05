@@ -1,14 +1,15 @@
-import { Component, ElementRef, HostListener, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
-import { FormsModule } from '@angular/forms';
-import { AuthService } from '@core/auth/auth.service';
-import { ApiService } from '@core/services/api.service';
-import { environment } from '@environments/environment';
-import { User } from '@shared/models/auth.model';
-import { Subject, Subscription, takeUntil } from 'rxjs';
-import { WebSocketService } from '@core/websocket/websocket.service';
-import { Router } from '@angular/router';
+import { Component, ElementRef, HostListener, OnInit } from "@angular/core";
+import { CommonModule } from "@angular/common";
+import { RouterModule } from "@angular/router";
+import { FormsModule } from "@angular/forms";
+import { AuthService } from "@core/auth/auth.service";
+import { ApiService } from "@core/services/api.service";
+import { AlertService } from "@core/services/alert.service";
+import { environment } from "@environments/environment";
+import { User } from "@shared/models/auth.model";
+import { Subject, Subscription, takeUntil } from "rxjs";
+import { WebSocketService } from "@core/websocket/websocket.service";
+import { Router } from "@angular/router";
 
 type HeaderNotification = {
   id: string;
@@ -19,15 +20,15 @@ type HeaderNotification = {
 };
 
 @Component({
-  selector: 'app-customer-header',
+  selector: "app-customer-header",
   standalone: true,
   imports: [CommonModule, RouterModule, FormsModule],
-  templateUrl: './customer-header.html',
-  styleUrls: ['./customer-header.scss']
+  templateUrl: "./customer-header.html",
+  styleUrls: ["./customer-header.scss"],
 })
 export class CustomerHeaderComponent implements OnInit {
-  readonly defaultAvatar = 'assets/branding/brand-logo.png';
-  readonly backendBaseUrl = environment.apiUrl.replace('/api', '');
+  readonly defaultAvatar = "assets/branding/brand-logo.png";
+  readonly backendBaseUrl = environment.apiUrl.replace("/api", "");
   user: User | null = null;
   lastLogin: Date | null = null;
   profileCompletion = 0;
@@ -39,9 +40,9 @@ export class CustomerHeaderComponent implements OnInit {
   uploadingImage = false;
   imageVersion = Date.now();
   profileForm = {
-    firstName: '',
-    lastName: '',
-    displayName: ''
+    firstName: "",
+    lastName: "",
+    displayName: "",
   };
   private userSubscription: Subscription | undefined;
   private destroy$ = new Subject<void>();
@@ -50,12 +51,13 @@ export class CustomerHeaderComponent implements OnInit {
     private elementRef: ElementRef<HTMLElement>,
     private authService: AuthService,
     private apiService: ApiService,
+    private alertService: AlertService,
     private webSocketService: WebSocketService,
     private router: Router,
   ) {}
 
   ngOnInit(): void {
-    this.userSubscription = this.authService.currentUser.subscribe(user => {
+    this.userSubscription = this.authService.currentUser.subscribe((user) => {
       this.user = user;
       if (user) {
         this.profileCompletion = user.profileCompletionPercentage || 0;
@@ -95,7 +97,7 @@ export class CustomerHeaderComponent implements OnInit {
     this.showProfileMenu = false;
   }
 
-  @HostListener('document:click', ['$event'])
+  @HostListener("document:click", ["$event"])
   handleDocumentClick(event: MouseEvent): void {
     const clickTarget = event.target as Node | null;
     if (!clickTarget) {
@@ -106,7 +108,7 @@ export class CustomerHeaderComponent implements OnInit {
     }
   }
 
-  @HostListener('document:keydown.escape')
+  @HostListener("document:keydown.escape")
   handleEscape(): void {
     this.closePopovers();
   }
@@ -122,24 +124,36 @@ export class CustomerHeaderComponent implements OnInit {
       return this.defaultAvatar;
     }
 
-    const normalized = rawUrl.startsWith('http') ? rawUrl : `${this.backendBaseUrl}${rawUrl}`;
-    return `${normalized}${normalized.includes('?') ? '&' : '?'}v=${this.imageVersion}`;
+    const normalized = rawUrl.startsWith("http")
+      ? rawUrl
+      : `${this.backendBaseUrl}${rawUrl}`;
+    return `${normalized}${normalized.includes("?") ? "&" : "?"}v=${this.imageVersion}`;
   }
 
   markAllRead(): void {
-    this.notifications = this.notifications.map(n => ({ ...n, read: true }));
+    this.notifications = this.notifications.map((n) => ({ ...n, read: true }));
     this.syncUnreadCount();
   }
 
   onProfileImageSelected(event: Event): void {
     const file = (event.target as HTMLInputElement)?.files?.[0];
     if (!file) return;
+    const twoMb = 2 * 1024 * 1024;
+    if (file.size > twoMb) {
+      this.alertService.error("Profile image must be 2MB or less");
+      (event.target as HTMLInputElement).value = "";
+      return;
+    }
     this.uploadingImage = true;
     this.apiService.uploadCustomerProfileImage(file).subscribe({
       next: (res) => {
         if (this.user) {
-          const uploadedImageUrl = res?.profileImageUrl || this.user.profileImageUrl;
-          const updatedUser = { ...this.user, profileImageUrl: uploadedImageUrl };
+          const uploadedImageUrl =
+            res?.profileImageUrl || this.user.profileImageUrl;
+          const updatedUser = {
+            ...this.user,
+            profileImageUrl: uploadedImageUrl,
+          };
           this.user = updatedUser;
           this.authService.updateUserData(updatedUser);
         }
@@ -148,12 +162,16 @@ export class CustomerHeaderComponent implements OnInit {
       },
       error: () => {
         this.uploadingImage = false;
-      }
+      },
     });
   }
 
   saveProfile(): void {
-    if (!this.profileForm.firstName.trim() || !this.profileForm.lastName.trim() || !this.profileForm.displayName.trim()) {
+    if (
+      !this.profileForm.firstName.trim() ||
+      !this.profileForm.lastName.trim() ||
+      !this.profileForm.displayName.trim()
+    ) {
       return;
     }
     this.isSavingProfile = true;
@@ -172,48 +190,61 @@ export class CustomerHeaderComponent implements OnInit {
       },
       error: () => {
         this.isSavingProfile = false;
-      }
+      },
     });
   }
 
   private loadProfile(): void {
     this.apiService.getCustomerProfile().subscribe({
       next: (profile) => {
-        this.profileForm.firstName = profile.firstName || this.user?.firstName || this.user?.username || '';
-        this.profileForm.lastName = profile.lastName || this.user?.lastName || '';
+        this.profileForm.firstName =
+          profile.firstName ||
+          this.user?.firstName ||
+          this.user?.username ||
+          "";
+        this.profileForm.lastName =
+          profile.lastName || this.user?.lastName || "";
         this.profileForm.displayName =
-          profile.displayName || `${profile.firstName || ''} ${profile.lastName || ''}`.trim() || this.user?.username || '';
+          profile.displayName ||
+          `${profile.firstName || ""} ${profile.lastName || ""}`.trim() ||
+          this.user?.username ||
+          "";
         if (this.user) {
           const updatedUser = {
             ...this.user,
             firstName: profile.firstName || this.user.firstName,
             lastName: profile.lastName || this.user.lastName,
-            profileImageUrl: profile.profileImageUrl || this.user.profileImageUrl,
+            profileImageUrl:
+              profile.profileImageUrl || this.user.profileImageUrl,
             lastLogin: profile.lastLogin || this.user.lastLogin,
           };
           this.user = updatedUser;
           this.authService.updateUserData(updatedUser);
-          this.profileCompletion = profile.profileCompletionPercentage ?? this.profileCompletion;
-          this.lastLogin = profile.lastLogin ? new Date(profile.lastLogin) : this.lastLogin;
+          this.profileCompletion =
+            profile.profileCompletionPercentage ?? this.profileCompletion;
+          this.lastLogin = profile.lastLogin
+            ? new Date(profile.lastLogin)
+            : this.lastLogin;
           this.imageVersion = Date.now();
         }
-      }
+      },
     });
   }
 
   get displayRole(): string {
-    const role = (this.user?.roles || [])[0] || 'CUSTOMER';
-    return role.replace('ROLE_', '').replace(/_/g, ' ');
+    const role = (this.user?.roles || [])[0] || "CUSTOMER";
+    return role.replace("ROLE_", "").replace(/_/g, " ");
   }
 
   private setupNotificationStream(): void {
-    this.webSocketService.watchDestination<any>('/user/queue/notifications')
+    this.webSocketService
+      .watchDestination<any>("/user/queue/notifications")
       .pipe(takeUntil(this.destroy$))
       .subscribe((payload) => {
         const item: HeaderNotification = {
           id: `${Date.now()}-${Math.random()}`,
-          title: payload?.title || payload?.type || 'Notification',
-          message: payload?.message || 'You have a new update.',
+          title: payload?.title || payload?.type || "Notification",
+          message: payload?.message || "You have a new update.",
           createdAt: new Date().toLocaleString(),
           read: false,
         };
@@ -223,13 +254,15 @@ export class CustomerHeaderComponent implements OnInit {
   }
 
   private syncUnreadCount(): void {
-    this.unreadNotifications = this.notifications.filter(n => !n.read).length;
-    localStorage.setItem('customer_unread_notifications', String(this.unreadNotifications));
+    this.unreadNotifications = this.notifications.filter((n) => !n.read).length;
+    localStorage.setItem(
+      "customer_unread_notifications",
+      String(this.unreadNotifications),
+    );
   }
 
   logout(): void {
     this.authService.logout();
-    this.router.navigate(['/auth/login']);
+    this.router.navigate(["/auth/login"]);
   }
 }
-

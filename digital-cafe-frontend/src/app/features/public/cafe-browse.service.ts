@@ -42,7 +42,9 @@ export class CafeBrowseService {
     if (/^(https?:\/\/|data:)/.test(src)) return src;
     // Relative path starting with / — prefix with backend origin
     if (src.startsWith("/")) return `${this.backendBase}${src}`;
-    // Absolute filesystem path (contains \ or a drive letter like D:) — discard
+    // Frontend Angular asset paths like "assets/cafe/..." — serve as-is from Angular dev server
+    if (src.startsWith("assets/")) return src;
+    // Absolute filesystem path (contains \ or Windows drive letter) — discard
     return "";
   }
 

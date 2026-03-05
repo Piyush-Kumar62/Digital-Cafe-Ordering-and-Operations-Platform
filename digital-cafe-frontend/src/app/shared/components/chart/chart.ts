@@ -1,53 +1,74 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { NgxChartsModule } from '@swimlane/ngx-charts';
+import {
+  Component,
+  Input,
+  Output,
+  EventEmitter,
+  HostListener,
+  ElementRef,
+  AfterViewInit,
+  ChangeDetectorRef,
+} from "@angular/core";
+import { CommonModule } from "@angular/common";
+import { NgxChartsModule } from "@swimlane/ngx-charts";
 
 @Component({
-  selector: 'app-chart',
+  selector: "app-chart",
   standalone: true,
   imports: [CommonModule, NgxChartsModule],
-  templateUrl: './chart.html',
-  styleUrls: ['./chart.scss']
+  templateUrl: "./chart.html",
+  styleUrls: ["./chart.scss"],
 })
-export class ChartComponent {
+export class ChartComponent implements AfterViewInit {
   @Input() data: any[] = [];
-  @Input() chartType: 'bar-vertical' | 'pie' | 'line' = 'bar-vertical';
+  @Input() chartType: "bar-vertical" | "pie" | "line" = "bar-vertical";
   @Input() showXAxis = true;
   @Input() showYAxis = true;
-  @Input() showLegend = true;
+  @Input() showLegend = false;
   @Input() showXAxisLabel = true;
   @Input() showYAxisLabel = true;
   @Input() showPieLabels = true;
-  @Input() xAxisLabel = '';
-  @Input() yAxisLabel = '';
+  @Input() xAxisLabel = "";
+  @Input() yAxisLabel = "";
   @Input() height = 280;
 
-  view: [number, number] = [640, 280];
+  view: [number, number] = [400, 280];
 
   @Output() selectEvent = new EventEmitter();
 
-  ngOnInit(): void {
+  constructor(
+    private el: ElementRef,
+    private cdr: ChangeDetectorRef,
+  ) {}
+
+  ngOnInit(): void {}
+
+  ngAfterViewInit(): void {
     this.updateView();
   }
 
-  ngOnChanges(): void {
+  ngOnChanges(): void {}
+
+  @HostListener("window:resize")
+  onResize(): void {
     this.updateView();
   }
 
   private updateView(): void {
-    const width = Math.max(280, window.innerWidth < 768 ? window.innerWidth - 96 : 620);
-    this.view = [width, this.height];
+    const w = this.el.nativeElement.offsetWidth || 400;
+    this.view = [w, this.height];
+    this.cdr.detectChanges();
   }
 
   hasData(): boolean {
     if (!Array.isArray(this.data) || this.data.length === 0) return false;
-    if (this.chartType === 'line') {
-      return this.data.some(item =>
-        Array.isArray(item?.series) &&
-        item.series.some((point: any) => Number(point?.value || 0) > 0),
+    if (this.chartType === "line") {
+      return this.data.some(
+        (item) =>
+          Array.isArray(item?.series) &&
+          item.series.some((point: any) => Number(point?.value || 0) > 0),
       );
     }
-    return this.data.some(item => Number(item?.value || 0) > 0);
+    return this.data.some((item) => Number(item?.value || 0) > 0);
   }
 
   onSelect(event: any) {

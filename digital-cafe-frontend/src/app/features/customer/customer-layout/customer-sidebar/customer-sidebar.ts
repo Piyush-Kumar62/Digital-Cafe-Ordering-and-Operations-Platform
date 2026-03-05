@@ -13,19 +13,24 @@ export class CustomerSidebarComponent implements OnInit {
   isCollapsed = false;
   menuItems = [
     { name: "Dashboard", icon: "dashboard", path: "/customer/dashboard" },
-    { name: "Browse Cafes", icon: "storefront", path: "/cafes" },
-    { name: "My Bookings", icon: "book_online", path: "/customer/booking" },
+    {
+      name: "Browse Cafés",
+      icon: "storefront",
+      path: "/customer/browse-cafes",
+    },
+    { name: "My Bookings", icon: "book_online", path: "/customer/my-bookings" },
     {
       name: "My Orders",
       icon: "receipt_long",
       path: "/customer/order-tracking",
     },
-    {
-      name: "Track Order",
-      icon: "local_shipping",
-      path: "/customer/order-tracking",
-    },
     { name: "Payments", icon: "payment", path: "/customer/payments" },
+    { name: "My Profile", icon: "person", path: "/customer/profile" },
+    {
+      name: "Notifications",
+      icon: "notifications",
+      path: "/customer/notifications",
+    },
   ];
 
   constructor() {}

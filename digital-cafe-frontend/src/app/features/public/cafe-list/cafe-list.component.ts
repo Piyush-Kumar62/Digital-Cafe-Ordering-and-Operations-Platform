@@ -32,10 +32,26 @@ export class CafeListComponent implements OnInit, OnDestroy {
   cafes: PublicCafeCard[] = [];
   loading = true;
   error = false;
-  page = 0;
-  size = 9;
+  pageIndex = 0;
+  readonly pageSize = 9;
+  totalElements = 0;
   totalPages = 0;
   searchQuery = "";
+
+  get rangeStart(): number {
+    return this.totalElements === 0 ? 0 : this.pageIndex * this.pageSize + 1;
+  }
+  get rangeEnd(): number {
+    return Math.min((this.pageIndex + 1) * this.pageSize, this.totalElements);
+  }
+  get allPages(): number[] {
+    return Array.from({ length: Math.max(this.totalPages, 1) }, (_, i) => i);
+  }
+  goToPage(page: number): void {
+    if (page < 0 || page >= this.totalPages) return;
+    this.pageIndex = page;
+    this.loadPage(this.pageIndex);
+  }
 
   private readonly POLL_INTERVAL_MS = 30_000;
   private destroy$ = new Subject<void>();
@@ -82,7 +98,7 @@ export class CafeListComponent implements OnInit, OnDestroy {
           this.loading = true;
           this.error = false;
           return this.cafeBrowseService
-            .getPublicCafes(this.page, this.size)
+            .getPublicCafes(this.pageIndex, this.pageSize)
             .pipe(
               catchError(() => {
                 this.error = true;
@@ -97,6 +113,7 @@ export class CafeListComponent implements OnInit, OnDestroy {
         if (res) {
           this.cafes = res.content || [];
           this.totalPages = res.totalPages || 0;
+          this.totalElements = res.totalElements || 0;
         }
         this.loading = false;
       });
@@ -112,19 +129,19 @@ export class CafeListComponent implements OnInit, OnDestroy {
   }
 
   previous(): void {
-    if (this.page <= 0) return;
-    this.page -= 1;
-    this.loadPage(this.page);
+    if (this.pageIndex <= 0) return;
+    this.pageIndex -= 1;
+    this.loadPage(this.pageIndex);
   }
 
   next(): void {
-    if (this.page + 1 >= this.totalPages) return;
-    this.page += 1;
-    this.loadPage(this.page);
+    if (this.pageIndex + 1 >= this.totalPages) return;
+    this.pageIndex += 1;
+    this.loadPage(this.pageIndex);
   }
 
   retry(): void {
-    this.loadPage(this.page);
+    this.loadPage(this.pageIndex);
   }
 
   /** Convert "HH:MM" 24-hour string → "H:MM AM/PM", blank stays blank */
@@ -142,10 +159,11 @@ export class CafeListComponent implements OnInit, OnDestroy {
   private loadPage(page: number): void {
     this.loading = true;
     this.error = false;
-    this.cafeBrowseService.getPublicCafes(page, this.size).subscribe({
+    this.cafeBrowseService.getPublicCafes(page, this.pageSize).subscribe({
       next: (res) => {
         this.cafes = res.content || [];
         this.totalPages = res.totalPages || 0;
+        this.totalElements = res.totalElements || 0;
         this.loading = false;
       },
       error: () => {

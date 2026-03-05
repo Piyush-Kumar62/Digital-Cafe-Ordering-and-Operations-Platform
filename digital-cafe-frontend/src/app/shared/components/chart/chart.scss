@@ -1,21 +1,32 @@
 :host {
   display: block;
   width: 100%;
-  min-height: 280px;
+  height: 100%;
 }
 
 .chart-wrapper {
   width: 100%;
-  min-height: 280px;
+  overflow: visible;
+
+  /* make ngx-charts SVG fill the wrapper */
+  ::ng-deep ngx-charts-bar-vertical,
+  ::ng-deep ngx-charts-pie-chart,
+  ::ng-deep ngx-charts-line-chart {
+    display: block;
+    width: 100% !important;
+  }
+
+  ::ng-deep .ngx-charts-outer {
+    width: 100% !important;
+  }
 }
 
 .no-data {
-  min-height: 240px;
+  min-height: 280px;
   display: grid;
   place-items: center;
-  border: 1px dashed #cbd5e1;
+  border: 1px dashed #4b5563;
   border-radius: 12px;
-  color: #64748b;
+  color: #94a3b8;
   font-size: 0.9rem;
-  background: #f8fafc;
 }

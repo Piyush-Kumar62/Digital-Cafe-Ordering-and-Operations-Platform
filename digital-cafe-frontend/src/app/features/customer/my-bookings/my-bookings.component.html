@@ -1,29 +1,174 @@
-<section class="page">
-      <header>
-        <h1>My Bookings</h1>
-        <p>Track your table reservations and status.</p>
-      </header>
+<!-- Page Header -->
+<div class="page-header">
+  <div class="header-left">
+    <div class="header-icon">
+      <span class="material-icons">book_online</span>
+    </div>
+    <div>
+      <h1 class="header-title">My Bookings</h1>
+      <p class="header-sub">All your table reservations in one place</p>
+    </div>
+  </div>
+  <a routerLink="/customer/browse-cafes" class="new-booking-btn">
+    <span class="material-icons">add</span> New Booking
+  </a>
+</div>
 
-      <div class="grid" *ngIf="pagedBookings.length; else empty">
-        <article class="card" *ngFor="let booking of pagedBookings">
-          <h3>{{ booking.bookingNumber || ('Booking #' + booking.id) }}</h3>
-          <p>Cafe: {{ booking.cafeName || ('Cafe #' + booking.cafeId) }}</p>
-          <p>Date: {{ booking.bookingDate }} {{ booking.bookingTime }}</p>
-          <p>Guests: {{ booking.numberOfGuests }}</p>
-          <span class="status">{{ booking.status }}</span>
-        </article>
+<!-- Loading -->
+<div class="loading-wrap" *ngIf="loading">
+  <div class="spinner"></div>
+  <p>Loading bookings…</p>
+</div>
+
+<!-- Stats Bar -->
+<div class="stats-bar" *ngIf="!loading && bookings.length">
+  <div class="stat-pill stat-total">
+    <span class="material-icons">list_alt</span>
+    <span>{{ bookings.length }} Total</span>
+  </div>
+  <div class="stat-pill stat-confirmed">
+    <span class="material-icons">check_circle</span>
+    <span>{{ countByStatus('CONFIRMED') + countByStatus('BOOKED') }} Active</span>
+  </div>
+  <div class="stat-pill stat-completed">
+    <span class="material-icons">done_all</span>
+    <span>{{ countByStatus('COMPLETED') }} Completed</span>
+  </div>
+  <div class="stat-pill stat-cancelled">
+    <span class="material-icons">cancel</span>
+    <span>{{ countByStatus('CANCELLED') + countByStatus('NO_SHOW') }} Cancelled</span>
+  </div>
+</div>
+
+<!-- Filter Tabs -->
+<div class="filter-tabs" *ngIf="!loading && bookings.length">
+  <button
+    class="tab-btn"
+    [class.active]="activeFilter === 'ALL'"
+    (click)="setFilter('ALL')"
+  >All</button>
+  <button
+    class="tab-btn"
+    [class.active]="activeFilter === 'UPCOMING'"
+    (click)="setFilter('UPCOMING')"
+  >Upcoming</button>
+  <button
+    class="tab-btn"
+    [class.active]="activeFilter === 'COMPLETED'"
+    (click)="setFilter('COMPLETED')"
+  >Completed</button>
+  <button
+    class="tab-btn"
+    [class.active]="activeFilter === 'CANCELLED'"
+    (click)="setFilter('CANCELLED')"
+  >Cancelled</button>
+</div>
+
+<!-- Bookings Grid -->
+<div class="bookings-grid" *ngIf="!loading && pagedBookings.length; else emptyState">
+  <div class="booking-card" *ngFor="let booking of pagedBookings" [class]="'booking-card status-' + booking.status.toLowerCase()">
+    <!-- Card Header -->
+    <div class="booking-card-header">
+      <div class="booking-id-row">
+        <span class="booking-number">
+          <span class="material-icons">confirmation_number</span>
+          {{ booking.bookingNumber || ('#' + booking.id) }}
+        </span>
+        <span class="booking-badge" [class]="'badge-' + booking.status.toLowerCase()">
+          {{ formatStatus(booking.status) }}
+        </span>
       </div>
-
-      <div class="pagination" *ngIf="totalPages > 1">
-        <button (click)="prevPage()" [disabled]="page === 1">Previous</button>
-        <span>Page {{ page }} / {{ totalPages }}</span>
-        <button (click)="nextPage()" [disabled]="page === totalPages">Next</button>
+      <div class="cafe-name">
+        <span class="material-icons">storefront</span>
+        {{ booking.cafeName || ('Café #' + booking.cafeId) }}
       </div>
+    </div>
 
-      <ng-template #empty>
-        <div class="empty">
-          No bookings found.
-          <a routerLink="/customer/cafe">Book a table</a>
+    <!-- Card Body -->
+    <div class="booking-card-body">
+      <div class="detail-item">
+        <span class="material-icons detail-icon">calendar_today</span>
+        <div class="detail-content">
+          <span class="detail-label">Date</span>
+          <span class="detail-value">{{ formatDate(booking.bookingDate) }}</span>
         </div>
-      </ng-template>
-    </section>
+      </div>
+      <div class="detail-item">
+        <span class="material-icons detail-icon">schedule</span>
+        <div class="detail-content">
+          <span class="detail-label">Time</span>
+          <span class="detail-value">{{ formatTime(booking.bookingTime) }}</span>
+        </div>
+      </div>
+      <div class="detail-item">
+        <span class="material-icons detail-icon">chair</span>
+        <div class="detail-content">
+          <span class="detail-label">Table</span>
+          <span class="detail-value">{{ booking.tableNumber ? 'Table ' + booking.tableNumber : 'Table #' + booking.tableId }}</span>
+        </div>
+      </div>
+      <div class="detail-item">
+        <span class="material-icons detail-icon">group</span>
+        <div class="detail-content">
+          <span class="detail-label">Guests</span>
+          <span class="detail-value">{{ booking.numberOfGuests }} {{ booking.numberOfGuests === 1 ? 'person' : 'people' }}</span>
+        </div>
+      </div>
+      <div class="detail-item full-width" *ngIf="booking.specialRequests">
+        <span class="material-icons detail-icon">notes</span>
+        <div class="detail-content">
+          <span class="detail-label">Special Requests</span>
+          <span class="detail-value">{{ booking.specialRequests }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card Footer -->
+    <div class="booking-card-footer">
+      <span class="booked-on">
+        <span class="material-icons">history</span>
+        Booked on {{ formatDate(booking.createdAt) }}
+      </span>
+    </div>
+  </div>
+</div>
+
+<!-- Empty State -->
+<ng-template #emptyState>
+  <div class="empty-state" *ngIf="!loading">
+    <div class="empty-icon">
+      <span class="material-icons">event_busy</span>
+    </div>
+    <h3 *ngIf="activeFilter === 'ALL'">No bookings yet</h3>
+    <h3 *ngIf="activeFilter !== 'ALL'">No {{ activeFilter.toLowerCase() }} bookings</h3>
+    <p *ngIf="activeFilter === 'ALL'">You haven't made any table reservations yet. Find a café and start booking!</p>
+    <p *ngIf="activeFilter !== 'ALL'">Try changing the filter above to see other bookings.</p>
+    <a routerLink="/customer/browse-cafes" class="new-booking-btn" *ngIf="activeFilter === 'ALL'">
+      <span class="material-icons">storefront</span> Browse Cafés
+    </a>
+    <button class="ghost-btn" (click)="setFilter('ALL')" *ngIf="activeFilter !== 'ALL'">
+      Show All Bookings
+    </button>
+  </div>
+</ng-template>
+
+<!-- Pagination -->
+<div class="pager" *ngIf="!loading && totalPages > 1">
+  <div class="pager-info">
+    Showing {{ rangeStart }}–{{ rangeEnd }} of {{ filteredCount }}
+  </div>
+  <div class="pager-controls">
+    <button class="page-btn nav-btn" [disabled]="pageIndex === 0" (click)="goToPage(pageIndex - 1)">
+      <span class="material-icons">chevron_left</span>
+    </button>
+    <button
+      class="page-btn"
+      *ngFor="let p of allPages"
+      [class.active]="p === pageIndex"
+      (click)="goToPage(p)"
+    >{{ p + 1 }}</button>
+    <button class="page-btn nav-btn" [disabled]="pageIndex >= totalPages - 1" (click)="goToPage(pageIndex + 1)">
+      <span class="material-icons">chevron_right</span>
+    </button>
+  </div>
+</div>

@@ -229,16 +229,24 @@ export class CafeDetailComponent implements OnInit {
     if (!this.cafe) {
       return;
     }
+    // Normalize time to HH:mm (strip seconds if present)
+    const timeSlot = this.selectedTime
+      ? this.selectedTime.split(":").slice(0, 2).join(":")
+      : "";
+    if (!this.selectedDate || !timeSlot) return;
     this.cafeBrowseService
       .getTableAvailability(
         this.cafe.cafeDetails.id,
         this.selectedDate,
-        this.selectedTime,
+        timeSlot,
         this.guests,
       )
       .subscribe({
         next: (tables) => {
           this.availableTables = tables.length;
+        },
+        error: () => {
+          this.availableTables = 0;
         },
       });
   }

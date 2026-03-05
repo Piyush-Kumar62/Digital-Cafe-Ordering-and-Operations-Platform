@@ -72,7 +72,7 @@
           <h3>{{ item.name }}</h3>
           <p>{{ item.description || "No description available." }}</p>
           <div class="meta">
-            <strong>${{ item.price | number: "1.2-2" }}</strong>
+            <strong>₹{{ item.price | number: "1.2-2" }}</strong>
             <small>{{ item.category }}</small>
           </div>
           <div class="actions">
@@ -119,7 +119,7 @@
       </div>
       <p class="empty" *ngIf="cartItems.length === 0">Cart is empty.</p>
       <p class="total">
-        Total: <strong>${{ cartTotal$ | async | number: "1.2-2" }}</strong>
+        Total: <strong>₹{{ cartTotal$ | async | number: "1.2-2" }}</strong>
       </p>
       <button (click)="placeOrder()" [disabled]="orderInProgress || !bookingId">
         {{ orderInProgress ? "Placing..." : "Place Order" }}

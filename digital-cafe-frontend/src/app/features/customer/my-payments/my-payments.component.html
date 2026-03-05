@@ -1,39 +1,65 @@
 <section class="page">
-      <header>
-        <h1>Payments</h1>
-        <p>View payment history and transaction status.</p>
-      </header>
+  <header>
+    <h1>Payments</h1>
+    <p>View payment history and transaction status.</p>
+  </header>
 
-      <div class="table-wrap" *ngIf="pagedPayments.length; else empty">
-        <table>
-          <thead>
-            <tr>
-              <th>Transaction</th>
-              <th>Order</th>
-              <th>Amount</th>
-              <th>Status</th>
-              <th>Date</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let payment of pagedPayments">
-              <td>{{ payment.transactionId || ('Payment #' + payment.id) }}</td>
-              <td>{{ payment.orderNumber || payment.orderId }}</td>
-              <td>{{ payment.amount | currency:'INR' }}</td>
-              <td><span class="status">{{ payment.status }}</span></td>
-              <td>{{ payment.completedAt || payment.initiatedAt || '-' }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+  <div class="table-wrap" *ngIf="pagedPayments.length; else empty">
+    <table>
+      <thead>
+        <tr>
+          <th>Transaction</th>
+          <th>Order</th>
+          <th>Amount</th>
+          <th>Status</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let payment of pagedPayments">
+          <td>{{ payment.transactionId || "Payment #" + payment.id }}</td>
+          <td>{{ payment.orderNumber || payment.orderId }}</td>
+          <td>{{ payment.amount | currency: "INR" }}</td>
+          <td>
+            <span class="status">{{ payment.status }}</span>
+          </td>
+          <td>{{ payment.completedAt || payment.initiatedAt || "-" }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 
-      <div class="pagination" *ngIf="totalPages > 1">
-        <button (click)="prevPage()" [disabled]="page === 1">Previous</button>
-        <span>Page {{ page }} / {{ totalPages }}</span>
-        <button (click)="nextPage()" [disabled]="page === totalPages">Next</button>
-      </div>
+  <div class="pager" *ngIf="totalElements > 0">
+    <div class="pager-left">
+      <span class="range-text"
+        >Showing {{ rangeStart }}–{{ rangeEnd }} of {{ totalElements }}</span
+      >
+    </div>
+    <div class="pager-right">
+      <button
+        class="page-btn nav-btn"
+        [disabled]="pageIndex === 0"
+        (click)="goToPage(pageIndex - 1)"
+      >
+        ← Prev</button>
+      <button
+        class="page-btn"
+        *ngFor="let p of allPages"
+        [class.active]="p === pageIndex"
+        (click)="goToPage(p)"
+      >
+        {{ p + 1 }}
+      </button>
+      <button
+        class="page-btn nav-btn"
+        [disabled]="pageIndex >= totalPages - 1"
+        (click)="goToPage(pageIndex + 1)"
+      >
+        Next →</button>
+    </div>
+  </div>
 
-      <ng-template #empty>
-        <div class="empty">No payments found.</div>
-      </ng-template>
-    </section>
+  <ng-template #empty>
+    <div class="empty">No payments found.</div>
+  </ng-template>
+</section>

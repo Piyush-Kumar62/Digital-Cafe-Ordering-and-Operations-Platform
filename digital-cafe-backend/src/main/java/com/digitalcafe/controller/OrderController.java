@@ -6,9 +6,9 @@ import com.digitalcafe.dto.response.ApiResponse;
 import com.digitalcafe.dto.response.OrderResponse;
 import com.digitalcafe.dto.response.PageResponse;
 import com.digitalcafe.entity.Order;
-import com.digitalcafe.entity.User;
-import com.digitalcafe.repository.UserRepository;
+import com.digitalcafe.service.CafeService;
 import com.digitalcafe.service.OrderService;
+import com.digitalcafe.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -30,14 +30,20 @@ import java.util.List;
 public class OrderController {
 
     private final OrderService orderService;
-    private final UserRepository userRepository;
+    private final UserService userService;
+    private final CafeService cafeService;
+
+    @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<List<OrderResponse>>> getAllOrders() {
+        List<OrderResponse> orders = orderService.getAllOrders();
+        return ResponseEntity.ok(ApiResponse.success("All orders retrieved successfully", orders));
+    }
 
     @PostMapping
     @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<ApiResponse<OrderResponse>> createOrder(@Valid @RequestBody OrderRequest request) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Long customerId = getUserIdFromAuthentication(authentication);
-
+        Long customerId = userService.getCurrentUserId();
         OrderResponse response = orderService.createOrder(customerId, request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success("Order created successfully", response));
@@ -53,9 +59,7 @@ public class OrderController {
     @GetMapping("/my-orders")
     @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<ApiResponse<List<OrderResponse>>> getMyOrders() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Long customerId = getUserIdFromAuthentication(authentication);
-
+        Long customerId = userService.getCurrentUserId();
         List<OrderResponse> response = orderService.getOrdersByCustomerId(customerId);
         return ResponseEntity.ok(ApiResponse.success("Orders retrieved successfully", response));
     }
@@ -80,8 +84,7 @@ public class OrderController {
     @PreAuthorize("hasRole('CHEF')")
     public ResponseEntity<ApiResponse<List<OrderResponse>>> getPendingOrdersForChef() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Long cafeId = getCafeIdFromAuthentication(authentication);
-
+        Long cafeId = cafeService.getCafeIdForUser(authentication.getName());
         List<OrderResponse> response = orderService.getPendingOrdersForChef(cafeId);
         return ResponseEntity.ok(ApiResponse.success("Pending orders retrieved successfully", response));
     }
@@ -90,8 +93,7 @@ public class OrderController {
     @PreAuthorize("hasRole('WAITER')")
     public ResponseEntity<ApiResponse<List<OrderResponse>>> getReadyOrdersForWaiter() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Long cafeId = getCafeIdFromAuthentication(authentication);
-
+        Long cafeId = cafeService.getCafeIdForUser(authentication.getName());
         List<OrderResponse> response = orderService.getReadyOrdersForWaiter(cafeId);
         return ResponseEntity.ok(ApiResponse.success("Ready orders retrieved successfully", response));
     }
@@ -161,18 +163,4 @@ public class OrderController {
         return ResponseEntity.ok(ApiResponse.success("Order cancelled successfully", response));
     }
 
-    private Long getUserIdFromAuthentication(Authentication authentication) {
-        return userRepository.findByEmail(authentication.getName())
-                .orElseThrow(() -> new IllegalArgumentException("Authenticated user not found"))
-                .getId();
-    }
-
-    private Long getCafeIdFromAuthentication(Authentication authentication) {
-        User user = userRepository.findByEmail(authentication.getName())
-                .orElseThrow(() -> new IllegalArgumentException("Authenticated user not found"));
-        if (user.getCafe() == null) {
-            throw new IllegalArgumentException("Authenticated user is not assigned to any cafe");
-        }
-        return user.getCafe().getId();
-    }
 }

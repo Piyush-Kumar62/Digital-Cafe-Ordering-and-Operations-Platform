@@ -4,8 +4,7 @@ import com.digitalcafe.dto.request.OrderStatusUpdateRequest;
 import com.digitalcafe.dto.response.ApiResponse;
 import com.digitalcafe.dto.response.OrderResponse;
 import com.digitalcafe.entity.Order;
-import com.digitalcafe.entity.User;
-import com.digitalcafe.repository.UserRepository;
+import com.digitalcafe.service.CafeService;
 import com.digitalcafe.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -23,13 +22,15 @@ import java.util.List;
 public class ChefOrderFlowController {
 
     private final OrderService orderService;
-    private final UserRepository userRepository;
+    private final CafeService cafeService;
 
     @GetMapping("/orders")
     @PreAuthorize("hasRole('CHEF')")
     public ResponseEntity<ApiResponse<List<OrderResponse>>> getKitchenOrders() {
         Long cafeId = getCafeIdFromAuthentication(SecurityContextHolder.getContext().getAuthentication());
         List<OrderResponse> queue = new ArrayList<>();
+        // Return both PLACED (new incoming orders) and PREPARING (in-progress) orders
+        queue.addAll(orderService.getOrdersByStatus(cafeId, Order.OrderStatus.PLACED));
         queue.addAll(orderService.getOrdersByStatus(cafeId, Order.OrderStatus.PREPARING));
         return ResponseEntity.ok(ApiResponse.success("Chef orders retrieved successfully", queue));
     }
@@ -67,11 +68,6 @@ public class ChefOrderFlowController {
     }
 
     private Long getCafeIdFromAuthentication(Authentication authentication) {
-        User user = userRepository.findByEmail(authentication.getName())
-                .orElseThrow(() -> new IllegalArgumentException("Authenticated user not found"));
-        if (user.getCafe() == null) {
-            throw new IllegalArgumentException("Authenticated user is not assigned to any cafe");
-        }
-        return user.getCafe().getId();
+        return cafeService.getCafeIdForUser(authentication.getName());
     }
 }

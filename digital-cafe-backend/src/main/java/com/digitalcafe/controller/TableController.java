@@ -110,4 +110,16 @@ public class TableController {
                 ApiResponse.success("Tables retrieved successfully", tables)
         );
     }
+
+    @PostMapping("/cafe/{cafeId}")
+    @PreAuthorize("hasAnyRole('CAFE_OWNER','ADMIN')")
+    public ResponseEntity<ApiResponse<TableResponse>> createTableForCafe(
+            @PathVariable Long cafeId,
+            @Valid @RequestBody TableRequest request) {
+
+        TableResponse response = tableService.createTable(cafeId, request);
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success("Table created successfully", response));
+    }
 }

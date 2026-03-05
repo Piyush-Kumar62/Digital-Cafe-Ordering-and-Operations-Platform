@@ -4,13 +4,8 @@ import com.digitalcafe.dto.request.CafeRequest;
 import com.digitalcafe.dto.response.ApiResponse;
 import com.digitalcafe.dto.response.CafeResponse;
 import com.digitalcafe.dto.response.PageResponse;
-import com.digitalcafe.entity.Cafe;
-import com.digitalcafe.entity.CafeGallery;
-import com.digitalcafe.repository.CafeGalleryRepository;
-import com.digitalcafe.repository.CafeRepository;
 import com.digitalcafe.security.CustomUserPrincipal;
 import com.digitalcafe.service.CafeService;
-import com.digitalcafe.storage.FileStorageService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,6 +22,7 @@ import org.springframework.core.io.UrlResource;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
+import java.util.Arrays;
 import java.util.List;
 
 @RestController
@@ -35,9 +31,6 @@ import java.util.List;
 public class CafeController {
 
     private final CafeService cafeService;
-    private final CafeRepository cafeRepository;
-    private final CafeGalleryRepository cafeGalleryRepository;
-    private final FileStorageService fileStorageService;
 
     @Value("${app.upload.dir:uploads}")
     private String uploadDir;
@@ -164,13 +157,7 @@ public class CafeController {
             @PathVariable Long cafeId,
             @RequestParam("file") MultipartFile file) {
 
-        Cafe cafe = cafeRepository.findById(cafeId)
-                .orElseThrow(() -> new RuntimeException("Cafe not found"));
-        String path = fileStorageService.uploadFile(file);
-
-        cafe.setLogoUrl(path);
-        cafeRepository.save(cafe);
-
+        String path = cafeService.updateLogo(cafeId, file);
         return ResponseEntity.ok(ApiResponse.success("Logo uploaded successfully", path));
     }
 
@@ -180,52 +167,54 @@ public class CafeController {
             @PathVariable Long cafeId,
             @RequestParam("file") MultipartFile file) {
 
-        Cafe cafe = cafeRepository.findById(cafeId)
-                .orElseThrow(() -> new RuntimeException("Cafe not found"));
-        String path = fileStorageService.uploadFile(file);
-
-        cafe.setCoverUrl(path);
-        cafeRepository.save(cafe);
-
+        String path = cafeService.updateCover(cafeId, file);
         return ResponseEntity.ok(ApiResponse.success("Cover uploaded successfully", path));
     }
 
     @GetMapping("/{cafeId}/cover")
     public ResponseEntity<Resource> getCafeCover(@PathVariable Long cafeId) throws IOException {
 
-        Cafe cafe = cafeRepository.findById(cafeId).orElseThrow();
-        Path path = Paths.get(cafe.getCoverUrl());
+        String coverPath = cafeService.getCafeById(cafeId).getCoverUrl();
+
+        if (coverPath == null || coverPath.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Path path;
+        if (coverPath.startsWith("/uploads/")) {
+            String filename = coverPath.substring("/uploads/".length());
+            path = Paths.get(uploadDir).toAbsolutePath().normalize().resolve(filename);
+        } else {
+            path = Paths.get(coverPath);
+        }
+
+        File file = path.toFile();
+        if (!file.exists()) {
+            return ResponseEntity.notFound().build();
+        }
 
         Resource resource = new UrlResource(path.toUri());
 
+        String contentType = Files.probeContentType(path);
+        if (contentType == null) {
+            contentType = "application/octet-stream";
+        }
+
         return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType(Files.probeContentType(path)))
+                .contentType(MediaType.parseMediaType(contentType))
                 .body(resource);
     }
 
     @PostMapping("/{cafeId}/gallery")
+    @PreAuthorize("hasAnyRole('CAFE_OWNER','ADMIN')")
     public void uploadGallery(@PathVariable Long cafeId, @RequestParam MultipartFile[] files) {
-
-        Cafe cafe = cafeRepository.findById(cafeId).orElseThrow();
-
-        for (MultipartFile file : files) {
-            String path = fileStorageService.uploadFile(file);
-
-            CafeGallery gallery = new CafeGallery();
-            gallery.setCafe(cafe);
-            gallery.setImageUrl(path);
-
-            cafeGalleryRepository.save(gallery);
-        }
+        cafeService.uploadGallery(cafeId, Arrays.asList(files));
     }
 
     @GetMapping("/{cafeId}/logo")
     public ResponseEntity<Resource> getCafeLogo(@PathVariable Long cafeId) throws IOException {
 
-        Cafe cafe = cafeRepository.findById(cafeId)
-                .orElseThrow(() -> new RuntimeException("Cafe not found"));
-
-        String logoPath = cafe.getLogoUrl();
+        String logoPath = cafeService.getCafeById(cafeId).getLogoUrl();
 
         if (logoPath == null || logoPath.isEmpty()) {
             return ResponseEntity.notFound().build();

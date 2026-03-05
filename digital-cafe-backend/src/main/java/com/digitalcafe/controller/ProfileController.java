@@ -4,8 +4,8 @@ import com.digitalcafe.dto.request.ProfileRequest;
 import com.digitalcafe.dto.response.ApiResponse;
 import com.digitalcafe.dto.response.ProfileResponse;
 import com.digitalcafe.exception.AccessDeniedException;
-import com.digitalcafe.repository.UserRepository;
 import com.digitalcafe.service.ProfileService;
+import com.digitalcafe.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -24,15 +24,13 @@ import java.util.stream.Collectors;
 public class ProfileController {
 
     private final ProfileService profileService;
-    private final UserRepository userRepository;
+    private final UserService userService;
 
     @PostMapping
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<ProfileResponse>> createOrUpdateProfile(
             @Valid @RequestBody ProfileRequest request) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Long userId = getUserIdFromAuthentication(authentication);
-
+        Long userId = userService.getCurrentUserId();
         ProfileResponse response = profileService.createOrUpdateProfile(userId, request);
         return ResponseEntity.ok(ApiResponse.success("Profile updated successfully", response));
     }
@@ -40,9 +38,7 @@ public class ProfileController {
     @GetMapping("/me")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<ProfileResponse>> getMyProfile() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Long userId = getUserIdFromAuthentication(authentication);
-
+        Long userId = userService.getCurrentUserId();
         ProfileResponse response = profileService.getProfileByUserId(userId);
         return ResponseEntity.ok(ApiResponse.success("Profile retrieved successfully", response));
     }
@@ -58,9 +54,7 @@ public class ProfileController {
     @GetMapping("/me/completion")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<Integer>> getProfileCompletion() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Long userId = getUserIdFromAuthentication(authentication);
-
+        Long userId = userService.getCurrentUserId();
         int completion = profileService.calculateProfileCompletion(userId);
         return ResponseEntity.ok(ApiResponse.success("Profile completion retrieved successfully", completion));
     }
@@ -85,15 +79,9 @@ public class ProfileController {
         return ResponseEntity.ok(ApiResponse.success("Work experience added successfully", response));
     }
 
-    private Long getUserIdFromAuthentication(Authentication authentication) {
-        return userRepository.findByEmail(authentication.getName())
-                .orElseThrow(() -> new IllegalArgumentException("Authenticated user not found"))
-                .getId();
-    }
-
     private void authorizeProfileMutation(Long targetUserId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Long authenticatedUserId = getUserIdFromAuthentication(authentication);
+        Long authenticatedUserId = userService.getCurrentUserId();
         Set<String> roles = authentication.getAuthorities().stream()
                 .map(a -> a.getAuthority().replace("ROLE_", ""))
                 .collect(Collectors.toSet());
@@ -105,7 +93,7 @@ public class ProfileController {
 
     private void authorizeProfileRead(Long targetUserId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Long authenticatedUserId = getUserIdFromAuthentication(authentication);
+        Long authenticatedUserId = userService.getCurrentUserId();
         Set<String> roles = authentication.getAuthorities().stream()
                 .map(a -> a.getAuthority().replace("ROLE_", ""))
                 .collect(Collectors.toSet());

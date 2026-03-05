@@ -5,8 +5,8 @@ import com.digitalcafe.dto.response.ApiResponse;
 import com.digitalcafe.dto.response.BookingResponse;
 import com.digitalcafe.dto.response.PageResponse;
 import com.digitalcafe.entity.Booking;
-import com.digitalcafe.repository.UserRepository;
 import com.digitalcafe.service.BookingService;
+import com.digitalcafe.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -15,8 +15,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -28,14 +26,20 @@ import java.util.List;
 public class BookingController {
 
     private final BookingService bookingService;
-    private final UserRepository userRepository;
+    private final UserService userService;
+
+    @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<List<BookingResponse>>> getAllBookings() {
+        List<BookingResponse> bookings = bookingService.getAllBookings();
+        return ResponseEntity.ok(ApiResponse.success("All bookings retrieved successfully", bookings));
+    }
 
     @PostMapping
     @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<ApiResponse<BookingResponse>> createBooking(
             @Valid @RequestBody BookingRequest request) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Long customerId = getUserIdFromAuthentication(authentication);
+        Long customerId = userService.getCurrentUserId();
 
         BookingResponse response = bookingService.createBooking(customerId, request);
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -52,8 +56,7 @@ public class BookingController {
     @GetMapping("/my-bookings")
     @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<ApiResponse<List<BookingResponse>>> getMyBookings() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Long customerId = getUserIdFromAuthentication(authentication);
+        Long customerId = userService.getCurrentUserId();
 
         List<BookingResponse> response = bookingService.getBookingsByCustomerId(customerId);
         return ResponseEntity.ok(ApiResponse.success("Bookings retrieved successfully", response));
@@ -113,9 +116,4 @@ public class BookingController {
         return ResponseEntity.ok(ApiResponse.success("Booking status updated successfully", response));
     }
 
-    private Long getUserIdFromAuthentication(Authentication authentication) {
-        return userRepository.findByEmail(authentication.getName())
-                .orElseThrow(() -> new IllegalArgumentException("Authenticated user not found"))
-                .getId();
-    }
 }

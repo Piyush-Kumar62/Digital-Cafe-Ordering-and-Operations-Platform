@@ -1,5 +1,5 @@
 # ================================================================================
-# application-prod.yml – Production configuration for Digital Café Platform
+# application-deployment.yml – Deployment configuration for Digital Café Platform
 #
 # IMPORTANT: Never commit real secrets to version control.
 # All sensitive values MUST be provided via environment variables or
@@ -8,13 +8,13 @@
 
 spring:
   profiles:
-    active: prod
+    active: deployment
   application:
     name: digital-cafe-backend
 
   # ─── Database ──────────────────────────────────────────────────────────────────
   datasource:
-    url: ${DB_URL}              # e.g. jdbc:mysql://your-rds-host:3306/digital_cafe_db?useSSL=true&serverTimezone=UTC
+    url: ${DB_URL} # e.g. jdbc:mysql://your-rds-host:3306/digital_cafe_db?useSSL=true&serverTimezone=UTC
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -28,7 +28,7 @@ spring:
   # ─── JPA / Hibernate ───────────────────────────────────────────────────────────
   jpa:
     hibernate:
-      ddl-auto: none            # CRITICAL: Never use update/create in production. Flyway owns the schema.
+      ddl-auto: none # CRITICAL: Never use update/create in deploymenttion. Manage schema changes manually or via a migration tool.
     show-sql: false
     open-in-view: false
     properties:
@@ -39,13 +39,6 @@ spring:
           batch_size: 25
         order_inserts: true
         order_updates: true
-
-  # ─── Flyway ────────────────────────────────────────────────────────────────────
-  flyway:
-    enabled: true
-    baseline-on-migrate: false  # false in prod: migrations must be applied cleanly
-    locations: classpath:db/migration
-    validate-on-migrate: true
 
   # ─── Email ─────────────────────────────────────────────────────────────────────
   mail:
@@ -75,9 +68,9 @@ spring:
 
 # ─── JWT ─────────────────────────────────────────────────────────────────────────
 jwt:
-  secret: ${JWT_SECRET}             # Min 256-bit (32 bytes) base64-encoded secret
-  expiration: ${JWT_EXPIRATION:3600000}         # 1h default
-  refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000}  # 7d default
+  secret: ${JWT_SECRET} # Min 256-bit (32 bytes) base64-encoded secret
+  expiration: ${JWT_EXPIRATION:3600000} # 1h default
+  refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000} # 7d default
 
 # ─── Payment Gateway ─────────────────────────────────────────────────────────────
 payment:
@@ -90,27 +83,27 @@ razorpay:
 # ─── Application ─────────────────────────────────────────────────────────────────
 app:
   frontend:
-    url: ${FRONTEND_URL}            # e.g. https://digitalcafe.example.com
+    url: ${FRONTEND_URL} # e.g. https://digitalcafe.example.com
   name: ${APP_NAME:Digital Cafe Platform}
   storage:
     provider: ${APP_STORAGE_PROVIDER:s3}
   upload:
-    dir: ${APP_UPLOAD_DIR:/var/app/uploads}   # On EC2 use EFS mount or S3 pre-signed URLs
+    dir: ${APP_UPLOAD_DIR:/var/app/uploads} # On EC2 use EFS mount or S3 pre-signed URLs
 
-# ─── AWS S3 (for file uploads in production) ─────────────────────────────────────
+# ─── AWS S3 (for file uploads in deployment) ─────────────────────────────────────
 aws:
   s3:
     bucket: ${S3_BUCKET}
     region: ${AWS_REGION:ap-south-1}
   credentials:
-    access-key: ${AWS_ACCESS_KEY_ID}      # Or use IAM instance role (preferred)
+    access-key: ${AWS_ACCESS_KEY_ID} # Or use IAM instance role (preferred)
     secret-key: ${AWS_SECRET_ACCESS_KEY}
 
 # ─── Server ──────────────────────────────────────────────────────────────────────
 server:
   port: ${SERVER_PORT:8080}
   error:
-    include-message: never          # Never expose internal messages in prod error responses
+    include-message: never # Never expose internal messages in deployment error responses
     include-binding-errors: never
     include-stacktrace: never
     include-exception: false
@@ -121,8 +114,8 @@ logging:
     root: WARN
     org.springframework.web: INFO
     org.springframework.security: WARN
-    com.digitalcafe: INFO           # Structured logs from service layer
-    org.hibernate.SQL: WARN         # No SQL query logging in prod
+    com.digitalcafe: INFO # Structured logs from service layer
+    org.hibernate.SQL: WARN # No SQL query logging in deployment
   pattern:
     console: "%d{yyyy-MM-dd'T'HH:mm:ssZ} [%thread] %-5level %logger{36} - %msg%n"
 
@@ -131,19 +124,19 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info        # Restrict actuator exposure in prod
+        include: health,info # Restrict actuator exposure in deployment
   endpoint:
     health:
       show-details: when_authorized
 
-# ─── Swagger (disabled in production) ────────────────────────────────────────────
+# ─── Swagger (disabled in deployment) ────────────────────────────────────────────
 springdoc:
   swagger-ui:
-    enabled: false                  # Never expose Swagger UI in production
+    enabled: false # Never expose Swagger UI in deployment
   api-docs:
     enabled: false
 
 # ─── File Uploads ────────────────────────────────────────────────────────────────
 spring.servlet.multipart:
-  max-file-size: ${MAX_FILE_SIZE:5MB}
-  max-request-size: ${MAX_REQUEST_SIZE:10MB}
+  max-file-size: ${MAX_FILE_SIZE:2MB}
+  max-request-size: ${MAX_REQUEST_SIZE:2MB}

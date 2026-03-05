@@ -136,17 +136,18 @@
 			<artifactId>commons-lang3</artifactId>
 		</dependency>
 
-		<!-- AWS S3 (optional storage provider for production) -->
+		<!-- AWS S3 (optional storage provider for deployment) -->
 		<dependency>
 			<groupId>software.amazon.awssdk</groupId>
 			<artifactId>s3</artifactId>
 			<version>${aws.sdk.version}</version>
-		</dependency>
-
-		<!-- Flyway – Database Migrations -->
-		<dependency>
-			<groupId>org.flywaydb</groupId>
-			<artifactId>flyway-mysql</artifactId>
+			<exclusions>
+				<!-- Exclude commons-logging to prevent conflict with spring-jcl -->
+				<exclusion>
+					<groupId>commons-logging</groupId>
+					<artifactId>commons-logging</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
 		<!-- Testing -->

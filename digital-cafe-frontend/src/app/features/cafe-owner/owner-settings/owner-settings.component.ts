@@ -110,6 +110,12 @@ export class OwnerSettingsComponent implements OnInit {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) return;
+    const twoMb = 2 * 1024 * 1024;
+    if (file.size > twoMb) {
+      this.alertService.error("Profile photo must be 2MB or less");
+      input.value = "";
+      return;
+    }
     const reader = new FileReader();
     reader.onload = () => {
       this.profileImageUrl = reader.result as string;

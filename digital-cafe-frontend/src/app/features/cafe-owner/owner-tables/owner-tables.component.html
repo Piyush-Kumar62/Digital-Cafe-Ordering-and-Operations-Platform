@@ -108,11 +108,13 @@
         class="table-card"
         [class.card-available]="table.isAvailable"
         [class.card-occupied]="!table.isAvailable"
-        *ngFor="let table of tables; let i = index"
+        *ngFor="let table of pagedTables; let i = index"
       >
         <div class="card-top">
           <div class="table-number">
-            Table #{{ displayTableNumber(table.tableNumber, i) }}
+            Table #{{
+              displayTableNumber(table.tableNumber, pageIndex * pageSize + i)
+            }}
           </div>
           <span
             class="status-badge"
@@ -202,6 +204,36 @@
             </svg>
           </button>
         </div>
+      </div>
+    </div>
+
+    <div class="pager" *ngIf="totalElements > 0">
+      <div class="pager-left">
+        <span class="range-text"
+          >Showing {{ rangeStart }}–{{ rangeEnd }} of {{ totalElements }}</span
+        >
+      </div>
+      <div class="pager-right">
+        <button
+          class="page-btn nav-btn"
+          [disabled]="pageIndex === 0"
+          (click)="goToPage(pageIndex - 1)"
+        >
+          ← Prev</button>
+        <button
+          class="page-btn"
+          *ngFor="let p of allPages"
+          [class.active]="p === pageIndex"
+          (click)="goToPage(p)"
+        >
+          {{ p + 1 }}
+        </button>
+        <button
+          class="page-btn nav-btn"
+          [disabled]="pageIndex >= totalPages - 1"
+          (click)="goToPage(pageIndex + 1)"
+        >
+          Next →</button>
       </div>
     </div>
   </div>

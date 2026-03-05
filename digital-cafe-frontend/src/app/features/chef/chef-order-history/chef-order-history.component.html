@@ -1,0 +1,54 @@
+<div class="history-page">
+  <div class="page-header">
+    <h1 class="page-title">
+      <i class="bi bi-clock-history"></i>
+      Order History
+    </h1>
+    <p class="page-subtitle">Completed and served orders</p>
+  </div>
+
+  <div *ngIf="isLoading" class="loading-state">
+    <i class="bi bi-arrow-clockwise spinning"></i>
+    <p>Loading order history...</p>
+  </div>
+
+  <div *ngIf="!isLoading && orders.length === 0" class="empty-state">
+    <i class="bi bi-clock-history"></i>
+    <p class="empty-title">No order history</p>
+    <p class="empty-hint">Completed orders will appear here</p>
+  </div>
+
+  <div *ngIf="!isLoading && orders.length > 0" class="history-table-wrap">
+    <table class="history-table">
+      <thead>
+        <tr>
+          <th>Order #</th>
+          <th>Table</th>
+          <th>Items</th>
+          <th>Status</th>
+          <th>Completed</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let order of orders">
+          <td class="order-num">
+            <i class="bi bi-receipt"></i>
+            #{{ order.orderNumber }}
+          </td>
+          <td>{{ order.tableNumber || '—' }}</td>
+          <td>
+            <span *ngFor="let item of order.items; let last = last">
+              {{ item.quantity }}x {{ item.menuItemName }}{{ last ? '' : ', ' }}
+            </span>
+          </td>
+          <td>
+            <span class="status-badge" [ngClass]="getStatusClass(order.status)">
+              {{ order.status }}
+            </span>
+          </td>
+          <td class="date-cell">{{ formatDate(order.readyAt || order.servedAt || order.updatedAt) }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

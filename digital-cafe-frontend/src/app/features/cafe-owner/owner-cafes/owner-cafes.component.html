@@ -138,7 +138,11 @@
             >
               <i class="bi bi-grid-3x3-gap"></i> Manage Tables
             </button>
-            <button class="btn-manage" routerLink="/owner/staff">
+            <button
+              class="btn-manage"
+              [routerLink]="['/owner/staff']"
+              [queryParams]="{ cafeId: cafe.id }"
+            >
               <i class="bi bi-people"></i> Manage Staff
             </button>
             <button

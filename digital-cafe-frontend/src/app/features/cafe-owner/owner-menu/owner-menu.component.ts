@@ -26,6 +26,38 @@ export class OwnerMenuComponent implements OnInit {
   searchText = "";
   categoryFilter = "";
 
+  pageIndex = 0;
+  readonly pageSize = 10;
+
+  get pagedItems(): MenuItem[] {
+    return this.filteredItems.slice(
+      this.pageIndex * this.pageSize,
+      (this.pageIndex + 1) * this.pageSize,
+    );
+  }
+  get totalElements(): number {
+    return this.filteredItems.length;
+  }
+  get totalPages(): number {
+    return Math.max(1, Math.ceil(this.totalElements / this.pageSize));
+  }
+  get rangeStart(): number {
+    return this.totalElements === 0 ? 0 : this.pageIndex * this.pageSize + 1;
+  }
+  get rangeEnd(): number {
+    return Math.min((this.pageIndex + 1) * this.pageSize, this.totalElements);
+  }
+  get allPages(): number[] {
+    return Array.from({ length: this.totalPages }, (_, i) => i);
+  }
+  goToPage(page: number): void {
+    if (page < 0 || page >= this.totalPages) return;
+    this.pageIndex = page;
+  }
+  onFilterChange(): void {
+    this.pageIndex = 0;
+  }
+
   showForm = false;
   isEditMode = false;
   editingItemId: number | null = null;
@@ -150,6 +182,12 @@ export class OwnerMenuComponent implements OnInit {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) return;
+    const twoMb = 2 * 1024 * 1024;
+    if (file.size > twoMb) {
+      this.alertService.error("Image must be 2MB or less");
+      input.value = "";
+      return;
+    }
     this.selectedImageFile = file;
     const reader = new FileReader();
     reader.onload = () => (this.imagePreviewUrl = reader.result as string);

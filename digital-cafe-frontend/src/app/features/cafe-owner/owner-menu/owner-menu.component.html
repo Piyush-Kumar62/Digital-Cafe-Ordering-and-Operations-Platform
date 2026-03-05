@@ -114,8 +114,12 @@
   </aside>
 
   <div class="toolbar card">
-    <input [(ngModel)]="searchText" placeholder="Search by item name..." />
-    <select [(ngModel)]="categoryFilter">
+    <input
+      [(ngModel)]="searchText"
+      placeholder="Search by item name..."
+      (ngModelChange)="onFilterChange()"
+    />
+    <select [(ngModel)]="categoryFilter" (ngModelChange)="onFilterChange()">
       <option value="">All categories</option>
       <option *ngFor="let c of categories" [value]="c">
         {{ categoryLabel(c) }}
@@ -135,7 +139,7 @@
   </div>
 
   <div class="grid" *ngIf="!loading && filteredItems.length > 0">
-    <article class="card item" *ngFor="let item of filteredItems">
+    <article class="card item" *ngFor="let item of pagedItems">
       <div class="item-img-wrap" *ngIf="item.imageUrl">
         <img
           [src]="getItemImage(item)"
@@ -170,5 +174,35 @@
         </button>
       </div>
     </article>
+  </div>
+
+  <div class="pager" *ngIf="totalElements > 0">
+    <div class="pager-left">
+      <span class="range-text"
+        >Showing {{ rangeStart }}–{{ rangeEnd }} of {{ totalElements }}</span
+      >
+    </div>
+    <div class="pager-right">
+      <button
+        class="page-btn nav-btn"
+        [disabled]="pageIndex === 0"
+        (click)="goToPage(pageIndex - 1)"
+      >
+        ← Prev</button>
+      <button
+        class="page-btn"
+        *ngFor="let p of allPages"
+        [class.active]="p === pageIndex"
+        (click)="goToPage(p)"
+      >
+        {{ p + 1 }}
+      </button>
+      <button
+        class="page-btn nav-btn"
+        [disabled]="pageIndex >= totalPages - 1"
+        (click)="goToPage(pageIndex + 1)"
+      >
+        Next →</button>
+    </div>
   </div>
 </section>

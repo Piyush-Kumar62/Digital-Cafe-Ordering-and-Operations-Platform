@@ -25,7 +25,7 @@
   </div>
 
   <div class="grid" *ngIf="!loading && bookings.length > 0">
-    <article class="card item" *ngFor="let booking of bookings">
+    <article class="card item" *ngFor="let booking of pagedBookings">
       <div>
         <h3>Booking #{{ booking.bookingNumber || booking.id }}</h3>
         <p>Customer: {{ booking.customerName || "#" + booking.customerId }}</p>
@@ -39,5 +39,35 @@
         booking.status
       }}</span>
     </article>
+  </div>
+
+  <div class="pager" *ngIf="totalElements > 0">
+    <div class="pager-left">
+      <span class="range-text"
+        >Showing {{ rangeStart }}–{{ rangeEnd }} of {{ totalElements }}</span
+      >
+    </div>
+    <div class="pager-right">
+      <button
+        class="page-btn nav-btn"
+        [disabled]="pageIndex === 0"
+        (click)="goToPage(pageIndex - 1)"
+      >
+        ← Prev</button>
+      <button
+        class="page-btn"
+        *ngFor="let p of allPages"
+        [class.active]="p === pageIndex"
+        (click)="goToPage(p)"
+      >
+        {{ p + 1 }}
+      </button>
+      <button
+        class="page-btn nav-btn"
+        [disabled]="pageIndex >= totalPages - 1"
+        (click)="goToPage(pageIndex + 1)"
+      >
+        Next →</button>
+    </div>
   </div>
 </section>

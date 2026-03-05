@@ -1,0 +1,102 @@
+<div class="orders-page">
+  <div class="page-header">
+    <div class="header-left">
+      <h1 class="page-title">
+        <i class="bi bi-fire"></i>
+        Active Orders
+      </h1>
+      <p class="page-subtitle">Manage and track all kitchen orders</p>
+    </div>
+    <button class="refresh-btn" (click)="loadOrders()" [disabled]="isLoading">
+      <i class="bi bi-arrow-clockwise" [class.spinning]="isLoading"></i>
+      Refresh
+    </button>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs-bar">
+    <button
+      *ngFor="let tab of tabs"
+      class="tab-btn"
+      [class.active]="activeTab === tab.key"
+      (click)="setTab(tab.key)"
+    >
+      <i [class]="tab.icon"></i>
+      {{ tab.label }}
+      <span class="tab-count">{{ getTabCount(tab.key) }}</span>
+    </button>
+  </div>
+
+  <!-- Search -->
+  <div class="search-bar">
+    <i class="bi bi-search search-icon"></i>
+    <input
+      type="text"
+      placeholder="Search by order number or table..."
+      [(ngModel)]="searchQuery"
+      (ngModelChange)="onSearchChange()"
+      class="search-input"
+    />
+  </div>
+
+  <!-- Orders -->
+  <div *ngIf="filteredOrders.length === 0 && !isLoading" class="empty-state">
+    <i class="bi bi-inbox"></i>
+    <p class="empty-title">No orders found</p>
+    <p class="empty-hint">{{ activeTab === 'ALL' ? 'Orders will appear when customers place them' : 'No orders with this status' }}</p>
+  </div>
+
+  <div class="orders-grid">
+    <div *ngFor="let order of filteredOrders" class="order-card" [ngClass]="getStatusClass(order.status)">
+      <div class="card-header">
+        <div class="order-id">
+          <i class="bi bi-receipt"></i>
+          #{{ order.orderNumber }}
+        </div>
+        <span class="status-badge" [ngClass]="getStatusClass(order.status)">
+          {{ order.status }}
+        </span>
+      </div>
+
+      <div class="card-body">
+        <div class="order-meta">
+          <span><i class="bi bi-geo-alt"></i> Table {{ order.tableNumber }}</span>
+          <span *ngIf="order.placedAt || order.createdAt">
+            <i class="bi bi-clock"></i> {{ getRelativeTime(order.placedAt || order.createdAt) }}
+          </span>
+        </div>
+
+        <div class="items-section">
+          <p class="items-header">Items</p>
+          <div *ngFor="let item of order.items" class="item-row">
+            <span class="qty">{{ item.quantity }}x</span>
+            <span class="name">{{ item.menuItemName }}</span>
+            <span *ngIf="item.specialInstructions" class="note">
+              <i class="bi bi-chat-text"></i> {{ item.specialInstructions }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-actions">
+        <button
+          *ngIf="order.status === 'PLACED'"
+          class="action-btn btn-start"
+          (click)="startPreparing(order.id)"
+        >
+          <i class="bi bi-play-circle"></i> Start Preparing
+        </button>
+        <button
+          *ngIf="order.status === 'PREPARING'"
+          class="action-btn btn-ready"
+          (click)="markReady(order.id)"
+        >
+          <i class="bi bi-check2-circle"></i> Mark Ready
+        </button>
+        <div *ngIf="order.status === 'READY'" class="ready-label">
+          <i class="bi bi-check-circle-fill"></i> Waiting for waiter
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

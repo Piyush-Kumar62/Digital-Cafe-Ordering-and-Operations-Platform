@@ -1,41 +1,181 @@
 <section class="waiter-dashboard">
-  <header class="hero">
-    <div>
-      <h1>Waiter Dashboard</h1>
-      <p>Serve ready orders quickly and keep table flow smooth.</p>
-    </div>
-    <div class="hero-stats">
+  <!-- Page Title -->
+  <div class="page-title-bar">
+    <div class="page-title-left">
+      <i class="bi bi-person-workspace page-icon"></i>
       <div>
-        <small>Ready Orders</small>
-        <strong>{{ readyOrders.length }}</strong>
-      </div>
-      <div>
-        <small>Served Today</small>
-        <strong>{{ servedToday }}</strong>
+        <h1 class="page-title">Waiter Dashboard</h1>
+        <p class="page-cafe" *ngIf="cafeName">
+          <i class="bi bi-geo-alt-fill"></i> {{ cafeName }}
+        </p>
       </div>
     </div>
-  </header>
+  </div>
 
-  <div class="loading" *ngIf="loading">Loading ready orders...</div>
-
-  <div class="orders-grid" *ngIf="!loading">
-    <article class="order-card" *ngFor="let order of readyOrders">
-      <div class="head">
-        <h3>Order #{{ order.orderNumber || order.id }}</h3>
-        <span class="status">READY</span>
+  <!-- Stats Row -->
+  <div class="stats-row">
+    <div class="stat-card card-ready">
+      <div class="stat-icon-wrap">
+        <i class="bi bi-bell-fill"></i>
       </div>
-      <p class="meta">
-        <strong>Table:</strong> {{ order.tableNumber || order.tableId }} |
-        <strong>Customer:</strong> {{ order.customerName || order.customerId }}
+      <div class="stat-body">
+        <span class="stat-label">Ready to Serve</span>
+        <strong class="stat-value">{{ readyOrders.length }}</strong>
+      </div>
+    </div>
+    <div class="stat-card card-active">
+      <div class="stat-icon-wrap">
+        <i class="bi bi-hourglass-split"></i>
+      </div>
+      <div class="stat-body">
+        <span class="stat-label">Active Orders</span>
+        <strong class="stat-value">{{ activeOrders }}</strong>
+      </div>
+    </div>
+    <div class="stat-card card-done">
+      <div class="stat-icon-wrap">
+        <i class="bi bi-check2-circle"></i>
+      </div>
+      <div class="stat-body">
+        <span class="stat-label">Served Today</span>
+        <strong class="stat-value">{{ servedToday }}</strong>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section Header -->
+  <div class="section-header">
+    <div class="section-title-wrap">
+      <h2 class="section-title">
+        <span class="status-dot ready"></span>
+        Ready Orders
+        <span class="badge" *ngIf="readyOrders.length > 0">{{
+          readyOrders.length
+        }}</span>
+      </h2>
+      <p class="section-sub">
+        Orders prepared by the kitchen — serve immediately
       </p>
-      <ul>
-        <li *ngFor="let item of order.items">{{ item.quantity }}x {{ item.menuItemName }}</li>
+    </div>
+    <div class="refresh-info" *ngIf="!loading">
+      <i class="bi bi-arrow-clockwise"></i>
+      <span>Updated {{ lastRefreshed | date: "h:mm a" }}</span>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading-wrap" *ngIf="loading">
+    <div class="spinner"></div>
+    <p>Loading ready orders…</p>
+  </div>
+
+  <!-- Orders Grid -->
+  <div class="orders-grid" *ngIf="!loading">
+    <article
+      class="order-card"
+      *ngFor="let order of pagedReadyOrders"
+      [class.urgent]="isUrgent(order)"
+    >
+      <div class="card-head">
+        <div class="order-id">
+          <i class="bi bi-receipt"></i>
+          <span>#{{ order.orderNumber || order.id }}</span>
+        </div>
+        <span class="status-badge ready">
+          <i class="bi bi-check-circle"></i>
+          READY
+        </span>
+      </div>
+
+      <div class="card-meta">
+        <div class="meta-item" *ngIf="order.tableNumber || order.tableId">
+          <i class="bi bi-grid-3x3-gap"></i>
+          <span>Table {{ order.tableNumber || order.tableId }}</span>
+        </div>
+        <div class="meta-item">
+          <i class="bi bi-person"></i>
+          <span>{{
+            order.customerName || "Customer #" + order.customerId
+          }}</span>
+        </div>
+        <div class="meta-item time" *ngIf="getOrderAge(order)">
+          <i class="bi bi-clock"></i>
+          <span [class.urgent-text]="isUrgent(order)">{{
+            getOrderAge(order)
+          }}</span>
+        </div>
+      </div>
+
+      <ul class="items-list">
+        <li *ngFor="let item of order.items" class="item-row">
+          <span class="qty">{{ item.quantity }}×</span>
+          <span class="item-name">{{ item.menuItemName }}</span>
+          <span class="item-price" *ngIf="item.totalPrice"
+            >₹{{ item.totalPrice | number: "1.0-0" }}</span
+          >
+        </li>
       </ul>
-      <button (click)="markServed(order.id)">Mark As Served</button>
+
+      <div class="special-note" *ngIf="order.specialInstructions">
+        <i class="bi bi-sticky"></i>
+        <span>{{ order.specialInstructions }}</span>
+      </div>
+
+      <div class="card-footer">
+        <div class="order-total" *ngIf="order.totalAmount">
+          <span class="total-label">Total</span>
+          <span class="total-value"
+            >₹{{ order.totalAmount | number: "1.2-2" }}</span
+          >
+        </div>
+        <button class="serve-btn" (click)="markServed(order.id)">
+          <i class="bi bi-check-lg"></i>
+          Mark As Served
+        </button>
+      </div>
     </article>
   </div>
 
+  <!-- Empty State -->
   <div class="empty" *ngIf="!loading && readyOrders.length === 0">
-    No ready orders right now.
+    <div class="empty-icon"><i class="bi bi-cup-hot"></i></div>
+    <h3>All clear!</h3>
+    <p>
+      No orders ready to serve right now. New ready orders will appear here
+      automatically.
+    </p>
+  </div>
+
+  <!-- Pagination -->
+  <div class="pager" *ngIf="totalElements > pageSize">
+    <div class="pager-left">
+      <span class="range-text"
+        >Showing {{ rangeStart }}–{{ rangeEnd }} of {{ totalElements }}</span
+      >
+    </div>
+    <div class="pager-right">
+      <button
+        class="page-btn nav-btn"
+        [disabled]="pageIndex === 0"
+        (click)="goToPage(pageIndex - 1)"
+      >
+        ← Prev
+      </button>
+      <button
+        class="page-btn"
+        *ngFor="let p of allPages"
+        [class.active]="p === pageIndex"
+        (click)="goToPage(p)"
+      >
+        {{ p + 1 }}
+      </button>
+      <button
+        class="page-btn nav-btn"
+        [disabled]="pageIndex >= totalPages - 1"
+        (click)="goToPage(pageIndex + 1)"
+      >
+        Next →
+      </button>
+    </div>
   </div>
 </section>

@@ -1,0 +1,65 @@
+<div class="profile-page">
+  <div class="page-header">
+    <h1 class="page-title">
+      <i class="bi bi-person-circle"></i>
+      My Profile
+    </h1>
+    <p class="page-subtitle">Your account information</p>
+  </div>
+
+  <div class="profile-grid">
+    <!-- Profile Card -->
+    <div class="profile-card">
+      <div class="card-banner"></div>
+      <div class="card-content">
+        <div class="avatar-wrap">
+          <div class="avatar-large">
+            <img *ngIf="profileImage" [src]="profileImage" alt="Profile" />
+            <span *ngIf="!profileImage" class="avatar-initials">{{ getAvatarText() }}</span>
+          </div>
+        </div>
+        <h2 class="user-name">{{ getDisplayName() }}</h2>
+        <p class="user-email">{{ getUserEmail() }}</p>
+        <span class="role-badge">
+          <i class="bi bi-shield-check"></i>
+          {{ getRoleLabel() }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Details Card -->
+    <div class="details-card">
+      <h3 class="details-title">Account Details</h3>
+      <div class="detail-row">
+        <span class="detail-label">
+          <i class="bi bi-person"></i> Username
+        </span>
+        <span class="detail-value">{{ currentUser?.username || '—' }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">
+          <i class="bi bi-envelope"></i> Email
+        </span>
+        <span class="detail-value">{{ getUserEmail() || '—' }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">
+          <i class="bi bi-shop"></i> Café
+        </span>
+        <span class="detail-value">{{ getCafeName() }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">
+          <i class="bi bi-shield-lock"></i> Role
+        </span>
+        <span class="detail-value">{{ getRoleLabel() }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">
+          <i class="bi bi-calendar"></i> Joined
+        </span>
+        <span class="detail-value">{{ getJoinDate() }}</span>
+      </div>
+    </div>
+  </div>
+</div>

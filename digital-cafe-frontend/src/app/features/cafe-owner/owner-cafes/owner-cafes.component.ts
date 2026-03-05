@@ -155,8 +155,11 @@ export class OwnerCafesComponent implements OnInit {
       gstNumber: c.gstNumber,
       msmeNumber: c.msmeNumber,
     });
-    // Always resolve through getCafeImage so /uploads/ paths get the host prefix
-    this.previewUrl = this.getCafeImage(cafe);
+    // Only set previewUrl when the cafe actually has a logo/image URL.
+    // getCafeImage() falls back to the logo endpoint which returns 404 when
+    // no logo is uploaded, causing a broken image instead of the empty-state.
+    const rawImg = cafe.logoUrl || cafe.imageUrl;
+    this.previewUrl = rawImg ? this.getCafeImage(cafe) : null;
     this.showForm = true;
   }
 
@@ -173,6 +176,12 @@ export class OwnerCafesComponent implements OnInit {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) return;
+    const twoMb = 2 * 1024 * 1024;
+    if (file.size > twoMb) {
+      this.alertService.error("Cafe image must be 2MB or less");
+      input.value = "";
+      return;
+    }
     this.selectedFile = file;
     const reader = new FileReader();
     reader.onload = () => (this.previewUrl = reader.result as string);

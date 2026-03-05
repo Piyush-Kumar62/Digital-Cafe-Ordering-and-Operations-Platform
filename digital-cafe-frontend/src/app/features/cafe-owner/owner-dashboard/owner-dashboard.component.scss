@@ -479,6 +479,44 @@ $font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
   text-align: center;
 }
 
+// ─── Chart HTML Legend ────────────────────────────────────────────────────────
+.chart-legend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  justify-content: center;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.legend-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: $text-secondary;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.legend-value {
+  font-size: 11px;
+  font-weight: 600;
+  color: $text-muted;
+}
+
 .table-occupancy-stat {
   display: flex;
   flex-direction: column;

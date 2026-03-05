@@ -1,70 +1,254 @@
 <div class="dashboard-container">
-      <div class="dashboard-header">
-        <h1>Chef Dashboard</h1>
-        <p>Manage kitchen operations</p>
-      </div>
-
-      <div class="stats-row">
-        <div class="stat-box pending">
-          <h3>{{ pendingOrders.length }}</h3>
-          <p>Pending Orders</p>
-        </div>
-        <div class="stat-box preparing">
-          <h3>{{ preparingOrders.length }}</h3>
-          <p>Preparing</p>
-        </div>
-        <div class="stat-box ready">
-          <h3>{{ readyOrders.length }}</h3>
-          <p>Ready</p>
-        </div>
-      </div>
-
-      <app-card title="Pending Orders" class="orders-section">
-        <div *ngIf="pendingOrders.length === 0" class="empty-state">
-          <p>No pending orders</p>
-        </div>
-        <div class="orders-grid">
-          <div *ngFor="let order of pendingOrders" class="order-card pending">
-            <div class="order-header">
-              <h3>Order #{{ order.orderNumber }}</h3>
-              <span class="badge badge-warning">{{ order.status }}</span>
-            </div>
-            <div class="order-details">
-              <p><strong>Table:</strong> {{ order.tableNumber }}</p>
-              <p><strong>Items:</strong></p>
-              <ul class="items-list">
-                <li *ngFor="let item of order.items">
-                  {{ item.quantity }}x {{ item.menuItemName }}
-                  <span *ngIf="item.specialInstructions" class="special-note"> ({{ item.specialInstructions }}) </span>
-                </li>
-              </ul>
-            </div>
-            <button class="btn-action btn-start" disabled>
-              Awaiting Kitchen Start
-            </button>
-          </div>
-        </div>
-      </app-card>
-
-      <app-card title="Preparing" class="orders-section">
-        <div *ngIf="preparingOrders.length === 0" class="empty-state">
-          <p>No orders being prepared</p>
-        </div>
-        <div class="orders-grid">
-          <div *ngFor="let order of preparingOrders" class="order-card preparing">
-            <div class="order-header">
-              <h3>Order #{{ order.orderNumber }}</h3>
-              <span class="badge badge-info">{{ order.status }}</span>
-            </div>
-            <div class="order-details">
-              <p><strong>Table:</strong> {{ order.tableNumber }}</p>
-              <p><strong>Items:</strong></p>
-              <ul class="items-list">
-                <li *ngFor="let item of order.items">{{ item.quantity }}x {{ item.menuItemName }}</li>
-              </ul>
-            </div>
-            <button class="btn-action btn-ready" (click)="updateOrderStatus(order.id, 'READY')">Mark as Ready</button>
-          </div>
-        </div>
-      </app-card>
+  <!-- Welcome Header -->
+  <div class="dashboard-welcome">
+    <div class="welcome-left">
+      <h1 class="welcome-title">
+        <i class="bi bi-fire welcome-icon"></i>
+        Kitchen Dashboard
+      </h1>
+      <p class="welcome-subtitle">
+        {{ currentTime | date:'EEEE, MMMM d, y • h:mm a' }}
+      </p>
     </div>
+    <button class="refresh-btn" (click)="refreshOrders()" [disabled]="isLoading">
+      <i class="bi bi-arrow-clockwise" [class.spinning]="isLoading"></i>
+      Refresh
+    </button>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-grid">
+    <div class="stat-card pending-card">
+      <div class="stat-icon-wrap">
+        <i class="bi bi-hourglass-split"></i>
+      </div>
+      <div class="stat-info">
+        <p class="stat-value">{{ pendingOrders.length }}</p>
+        <p class="stat-label">Pending Orders</p>
+      </div>
+      <div class="stat-accent"></div>
+    </div>
+
+    <div class="stat-card preparing-card">
+      <div class="stat-icon-wrap">
+        <i class="bi bi-fire"></i>
+      </div>
+      <div class="stat-info">
+        <p class="stat-value">{{ preparingOrders.length }}</p>
+        <p class="stat-label">Preparing</p>
+      </div>
+      <div class="stat-accent"></div>
+    </div>
+
+    <div class="stat-card ready-card">
+      <div class="stat-icon-wrap">
+        <i class="bi bi-check-circle"></i>
+      </div>
+      <div class="stat-info">
+        <p class="stat-value">{{ readyOrders.length }}</p>
+        <p class="stat-label">Ready to Serve</p>
+      </div>
+      <div class="stat-accent"></div>
+    </div>
+
+    <div class="stat-card total-card">
+      <div class="stat-icon-wrap">
+        <i class="bi bi-graph-up-arrow"></i>
+      </div>
+      <div class="stat-info">
+        <p class="stat-value">{{ totalOrdersToday }}</p>
+        <p class="stat-label">Total Active</p>
+      </div>
+      <div class="stat-accent"></div>
+    </div>
+  </div>
+
+  <!-- Pending Orders Section -->
+  <div class="orders-section">
+    <div class="section-header">
+      <div class="section-title-wrap">
+        <i class="bi bi-hourglass-split section-icon pending-icon"></i>
+        <h2 class="section-title">Pending Orders</h2>
+        <span class="section-count" *ngIf="pendingOrders.length > 0">{{ pendingOrders.length }}</span>
+      </div>
+    </div>
+
+    <div *ngIf="pendingOrders.length === 0" class="empty-state">
+      <i class="bi bi-inbox empty-icon"></i>
+      <p class="empty-text">No pending orders</p>
+      <p class="empty-hint">New orders will appear here in real-time</p>
+    </div>
+
+    <div class="orders-grid">
+      <div *ngFor="let order of pagedPending" class="order-card pending">
+        <div class="order-card-header">
+          <div class="order-number">
+            <i class="bi bi-receipt"></i>
+            Order #{{ order.orderNumber }}
+          </div>
+          <span class="badge badge-warning">{{ order.status }}</span>
+        </div>
+
+        <div class="order-card-body">
+          <div class="order-meta">
+            <span class="meta-item">
+              <i class="bi bi-geo-alt"></i> Table {{ order.tableNumber }}
+            </span>
+            <span class="meta-item" *ngIf="order.placedAt || order.createdAt">
+              <i class="bi bi-clock"></i> {{ getRelativeTime(order.placedAt || order.createdAt) }}
+            </span>
+          </div>
+
+          <div class="order-items">
+            <p class="items-label">Order Items</p>
+            <ul class="items-list">
+              <li *ngFor="let item of order.items" class="item-row">
+                <span class="item-qty">{{ item.quantity }}x</span>
+                <span class="item-name">{{ item.menuItemName }}</span>
+                <span *ngIf="item.specialInstructions" class="item-note">
+                  <i class="bi bi-chat-text"></i> {{ item.specialInstructions }}
+                </span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <button class="action-btn btn-start" (click)="startPreparing(order.id)">
+          <i class="bi bi-play-circle"></i> Start Preparing
+        </button>
+      </div>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pager" *ngIf="pendingOrders.length > pageSize">
+      <span class="range-text">
+        Showing {{ pendingRangeStart }}–{{ pendingRangeEnd }} of {{ pendingOrders.length }}
+      </span>
+      <div class="pager-controls">
+        <button
+          class="page-btn"
+          [disabled]="pendingPage === 0"
+          (click)="goToPending(pendingPage - 1)"
+        >
+          <i class="bi bi-chevron-left"></i>
+        </button>
+        <button
+          class="page-btn"
+          *ngFor="let p of pendingAllPages"
+          [class.active]="p === pendingPage"
+          (click)="goToPending(p)"
+        >
+          {{ p + 1 }}
+        </button>
+        <button
+          class="page-btn"
+          [disabled]="pendingPage >= pendingTotalPages - 1"
+          (click)="goToPending(pendingPage + 1)"
+        >
+          <i class="bi bi-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Preparing Orders Section -->
+  <div class="orders-section">
+    <div class="section-header">
+      <div class="section-title-wrap">
+        <i class="bi bi-fire section-icon preparing-icon"></i>
+        <h2 class="section-title">Now Preparing</h2>
+        <span class="section-count preparing-count" *ngIf="preparingOrders.length > 0">{{ preparingOrders.length }}</span>
+      </div>
+    </div>
+
+    <div *ngIf="preparingOrders.length === 0" class="empty-state">
+      <i class="bi bi-fire empty-icon"></i>
+      <p class="empty-text">No orders being prepared</p>
+      <p class="empty-hint">Start preparing pending orders from above</p>
+    </div>
+
+    <div class="orders-grid">
+      <div *ngFor="let order of pagedPreparing" class="order-card preparing">
+        <div class="order-card-header">
+          <div class="order-number">
+            <i class="bi bi-receipt"></i>
+            Order #{{ order.orderNumber }}
+          </div>
+          <span class="badge badge-info">{{ order.status }}</span>
+        </div>
+
+        <div class="order-card-body">
+          <div class="order-meta">
+            <span class="meta-item">
+              <i class="bi bi-geo-alt"></i> Table {{ order.tableNumber }}
+            </span>
+            <span class="meta-item" *ngIf="order.preparingAt || order.createdAt">
+              <i class="bi bi-clock"></i> {{ getRelativeTime(order.preparingAt || order.createdAt) }}
+            </span>
+          </div>
+
+          <div class="order-items">
+            <p class="items-label">Order Items</p>
+            <ul class="items-list">
+              <li *ngFor="let item of order.items" class="item-row">
+                <span class="item-qty">{{ item.quantity }}x</span>
+                <span class="item-name">{{ item.menuItemName }}</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <button class="action-btn btn-ready" (click)="markReady(order.id)">
+          <i class="bi bi-check2-circle"></i> Mark as Ready
+        </button>
+      </div>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pager" *ngIf="preparingOrders.length > pageSize">
+      <span class="range-text">
+        Showing {{ preparingRangeStart }}–{{ preparingRangeEnd }} of {{ preparingOrders.length }}
+      </span>
+      <div class="pager-controls">
+        <button
+          class="page-btn"
+          [disabled]="preparingPage === 0"
+          (click)="goToPreparing(preparingPage - 1)"
+        >
+          <i class="bi bi-chevron-left"></i>
+        </button>
+        <button
+          class="page-btn"
+          *ngFor="let p of preparingAllPages"
+          [class.active]="p === preparingPage"
+          (click)="goToPreparing(p)"
+        >
+          {{ p + 1 }}
+        </button>
+        <button
+          class="page-btn"
+          [disabled]="preparingPage >= preparingTotalPages - 1"
+          (click)="goToPreparing(preparingPage + 1)"
+        >
+          <i class="bi bi-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ready Orders Overview -->
+  <div class="orders-section" *ngIf="readyOrders.length > 0">
+    <div class="section-header">
+      <div class="section-title-wrap">
+        <i class="bi bi-check-circle section-icon ready-icon"></i>
+        <h2 class="section-title">Ready to Serve</h2>
+        <span class="section-count ready-count">{{ readyOrders.length }}</span>
+      </div>
+    </div>
+
+    <div class="ready-banner">
+      <i class="bi bi-bell"></i>
+      <p>{{ readyOrders.length }} order(s) are ready and waiting for waiter pickup</p>
+    </div>
+  </div>
+</div>

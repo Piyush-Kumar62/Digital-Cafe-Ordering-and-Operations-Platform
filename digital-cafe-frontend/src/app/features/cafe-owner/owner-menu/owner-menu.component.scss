@@ -89,8 +89,8 @@ textarea {
 .item {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  gap: 0.8rem;
+  align-items: center;
+  gap: 1rem;
 }
 .item-body {
   flex: 1 1 0;
@@ -263,16 +263,20 @@ textarea {
 
 /* Item card image */
 .item-img-wrap {
-  flex: 0 0 90px;
-  height: 70px;
-  border-radius: 10px;
+  flex: 0 0 108px;
+  width: 108px;
+  height: 108px;
+  border-radius: 12px;
   overflow: hidden;
   border: 1px solid #e2e8f0;
   flex-shrink: 0;
+  align-self: center;
   img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    object-position: center;
+    display: block;
   }
 }
 .uploading-badge {

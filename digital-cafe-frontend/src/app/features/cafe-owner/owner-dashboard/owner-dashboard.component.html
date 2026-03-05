@@ -131,6 +131,13 @@
         <div><h3>Order Status</h3><p>Today's breakdown</p></div>
       </div>
       <div class="chart-area medium"><canvas #orderStatusChart></canvas></div>
+      <ul class="chart-legend" *ngIf="orderStatusCounts.length">
+        <li *ngFor="let s of orderStatusCounts" class="legend-item">
+          <span class="legend-dot" [style.background]="s.color"></span>
+          <span class="legend-label">{{ s.label }}</span>
+          <span class="legend-value">{{ s.count }}</span>
+        </li>
+      </ul>
       <div *ngIf="orderStatusCounts.length === 0" class="chart-empty">
         <span>No orders today</span>
       </div>
@@ -156,6 +163,18 @@
         <span class="occ-label">Occupied</span>
       </div>
       <div class="chart-area medium"><canvas #tableChart></canvas></div>
+      <ul class="chart-legend">
+        <li class="legend-item">
+          <span class="legend-dot" style="background:#22c55e"></span>
+          <span class="legend-label">Available</span>
+          <span class="legend-value">{{ stats.availableTables }}</span>
+        </li>
+        <li class="legend-item">
+          <span class="legend-dot" style="background:#ef4444"></span>
+          <span class="legend-label">Occupied</span>
+          <span class="legend-value">{{ stats.occupiedTables }}</span>
+        </li>
+      </ul>
     </article>
   </section>
 

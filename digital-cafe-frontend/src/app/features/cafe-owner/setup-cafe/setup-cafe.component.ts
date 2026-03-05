@@ -66,7 +66,12 @@ export class SetupCafeComponent implements OnInit {
   onFileChange(event: any): void {
     const file = event.target.files[0];
     if (!file) return;
-
+    const twoMb = 2 * 1024 * 1024;
+    if (file.size > twoMb) {
+      this.alertService.error("Cafe image must be 2MB or less");
+      event.target.value = "";
+      return;
+    }
     this.selectedFile = file;
 
     const reader = new FileReader();

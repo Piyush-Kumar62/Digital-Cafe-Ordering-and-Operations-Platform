@@ -1,7 +1,7 @@
 import { Component, OnInit } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
-import { Router } from "@angular/router";
+import { Router, ActivatedRoute } from "@angular/router";
 import { ApiService } from "@core/services/api.service";
 import { TableService } from "../services/table-service";
 import { Location } from "@angular/common";
@@ -19,6 +19,38 @@ export class OwnerTablesComponent implements OnInit {
   saving = false;
   deleting: number | null = null;
 
+  pageIndex = 0;
+  readonly pageSize = 10;
+
+  get pagedTables(): any[] {
+    return this.tables.slice(
+      this.pageIndex * this.pageSize,
+      (this.pageIndex + 1) * this.pageSize,
+    );
+  }
+  get totalElements(): number {
+    return this.tables.length;
+  }
+  get totalPages(): number {
+    return Math.max(1, Math.ceil(this.totalElements / this.pageSize));
+  }
+  get rangeStart(): number {
+    return this.totalElements === 0 ? 0 : this.pageIndex * this.pageSize + 1;
+  }
+  get rangeEnd(): number {
+    return Math.min((this.pageIndex + 1) * this.pageSize, this.totalElements);
+  }
+  get allPages(): number[] {
+    return Array.from({ length: this.totalPages }, (_, i) => i);
+  }
+  goToPage(page: number): void {
+    if (page < 0 || page >= this.totalPages) return;
+    this.pageIndex = page;
+  }
+
+  /** cafeId from ?cafeId= query param — set when coming from multi-cafe view */
+  activeCafeId: number | null = null;
+
   showForm = false;
   isEditMode = false;
 
@@ -33,10 +65,17 @@ export class OwnerTablesComponent implements OnInit {
     private apiService: ApiService,
     private tableService: TableService,
     private location: Location,
+    private route: ActivatedRoute,
     private router: Router,
   ) {}
 
   ngOnInit(): void {
+    const queryId = this.route.snapshot.queryParamMap.get("cafeId");
+    if (queryId) {
+      this.activeCafeId = +queryId;
+      this.loadTables();
+      return;
+    }
     this.apiService.cafeExistsForOwner().subscribe({
       next: (exists) => {
         if (!exists) {
@@ -55,7 +94,11 @@ export class OwnerTablesComponent implements OnInit {
 
   loadTables(): void {
     this.loading = true;
-    this.tableService.getMyTables().subscribe({
+    // Use cafeId-scoped endpoint when coming from multi-cafe view
+    const load$ = this.activeCafeId
+      ? this.apiService.getTablesByCafe(this.activeCafeId)
+      : this.tableService.getMyTables();
+    load$.subscribe({
       next: (res: any) => {
         this.tables = (res.data || res).map((t: any) => ({
           ...t,
@@ -113,7 +156,12 @@ export class OwnerTablesComponent implements OnInit {
     const payload: any = { capacity: this.formCapacity };
     if (this.formTableNumber && this.formTableNumber.trim())
       payload.tableNumber = this.formTableNumber.trim();
-    this.tableService.createTable(payload).subscribe({
+
+    const create$ = this.activeCafeId
+      ? this.apiService.createTable(this.activeCafeId, payload)
+      : this.tableService.createTable(payload);
+
+    create$.subscribe({
       next: () => {
         this.closeForm();
         this.loadTables();

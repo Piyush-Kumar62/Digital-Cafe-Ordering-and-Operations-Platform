@@ -1,60 +1,201 @@
-<div class="chef-shell">
-  <!-- Top Header -->
-  <header class="top-header">
-    <div class="header-left">
-      <div class="brand">
-        <span class="brand-icon">🍳</span>
-        <div>
+<div class="chef-shell" [class.dark]="isDarkMode">
+  <!-- Mobile Overlay -->
+  <div
+    *ngIf="!isSidebarCollapsed"
+    class="mobile-overlay"
+    (click)="isSidebarCollapsed = true"
+  ></div>
+
+  <!-- Sidebar -->
+  <aside
+    class="sidebar"
+    [class.collapsed]="isSidebarCollapsed"
+    [class.open]="!isSidebarCollapsed"
+  >
+    <!-- Sidebar Header -->
+    <div class="sidebar-header">
+      <div *ngIf="!isSidebarCollapsed" class="sidebar-brand">
+        <div class="brand-logo">
+          <i class="bi bi-fire"></i>
+        </div>
+        <div class="brand-text">
+          <h1 (click)="goToLanding()" class="brand-title">Digital Café</h1>
+          <p class="brand-subtitle">Kitchen Portal</p>
+        </div>
+      </div>
+      <div *ngIf="isSidebarCollapsed" class="sidebar-brand-collapsed">
+        <div class="brand-logo">
+          <i class="bi bi-fire"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="sidebar-nav">
+      <p *ngIf="!isSidebarCollapsed" class="nav-section-label">Main Menu</p>
+      <a
+        *ngFor="let item of navigationItems"
+        [routerLink]="item.route"
+        routerLinkActive="nav-active"
+        [routerLinkActiveOptions]="{ exact: false }"
+        class="nav-item"
+        [class.collapsed-item]="isSidebarCollapsed"
+        [title]="isSidebarCollapsed ? item.label : ''"
+        (click)="isMobileView ? isSidebarCollapsed = true : null"
+      >
+        <i [class]="item.icon + ' nav-icon'"></i>
+        <span *ngIf="!isSidebarCollapsed" class="nav-label">{{ item.label }}</span>
+        <span *ngIf="!isSidebarCollapsed" class="nav-arrow">
+          <i class="bi bi-chevron-right"></i>
+        </span>
+      </a>
+    </nav>
+
+    <!-- Back to Home -->
+    <div class="sidebar-footer">
+      <button
+        (click)="goToLanding()"
+        class="nav-item back-btn"
+        [class.collapsed-item]="isSidebarCollapsed"
+        title="Back to Home"
+      >
+        <i class="bi bi-house-door nav-icon"></i>
+        <span *ngIf="!isSidebarCollapsed" class="nav-label">Back to Home</span>
+      </button>
+    </div>
+
+    <!-- Collapse Toggle (desktop only) -->
+    <button
+      (click)="toggleSidebar()"
+      class="sidebar-toggle"
+    >
+      <i class="bi bi-chevron-left" [class.rotated]="isSidebarCollapsed"></i>
+    </button>
+  </aside>
+
+  <!-- Main Content Area -->
+  <div
+    class="main-area"
+    [class.sidebar-expanded]="!isSidebarCollapsed"
+    [class.sidebar-collapsed]="isSidebarCollapsed"
+  >
+    <!-- Top Header -->
+    <header class="top-header">
+      <div class="header-left">
+        <button (click)="toggleSidebar()" class="hamburger-btn">
+          <i class="bi bi-list"></i>
+        </button>
+        <div class="header-title-wrap">
           <h2 class="header-title">Kitchen Dashboard</h2>
           <p class="header-subtitle">Real-time order management</p>
         </div>
       </div>
-    </div>
 
-    <div class="header-actions">
-      <!-- Profile -->
-      <div class="profile-wrap" #profileContainer>
-        <button class="profile-btn" (click)="toggleProfileDropdown()">
-          <div class="profile-meta">
-            <p class="profile-name">{{ getDisplayName() }}</p>
-            <p class="profile-role">Chef</p>
+      <div class="header-actions">
+        <!-- Notifications -->
+        <div #notificationContainer class="header-action-item">
+          <button
+            (click)="toggleNotificationDropdown()"
+            class="action-btn"
+            title="Notifications"
+          >
+            <i class="bi bi-bell"></i>
+            <span *ngIf="unreadNotifications > 0" class="notif-badge">
+              {{ unreadNotifications > 9 ? "9+" : unreadNotifications }}
+            </span>
+          </button>
+
+          <div *ngIf="notificationDropdownOpen" class="notification-dropdown">
+            <div class="dropdown-header">
+              <p class="dropdown-header-title">Notifications</p>
+            </div>
+            <div
+              *ngIf="notifications.length === 0"
+              class="notification-empty"
+            >
+              <i class="bi bi-bell-slash"></i>
+              <p>No notifications yet</p>
+            </div>
+            <div
+              *ngFor="let item of notifications"
+              class="notification-item"
+            >
+              <div class="notif-top">
+                <span
+                  class="notif-severity"
+                  [ngClass]="getNotificationSeverityClass(item.severity)"
+                >
+                  {{ item.severity | titlecase }}
+                </span>
+                <span class="notif-time">{{ getNotificationTime(item.timestamp) }}</span>
+              </div>
+              <p class="notif-title">{{ item.title }}</p>
+              <p class="notif-message">{{ item.message }}</p>
+            </div>
           </div>
-          <div class="avatar">
-            <img
-              *ngIf="profileImage"
-              [src]="profileImage"
-              alt="Profile"
-              class="avatar-img"
-            />
-            <span *ngIf="!profileImage" class="avatar-initials">{{
-              getAvatarText()
-            }}</span>
-          </div>
+        </div>
+
+        <!-- Theme Toggle -->
+        <button
+          (click)="toggleTheme()"
+          class="action-btn"
+          [title]="isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
+        >
+          <i [class]="isDarkMode ? 'bi bi-sun' : 'bi bi-moon-stars'"></i>
         </button>
 
-        <!-- Dropdown -->
-        <div *ngIf="profileDropdownOpen" class="profile-dropdown">
-          <div class="dropdown-user">
-            <div class="dropdown-avatar">
-              <img *ngIf="profileImage" [src]="profileImage" alt="Profile" />
-              <span *ngIf="!profileImage">{{ getAvatarText() }}</span>
+        <!-- Profile -->
+        <div #profileContainer class="header-action-item profile-area">
+          <button (click)="toggleProfileDropdown()" class="profile-btn">
+            <div class="profile-meta">
+              <p class="profile-name">{{ getDisplayName() }}</p>
+              <p class="profile-role">{{ getRoleLabel() }}</p>
             </div>
-            <div>
-              <p class="dropdown-name">{{ getDisplayName() }}</p>
-              <p class="dropdown-email">{{ getUserEmail() }}</p>
+            <div class="avatar">
+              <img
+                *ngIf="profileImage"
+                [src]="profileImage"
+                alt="Profile"
+                class="avatar-img"
+              />
+              <span *ngIf="!profileImage" class="avatar-initials">{{
+                getAvatarText()
+              }}</span>
             </div>
-          </div>
-          <div class="dropdown-divider"></div>
-          <button (click)="logout()" class="dropdown-item danger">
-            <span>🚪</span> Logout
           </button>
+
+          <!-- Profile Dropdown -->
+          <div *ngIf="profileDropdownOpen" class="profile-dropdown">
+            <div class="dropdown-user-info">
+              <div class="dropdown-avatar">
+                <img *ngIf="profileImage" [src]="profileImage" alt="Profile" />
+                <span *ngIf="!profileImage">{{ getAvatarText() }}</span>
+              </div>
+              <div>
+                <p class="dropdown-name">{{ getDisplayName() }}</p>
+                <p class="dropdown-email">{{ getUserEmail() }}</p>
+              </div>
+            </div>
+            <div class="dropdown-divider"></div>
+            <button
+              routerLink="/chef/profile"
+              (click)="profileDropdownOpen = false"
+              class="dropdown-item"
+            >
+              <i class="bi bi-person"></i> Profile
+            </button>
+            <div class="dropdown-divider"></div>
+            <button (click)="logout()" class="dropdown-item danger">
+              <i class="bi bi-box-arrow-right"></i> Logout
+            </button>
+          </div>
         </div>
       </div>
-    </div>
-  </header>
+    </header>
 
-  <!-- Page content -->
-  <main class="page-content">
-    <router-outlet></router-outlet>
-  </main>
+    <!-- Page Content -->
+    <main class="page-content">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
 </div>

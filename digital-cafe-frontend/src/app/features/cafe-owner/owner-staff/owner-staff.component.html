@@ -51,7 +51,7 @@
       </thead>
 
       <tbody *ngIf="!loading">
-        <tr *ngFor="let s of filteredStaff">
+        <tr *ngFor="let s of pagedStaff">
           <td>
             <div class="name-cell">
               <div class="avatar-sm">
@@ -111,7 +111,7 @@
           </td>
         </tr>
 
-        <tr *ngIf="filteredStaff.length === 0">
+        <tr *ngIf="totalElements === 0">
           <td colspan="7" class="empty-row">
             No staff found matching your search.
           </td>
@@ -119,20 +119,47 @@
       </tbody>
     </table>
   </div>
+
+  <div class="pager" *ngIf="totalElements > 0">
+    <div class="pager-left">
+      <span class="range-text"
+        >Showing {{ rangeStart }}–{{ rangeEnd }} of {{ totalElements }}</span
+      >
+    </div>
+    <div class="pager-right">
+      <button
+        class="page-btn nav-btn"
+        [disabled]="pageIndex === 0"
+        (click)="goToPage(pageIndex - 1)"
+      >
+        ← Prev</button>
+      <button
+        class="page-btn"
+        *ngFor="let p of allPages"
+        [class.active]="p === pageIndex"
+        (click)="goToPage(p)"
+      >
+        {{ p + 1 }}
+      </button>
+      <button
+        class="page-btn nav-btn"
+        [disabled]="pageIndex >= totalPages - 1"
+        (click)="goToPage(pageIndex + 1)"
+      >
+        Next →</button>
+    </div>
+  </div>
 </section>
 
 <!-- ================= MODERN MODAL ================= -->
 
 <div class="modal-overlay" *ngIf="showModal">
   <div class="modal modern-modal">
-
     <!-- Header -->
     <div class="modal-header">
       <div>
         <h2>{{ isEditMode ? "Edit Staff" : "Create Staff Account" }}</h2>
-        <p class="subtitle">
-          Manage staff details and work information
-        </p>
+        <p class="subtitle">Manage staff details and work information</p>
       </div>
 
       <button class="close-btn" (click)="closeModal()">×</button>
@@ -140,9 +167,7 @@
 
     <!-- Scrollable Body -->
     <div class="modal-body">
-
       <form (ngSubmit)="submitStaff()">
-
         <!-- ================= BASIC ================= -->
         <div class="form-section">
           <h3>Basic Information</h3>
@@ -207,9 +232,11 @@
 
             <div class="form-group">
               <label>Experience (Years)</label>
-              <input type="number"
-                     [(ngModel)]="experienceYears"
-                     name="experienceYears" />
+              <input
+                type="number"
+                [(ngModel)]="experienceYears"
+                name="experienceYears"
+              />
             </div>
 
             <div class="form-group">
@@ -222,20 +249,16 @@
             </div>
           </div>
         </div>
-
       </form>
     </div>
 
     <!-- Footer -->
     <div class="modal-footer">
-      <button class="secondary-btn" (click)="closeModal()">
-        Cancel
-      </button>
+      <button class="secondary-btn" (click)="closeModal()">Cancel</button>
 
       <button class="primary-btn" (click)="submitStaff()">
         {{ isEditMode ? "Update Staff" : "Create Staff" }}
       </button>
     </div>
-
   </div>
 </div>

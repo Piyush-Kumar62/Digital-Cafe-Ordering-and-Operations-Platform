@@ -29,5 +29,6 @@ public interface UserService {
     void approveUser(Long userId);
     void rejectUser(Long userId);
     UserResponse getCurrentUser();
+    Long getCurrentUserId();
     UserResponse updateStaffByOwner(Long staffId, CreateStaffRequest request);
 }

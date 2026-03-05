@@ -19,7 +19,8 @@ import java.util.UUID;
 @Service
 public class FileStorageServiceImpl implements FileStorageService {
 
-    private static final long MAX_PROFILE_IMAGE_SIZE = 2 * 1024 * 1024; // 2MB
+    private static final long MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
+    private static final long MAX_PROFILE_IMAGE_SIZE = MAX_FILE_SIZE;
     private static final Set<String> ALLOWED_CONTENT_TYPES = Set.of("image/png", "image/jpeg");
 
     private final Path rootUploadPath;
@@ -62,8 +63,8 @@ public class FileStorageServiceImpl implements FileStorageService {
         if (ct == null || !Set.of("image/png", "image/jpeg", "image/webp", "image/gif").contains(ct)) {
             throw new BadRequestException("Only PNG, JPEG, WEBP or GIF images are allowed");
         }
-        if (file.getSize() > 5 * 1024 * 1024) {
-            throw new BadRequestException("Image file size must be 5MB or less");
+        if (file.getSize() > MAX_FILE_SIZE) {
+            throw new BadRequestException("Image file size must be 2MB or less");
         }
 
         String extension = resolveExtension(ct);

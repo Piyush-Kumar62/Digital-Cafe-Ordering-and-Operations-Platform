@@ -70,7 +70,7 @@ public class UserServiceImpl implements UserService {
         user = userRepository.save(user);
         log.info("Cafe owner created: {}", user.getEmail());
 
-        emailService.sendWelcomeEmail(user.getEmail(), user.getUsername(), tempPassword);
+        emailService.sendWelcomeEmail(user.getEmail(), user.getUsername(), tempPassword, "Café Owner", "/owner/dashboard");
 
         return mapToUserResponse(user);
     }
@@ -140,7 +140,8 @@ public class UserServiceImpl implements UserService {
         log.info("{} created by owner {} for cafe {}",
                 roleName, currentOwner.getEmail(), cafe.getName());
 
-        emailService.sendWelcomeEmail(user.getEmail(), user.getUsername(), tempPassword);
+        String roleLabel = roleName == Role.RoleName.CHEF ? "Chef" : "Waiter";
+        emailService.sendWelcomeEmail(user.getEmail(), user.getUsername(), tempPassword, roleLabel, "/" + roleLabel.toLowerCase() + "/dashboard");
 
         return mapToUserResponse(user);
     }
@@ -270,7 +271,8 @@ public class UserServiceImpl implements UserService {
 
         user = userRepository.save(user);
 
-        emailService.sendWelcomeEmail(user.getEmail(), user.getUsername(), tempPassword);
+        String roleLabel2 = roleName == Role.RoleName.CHEF ? "Chef" : "Waiter";
+        emailService.sendWelcomeEmail(user.getEmail(), user.getUsername(), tempPassword, roleLabel2, "/" + roleLabel2.toLowerCase() + "/dashboard");
 
         return user;
     }
@@ -329,10 +331,14 @@ public class UserServiceImpl implements UserService {
         user.setRegistrationStatus(User.RegistrationStatus.APPROVED);
         user.setIsActive(true);
         userRepository.save(user);
-        emailService.sendApprovalConfirmationEmail(user.getEmail());
-        // Also send the "you're all set" email so the user knows they can now log in fully
         String displayName = (user.getDisplayName() != null && !user.getDisplayName().isBlank())
                 ? user.getDisplayName() : user.getUsername();
+        String role = user.getRoles().stream()
+                .findFirst()
+                .map(r -> r.getName().name())
+                .orElse("USER");
+        emailService.sendApprovalConfirmationEmail(user.getEmail(), displayName, role);
+        // Also send the "you're all set" email so the user knows they can now log in fully
         emailService.sendComprehensiveRegistrationSuccess(user.getEmail(), displayName);
     }
 
@@ -352,6 +358,12 @@ public class UserServiceImpl implements UserService {
     public UserResponse getCurrentUser() {
         User user = getCurrentUserEntity();
         return mapToUserResponse(user);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Long getCurrentUserId() {
+        return getCurrentUserEntity().getId();
     }
 
     @Override

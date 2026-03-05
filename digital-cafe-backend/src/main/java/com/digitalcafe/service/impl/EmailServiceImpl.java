@@ -5,8 +5,9 @@ import com.digitalcafe.service.EmailService;
 import jakarta.annotation.PostConstruct;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -24,18 +25,27 @@ import java.util.Map;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class EmailServiceImpl implements EmailService {
 
     private final JavaMailSender mailSender;
-
     private final SpringTemplateEngine templateEngine;
 
+    @Autowired
+    public EmailServiceImpl(JavaMailSender mailSender,
+                            @Qualifier("emailTemplateEngine") SpringTemplateEngine templateEngine) {
+        this.mailSender = mailSender;
+        this.templateEngine = templateEngine;
+    }
+
     @Value("${spring.mail.username:}")
-    private String fromEmail;
+    private String smtpUsername;
 
     @Value("${spring.mail.password:}")
-    private String mailPassword;
+    private String smtpPassword;
+
+    /** The address that appears in the email "From:" header. Must be a real email address. */
+    @Value("${app.email.from-email:noreply@digitalcafe.com}")
+    private String fromEmail;
 
     @Value("${app.email.enabled:true}")
     private boolean emailEnabled;
@@ -49,24 +59,33 @@ public class EmailServiceImpl implements EmailService {
     @Value("${app.email.support-url:http://localhost:4200/contact}")
     private String supportUrl;
 
+    @Value("${spring.mail.host:smtp.gmail.com}")
+    private String smtpHost;
+
+    @Value("${spring.mail.port:587}")
+    private int smtpPort;
+
     // ── Startup validation ───────────────────────────────────────────────────
 
     @PostConstruct
     public void validateEmailConfig() {
-        boolean credentialsMissing = fromEmail.isBlank() || mailPassword.isBlank()
-                || fromEmail.equals("noreply@digitalcafe.com");
+        boolean credentialsMissing = smtpUsername.isBlank() || smtpPassword.isBlank();
         if (!emailEnabled) {
             log.warn("[Email] Email sending is DISABLED (app.email.enabled=false). No emails will be sent.");
         } else if (credentialsMissing) {
             log.warn("=================================================================");
             log.warn("[Email] ⚠️  EMAIL CREDENTIALS NOT CONFIGURED — emails will NOT be sent!");
-            log.warn("[Email] To enable emails, create digital-cafe-backend/.env and set:");
-            log.warn("[Email]   MAIL_USERNAME=your-gmail@gmail.com");
-            log.warn("[Email]   MAIL_APP_PASSWORD=xxxx xxxx xxxx xxxx  (Gmail App Password)");
-            log.warn("[Email] Guide: https://myaccount.google.com/apppasswords");
+            log.warn("[Email] Values read from environment:");
+            log.warn("[Email]   MAIL_HOST     = {}", smtpHost);
+            log.warn("[Email]   MAIL_PORT     = {}", smtpPort);
+            log.warn("[Email]   MAIL_USERNAME = {}", smtpUsername.isBlank() ? "<blank — not set>" : smtpUsername);
+            log.warn("[Email]   MAIL_PASSWORD = {}", smtpPassword.isBlank() ? "<blank — not set>" : "***set***");
+            log.warn("[Email] Fix: set MAIL_USERNAME and MAIL_PASSWORD in digital-cafe-backend/.env");
+            log.warn("[Email] Gmail App Password guide: https://myaccount.google.com/apppasswords");
             log.warn("=================================================================");
         } else {
-            log.info("[Email] ✅ Email configured — sending from: {}", fromEmail);
+            log.info("[Email] ✅ Email ready — host={}:{}, from={} <{}>",
+                    smtpHost, smtpPort, fromName, fromEmail);
         }
     }
 
@@ -103,10 +122,13 @@ public class EmailServiceImpl implements EmailService {
 
     @Async("emailTaskExecutor")
     @Override
-    public void sendApprovalConfirmationEmail(String to) {
+    public void sendApprovalConfirmationEmail(String to, String username, String role) {
         log.info("[Email] Queuing REGISTRATION_APPROVED -> {}", to);
         Map<String, Object> vars = new HashMap<>();
+        vars.put("username", username);
+        vars.put("role", role);
         vars.put("loginUrl", frontendUrl + "/auth/login");
+        vars.put("dashboardUrl", frontendUrl + resolveDashboardPath(role));
         internalSend(to, "Your Digital Cafe account is approved!", EmailTemplateType.REGISTRATION_APPROVED, vars);
     }
 
@@ -120,13 +142,15 @@ public class EmailServiceImpl implements EmailService {
 
     @Async("emailTaskExecutor")
     @Override
-    public void sendWelcomeEmail(String to, String username, String tempPassword) {
+    public void sendWelcomeEmail(String to, String username, String tempPassword, String role, String dashboardUrl) {
         log.info("[Email] Queuing WELCOME -> {}", to);
         Map<String, Object> vars = new HashMap<>();
         vars.put("username", username);
         vars.put("email", to);
         vars.put("tempPassword", tempPassword);
+        vars.put("role", role);
         vars.put("loginUrl", frontendUrl + "/auth/login");
+        vars.put("dashboardUrl", !dashboardUrl.startsWith("http") ? (frontendUrl + dashboardUrl) : dashboardUrl);
         internalSend(to, "Welcome to Digital Cafe, " + username + "!", EmailTemplateType.WELCOME, vars);
     }
 
@@ -153,6 +177,18 @@ public class EmailServiceImpl implements EmailService {
 
     @Async("emailTaskExecutor")
     @Override
+    public void sendLoginNotification(String to, String username, String loginTime) {
+        log.info("[Email] Queuing LOGIN_NOTIFICATION -> {}", to);
+        Map<String, Object> vars = new HashMap<>();
+        vars.put("username", username);
+        vars.put("loginTime", loginTime);
+        vars.put("loginUrl", frontendUrl + "/auth/login");
+        vars.put("supportUrl", supportUrl);
+        internalSend(to, "New login to your Digital Cafe account", EmailTemplateType.LOGIN_NOTIFICATION, vars);
+    }
+
+    @Async("emailTaskExecutor")
+    @Override
     public void sendBookingConfirmation(String to, String bookingDetails) {
         log.info("[Email] Queuing BOOKING_CONFIRMATION -> {}", to);
         Map<String, Object> vars = new HashMap<>();
@@ -174,8 +210,8 @@ public class EmailServiceImpl implements EmailService {
             log.debug("[Email] SKIP (disabled) {} -> {}", templateType, to);
             return;
         }
-        if (fromEmail.isBlank() || mailPassword.isBlank() || fromEmail.equals("noreply@digitalcafe.com")) {
-            log.warn("[Email] SKIP (no credentials) {} -> {} | Set MAIL_USERNAME + MAIL_APP_PASSWORD in .env", templateType, to);
+        if (smtpUsername.isBlank() || smtpPassword.isBlank()) {
+            log.warn("[Email] SKIP (no credentials) {} -> {} | Set MAIL_USERNAME + MAIL_PASSWORD in .env", templateType, to);
             return;
         }
 
@@ -212,5 +248,21 @@ public class EmailServiceImpl implements EmailService {
     private String processTemplate(EmailTemplateType templateType, Map<String, Object> variables) {
         Context context = new Context(Locale.ENGLISH, variables);
         return templateEngine.process(templateType.getTemplateName(), context);
+    }
+
+    /**
+     * Maps a raw role name (e.g. "CHEF", "cafe_owner") to the
+     * corresponding frontend dashboard path.
+     */
+    private String resolveDashboardPath(String role) {
+        if (role == null) return "/auth/login";
+        return switch (role.toUpperCase().replace(" ", "_").replace("-", "_")) {
+            case "ADMIN"      -> "/admin/dashboard";
+            case "CAFE_OWNER" -> "/owner/dashboard";
+            case "CHEF"       -> "/chef/dashboard";
+            case "WAITER"     -> "/waiter/dashboard";
+            case "CUSTOMER"   -> "/cafes";
+            default           -> "/auth/login";
+        };
     }
 }

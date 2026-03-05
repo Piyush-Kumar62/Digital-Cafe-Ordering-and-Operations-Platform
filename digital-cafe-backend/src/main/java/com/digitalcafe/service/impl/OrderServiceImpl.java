@@ -23,7 +23,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
-// Production-grade Order service with strict status transitions, mapped domain violations, and complete audit trails via OrderStatusHistory.
+// Deployment-grade Order service with strict status transitions, mapped domain violations, and complete audit trails via OrderStatusHistory.
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -216,6 +216,21 @@ public class OrderServiceImpl implements OrderService {
         return orderMapper.toResponse(order);
     }
 
+
+    @Override
+    @Transactional(readOnly = true)
+    public void validateOrderOwnership(Long orderId, Long customerId) {
+        Order order = fetchOrder(orderId);
+        if (!order.getCustomer().getId().equals(customerId)) {
+            throw new BusinessException("Order does not belong to authenticated customer");
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Order getOrderEntity(Long orderId) {
+        return fetchOrder(orderId);
+    }
 
     private Order fetchOrder(Long orderId) {
         return orderRepository.findById(orderId)

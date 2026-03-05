@@ -9,12 +9,15 @@ import com.digitalcafe.entity.Cafe;
 import com.digitalcafe.entity.CafeGallery;
 import com.digitalcafe.entity.Role;
 import com.digitalcafe.entity.User;
+import com.digitalcafe.exception.AccessDeniedException;
 import com.digitalcafe.exception.BadRequestException;
 import com.digitalcafe.exception.BusinessException;
 import com.digitalcafe.exception.ResourceNotFoundException;
 import com.digitalcafe.mapper.CafeMapper;
+import com.digitalcafe.entity.MenuItem;
 import com.digitalcafe.repository.CafeGalleryRepository;
 import com.digitalcafe.repository.CafeRepository;
+import com.digitalcafe.repository.MenuItemRepository;
 import com.digitalcafe.repository.UserRepository;
 import com.digitalcafe.service.CafeService;
 import com.digitalcafe.storage.FileStorageService;
@@ -39,6 +42,7 @@ public class CafeServiceImpl implements CafeService {
     private final CafeRepository cafeRepository;
     private final UserRepository userRepository;
     private final CafeGalleryRepository cafeGalleryRepository;
+    private final MenuItemRepository menuItemRepository;
     private final FileStorageService fileStorageService;
     private final CafeMapper cafeMapper;
 
@@ -132,6 +136,8 @@ public class CafeServiceImpl implements CafeService {
     public CafeResponse updateCafe(Long cafeId, CafeRequest request , MultipartFile logo) {
 
         log.info("Updating cafe with ID: {}", cafeId);
+
+        verifyOwnerOrAdmin(cafeId);
 
         Cafe cafe = cafeRepository.findById(cafeId)
                 .orElseThrow(() -> new ResourceNotFoundException("Cafe not found with ID: " + cafeId));
@@ -243,12 +249,30 @@ public class CafeServiceImpl implements CafeService {
     @Transactional
     public CafeResponse toggleCafeStatus(Long cafeId, boolean isActive) {
 
+        verifyOwnerOrAdmin(cafeId);
+
         Cafe cafe = cafeRepository.findById(cafeId)
                 .orElseThrow(() -> new ResourceNotFoundException("Cafe not found with ID: " + cafeId));
 
         cafe.setIsActive(isActive);
 
         return cafeMapper.toResponse(cafeRepository.save(cafe));
+    }
+
+    @Override
+    public Long getCafeIdForUser(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("Authenticated user not found"));
+        // Direct association (staff assigned to a cafe)
+        if (user.getCafe() != null && user.getCafe().getId() != null) {
+            return user.getCafe().getId();
+        }
+        // Owner: find cafes where this user is the owner
+        List<Cafe> owned = cafeRepository.findAllByOwnerIdOrderByCreatedAtDesc(user.getId());
+        if (!owned.isEmpty()) {
+            return owned.get(0).getId();
+        }
+        throw new IllegalArgumentException("Authenticated user is not assigned to any cafe");
     }
 
     private User getCurrentOwner() {
@@ -277,6 +301,8 @@ public class CafeServiceImpl implements CafeService {
     @Override
     public void uploadGallery(Long cafeId, List<MultipartFile> files) {
 
+        verifyOwnerOrAdmin(cafeId);
+
         Cafe cafe = cafeRepository.findById(cafeId)
                 .orElseThrow(() -> new ResourceNotFoundException("Cafe", "id", cafeId));
 
@@ -303,10 +329,13 @@ public class CafeServiceImpl implements CafeService {
     }
 
     @Override
+    @Transactional
     public void deleteGalleryImage(Long imageId) {
 
         CafeGallery gallery = cafeGalleryRepository.findById(imageId)
                 .orElseThrow(() -> new ResourceNotFoundException("Image", "id", imageId));
+
+        verifyOwnerOrAdmin(gallery.getCafe().getId());
 
         fileStorageService.deleteFile(gallery.getImageUrl());
 
@@ -314,7 +343,9 @@ public class CafeServiceImpl implements CafeService {
     }
 
     @Transactional
-    public void updateLogo(Long cafeId, MultipartFile file) {
+    public String updateLogo(Long cafeId, MultipartFile file) {
+
+        verifyOwnerOrAdmin(cafeId);
 
         Cafe cafe = cafeRepository.findById(cafeId)
                 .orElseThrow(() -> new ResourceNotFoundException("Cafe not found"));
@@ -328,10 +359,13 @@ public class CafeServiceImpl implements CafeService {
         cafe.setLogoUrl(newPath);
 
         cafeRepository.save(cafe);
+        return newPath;
     }
 
     @Transactional
-    public void updateCover(Long cafeId, MultipartFile file) {
+    public String updateCover(Long cafeId, MultipartFile file) {
+
+        verifyOwnerOrAdmin(cafeId);
 
         Cafe cafe = cafeRepository.findById(cafeId)
                 .orElseThrow(() -> new ResourceNotFoundException("Cafe not found"));
@@ -344,8 +378,28 @@ public class CafeServiceImpl implements CafeService {
         cafe.setCoverUrl(newPath);
 
         cafeRepository.save(cafe);
+        return newPath;
     }
 
+
+    /**
+     * Verifies the currently authenticated user is either an ADMIN or the owner of the cafe.
+     * Throws AccessDeniedException if neither condition is met.
+     */
+    private void verifyOwnerOrAdmin(Long cafeId) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null) return;
+        boolean isAdmin = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        if (isAdmin) return;
+        User currentUser = userRepository.findByEmail(auth.getName())
+                .orElseThrow(() -> new ResourceNotFoundException("Authenticated user not found"));
+        Cafe cafe = cafeRepository.findById(cafeId)
+                .orElseThrow(() -> new ResourceNotFoundException("Cafe not found with ID: " + cafeId));
+        if (!cafe.getOwner().getId().equals(currentUser.getId())) {
+            throw new AccessDeniedException("You do not have permission to modify this cafe");
+        }
+    }
 
     @Override
     public CafeResponse getMyCafe() {
@@ -430,6 +484,21 @@ public class CafeServiceImpl implements CafeService {
             throw new BadRequestException("This cafe is currently not active");
         }
 
+        // Fetch active menu items for this cafe
+        List<PublicCafeDetailResponse.PublicMenuItemResponse> menuItems =
+                menuItemRepository.findByCafeIdAndIsAvailableTrueAndIsDeletedFalse(cafe.getId())
+                        .stream()
+                        .map(mi -> PublicCafeDetailResponse.PublicMenuItemResponse.builder()
+                                .id(mi.getId())
+                                .name(mi.getName())
+                                .description(mi.getDescription())
+                                .category(mi.getCategory() != null ? mi.getCategory().name() : "OTHER")
+                                .price(mi.getPrice())
+                                .imageUrl(mi.getImageUrl())
+                                .available(mi.getIsAvailable())
+                                .build())
+                        .toList();
+
         return PublicCafeDetailResponse.builder()
                 .id(cafe.getId())
                 .name(cafe.getName())
@@ -442,9 +511,11 @@ public class CafeServiceImpl implements CafeService {
                 .email(cafe.getEmail())
                 .openTime(cafe.getOpenTime())
                 .closeTime(cafe.getCloseTime())
+                .rating(cafe.getRating())
                 .logoUrl(cafe.getLogoUrl())
                 .coverUrl(cafe.getCoverUrl())
                 .galleryImages(cafe.getGalleryImages().stream().map(CafeGallery::getImageUrl).toList())
+                .menuItems(menuItems)
                 .createdAt(cafe.getCreatedAt())
                 .build();
     }

@@ -42,6 +42,9 @@ public class DocumentStorageServiceImpl implements DocumentStorageService {
         if (!ALLOWED_CONTENT_TYPES.contains(contentType)) {
             throw new BadRequestException("Unsupported government ID proof file type");
         }
+        if (file.getSize() > 2 * 1024 * 1024) {
+            throw new BadRequestException("Government ID proof file size must be 2MB or less");
+        }
 
         String extension = extractExtension(file.getOriginalFilename());
         String storedFileName = "govt-id-" + UUID.randomUUID() + extension;

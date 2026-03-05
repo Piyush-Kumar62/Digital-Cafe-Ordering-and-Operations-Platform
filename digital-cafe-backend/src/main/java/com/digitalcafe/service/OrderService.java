@@ -73,4 +73,15 @@ public interface OrderService {
      * Activate kitchen flow only after successful payment.
      */
     OrderResponse activateOrderAfterPayment(Long orderId);
+
+    /**
+     * Validates that an order belongs to the given customer.
+     * Throws BusinessException if ownership check fails, or ResourceNotFoundException if not found.
+     */
+    void validateOrderOwnership(Long orderId, Long customerId);
+
+    /**
+     * Get the raw Order entity by ID (for internal service-to-service use).
+     */
+    Order getOrderEntity(Long orderId);
 }

@@ -41,11 +41,17 @@ public interface CafeService {
 
     void deleteGalleryImage(Long imageId);
 
-    void updateLogo(Long cafeId, MultipartFile file);
+    String updateLogo(Long cafeId, MultipartFile file);
 
-    void updateCover(Long cafeId, MultipartFile file);
+    String updateCover(Long cafeId, MultipartFile file);
 
     CafeResponse getMyCafe();
+
+    /**
+     * Returns the cafe ID for the user with the given email.
+     * Throws IllegalArgumentException if the user has no cafe assigned.
+     */
+    Long getCafeIdForUser(String email);
 
     PageResponse<PublicCafeCardResponse> getPublicActiveCafes(Pageable pageable);
 

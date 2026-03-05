@@ -36,7 +36,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
- * Production-grade Booking service implementation.
+ * Deployment-grade Booking service implementation.
  *
  * Key design decisions:
  * - Overlap detection uses DB-level interval query (start_time < end AND end_time > start).

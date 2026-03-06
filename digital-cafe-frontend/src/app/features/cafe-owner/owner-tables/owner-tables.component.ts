@@ -4,6 +4,7 @@ import { FormsModule } from "@angular/forms";
 import { Router, ActivatedRoute } from "@angular/router";
 import { ApiService } from "@core/services/api.service";
 import { TableService } from "../services/table-service";
+import { CafeContextService } from "../services/cafe-context.service";
 import { Location } from "@angular/common";
 
 @Component({
@@ -67,12 +68,20 @@ export class OwnerTablesComponent implements OnInit {
     private location: Location,
     private route: ActivatedRoute,
     private router: Router,
+    private cafeCtx: CafeContextService,
   ) {}
 
   ngOnInit(): void {
     const queryId = this.route.snapshot.queryParamMap.get("cafeId");
     if (queryId) {
       this.activeCafeId = +queryId;
+      this.loadTables();
+      return;
+    }
+    // Use context-selected cafe
+    const activeCafe = this.cafeCtx.activeCafe;
+    if (activeCafe) {
+      this.activeCafeId = activeCafe.id;
       this.loadTables();
       return;
     }

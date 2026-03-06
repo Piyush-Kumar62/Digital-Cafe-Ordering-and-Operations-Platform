@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════
-   Chef Dashboard — Premium Kitchen UI
+   Chef Dashboard — Premium Chef UI
    ═══════════════════════════════════════════ */
 
 :host {
@@ -130,7 +130,9 @@
   box-shadow: var(--shadow);
   border: 1px solid var(--border);
   overflow: hidden;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
 
   &:hover {
     transform: translateY(-3px);
@@ -229,9 +231,15 @@
   font-size: 1.15rem;
 }
 
-.pending-icon { color: var(--pending-color); }
-.preparing-icon { color: var(--preparing-color); }
-.ready-icon { color: var(--ready-color); }
+.pending-icon {
+  color: var(--pending-color);
+}
+.preparing-icon {
+  color: var(--preparing-color);
+}
+.ready-icon {
+  color: var(--ready-color);
+}
 
 .section-title {
   font-size: 1.15rem;
@@ -254,8 +262,12 @@
   background: var(--pending-color);
 }
 
-.preparing-count { background: var(--preparing-color); }
-.ready-count { background: var(--ready-color); }
+.preparing-count {
+  background: var(--preparing-color);
+}
+.ready-count {
+  background: var(--ready-color);
+}
 
 /* ===== EMPTY STATE ===== */
 .empty-state {
@@ -299,7 +311,9 @@
   border: 1px solid var(--border);
   border-radius: var(--radius);
   overflow: hidden;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
   display: flex;
   flex-direction: column;
 
@@ -476,7 +490,11 @@
   align-items: center;
   gap: 12px;
   padding: 16px 20px;
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.05));
+  background: linear-gradient(
+    135deg,
+    rgba(16, 185, 129, 0.1),
+    rgba(5, 150, 105, 0.05)
+  );
   border: 1px solid rgba(16, 185, 129, 0.2);
   border-radius: var(--radius);
   color: #059669;
@@ -488,7 +506,9 @@
     animation: ring 2s ease-in-out infinite;
   }
 
-  p { margin: 0; }
+  p {
+    margin: 0;
+  }
 }
 
 :host-context(.dark) .ready-banner {
@@ -551,21 +571,42 @@
 
 /* ===== ANIMATIONS ===== */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @keyframes ring {
-  0%, 100% { transform: rotate(0deg); }
-  20% { transform: rotate(12deg); }
-  40% { transform: rotate(-12deg); }
-  60% { transform: rotate(8deg); }
-  80% { transform: rotate(-8deg); }
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  20% {
+    transform: rotate(12deg);
+  }
+  40% {
+    transform: rotate(-12deg);
+  }
+  60% {
+    transform: rotate(8deg);
+  }
+  80% {
+    transform: rotate(-8deg);
+  }
 }
 
 /* ===== RESPONSIVE ===== */

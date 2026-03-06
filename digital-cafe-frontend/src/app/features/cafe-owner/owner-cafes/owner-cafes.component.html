@@ -59,6 +59,14 @@
             ></i>
             {{ $any(cafe).isActive ? "Active" : "Inactive" }}
           </div>
+          <div
+            class="context-active-badge"
+            *ngIf="isActiveCafe(cafe)"
+            title="Currently managing this café"
+          >
+            <i class="bi bi-lightning-charge-fill"></i>
+            <span>Managing</span>
+          </div>
         </div>
 
         <div class="cafe-details">
@@ -144,6 +152,28 @@
               [queryParams]="{ cafeId: cafe.id }"
             >
               <i class="bi bi-people"></i> Manage Staff
+            </button>
+            <button
+              class="btn-manage"
+              [routerLink]="['/owner/orders']"
+              [queryParams]="{ cafeId: cafe.id }"
+            >
+              <i class="bi bi-cart3"></i> Manage Orders
+            </button>
+            <button
+              class="btn-manage"
+              [routerLink]="['/owner/bookings']"
+              [queryParams]="{ cafeId: cafe.id }"
+            >
+              <i class="bi bi-calendar-check"></i> Manage Bookings
+            </button>
+            <button
+              class="btn-set-active"
+              *ngIf="!isActiveCafe(cafe)"
+              (click)="setActiveCafe(cafe)"
+              title="Set as active café for dashboard"
+            >
+              <i class="bi bi-lightning-charge"></i> Set as Active
             </button>
             <button
               class="btn-toggle"

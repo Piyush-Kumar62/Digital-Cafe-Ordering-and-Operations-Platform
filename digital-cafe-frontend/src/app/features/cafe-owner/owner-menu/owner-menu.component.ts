@@ -4,6 +4,7 @@ import { FormsModule } from "@angular/forms";
 import { ActivatedRoute, Router } from "@angular/router";
 import { ApiService } from "@core/services/api.service";
 import { AlertService } from "@core/services/alert.service";
+import { CafeContextService } from "../services/cafe-context.service";
 import {
   MenuCategory,
   MenuItem,
@@ -71,6 +72,7 @@ export class OwnerMenuComponent implements OnInit {
     private alertService: AlertService,
     private router: Router,
     private route: ActivatedRoute,
+    private cafeCtx: CafeContextService,
   ) {}
 
   ngOnInit(): void {
@@ -81,6 +83,14 @@ export class OwnerMenuComponent implements OnInit {
       this.loadItems();
       return;
     }
+    // Use context-selected cafe
+    const activeCafe = this.cafeCtx.activeCafe;
+    if (activeCafe) {
+      this.cafeId = activeCafe.id;
+      this.loadItems();
+      return;
+    }
+    // Fallback: load via API
     this.apiService.cafeExistsForOwner().subscribe({
       next: (exists) => {
         if (!exists) {

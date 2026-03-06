@@ -15,6 +15,7 @@ import { catchError, switchMap, startWith } from "rxjs/operators";
 import { ApiService } from "@core/services/api.service";
 import { AlertService } from "@core/services/alert.service";
 import { OwnerDashboard } from "@shared/models/dashboard.model";
+import { CafeContextService } from "../services/cafe-context.service";
 import { Chart, registerables } from "chart.js";
 
 Chart.register(...registerables);
@@ -146,6 +147,7 @@ export class CafeOwnerDashboardComponent
     private alertService: AlertService,
     private router: Router,
     private cdr: ChangeDetectorRef,
+    private cafeCtx: CafeContextService,
   ) {}
 
   ngOnInit(): void {
@@ -179,6 +181,15 @@ export class CafeOwnerDashboardComponent
       this.refreshing = true;
     } else {
       this.loading = true;
+    }
+
+    // Use the context-selected cafe when available; otherwise load via API
+    const activeCafe = this.cafeCtx.activeCafe;
+    if (activeCafe) {
+      this.cafeId = activeCafe.id;
+      this.cafeName = activeCafe.name || "My Cafe";
+      this.fetchAllDashboardData();
+      return;
     }
 
     this.apiService.cafeExistsForOwner().subscribe({

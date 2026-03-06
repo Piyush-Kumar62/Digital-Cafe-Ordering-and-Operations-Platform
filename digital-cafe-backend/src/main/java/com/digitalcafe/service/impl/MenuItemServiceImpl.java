@@ -205,9 +205,11 @@ public class MenuItemServiceImpl implements MenuItemService {
         if (!actor.hasRole(Role.RoleName.CAFE_OWNER)) {
             throw new AccessDeniedException("Only cafe owner can manage menu items");
         }
-        Long actorCafeId = actor.getCafe() != null ? actor.getCafe().getId() : null;
-        if (actorCafeId == null || !actorCafeId.equals(cafeId)) {
-            throw new AccessDeniedException("Cafe owner cannot manage menu items from another cafe");
+        // Check actual cafe ownership — supports owners with multiple cafes
+        Cafe targetCafe = cafeRepository.findById(cafeId)
+                .orElseThrow(() -> new ResourceNotFoundException("Cafe not found with ID: " + cafeId));
+        if (!targetCafe.getOwner().getId().equals(actor.getId())) {
+            throw new AccessDeniedException("You do not own this cafe");
         }
     }
 

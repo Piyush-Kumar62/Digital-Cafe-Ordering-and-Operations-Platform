@@ -1,69 +1,107 @@
 <div class="container" *ngIf="dashboard as d; else loadingTpl">
-      <div class="grid">
-        <div class="card users">
-          <div class="card-top"><h3>Total Users</h3><span class="chip">USERS</span></div>
-          <p>{{ d.totalUsers }}</p>
-        </div>
-        <div class="card cafes">
-          <div class="card-top"><h3>Total Cafes</h3><span class="chip">CAFES</span></div>
-          <p>{{ d.totalCafes }}</p>
-        </div>
-        <div class="card bookings">
-          <div class="card-top"><h3>Total Bookings</h3><span class="chip">BOOKINGS</span></div>
-          <p>{{ d.totalBookings }}</p>
-        </div>
-        <div class="card orders">
-          <div class="card-top"><h3>Total Orders</h3><span class="chip">ORDERS</span></div>
-          <p>{{ d.totalOrders }}</p>
-        </div>
-        <div class="card revenue-today">
-          <div class="card-top"><h3>Today Revenue</h3><span class="chip">TODAY</span></div>
-          <p>{{ d.todayRevenue }}</p>
-        </div>
-        <div class="card revenue-month">
-          <div class="card-top"><h3>Month Revenue</h3><span class="chip">MONTH</span></div>
-          <p>{{ d.thisMonthRevenue }}</p>
-        </div>
+  <div class="grid">
+    <div class="card users">
+      <div class="card-top">
+        <h3>Total Users</h3>
+        <span class="chip">USERS</span>
       </div>
+      <p>{{ d.totalUsers }}</p>
+    </div>
+    <div class="card cafes">
+      <div class="card-top">
+        <h3>Total Cafes</h3>
+        <span class="chip">CAFES</span>
+      </div>
+      <p>{{ d.totalCafes }}</p>
+    </div>
+    <div class="card bookings">
+      <div class="card-top">
+        <h3>Total Bookings</h3>
+        <span class="chip">BOOKINGS</span>
+      </div>
+      <p>{{ d.totalBookings }}</p>
+    </div>
+    <div class="card orders">
+      <div class="card-top">
+        <h3>Total Orders</h3>
+        <span class="chip">ORDERS</span>
+      </div>
+      <p>{{ d.totalOrders }}</p>
+    </div>
+    <div class="card revenue-today">
+      <div class="card-top">
+        <h3>Today Revenue</h3>
+        <span class="chip">TODAY</span>
+      </div>
+      <p>₹{{ d.todayRevenue | number: "1.2-2" }}</p>
+    </div>
+    <div class="card revenue-month">
+      <div class="card-top">
+        <h3>Month Revenue</h3>
+        <span class="chip">MONTH</span>
+      </div>
+      <p>₹{{ d.thisMonthRevenue | number: "1.2-2" }}</p>
+    </div>
+  </div>
 
-      <div class="split">
-        <div class="panel">
-          <h2>Users by Role</h2>
-          <div *ngFor="let item of roleEntries" class="role-line">
-            <div class="role-head">
-              <span>{{ item[0] }}</span>
-              <strong>{{ item[1] }}</strong>
-            </div>
-            <div class="role-bar">
-              <span class="fill" [style.width]="getRoleWidth(item[1])"></span>
-            </div>
-          </div>
+  <div class="split">
+    <div class="panel">
+      <h2>Users by Role</h2>
+      <div *ngFor="let item of roleEntries" class="role-line">
+        <div class="role-head">
+          <span>{{ item[0] }}</span>
+          <strong>{{ item[1] }}</strong>
         </div>
-        <div class="panel">
-          <h2>Weekly Growth</h2>
-          <div class="table-wrap">
-            <table>
-              <thead><tr><th>Date</th><th>Users</th><th>Orders</th><th>Bookings</th><th>Revenue</th></tr></thead>
-              <tbody>
-                <tr *ngFor="let w of d.weeklyGrowth">
-                  <td>{{ w.date }}</td>
-                  <td>
-                    <span class="metric-chip users-chip">{{ w.newUsers ?? w.usersCount ?? 0 }}</span>
-                  </td>
-                  <td>
-                    <span class="metric-chip orders-chip">{{ w.newOrders ?? w.ordersCount ?? 0 }}</span>
-                  </td>
-                  <td>
-                    <span class="metric-chip bookings-chip">{{ w.newBookings ?? w.bookingsCount ?? 0 }}</span>
-                  </td>
-                  <td>
-                    <span class="metric-chip revenue-chip">{{ w.revenue ?? 0 }}</span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+        <div class="role-bar">
+          <span class="fill" [style.width]="getRoleWidth(item[1])"></span>
         </div>
       </div>
     </div>
-    <ng-template #loadingTpl><div class="container"><p class="loading-text">Loading analytics...</p></div></ng-template>
+    <div class="panel">
+      <h2>Weekly Growth</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Users</th>
+              <th>Orders</th>
+              <th>Bookings</th>
+              <th>Revenue</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let w of d.weeklyGrowth">
+              <td>{{ w.date }}</td>
+              <td>
+                <span class="metric-chip users-chip">{{
+                  w.newUsers ?? w.usersCount ?? 0
+                }}</span>
+              </td>
+              <td>
+                <span class="metric-chip orders-chip">{{
+                  w.newOrders ?? w.ordersCount ?? 0
+                }}</span>
+              </td>
+              <td>
+                <span class="metric-chip bookings-chip">{{
+                  w.newBookings ?? w.bookingsCount ?? 0
+                }}</span>
+              </td>
+              <td>
+                <span class="metric-chip revenue-chip"
+                  >₹{{ w.revenue ?? 0 | number: "1.2-2" }}</span
+                >
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+<ng-template #loadingTpl
+  ><div class="container">
+    <p class="loading-text">Loading analytics...</p>
+  </div></ng-template
+>

@@ -26,7 +26,7 @@ public class ChefOrderFlowController {
 
     @GetMapping("/orders")
     @PreAuthorize("hasRole('CHEF')")
-    public ResponseEntity<ApiResponse<List<OrderResponse>>> getKitchenOrders() {
+    public ResponseEntity<ApiResponse<List<OrderResponse>>> getChefOrders() {
         Long cafeId = getCafeIdFromAuthentication(SecurityContextHolder.getContext().getAuthentication());
         List<OrderResponse> queue = new ArrayList<>();
         // Return both PLACED (new incoming orders) and PREPARING (in-progress) orders

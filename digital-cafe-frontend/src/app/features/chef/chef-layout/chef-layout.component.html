@@ -20,7 +20,7 @@
         </div>
         <div class="brand-text">
           <h1 (click)="goToLanding()" class="brand-title">Digital Café</h1>
-          <p class="brand-subtitle">Kitchen Portal</p>
+          <p class="brand-subtitle">Chef Portal</p>
         </div>
       </div>
       <div *ngIf="isSidebarCollapsed" class="sidebar-brand-collapsed">
@@ -41,10 +41,12 @@
         class="nav-item"
         [class.collapsed-item]="isSidebarCollapsed"
         [title]="isSidebarCollapsed ? item.label : ''"
-        (click)="isMobileView ? isSidebarCollapsed = true : null"
+        (click)="isMobileView ? (isSidebarCollapsed = true) : null"
       >
         <i [class]="item.icon + ' nav-icon'"></i>
-        <span *ngIf="!isSidebarCollapsed" class="nav-label">{{ item.label }}</span>
+        <span *ngIf="!isSidebarCollapsed" class="nav-label">{{
+          item.label
+        }}</span>
         <span *ngIf="!isSidebarCollapsed" class="nav-arrow">
           <i class="bi bi-chevron-right"></i>
         </span>
@@ -65,10 +67,7 @@
     </div>
 
     <!-- Collapse Toggle (desktop only) -->
-    <button
-      (click)="toggleSidebar()"
-      class="sidebar-toggle"
-    >
+    <button (click)="toggleSidebar()" class="sidebar-toggle">
       <i class="bi bi-chevron-left" [class.rotated]="isSidebarCollapsed"></i>
     </button>
   </aside>
@@ -86,7 +85,7 @@
           <i class="bi bi-list"></i>
         </button>
         <div class="header-title-wrap">
-          <h2 class="header-title">Kitchen Dashboard</h2>
+          <h2 class="header-title">Chef Dashboard</h2>
           <p class="header-subtitle">Real-time order management</p>
         </div>
       </div>
@@ -109,17 +108,11 @@
             <div class="dropdown-header">
               <p class="dropdown-header-title">Notifications</p>
             </div>
-            <div
-              *ngIf="notifications.length === 0"
-              class="notification-empty"
-            >
+            <div *ngIf="notifications.length === 0" class="notification-empty">
               <i class="bi bi-bell-slash"></i>
               <p>No notifications yet</p>
             </div>
-            <div
-              *ngFor="let item of notifications"
-              class="notification-item"
-            >
+            <div *ngFor="let item of notifications" class="notification-item">
               <div class="notif-top">
                 <span
                   class="notif-severity"
@@ -127,7 +120,9 @@
                 >
                   {{ item.severity | titlecase }}
                 </span>
-                <span class="notif-time">{{ getNotificationTime(item.timestamp) }}</span>
+                <span class="notif-time">{{
+                  getNotificationTime(item.timestamp)
+                }}</span>
               </div>
               <p class="notif-title">{{ item.title }}</p>
               <p class="notif-message">{{ item.message }}</p>

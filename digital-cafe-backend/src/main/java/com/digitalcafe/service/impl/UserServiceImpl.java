@@ -9,6 +9,7 @@ import com.digitalcafe.entity.Profile;
 import com.digitalcafe.entity.Role;
 import com.digitalcafe.entity.User;
 import com.digitalcafe.exception.BadRequestException;
+import com.digitalcafe.exception.AccessDeniedException;
 import com.digitalcafe.exception.ResourceNotFoundException;
 import com.digitalcafe.repository.CafeRepository;
 import com.digitalcafe.repository.RoleRepository;
@@ -87,7 +88,16 @@ public class UserServiceImpl implements UserService {
             throw new BadRequestException("Only Cafe Owner can create staff");
         }
 
-        Cafe cafe = currentOwner.getCafe();
+        Cafe cafe;
+        if (request.getCafeId() != null) {
+            cafe = cafeRepository.findById(request.getCafeId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Cafe not found with ID: " + request.getCafeId()));
+            if (!cafe.getOwner().getId().equals(currentOwner.getId())) {
+                throw new AccessDeniedException("You do not own this cafe");
+            }
+        } else {
+            cafe = currentOwner.getCafe();
+        }
         if (cafe == null) {
             throw new BadRequestException("Owner is not linked to any cafe");
         }

@@ -65,6 +65,74 @@
       <span *ngIf="!isSidebarCollapsed">Back to Home</span>
     </div>
 
+    <!-- Multi-café switcher (only visible when owner has >1 café) -->
+    <div
+      class="cafe-switcher"
+      *ngIf="allCafes.length > 1"
+      [class.collapsed]="isSidebarCollapsed"
+    >
+      <button
+        class="cafe-switcher-btn"
+        (click)="toggleCafePicker()"
+        [title]="activeCafe?.name || 'Select Café'"
+      >
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          class="cafe-switcher-icon"
+        >
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+          <polyline points="9 22 9 12 15 12 15 22" />
+        </svg>
+        <span *ngIf="!isSidebarCollapsed" class="cafe-switcher-name">
+          {{ activeCafe?.name || "Select Café" }}
+        </span>
+        <svg
+          *ngIf="!isSidebarCollapsed"
+          width="12"
+          height="12"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+          class="cafe-switcher-chevron"
+          [style.transform]="cafePickerOpen ? 'rotate(180deg)' : 'rotate(0deg)'"
+        >
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+      </button>
+
+      <!-- Café dropdown list -->
+      <div *ngIf="cafePickerOpen && !isSidebarCollapsed" class="cafe-picker-list">
+        <button
+          *ngFor="let cafe of allCafes"
+          class="cafe-picker-item"
+          [class.active]="cafe.id === activeCafe?.id"
+          (click)="selectCafe(cafe)"
+        >
+          <svg
+            *ngIf="cafe.id === activeCafe?.id"
+            width="12"
+            height="12"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="3"
+            class="cafe-picker-check"
+          >
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+          <span>{{ cafe.name }}</span>
+        </button>
+      </div>
+    </div>
+
     <nav>
       <a
         *ngFor="let item of navigationItems"

@@ -1,7 +1,8 @@
 import { CommonModule } from "@angular/common";
 import { Component, OnInit } from "@angular/core";
-import { Router } from "@angular/router";
+import { Router, ActivatedRoute } from "@angular/router";
 import { ApiService } from "@core/services/api.service";
+import { CafeContextService } from "../services/cafe-context.service";
 import { Booking } from "@shared/models/booking.model";
 
 @Component({
@@ -48,9 +49,26 @@ export class OwnerBookingsComponent implements OnInit {
   constructor(
     private apiService: ApiService,
     private router: Router,
+    private route: ActivatedRoute,
+    private cafeCtx: CafeContextService,
   ) {}
 
   ngOnInit(): void {
+    // Check ?cafeId= query param (navigation from multi-cafe view)
+    const queryId = this.route.snapshot.queryParamMap.get("cafeId");
+    if (queryId) {
+      this.cafeId = +queryId;
+      this.fetchBookings();
+      return;
+    }
+    // Use context-selected cafe
+    const activeCafe = this.cafeCtx.activeCafe;
+    if (activeCafe) {
+      this.cafeId = activeCafe.id;
+      this.fetchBookings();
+      return;
+    }
+    // Fallback: load via API
     this.apiService.cafeExistsForOwner().subscribe({
       next: (exists) => {
         if (!exists) {

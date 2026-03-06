@@ -173,7 +173,7 @@ export class ChefDashboardComponent implements OnInit, OnDestroy {
       next: () => {
         this.alertService.close();
         this.alertService.success(
-          "Kitchen Started",
+          "Chef Started",
           "Order is now being prepared.",
         );
         this.loadOrders();

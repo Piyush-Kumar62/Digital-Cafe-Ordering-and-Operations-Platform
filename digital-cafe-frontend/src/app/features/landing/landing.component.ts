@@ -96,7 +96,7 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
       step: "4",
       icon: "👨‍🍳",
       title: "Chef Prepares",
-      description: "Kitchen receives your order and prepares it fresh and hot.",
+      description: "Chef receives your order and prepares it fresh and hot.",
     },
     {
       step: "5",

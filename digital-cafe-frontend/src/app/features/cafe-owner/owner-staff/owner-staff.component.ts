@@ -4,6 +4,7 @@ import { FormsModule } from "@angular/forms";
 import { Router, ActivatedRoute } from "@angular/router";
 import { ApiService } from "@core/services/api.service";
 import { AlertService } from "@core/services/alert.service";
+import { CafeContextService } from "../services/cafe-context.service";
 import { User } from "@shared/models/auth.model";
 
 @Component({
@@ -80,6 +81,7 @@ export class OwnerStaffComponent implements OnInit {
     private alertService: AlertService,
     private route: ActivatedRoute,
     private router: Router,
+    private cafeCtx: CafeContextService,
   ) {}
 
   ngOnInit(): void {
@@ -87,6 +89,13 @@ export class OwnerStaffComponent implements OnInit {
     const queryId = this.route.snapshot.queryParamMap.get("cafeId");
     if (queryId) {
       this.cafeId = +queryId;
+      this.loadStaff();
+      return;
+    }
+    // Use context-selected cafe
+    const activeCafe = this.cafeCtx.activeCafe;
+    if (activeCafe) {
+      this.cafeId = activeCafe.id;
       this.loadStaff();
       return;
     }

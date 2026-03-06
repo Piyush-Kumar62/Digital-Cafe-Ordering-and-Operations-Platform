@@ -68,7 +68,7 @@ public class DevDataInitializer implements CommandLineRunner {
 
     // ── Passwords ─────────────────────────────────────────────────────────────
     private static final String ADMIN_PW    = "Admin@123";
-    private static final String OWNER1_PW   = "Owner1@123";
+    private static final String OWNER_PW    = "Owner@123";   // primary demo owner (owner@cafe.com)
     private static final String OWNER2_PW   = "Owner2@123";
     private static final String OWNER3_PW   = "Owner3@123";
     private static final String OWNER4_PW   = "Owner4@123";
@@ -120,6 +120,23 @@ public class DevDataInitializer implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) {
+        // ── 1. Roles — always idempotent ────────────────────────────────────────
+        Role adminRole    = ensureRole(Role.RoleName.ADMIN,      "System Administrator");
+        Role ownerRole    = ensureRole(Role.RoleName.CAFE_OWNER, "Cafe Owner");
+        Role chefRole     = ensureRole(Role.RoleName.CHEF,       "Chef");
+        Role waiterRole   = ensureRole(Role.RoleName.WAITER,     "Waiter");
+        Role customerRole = ensureRole(Role.RoleName.CUSTOMER,   "Customer");
+
+        // ── 2. Admin — always idempotent ────────────────────────────────────────
+        if (!userRepository.existsByEmail("admin@cafe.com")) {
+            createAdmin(adminRole);
+        }
+
+        // ── 3. Primary demo owner — always ensure owner@cafe.com exists and is activated.
+        //    Runs on every startup so a previously-registered but still-pending account
+        //    (isActive=false / PENDING_APPROVAL) gets dev-approved automatically.
+        User owner1 = findOrCreateOwner("owner@cafe.com", "Raj",     "Sharma",   "9876540001", OWNER_PW,  ownerRole);
+
         if (cafeRepository.count() > 0) {
             log.info("[DevSeed] Cafes already present ({}) — skipping demo seed.", cafeRepository.count());
             logAllCredentials();
@@ -130,29 +147,16 @@ public class DevDataInitializer implements CommandLineRunner {
         log.info("[DevSeed]  Seeding demo data for Digital Cafe Platform");
         log.info("[DevSeed] =====================================================");
 
-        // 1. Roles
-        Role adminRole    = ensureRole(Role.RoleName.ADMIN,      "System Administrator");
-        Role ownerRole    = ensureRole(Role.RoleName.CAFE_OWNER, "Cafe Owner");
-        Role chefRole     = ensureRole(Role.RoleName.CHEF,       "Chef");
-        Role waiterRole   = ensureRole(Role.RoleName.WAITER,     "Waiter");
-        Role customerRole = ensureRole(Role.RoleName.CUSTOMER,   "Customer");
-
-        // 2. Admin
-        if (!userRepository.existsByEmail("admin@cafe.com")) {
-            createAdmin(adminRole);
-        }
-
-        // 3. Five cafe owners (owner1–owner5)  — owner1 gets 6 cafes, rest 1–2 each
-        User owner1 = findOrCreateOwner("owner1@cafe.com", "Raj",    "Sharma",   "9876540001", OWNER1_PW, ownerRole);
+        // 4. Remaining cafe owners — owner2–owner5
         User owner2 = findOrCreateOwner("owner2@cafe.com", "Priya",  "Nair",     "9876540002", OWNER2_PW, ownerRole);
         User owner3 = findOrCreateOwner("owner3@cafe.com", "Vikram", "Patel",    "9876540003", OWNER3_PW, ownerRole);
         User owner4 = findOrCreateOwner("owner4@cafe.com", "Ananya", "Iyer",     "9876540004", OWNER4_PW, ownerRole);
         User owner5 = findOrCreateOwner("owner5@cafe.com", "Suresh", "Menon",    "9876540005", OWNER5_PW, ownerRole);
 
-        // 4. Create 11 cafes: owner1=6, owner2=2, owner3=1, owner4=1, owner5=1
+        // 5. Create 11 cafes: owner=6, owner2=2, owner3=1, owner4=1, owner5=1
         List<Cafe> cafes = createAllCafes(owner1, owner2, owner3, owner4, owner5);
 
-        // 5. Tables, menu items, and staff per cafe
+        // 6. Tables, menu items, and staff per cafe
         List<User> allChefs   = new ArrayList<>();
         List<User> allWaiters = new ArrayList<>();
         for (int i = 0; i < cafes.size(); i++) {
@@ -165,16 +169,16 @@ public class DevDataInitializer implements CommandLineRunner {
             allWaiters.addAll(seedStaff(cafe, waiterRole, cafeOwner, i, false));
         }
 
-        // 6. Customers
+        // 7. Customers
         List<User> customers = batchCreateCustomers(customerRole);
 
-        // 7. Bookings + orders + payments for all cafes
+        // 8. Bookings + orders + payments for all cafes
         int totalOrders = seedDemoTransactions(cafes, customers, allChefs, allWaiters);
 
         log.info("[DevSeed] =====================================================");
         log.info("[DevSeed]  Seed complete — summary:");
         log.info("[DevSeed]   Admin      → admin@cafe.com         / {}", ADMIN_PW);
-        log.info("[DevSeed]   Owner 1    → owner1@cafe.com (6 cafes) / {}", OWNER1_PW);
+        log.info("[DevSeed]   Owner      → owner@cafe.com  (6 cafes) / {}", OWNER_PW);
         log.info("[DevSeed]   Owner 2    → owner2@cafe.com (2 cafes) / {}", OWNER2_PW);
         log.info("[DevSeed]   Owner 3    → owner3@cafe.com (1 cafe)  / {}", OWNER3_PW);
         log.info("[DevSeed]   Owner 4    → owner4@cafe.com (1 cafe)  / {}", OWNER4_PW);
@@ -197,7 +201,7 @@ public class DevDataInitializer implements CommandLineRunner {
         log.info("[DevSeed] ╠══════════════════════════════════════════════════════════════════════╣");
         log.info("[DevSeed] ║  ADMIN       admin@cafe.com                  {}                ║", ADMIN_PW);
         log.info("[DevSeed] ╠══════════════════════════════════════════════════════════════════════╣");
-        log.info("[DevSeed] ║  CAFE_OWNER  owner1@cafe.com  (6 cafes)      {}               ║", OWNER1_PW);
+        log.info("[DevSeed] ║  CAFE_OWNER  owner@cafe.com   (6 cafes)      {}               ║", OWNER_PW);
         log.info("[DevSeed] ║  CAFE_OWNER  owner2@cafe.com  (2 cafes)      {}               ║", OWNER2_PW);
         log.info("[DevSeed] ║  CAFE_OWNER  owner3@cafe.com  (1 cafe)       {}               ║", OWNER3_PW);
         log.info("[DevSeed] ║  CAFE_OWNER  owner4@cafe.com  (1 cafe)       {}               ║", OWNER4_PW);
@@ -309,10 +313,38 @@ public class DevDataInitializer implements CommandLineRunner {
 
     // ============================================================
     //  Cafe Owners — findOrCreate helper
+    //  Also activates users that were previously registered via the
+    //  sign-up flow (isActive=false / PENDING_APPROVAL) so they can
+    //  immediately use the dashboard in dev mode.
     // ============================================================
     private User findOrCreateOwner(String email, String firstName, String lastName,
                                     String phone, String pw, Role ownerRole) {
-        return userRepository.findByEmail(email).orElseGet(() -> {
+        return userRepository.findByEmail(email).map(existing -> {
+            boolean dirty = false;
+            if (!Boolean.TRUE.equals(existing.getIsActive())) {
+                existing.setIsActive(true);
+                dirty = true;
+            }
+            if (existing.getAccountStatus() != User.AccountStatus.ACTIVE) {
+                existing.setAccountStatus(User.AccountStatus.ACTIVE);
+                dirty = true;
+            }
+            if (existing.getRegistrationStatus() != User.RegistrationStatus.APPROVED) {
+                existing.setRegistrationStatus(User.RegistrationStatus.APPROVED);
+                dirty = true;
+            }
+            boolean hasOwnerRole = existing.getRoles().stream()
+                    .anyMatch(r -> r.getName() == Role.RoleName.CAFE_OWNER);
+            if (!hasOwnerRole) {
+                existing.getRoles().add(ownerRole);
+                dirty = true;
+            }
+            if (dirty) {
+                existing = userRepository.save(existing);
+                log.info("[DevSeed] Activated/updated existing owner for dev: {}", email);
+            }
+            return existing;
+        }).orElseGet(() -> {
             User u = buildBaseUser(firstName, lastName, email, email, pw);
             u.setPhoneNumber(phone);
             u.getRoles().add(ownerRole);

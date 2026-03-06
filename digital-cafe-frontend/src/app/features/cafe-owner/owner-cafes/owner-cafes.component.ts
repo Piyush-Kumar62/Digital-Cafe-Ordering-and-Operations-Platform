@@ -10,6 +10,7 @@ import {
 } from "@angular/forms";
 import { ApiService } from "@core/services/api.service";
 import { AlertService } from "@core/services/alert.service";
+import { CafeContextService } from "../services/cafe-context.service";
 import { Cafe } from "@shared/models/cafe.model";
 import { environment } from "@environments/environment";
 
@@ -62,6 +63,7 @@ export class OwnerCafesComponent implements OnInit {
     private apiService: ApiService,
     private alertService: AlertService,
     private router: Router,
+    private cafeCtx: CafeContextService,
   ) {}
 
   ngOnInit(): void {
@@ -96,12 +98,24 @@ export class OwnerCafesComponent implements OnInit {
       next: (cafes) => {
         this.cafes = cafes || [];
         this.loading = false;
+        // Refresh context with latest cafe list
+        this.cafeCtx.loadCafes().subscribe();
       },
       error: () => {
         this.loading = false;
         this.alertService.error("Failed to load your cafes.");
       },
     });
+  }
+
+  /** Switch the active cafe in context and navigate to dashboard */
+  setActiveCafe(cafe: Cafe): void {
+    this.cafeCtx.setActiveCafe(cafe);
+    this.router.navigate(["/owner/dashboard"]);
+  }
+
+  isActiveCafe(cafe: Cafe): boolean {
+    return this.cafeCtx.activeCafe?.id === cafe.id;
   }
 
   getCafeImage(cafe: Cafe): string {

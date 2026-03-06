@@ -169,9 +169,114 @@
   }
 }
 
+/* Multi-café switcher */
+.cafe-switcher {
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+  position: relative;
+
+  &.collapsed {
+    padding: 8px;
+    display: flex;
+    justify-content: center;
+  }
+}
+
+.cafe-switcher-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  border-radius: 8px;
+  color: #cbd5e1;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  overflow: hidden;
+
+  &:hover {
+    background: rgba(99, 102, 241, 0.15);
+    border-color: rgba(99, 102, 241, 0.4);
+    color: #e2e8f0;
+  }
+
+  .cafe-switcher-icon {
+    flex-shrink: 0;
+    color: #6366f1;
+  }
+
+  .cafe-switcher-name {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .cafe-switcher-chevron {
+    flex-shrink: 0;
+    transition: transform 0.2s ease;
+    color: #64748b;
+  }
+}
+
+.cafe-picker-list {
+  position: absolute;
+  top: calc(100% - 4px);
+  left: 10px;
+  right: 10px;
+  background: #1e293b;
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  z-index: 200;
+  overflow: hidden;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.cafe-picker-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 9px 12px;
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 0.82rem;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: rgba(99, 102, 241, 0.15);
+    color: #e2e8f0;
+  }
+
+  &.active {
+    color: #818cf8;
+    font-weight: 600;
+  }
+
+  .cafe-picker-check {
+    flex-shrink: 0;
+    color: #6366f1;
+  }
+
+  span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
 /* Nav */
 nav {
-  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 4px;

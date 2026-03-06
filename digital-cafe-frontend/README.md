@@ -103,7 +103,7 @@ The build artifacts will be stored in the `dist/` directory.
 
 1. **Admin** - Platform management
 2. **Café Owner** - Café and staff management
-3. **Chef** - Kitchen operations and order preparation
+3. **Chef** - Chef operations and order preparation
 4. **Waiter** - Order serving and customer service
 5. **Customer** - Browse cafés, order food, book tables
 
@@ -123,7 +123,7 @@ The build artifacts will be stored in the `dist/` directory.
 - View pending orders
 - Update order status (Preparing, Ready)
 - Real-time order notifications
-- Kitchen dashboard
+- Chef dashboard
 
 ### Waiter
 

@@ -4,13 +4,17 @@
     <div class="welcome-left">
       <h1 class="welcome-title">
         <i class="bi bi-fire welcome-icon"></i>
-        Kitchen Dashboard
+        Chef Dashboard
       </h1>
       <p class="welcome-subtitle">
-        {{ currentTime | date:'EEEE, MMMM d, y • h:mm a' }}
+        {{ currentTime | date: "EEEE, MMMM d, y • h:mm a" }}
       </p>
     </div>
-    <button class="refresh-btn" (click)="refreshOrders()" [disabled]="isLoading">
+    <button
+      class="refresh-btn"
+      (click)="refreshOrders()"
+      [disabled]="isLoading"
+    >
       <i class="bi bi-arrow-clockwise" [class.spinning]="isLoading"></i>
       Refresh
     </button>
@@ -69,7 +73,9 @@
       <div class="section-title-wrap">
         <i class="bi bi-hourglass-split section-icon pending-icon"></i>
         <h2 class="section-title">Pending Orders</h2>
-        <span class="section-count" *ngIf="pendingOrders.length > 0">{{ pendingOrders.length }}</span>
+        <span class="section-count" *ngIf="pendingOrders.length > 0">{{
+          pendingOrders.length
+        }}</span>
       </div>
     </div>
 
@@ -95,7 +101,8 @@
               <i class="bi bi-geo-alt"></i> Table {{ order.tableNumber }}
             </span>
             <span class="meta-item" *ngIf="order.placedAt || order.createdAt">
-              <i class="bi bi-clock"></i> {{ getRelativeTime(order.placedAt || order.createdAt) }}
+              <i class="bi bi-clock"></i>
+              {{ getRelativeTime(order.placedAt || order.createdAt) }}
             </span>
           </div>
 
@@ -122,7 +129,8 @@
     <!-- Pagination -->
     <div class="pager" *ngIf="pendingOrders.length > pageSize">
       <span class="range-text">
-        Showing {{ pendingRangeStart }}–{{ pendingRangeEnd }} of {{ pendingOrders.length }}
+        Showing {{ pendingRangeStart }}–{{ pendingRangeEnd }} of
+        {{ pendingOrders.length }}
       </span>
       <div class="pager-controls">
         <button
@@ -157,7 +165,11 @@
       <div class="section-title-wrap">
         <i class="bi bi-fire section-icon preparing-icon"></i>
         <h2 class="section-title">Now Preparing</h2>
-        <span class="section-count preparing-count" *ngIf="preparingOrders.length > 0">{{ preparingOrders.length }}</span>
+        <span
+          class="section-count preparing-count"
+          *ngIf="preparingOrders.length > 0"
+          >{{ preparingOrders.length }}</span
+        >
       </div>
     </div>
 
@@ -182,8 +194,12 @@
             <span class="meta-item">
               <i class="bi bi-geo-alt"></i> Table {{ order.tableNumber }}
             </span>
-            <span class="meta-item" *ngIf="order.preparingAt || order.createdAt">
-              <i class="bi bi-clock"></i> {{ getRelativeTime(order.preparingAt || order.createdAt) }}
+            <span
+              class="meta-item"
+              *ngIf="order.preparingAt || order.createdAt"
+            >
+              <i class="bi bi-clock"></i>
+              {{ getRelativeTime(order.preparingAt || order.createdAt) }}
             </span>
           </div>
 
@@ -207,7 +223,8 @@
     <!-- Pagination -->
     <div class="pager" *ngIf="preparingOrders.length > pageSize">
       <span class="range-text">
-        Showing {{ preparingRangeStart }}–{{ preparingRangeEnd }} of {{ preparingOrders.length }}
+        Showing {{ preparingRangeStart }}–{{ preparingRangeEnd }} of
+        {{ preparingOrders.length }}
       </span>
       <div class="pager-controls">
         <button
@@ -248,7 +265,10 @@
 
     <div class="ready-banner">
       <i class="bi bi-bell"></i>
-      <p>{{ readyOrders.length }} order(s) are ready and waiting for waiter pickup</p>
+      <p>
+        {{ readyOrders.length }} order(s) are ready and waiting for waiter
+        pickup
+      </p>
     </div>
   </div>
 </div>

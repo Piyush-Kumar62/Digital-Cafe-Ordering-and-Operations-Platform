@@ -11,6 +11,8 @@ import { RouterModule, Router, NavigationEnd } from "@angular/router";
 import { Subscription, interval } from "rxjs";
 import { filter } from "rxjs/operators";
 import { AuthService } from "@core/auth/auth.service";
+import { CafeContextService } from "../services/cafe-context.service";
+import { Cafe } from "@shared/models/cafe.model";
 
 interface NavigationItem {
   label: string;
@@ -37,6 +39,12 @@ export class OwnerLayoutComponent implements OnInit, OnDestroy {
   private routerEventsSub?: Subscription;
   private profilePollSub?: Subscription;
 
+  // Multi-cafe support
+  allCafes: Cafe[] = [];
+  activeCafe: Cafe | null = null;
+  cafePickerOpen = false;
+  private cafeContextSub?: Subscription;
+
   @ViewChild("profileContainer", { static: false })
   profileContainer!: ElementRef;
 
@@ -55,6 +63,7 @@ export class OwnerLayoutComponent implements OnInit, OnDestroy {
   constructor(
     private authService: AuthService,
     private router: Router,
+    private cafeCtx: CafeContextService,
   ) {
     const savedTheme = localStorage.getItem("cafe_theme");
     this.isDarkMode = savedTheme === "dark";
@@ -76,6 +85,7 @@ export class OwnerLayoutComponent implements OnInit, OnDestroy {
       .subscribe((event) => {
         const nav = event as NavigationEnd;
         this.updateRouteState(nav.urlAfterRedirects || nav.url);
+        this.cafePickerOpen = false;
       });
 
     // Poll for profile image updates from settings page
@@ -85,15 +95,41 @@ export class OwnerLayoutComponent implements OnInit, OnDestroy {
         this.profileImage = stored;
       }
     });
+
+    // Load cafes for multi-cafe switcher
+    this.cafeCtx.loadCafes().subscribe();
+    this.cafeContextSub = this.cafeCtx.allCafes$.subscribe((cafes) => {
+      this.allCafes = cafes;
+    });
+    this.cafeCtx.activeCafe$.subscribe((cafe) => {
+      this.activeCafe = cafe;
+    });
   }
 
   goHome(): void {
     this.router.navigate(["/"]);
   }
 
+  toggleCafePicker(): void {
+    this.cafePickerOpen = !this.cafePickerOpen;
+  }
+
+  selectCafe(cafe: Cafe): void {
+    this.cafeCtx.setActiveCafe(cafe);
+    this.cafePickerOpen = false;
+    // Re-navigate to the current route to trigger component reload with new cafe
+    const currentUrl = this.router.url.split("?")[0];
+    this.router
+      .navigateByUrl("/owner/dashboard", { skipLocationChange: true })
+      .then(() => {
+        this.router.navigate([currentUrl]);
+      });
+  }
+
   ngOnDestroy(): void {
     this.routerEventsSub?.unsubscribe();
     this.profilePollSub?.unsubscribe();
+    this.cafeContextSub?.unsubscribe();
   }
 
   toggleSidebar(): void {
@@ -101,6 +137,7 @@ export class OwnerLayoutComponent implements OnInit, OnDestroy {
   }
 
   logout(): void {
+    this.cafeCtx.clear();
     this.authService.logout();
     this.router.navigate(["/auth/login"]);
   }

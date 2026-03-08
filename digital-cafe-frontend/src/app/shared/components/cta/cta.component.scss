@@ -212,3 +212,25 @@
     transition: none;
   }
 }
+
+/* Dark mode only: keep light mode unchanged */
+:host-context(html.dark) .cta-shell,
+:host-context(html.dark-mode) .cta-shell,
+:host-context(body.dark-theme) .cta-shell {
+  background: linear-gradient(
+    145deg,
+    rgba(2, 6, 23, 0.95),
+    rgba(15, 23, 42, 0.94)
+  ) !important;
+  border: 1px solid rgba(71, 85, 105, 0.55) !important;
+  box-shadow:
+    0 24px 48px rgba(2, 6, 23, 0.6),
+    0 0 0 1px rgba(148, 163, 184, 0.14) inset !important;
+}
+
+:host-context(html.dark) .trust-chip,
+:host-context(html.dark-mode) .trust-chip,
+:host-context(body.dark-theme) .trust-chip {
+  background: rgba(15, 23, 42, 0.82) !important;
+  border: 1px solid rgba(100, 116, 139, 0.55) !important;
+}

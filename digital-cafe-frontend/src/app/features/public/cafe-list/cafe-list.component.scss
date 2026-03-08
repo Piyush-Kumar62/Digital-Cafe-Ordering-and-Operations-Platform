@@ -71,21 +71,36 @@
 }
 
 .cafe-hero-title {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: nowrap;
+  gap: 0.65rem;
   font-size: clamp(2.2rem, 5vw, 3.6rem);
   font-weight: 900;
   letter-spacing: -0.03em;
   line-height: 1.1;
   color: #fff;
   margin: 0 0 1rem;
+  white-space: nowrap;
   text-shadow: 0 4px 24px rgba(0, 0, 0, 0.45);
+
+  .cafe-title-icon {
+    width: 0.9em;
+    height: 0.9em;
+    display: inline-block;
+    object-fit: contain;
+    transform: translateY(-1px);
+  }
 }
 
 .cafe-hero-sub {
   font-size: 1.18rem;
   color: #cbd5e1;
-  max-width: 580px;
+  max-width: none;
   margin: 0 auto 2rem;
   line-height: 1.65;
+  white-space: nowrap;
 }
 
 // ─── Search bar ──────────────────────────────────────────────────────────────
@@ -458,6 +473,15 @@
 @media (max-width: 768px) {
   .cafe-hero-content {
     padding: 90px 1.25rem 2.5rem;
+  }
+
+  .cafe-hero-title {
+    display: flex;
+    gap: 0.45rem;
+  }
+
+  .cafe-hero-sub {
+    white-space: normal;
   }
 
   .cafe-hero-stats {

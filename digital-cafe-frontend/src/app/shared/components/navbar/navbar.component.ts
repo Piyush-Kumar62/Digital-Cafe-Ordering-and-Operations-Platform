@@ -104,7 +104,22 @@ export class NavbarComponent implements OnInit {
 
   private updateRouteContext(url: string): void {
     const pathOnly = url.split("?")[0].split("#")[0];
-    this.isLandingPage = pathOnly === "" || pathOnly === "/";
+    this.isLandingPage = this.shouldUseLandingNavbar(pathOnly);
+  }
+
+  private shouldUseLandingNavbar(path: string): boolean {
+    if (path === "" || path === "/") {
+      return true;
+    }
+
+    return (
+      path.startsWith("/cafes") ||
+      path.startsWith("/about") ||
+      path.startsWith("/contact") ||
+      path.startsWith("/auth/") ||
+      path.startsWith("/privacy") ||
+      path.startsWith("/terms")
+    );
   }
 
   getDisplayName(): string {

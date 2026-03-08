@@ -26,6 +26,7 @@ interface NavigationItem {
   label: string;
   icon: string;
   route: string;
+  iconAsset?: string;
   active?: boolean;
   expanded?: boolean;
   submenu?: {
@@ -76,8 +77,9 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
   navigationItems: NavigationItem[] = [
     {
       label: "Dashboard",
-      icon: "cup-hot",
+      icon: "cup-straw",
       route: "/admin/dashboard",
+      iconAsset: "assets/icons/coffee/coffee-svgrepo-com.svg",
       active: true,
     },
     {
@@ -123,7 +125,7 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
   ];
 
   private readonly iconClassMap: Record<string, string> = {
-    "cup-hot": "bi bi-cup-hot-fill w-6 h-6 text-lg",
+    "cup-straw": "bi bi-cup-straw w-6 h-6 text-lg",
     "people-fill": "bi bi-people-fill w-6 h-6 text-lg",
     "shop-window": "bi bi-shop-window w-6 h-6 text-lg",
     "receipt-cutoff": "bi bi-receipt-cutoff w-6 h-6 text-lg",

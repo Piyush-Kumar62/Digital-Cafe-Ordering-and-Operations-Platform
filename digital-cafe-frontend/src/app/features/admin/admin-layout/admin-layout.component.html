@@ -98,7 +98,16 @@
           [title]="isSidebarCollapsed ? item.label : ''"
         >
           <span class="flex-shrink-0 transition-transform group-hover:scale-110">
-            <i [class]="getIconClass(item.icon)"></i>
+            <ng-container *ngIf="item.iconAsset; else defaultAdminIcon">
+              <img
+                [src]="item.iconAsset"
+                [alt]="item.label + ' icon'"
+                class="sidebar-custom-icon w-6 h-6"
+              />
+            </ng-container>
+            <ng-template #defaultAdminIcon>
+              <i [class]="getIconClass(item.icon)"></i>
+            </ng-template>
           </span>
           <span *ngIf="!isSidebarCollapsed" class="ml-4 transition-all">{{
             item.label

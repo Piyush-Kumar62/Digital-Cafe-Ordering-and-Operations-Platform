@@ -145,6 +145,11 @@
 }
 
 .contact-title {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  white-space: nowrap;
   font-size: clamp(2.2rem, 5vw, 3.4rem);
   font-weight: 900;
   color: #fff;
@@ -152,6 +157,13 @@
   line-height: 1.1;
   margin: 0 0 1rem;
   text-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
+
+  i {
+    color: #fbbf24;
+    font-size: 0.82em;
+    line-height: 1;
+    transform: translateY(-1px);
+  }
 }
 
 .contact-subtitle {

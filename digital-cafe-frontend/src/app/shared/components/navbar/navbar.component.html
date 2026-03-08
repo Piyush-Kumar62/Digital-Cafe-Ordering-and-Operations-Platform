@@ -92,12 +92,21 @@
 
       <button
         class="theme-toggle"
+        [class.dark]="isDarkMode"
         (click)="toggleTheme()"
         [attr.aria-label]="
           isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'
         "
       >
-        <span class="theme-icon">{{ isDarkMode ? "☀️" : "🌙" }}</span>
+        <span class="toggle-track">
+          <span class="toggle-icon sun" aria-hidden="true">☀</span>
+          <span class="toggle-icon moon" aria-hidden="true">
+            <span class="moon-crescent"></span>
+            <span class="moon-sparkle sparkle-1">✦</span>
+            <span class="moon-sparkle sparkle-2">✦</span>
+          </span>
+          <span class="toggle-thumb" aria-hidden="true"></span>
+        </span>
       </button>
 
       <button class="menu-toggle" (click)="toggleMenu()">

@@ -182,7 +182,19 @@
   opacity: 0;
 
   .badge-icon {
-    font-size: 1.2rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+  }
+
+  .badge-icon-svg {
+    width: 1.18rem;
+    height: 1.18rem;
+    display: block;
+    object-fit: contain;
+    filter: brightness(0) saturate(100%) invert(80%) sepia(77%)
+      saturate(841%) hue-rotate(343deg) brightness(101%) contrast(97%);
   }
 
   .badge-text {
@@ -5725,12 +5737,7 @@ section::after,
 
 /* ===== Absolute single-tone page background (override all section color drift) ===== */
 :host {
-  background: linear-gradient(
-    135deg,
-    #312e81 0%,
-    #581c87 52%,
-    #831843 100%
-  ) !important;
+  background: var(--landing-unified-bg) !important;
   background-attachment: fixed;
 }
 
@@ -5791,6 +5798,27 @@ section::after,
   --landing-feel-title: #ffffff;
   --landing-feel-body: #e5e7eb;
   --landing-feel-muted: #cbd5e1;
+}
+
+:host-context(body.dark-theme) {
+  --landing-unified-bg: linear-gradient(
+    145deg,
+    #050b18 0%,
+    #0b1220 48%,
+    #0f172a 100%
+  );
+  --landing-feel-bg: linear-gradient(
+    145deg,
+    #050b18 0%,
+    #0b1220 48%,
+    #0f172a 100%
+  );
+  --landing-feel-card: rgba(15, 23, 42, 0.64);
+  --landing-feel-card-hover: rgba(30, 41, 59, 0.78);
+  --landing-feel-border: rgba(148, 163, 184, 0.24);
+  --landing-feel-title: #f8fafc;
+  --landing-feel-body: #d1d5db;
+  --landing-feel-muted: #94a3b8;
 }
 
 .hero-section,
@@ -6579,4 +6607,45 @@ section,
   -webkit-background-clip: text !important;
   -webkit-text-fill-color: transparent !important;
   background-clip: text !important;
+}
+
+/* ===== Dark-Mode Only Final Override (keep last) ===== */
+:host-context(html.dark),
+:host-context(html.dark-mode),
+:host-context(body.dark-theme),
+:host-context(.dark),
+:host-context(.dark-mode),
+:host-context(.dark-theme) {
+  --landing-unified-bg: linear-gradient(145deg, #020617 0%, #0b1220 55%, #0f172a 100%);
+  --landing-feel-bg: linear-gradient(145deg, #020617 0%, #0b1220 55%, #0f172a 100%);
+  --landing-feel-card: rgba(15, 23, 42, 0.78);
+  --landing-feel-card-hover: rgba(30, 41, 59, 0.88);
+  --landing-feel-border: rgba(71, 85, 105, 0.55);
+  --landing-feel-title: #f8fafc;
+  --landing-feel-body: #cbd5e1;
+  --landing-feel-muted: #94a3b8;
+  background: linear-gradient(145deg, #020617 0%, #0b1220 55%, #0f172a 100%) !important;
+  background-image: linear-gradient(145deg, #020617 0%, #0b1220 55%, #0f172a 100%) !important;
+}
+
+:host-context(html.dark) :is(section, .hero-section, .features-section, .how-it-works-section, .roles-section, .workflow-section, .security-section, .cafes-section, .testimonials-section, .faq-section),
+:host-context(html.dark-mode) :is(section, .hero-section, .features-section, .how-it-works-section, .roles-section, .workflow-section, .security-section, .cafes-section, .testimonials-section, .faq-section),
+:host-context(body.dark-theme) :is(section, .hero-section, .features-section, .how-it-works-section, .roles-section, .workflow-section, .security-section, .cafes-section, .testimonials-section, .faq-section),
+:host-context(.dark) :is(section, .hero-section, .features-section, .how-it-works-section, .roles-section, .workflow-section, .security-section, .cafes-section, .testimonials-section, .faq-section),
+:host-context(.dark-mode) :is(section, .hero-section, .features-section, .how-it-works-section, .roles-section, .workflow-section, .security-section, .cafes-section, .testimonials-section, .faq-section),
+:host-context(.dark-theme) :is(section, .hero-section, .features-section, .how-it-works-section, .roles-section, .workflow-section, .security-section, .cafes-section, .testimonials-section, .faq-section) {
+  background: linear-gradient(145deg, #020617 0%, #0b1220 55%, #0f172a 100%) !important;
+  background-image: linear-gradient(145deg, #020617 0%, #0b1220 55%, #0f172a 100%) !important;
+  background-color: #020617 !important;
+}
+
+:host-context(html.dark) .testimonials-section .testimonial-card,
+:host-context(html.dark-mode) .testimonials-section .testimonial-card,
+:host-context(body.dark-theme) .testimonials-section .testimonial-card,
+:host-context(.dark) .testimonials-section .testimonial-card,
+:host-context(.dark-mode) .testimonials-section .testimonial-card,
+:host-context(.dark-theme) .testimonials-section .testimonial-card {
+  background: linear-gradient(160deg, rgba(2, 6, 23, 0.96), rgba(15, 23, 42, 0.94)) !important;
+  border-color: rgba(71, 85, 105, 0.48) !important;
+  box-shadow: 0 14px 30px rgba(2, 6, 23, 0.58) !important;
 }

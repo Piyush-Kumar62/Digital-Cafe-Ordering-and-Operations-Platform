@@ -59,7 +59,8 @@
               ],
               "allowedCommonJsDependencies": [
                 "@stomp/stompjs",
-                "sockjs-client"
+                "sockjs-client",
+                "sweetalert"
               ],
               "outputHashing": "all"
             },

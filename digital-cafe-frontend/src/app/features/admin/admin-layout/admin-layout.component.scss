@@ -172,6 +172,11 @@ nav a.router-link-active::before {
   transform: scaleY(1);
 }
 
+.sidebar-custom-icon {
+  display: block;
+  object-fit: contain;
+}
+
 @keyframes dropdownAnimation {
   from {
     opacity: 0;

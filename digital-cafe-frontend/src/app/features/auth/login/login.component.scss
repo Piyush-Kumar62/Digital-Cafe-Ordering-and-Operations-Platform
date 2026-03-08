@@ -113,12 +113,23 @@
 }
 
 .auth-title {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
   font-size: 2.05rem;
   font-weight: 800;
   letter-spacing: -0.02em;
   color: var(--text-main);
   margin: 0 0 0.55rem;
   font-family: "Poppins", sans-serif;
+
+  i {
+    color: #fbbf24;
+    font-size: 0.78em;
+    line-height: 1;
+    transform: translateY(-1px);
+  }
 }
 
 .auth-subtitle {

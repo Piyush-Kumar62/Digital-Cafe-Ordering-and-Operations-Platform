@@ -7,125 +7,125 @@
   display: block;
 
   // Dark mode defaults
-  --page-bg-start:   #0b1220;
-  --page-bg-mid:     #111827;
-  --page-bg-end:     #1a1005;
-  --section-border:  rgba(255, 255, 255, 0.08);
-  --section-shadow:  0 10px 32px rgba(0, 0, 0, 0.38);
-  --heading:         #f1f5f9;
-  --text:            #cbd5e1;
-  --text-muted:      #94a3b8;
-  --accent:          #f59e0b;
-  --accent-bright:   #fbbf24;
-  --accent-dim:      rgba(245, 158, 11, 0.14);
-  --accent-border:   rgba(245, 158, 11, 0.3);
-  --surface-glass:   rgba(255, 255, 255, 0.04);
+  --page-bg-start: #0b1220;
+  --page-bg-mid: #111827;
+  --page-bg-end: #1a1005;
+  --section-border: rgba(255, 255, 255, 0.08);
+  --section-shadow: 0 10px 32px rgba(0, 0, 0, 0.38);
+  --heading: #f1f5f9;
+  --text: #cbd5e1;
+  --text-muted: #94a3b8;
+  --accent: #f59e0b;
+  --accent-bright: #fbbf24;
+  --accent-dim: rgba(245, 158, 11, 0.14);
+  --accent-border: rgba(245, 158, 11, 0.3);
+  --surface-glass: rgba(255, 255, 255, 0.04);
   --surface-glass-h: rgba(245, 158, 11, 0.07);
-  --badge-bg:        rgba(255, 255, 255, 0.06);
-  --badge-border:    rgba(255, 255, 255, 0.11);
-  --badge-text:      #e2e8f0;
+  --badge-bg: rgba(255, 255, 255, 0.06);
+  --badge-border: rgba(255, 255, 255, 0.11);
+  --badge-text: #e2e8f0;
 
   // Mission section
-  --mission-bg-a:    #1e2d1a;
-  --mission-bg-b:    #172716;
-  --mission-border:  rgba(74, 222, 128, 0.15);
+  --mission-bg-a: #1e2d1a;
+  --mission-bg-b: #172716;
+  --mission-border: rgba(74, 222, 128, 0.15);
   --mission-heading: #bbf7d0;
-  --mission-text:    #86efac;
+  --mission-text: #86efac;
   --mission-icon-bg: rgba(74, 222, 128, 0.14);
-  --mission-icon:    #4ade80;
+  --mission-icon: #4ade80;
 
   // Tech section
-  --tech-bg-a:       #1a2035;
-  --tech-bg-b:       #0f1929;
-  --tech-border:     rgba(96, 165, 250, 0.14);
-  --tech-heading:    #bfdbfe;
-  --tech-icon-bg:    rgba(96, 165, 250, 0.12);
-  --tech-icon:       #60a5fa;
+  --tech-bg-a: #1a2035;
+  --tech-bg-b: #0f1929;
+  --tech-border: rgba(96, 165, 250, 0.14);
+  --tech-heading: #bfdbfe;
+  --tech-icon-bg: rgba(96, 165, 250, 0.12);
+  --tech-icon: #60a5fa;
 
   // Serve section
-  --serve-bg-a:      #1e1a2e;
-  --serve-bg-b:      #16132b;
-  --serve-border:    rgba(167, 139, 250, 0.15);
-  --serve-heading:   #ddd6fe;
-  --serve-icon-bg:   rgba(167, 139, 250, 0.12);
-  --serve-icon:      #a78bfa;
-  --serve-item-bg:   rgba(255, 255, 255, 0.04);
+  --serve-bg-a: #1e1a2e;
+  --serve-bg-b: #16132b;
+  --serve-border: rgba(167, 139, 250, 0.15);
+  --serve-heading: #ddd6fe;
+  --serve-icon-bg: rgba(167, 139, 250, 0.12);
+  --serve-icon: #a78bfa;
+  --serve-item-bg: rgba(255, 255, 255, 0.04);
   --serve-item-border: rgba(167, 139, 250, 0.1);
   --serve-item-text: #cbd5e1;
-  --serve-item-h:    rgba(167, 139, 250, 0.07);
+  --serve-item-h: rgba(167, 139, 250, 0.07);
 
   // Features section
-  --features-bg-a:   #1e293b;
-  --features-bg-b:   #162032;
+  --features-bg-a: #1e293b;
+  --features-bg-b: #162032;
 
   // CTA section
-  --cta-bg-a:        #1a1005;
-  --cta-bg-b:        #2a1a05;
-  --cta-border:      rgba(245, 158, 11, 0.25);
-  --cta-heading:     #fbbf24;
-  --cta-text:        #d97706;
+  --cta-bg-a: #1a1005;
+  --cta-bg-b: #2a1a05;
+  --cta-border: rgba(245, 158, 11, 0.25);
+  --cta-heading: #fbbf24;
+  --cta-text: #d97706;
 }
 
 // ── Light Mode Overrides ───────────────────────────────────────────────────────
 @media (prefers-color-scheme: light) {
   :host {
-    --page-bg-start:   #faf8f5;
-    --page-bg-mid:     #f5f0e8;
-    --page-bg-end:     #fef9f0;
-    --section-border:  rgba(0, 0, 0, 0.07);
-    --section-shadow:  0 4px 24px rgba(0, 0, 0, 0.09);
-    --heading:         #1a1005;
-    --text:            #374151;
-    --text-muted:      #4b5563;
-    --accent:          #b45309;
-    --accent-bright:   #d97706;
-    --accent-dim:      rgba(180, 83, 9, 0.1);
-    --accent-border:   rgba(180, 83, 9, 0.25);
-    --surface-glass:   rgba(0, 0, 0, 0.03);
+    --page-bg-start: #faf8f5;
+    --page-bg-mid: #f5f0e8;
+    --page-bg-end: #fef9f0;
+    --section-border: rgba(0, 0, 0, 0.07);
+    --section-shadow: 0 4px 24px rgba(0, 0, 0, 0.09);
+    --heading: #1a1005;
+    --text: #374151;
+    --text-muted: #4b5563;
+    --accent: #b45309;
+    --accent-bright: #d97706;
+    --accent-dim: rgba(180, 83, 9, 0.1);
+    --accent-border: rgba(180, 83, 9, 0.25);
+    --surface-glass: rgba(0, 0, 0, 0.03);
     --surface-glass-h: rgba(180, 83, 9, 0.06);
-    --badge-bg:        rgba(0, 0, 0, 0.05);
-    --badge-border:    rgba(0, 0, 0, 0.1);
-    --badge-text:      #374151;
+    --badge-bg: rgba(0, 0, 0, 0.05);
+    --badge-border: rgba(0, 0, 0, 0.1);
+    --badge-text: #374151;
 
     // Mission section (light sage)
-    --mission-bg-a:    #f0fdf4;
-    --mission-bg-b:    #dcfce7;
-    --mission-border:  rgba(22, 163, 74, 0.18);
+    --mission-bg-a: #f0fdf4;
+    --mission-bg-b: #dcfce7;
+    --mission-border: rgba(22, 163, 74, 0.18);
     --mission-heading: #14532d;
-    --mission-text:    #166534;
+    --mission-text: #166534;
     --mission-icon-bg: rgba(22, 163, 74, 0.12);
-    --mission-icon:    #16a34a;
+    --mission-icon: #16a34a;
 
     // Tech section (light blue)
-    --tech-bg-a:       #eff6ff;
-    --tech-bg-b:       #dbeafe;
-    --tech-border:     rgba(37, 99, 235, 0.15);
-    --tech-heading:    #1e3a5f;
-    --tech-icon-bg:    rgba(37, 99, 235, 0.1);
-    --tech-icon:       #2563eb;
+    --tech-bg-a: #eff6ff;
+    --tech-bg-b: #dbeafe;
+    --tech-border: rgba(37, 99, 235, 0.15);
+    --tech-heading: #1e3a5f;
+    --tech-icon-bg: rgba(37, 99, 235, 0.1);
+    --tech-icon: #2563eb;
 
     // Serve section (light purple)
-    --serve-bg-a:      #faf5ff;
-    --serve-bg-b:      #f3e8ff;
-    --serve-border:    rgba(124, 58, 237, 0.15);
-    --serve-heading:   #3b0764;
-    --serve-icon-bg:   rgba(124, 58, 237, 0.1);
-    --serve-icon:      #7c3aed;
-    --serve-item-bg:   rgba(255, 255, 255, 0.75);
+    --serve-bg-a: #faf5ff;
+    --serve-bg-b: #f3e8ff;
+    --serve-border: rgba(124, 58, 237, 0.15);
+    --serve-heading: #3b0764;
+    --serve-icon-bg: rgba(124, 58, 237, 0.1);
+    --serve-icon: #7c3aed;
+    --serve-item-bg: rgba(255, 255, 255, 0.75);
     --serve-item-border: rgba(124, 58, 237, 0.12);
     --serve-item-text: #374151;
-    --serve-item-h:    rgba(124, 58, 237, 0.06);
+    --serve-item-h: rgba(124, 58, 237, 0.06);
 
     // Features section (light slate)
-    --features-bg-a:   #f8fafc;
-    --features-bg-b:   #f1f5f9;
+    --features-bg-a: #f8fafc;
+    --features-bg-b: #f1f5f9;
 
     // CTA section (warm amber)
-    --cta-bg-a:        #fffbeb;
-    --cta-bg-b:        #fef3c7;
-    --cta-border:      rgba(180, 83, 9, 0.22);
-    --cta-heading:     #92400e;
-    --cta-text:        #78350f;
+    --cta-bg-a: #fffbeb;
+    --cta-bg-b: #fef3c7;
+    --cta-border: rgba(180, 83, 9, 0.22);
+    --cta-heading: #92400e;
+    --cta-text: #78350f;
   }
 }
 
@@ -170,14 +170,15 @@
   z-index: 1;
   text-align: center;
   padding: 100px 1.5rem 3.5rem;
-  max-width: 700px;
+  max-width: 960px;
   margin: 0 auto;
 }
 
 .about-eyebrow {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 0.4rem;
+  width: fit-content;
   border-radius: 999px;
   padding: 0.36rem 0.9rem;
   background: rgba(245, 158, 11, 0.18);
@@ -187,31 +188,43 @@
   font-weight: 700;
   letter-spacing: 0.07em;
   text-transform: uppercase;
-  margin-bottom: 1.1rem;
+  margin: -0.1rem auto 1.1rem;
+}
+
+.about-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem;
+  width: fit-content;
+  margin: 0 auto 1rem;
 }
 
 .about-hero-icon {
-  font-size: 3rem;
+  font-size: 2.9rem;
   color: #fbbf24;
   line-height: 1;
-  margin-bottom: 1rem;
+  flex-shrink: 0;
 }
 
 .about-title {
-  font-size: clamp(2rem, 5vw, 3.2rem);
+  font-size: clamp(2.2rem, 5vw, 3.6rem);
   font-weight: 900;
   color: #fff;
   letter-spacing: -0.03em;
   line-height: 1.1;
-  margin: 0 0 1rem;
+  margin: 0;
+  white-space: nowrap;
   text-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
 }
 
 .about-hero-tagline {
-  font-size: 1.1rem;
+  font-size: 1.18rem;
   color: #e2e8f0;
   line-height: 1.65;
-  margin: 0;
+  margin: 0 auto;
+  max-width: 980px;
+  white-space: nowrap;
 }
 
 // ─── Main container ───────────────────────────────────────────────────────────
@@ -222,7 +235,7 @@
     var(--page-bg-mid) 60%,
     var(--page-bg-end) 100%
   );
-  padding: 2.5rem 1.5rem 4rem;
+  padding: 0.5rem 1.5rem 4rem;
 }
 
 .about-content {
@@ -273,11 +286,19 @@
 
 // ─── Mission section ──────────────────────────────────────────────────────────
 .about-section.mission-section {
-  background: linear-gradient(140deg, var(--mission-bg-a) 0%, var(--mission-bg-b) 100%);
+  background: linear-gradient(
+    140deg,
+    var(--mission-bg-a) 0%,
+    var(--mission-bg-b) 100%
+  );
   border-color: var(--mission-border);
 
-  h2 { color: var(--mission-heading); }
-  p  { color: var(--mission-text); }
+  h2 {
+    color: var(--mission-heading);
+  }
+  p {
+    color: var(--mission-text);
+  }
 
   .section-icon {
     background: var(--mission-icon-bg);
@@ -287,8 +308,14 @@
 
 // ─── Features section ─────────────────────────────────────────────────────────
 .about-section.features-section {
-  background: linear-gradient(140deg, var(--features-bg-a), var(--features-bg-b));
-  h2 { color: var(--heading); }
+  background: linear-gradient(
+    140deg,
+    var(--features-bg-a),
+    var(--features-bg-b)
+  );
+  h2 {
+    color: var(--heading);
+  }
 }
 
 .features-grid {
@@ -303,7 +330,9 @@
   padding: 1.5rem;
   background: var(--surface-glass);
   border: 1px solid var(--accent-border);
-  transition: transform 0.25s ease, background 0.25s ease;
+  transition:
+    transform 0.25s ease,
+    background 0.25s ease;
 
   &:hover {
     transform: translateY(-4px);
@@ -340,7 +369,9 @@
     color: var(--tech-heading);
   }
 
-  p { color: var(--text); }
+  p {
+    color: var(--text);
+  }
 
   .section-icon {
     background: var(--tech-icon-bg);
@@ -374,7 +405,9 @@
   color: var(--badge-text);
   font-size: 0.85rem;
   font-weight: 600;
-  transition: background 0.2s, border-color 0.2s;
+  transition:
+    background 0.2s,
+    border-color 0.2s;
 
   &:hover {
     background: var(--accent-dim);
@@ -394,7 +427,9 @@
   background: linear-gradient(140deg, var(--serve-bg-a), var(--serve-bg-b));
   border-color: var(--serve-border);
 
-  h2 { color: var(--serve-heading); }
+  h2 {
+    color: var(--serve-heading);
+  }
 
   .section-icon {
     background: var(--serve-icon-bg);
@@ -423,7 +458,9 @@
     line-height: 1.55;
     transition: background 0.22s;
 
-    &:hover { background: var(--serve-item-h); }
+    &:hover {
+      background: var(--serve-item-h);
+    }
 
     > i {
       font-size: 1.1rem;
@@ -432,7 +469,10 @@
       flex-shrink: 0;
     }
 
-    strong { color: var(--heading); font-weight: 700; }
+    strong {
+      color: var(--heading);
+      font-weight: 700;
+    }
   }
 }
 
@@ -455,10 +495,28 @@
   }
 }
 
+.cta-heading {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  white-space: nowrap;
+}
+
 .cta-icon {
-  font-size: 2.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.08em;
   color: var(--cta-heading);
-  margin-bottom: 0.75rem;
+  transition:
+    transform 0.25s ease,
+    filter 0.25s ease;
+}
+
+.cta-heading:hover .cta-icon {
+  transform: translateY(-2px) scale(1.06);
+  filter: drop-shadow(0 6px 10px rgba(245, 158, 11, 0.35));
 }
 
 .cta-button {
@@ -473,7 +531,9 @@
   font-size: 1rem;
   font-weight: 700;
   text-decoration: none;
-  transition: opacity 0.2s, transform 0.2s;
+  transition:
+    opacity 0.2s,
+    transform 0.2s;
   box-shadow: 0 8px 24px rgba(180, 83, 9, 0.35);
 
   &:hover {
@@ -489,10 +549,23 @@
     padding: 90px 1.25rem 2.5rem;
   }
 
+  .about-title-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .about-title,
+  .about-hero-tagline {
+    white-space: normal;
+  }
+
   .about-section {
     padding: 1.75rem 1.25rem;
 
-    h2 { font-size: 1.3rem; }
+    h2 {
+      font-size: 1.3rem;
+    }
   }
 
   .features-grid {

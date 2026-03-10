@@ -2,6 +2,7 @@ import { CommonModule } from "@angular/common";
 import { Component, OnInit } from "@angular/core";
 import { RouterModule } from "@angular/router";
 import { ApiService } from "@core/services/api.service";
+import { AlertService } from "@core/services/alert.service";
 import { Payment } from "@shared/models/payment.model";
 
 @Component({
@@ -18,7 +19,10 @@ export class MyPaymentsComponent implements OnInit {
   pageIndex = 0;
   readonly pageSize = 10;
 
-  constructor(private apiService: ApiService) {}
+  constructor(
+    private apiService: ApiService,
+    private alertService: AlertService,
+  ) {}
 
   ngOnInit(): void {
     this.apiService.getMyPayments().subscribe({
@@ -57,5 +61,56 @@ export class MyPaymentsComponent implements OnInit {
   goToPage(page: number): void {
     if (page < 0 || page >= this.totalPages) return;
     this.pageIndex = page;
+  }
+
+  fmtDate(value?: string): string {
+    if (!value) return "-";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return value;
+    return date.toLocaleString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
+
+  downloadReceipt(payment: Payment): void {
+    if (!payment?.id) {
+      return;
+    }
+    this.apiService.downloadPaymentReceipt(payment.id).subscribe({
+      next: (blob) => {
+        const receiptNo = payment.transactionId || `payment-${payment.id}`;
+        const fileName = `payment-receipt-${receiptNo}.pdf`;
+        const url = URL.createObjectURL(blob);
+        const anchor = document.createElement("a");
+        anchor.href = url;
+        anchor.download = fileName;
+        document.body.appendChild(anchor);
+        anchor.click();
+        anchor.remove();
+        URL.revokeObjectURL(url);
+      },
+      error: () => {
+        this.error = true;
+        this.alertService.error("Failed to download receipt.");
+      },
+    });
+  }
+
+  resendReceiptEmail(payment: Payment): void {
+    if (!payment?.id) {
+      return;
+    }
+    this.apiService.resendPaymentReceiptEmail(payment.id).subscribe({
+      next: () => {
+        this.alertService.success("Receipt email sent successfully.");
+      },
+      error: () => {
+        this.alertService.error("Failed to send receipt email.");
+      },
+    });
   }
 }

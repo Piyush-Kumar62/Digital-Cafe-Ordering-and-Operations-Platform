@@ -24,7 +24,9 @@ export class BrowseCafesComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
   pageIndex = 0;
-  readonly pageSize = 10;
+  readonly pageSize = 9;
+  totalElements = 0;
+  totalPages = 0;
 
   get filteredCafes(): PublicCafeCard[] {
     const q = this.searchQuery.trim().toLowerCase();
@@ -38,16 +40,7 @@ export class BrowseCafesComponent implements OnInit, OnDestroy {
   }
 
   get pagedCafes(): PublicCafeCard[] {
-    return this.filteredCafes.slice(
-      this.pageIndex * this.pageSize,
-      (this.pageIndex + 1) * this.pageSize,
-    );
-  }
-  get totalElements(): number {
-    return this.filteredCafes.length;
-  }
-  get totalPages(): number {
-    return Math.max(1, Math.ceil(this.totalElements / this.pageSize));
+    return this.filteredCafes;
   }
   get rangeStart(): number {
     return this.totalElements === 0 ? 0 : this.pageIndex * this.pageSize + 1;
@@ -56,14 +49,12 @@ export class BrowseCafesComponent implements OnInit, OnDestroy {
     return Math.min((this.pageIndex + 1) * this.pageSize, this.totalElements);
   }
   get allPages(): number[] {
-    return Array.from({ length: this.totalPages }, (_, i) => i);
+    return Array.from({ length: Math.max(this.totalPages, 1) }, (_, i) => i);
   }
   goToPage(page: number): void {
     if (page < 0 || page >= this.totalPages) return;
     this.pageIndex = page;
-  }
-  onSearchChange(): void {
-    this.pageIndex = 0;
+    this.loadPage(this.pageIndex);
   }
 
   constructor(
@@ -78,19 +69,23 @@ export class BrowseCafesComponent implements OnInit, OnDestroy {
         switchMap(() => {
           this.loading = true;
           this.error = false;
-          return this.cafeBrowseService.getPublicCafes(0, 50).pipe(
+          return this.cafeBrowseService
+            .getPublicCafes(this.pageIndex, this.pageSize)
+            .pipe(
             catchError(() => {
               this.error = true;
               this.loading = false;
               return of(null);
             }),
-          );
+            );
         }),
         takeUntil(this.destroy$),
       )
       .subscribe((res) => {
         if (res) {
           this.cafes = res.content || [];
+          this.totalPages = res.totalPages || 0;
+          this.totalElements = res.totalElements || 0;
           this.loading = false;
         }
       });
@@ -105,17 +100,18 @@ export class BrowseCafesComponent implements OnInit, OnDestroy {
     this.router.navigate(["/customer/browse-cafes", cafeId]);
   }
 
+  viewMenu(cafeId: number, event?: Event): void {
+    event?.stopPropagation();
+    this.router.navigate(["/customer/browse-cafes", cafeId]);
+  }
+
+  bookTable(cafeId: number, event?: Event): void {
+    event?.stopPropagation();
+    this.router.navigate(["/customer/booking"], { queryParams: { cafeId } });
+  }
+
   retry(): void {
-    this.error = false;
-    this.loading = true;
-    this.cafeBrowseService
-      .getPublicCafes(0, 50)
-      .pipe(catchError(() => of(null)))
-      .subscribe((res) => {
-        this.cafes = res?.content || [];
-        this.loading = false;
-        this.error = !res;
-      });
+    this.loadPage(this.pageIndex);
   }
 
   fmt12h(val: string | undefined | null): string {
@@ -127,5 +123,22 @@ export class BrowseCafesComponent implements OnInit, OnDestroy {
     const meridian = h >= 12 ? "PM" : "AM";
     h = h % 12 || 12;
     return `${h}:${min} ${meridian}`;
+  }
+
+  private loadPage(page: number): void {
+    this.loading = true;
+    this.error = false;
+    this.cafeBrowseService.getPublicCafes(page, this.pageSize).subscribe({
+      next: (res) => {
+        this.cafes = res.content || [];
+        this.totalPages = res.totalPages || 0;
+        this.totalElements = res.totalElements || 0;
+        this.loading = false;
+      },
+      error: () => {
+        this.error = true;
+        this.loading = false;
+      },
+    });
   }
 }

@@ -12,6 +12,20 @@
     #f1f5f9;
 }
 
+:host-context(body.dark-theme) .customer-layout {
+  background:
+    radial-gradient(circle at 0% 0%, rgba(14, 165, 233, 0.16), transparent 38%),
+    radial-gradient(circle at 100% 100%, rgba(37, 99, 235, 0.14), transparent 35%),
+    #0a1420;
+}
+
+:host-context(body.light-theme) .customer-layout {
+  background:
+    radial-gradient(circle at 0% 0%, rgba(14, 165, 233, 0.12), transparent 38%),
+    radial-gradient(circle at 100% 100%, rgba(37, 99, 235, 0.1), transparent 35%),
+    #f1f5f9;
+}
+
 .sidebar-container {
   flex-shrink: 0;
 }

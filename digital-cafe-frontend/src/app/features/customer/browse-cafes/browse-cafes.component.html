@@ -19,7 +19,6 @@
         class="search-input"
         placeholder="Search by name, city or keyword…"
         [(ngModel)]="searchQuery"
-        (ngModelChange)="onSearchChange()"
         autocomplete="off"
       />
       <span class="search-badge" *ngIf="searchQuery">
@@ -73,64 +72,78 @@
   <div class="cafe-grid" *ngIf="!loading && !error && filteredCafes.length > 0">
     <article
       class="cafe-card"
-      *ngFor="let cafe of pagedCafes"
+      *ngFor="let cafe of pagedCafes; let i = index"
       (click)="openCafe(cafe.id)"
       (keydown.enter)="openCafe(cafe.id)"
       tabindex="0"
       role="button"
       [attr.aria-label]="'Browse ' + cafe.name"
     >
-      <!-- Cover image -->
-      <div class="card-img-wrap">
+      <!-- Image -->
+      <div class="cafe-card-img-wrap">
         <img
           [src]="cafe.imageUrl || 'assets/cafe/cafe-interior-pexels-01.jpg'"
           [alt]="cafe.name"
-          class="card-img"
-          loading="lazy"
+          class="cafe-card-img"
+          [attr.loading]="i < 2 ? 'eager' : 'lazy'"
           onerror="this.src = 'assets/cafe/cafe-interior-pexels-01.jpg'"
         />
-        <div class="card-img-overlay"></div>
-        <!-- Rating badge -->
-        <span class="rating-badge" *ngIf="cafe.rating && cafe.rating > 0">
-          <span class="material-icons">star</span>
+        <div class="cafe-card-img-overlay"></div>
+        <span class="cafe-rating" *ngIf="cafe.rating && cafe.rating > 0">
+          <i class="bi bi-star-fill"></i>
           {{ cafe.rating | number: "1.1-1" }}
         </span>
         <span
-          class="rating-badge new-badge"
+          class="cafe-rating cafe-rating--new"
           *ngIf="!cafe.rating || cafe.rating === 0"
         >
           New
         </span>
       </div>
 
-      <!-- Card content -->
-      <div class="card-body">
-        <h3 class="card-name">{{ cafe.name }}</h3>
+      <!-- Content -->
+      <div class="cafe-card-body">
+        <h3 class="cafe-card-name">{{ cafe.name }}</h3>
 
-        <p class="card-location" *ngIf="cafe.location">
-          <span class="material-icons">location_on</span>
-          {{ cafe.location }}
+        <p class="cafe-card-location" *ngIf="cafe.location">
+          <i class="bi bi-geo-alt-fill"></i> {{ cafe.location }}
         </p>
 
-        <p class="card-desc">
+        <p class="cafe-card-desc">
           {{ cafe.description || "A wonderful café experience awaits you." }}
         </p>
 
-        <div class="card-footer">
-          <span class="card-hours" *ngIf="cafe.openTime || cafe.closeTime">
-            <span class="material-icons">schedule</span>
-            {{ fmt12h(cafe.openTime) || "—" }} –
-            {{ fmt12h(cafe.closeTime) || "—" }}
+        <div class="cafe-card-footer">
+          <span class="cafe-card-time">
+            <i class="bi bi-clock"></i>
+            <ng-container *ngIf="cafe.openTime || cafe.closeTime">
+              {{ fmt12h(cafe.openTime) || "—" }} –
+              {{ fmt12h(cafe.closeTime) || "—" }}
+            </ng-container>
+            <ng-container *ngIf="!cafe.openTime && !cafe.closeTime">
+              Hours not specified
+            </ng-container>
           </span>
-          <span class="card-cta">
-            View Menu <span class="material-icons">arrow_forward</span>
-          </span>
+          <div class="cafe-card-actions">
+            <button
+              class="cafe-card-btn cafe-card-btn--secondary"
+              (click)="viewMenu(cafe.id, $event)"
+            >
+              View Menu
+            </button>
+            <button
+              class="cafe-card-btn cafe-card-btn--primary"
+              (click)="bookTable(cafe.id, $event)"
+            >
+              Book Table
+            </button>
+          </div>
         </div>
       </div>
     </article>
   </div>
 
-  <div class="pager" *ngIf="totalElements > 0">
+  <div class="pager" *ngIf="!loading && !error && totalElements > 0">
     <div class="pager-left">
       <span class="range-text"
         >Showing {{ rangeStart }}–{{ rangeEnd }} of {{ totalElements }}</span

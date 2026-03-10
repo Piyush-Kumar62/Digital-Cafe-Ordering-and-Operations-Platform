@@ -6,12 +6,6 @@ import { Booking, BookingRequest } from '@shared/models/booking.model';
 import { environment } from '@environments/environment';
 import { Cafe, Table } from '@shared/models/cafe.model';
 
-interface AvailabilityTableDto {
-  tableId: number;
-  capacity: number;
-  isAvailable: boolean;
-}
-
 @Injectable({
   providedIn: 'root'
 })
@@ -29,18 +23,15 @@ export class BookingService {
   }
 
   getAvailableTables(cafeId: number, date?: string, timeSlot?: string): Observable<Table[]> {
-    if (date && timeSlot) {
-      const params = new HttpParams()
-        .set('cafeId', String(cafeId))
-        .set('date', date)
-        .set('timeSlot', timeSlot);
-      return this.http
-        .get<{ data?: Table[] }>(`${this.tableApiUrl}/available`, { params })
-        .pipe(map((res) => res?.data || []));
+    let params = new HttpParams().set('cafeId', String(cafeId));
+    if (date) {
+      params = params.set('date', date);
     }
-
+    if (timeSlot) {
+      params = params.set('timeSlot', timeSlot);
+    }
     return this.http
-      .get<{ data?: Table[] }>(`${this.tableApiUrl}/cafe/${cafeId}/available`)
+      .get<{ data?: Table[] }>(`${this.tableApiUrl}/available`, { params })
       .pipe(map((res) => res?.data || []));
   }
 
@@ -48,23 +39,13 @@ export class BookingService {
     let params = new HttpParams()
       .set('cafeId', String(cafeId))
       .set('date', date)
-      .set('time', time);
+      .set('timeSlot', time);
     if (typeof seats === 'number' && seats > 0) {
       params = params.set('seats', String(seats));
     }
     return this.http
-      .get<{ data?: AvailabilityTableDto[] }>(`${this.bookingApiUrl}/availability`, { params })
-      .pipe(
-        map((res) =>
-          (res?.data || []).map((item) => ({
-            id: item.tableId,
-            tableNumber: `Table ${item.tableId}`,
-            capacity: item.capacity,
-            isAvailable: item.isAvailable,
-            cafeId,
-          })),
-        ),
-      );
+      .get<{ data?: Table[] }>(`${this.tableApiUrl}/available`, { params })
+      .pipe(map((res) => (res?.data || []).filter((t) => t.isAvailable !== false)));
   }
 
   getActiveCafes(): Observable<Cafe[]> {

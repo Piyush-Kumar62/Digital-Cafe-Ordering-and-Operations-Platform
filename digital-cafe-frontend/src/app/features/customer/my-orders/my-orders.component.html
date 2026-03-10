@@ -13,8 +13,26 @@
           {{ order.totalAmount | currency: "INR" }}
         </p>
         <p>
+          Café:
+          <strong>{{ order.cafeName || ("Cafe #" + order.cafeId) }}</strong>
+        </p>
+        <p>
+          Booking:
+          <strong>{{ order.bookingNumber || ("#" + order.bookingId) }}</strong>
+        </p>
+        <p>
           Status: <strong>{{ order.status }}</strong>
         </p>
+        <p>
+          Payment:
+          <strong>{{
+            order.payment?.status || (order.status === "PENDING_PAYMENT" ? "PENDING" : "-")
+          }}</strong>
+          <span *ngIf="order.payment?.transactionId">
+            • {{ order.payment?.transactionId }}
+          </span>
+        </p>
+        <p>Placed: {{ fmtDate(order.placedAt || order.createdAt) }}</p>
       </div>
       <a [routerLink]="['/customer/order-tracking', order.id]">Track</a>
     </article>

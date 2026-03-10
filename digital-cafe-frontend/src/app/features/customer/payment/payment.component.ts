@@ -2,6 +2,7 @@ import { CommonModule } from "@angular/common";
 import { Component, OnInit } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { ActivatedRoute, Router, RouterModule } from "@angular/router";
+import { AuthService } from "@core/auth/auth.service";
 import { ApiService } from "@core/services/api.service";
 import { AlertService } from "@core/services/alert.service";
 import { Order } from "@shared/models/order.model";
@@ -32,6 +33,7 @@ export class PaymentComponent implements OnInit {
   readonly methods = [
     PaymentMethod.UPI,
     PaymentMethod.CARD,
+    PaymentMethod.NET_BANKING,
     PaymentMethod.WALLET,
   ];
   readonly PaymentStatus = PaymentStatus;
@@ -40,6 +42,7 @@ export class PaymentComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
+    private authService: AuthService,
     private apiService: ApiService,
     private alertService: AlertService,
   ) {}
@@ -77,15 +80,42 @@ export class PaymentComponent implements OnInit {
         this.payment = payment;
         this.alertService.close();
 
-        // Decide flow: real Razorpay vs TEST simulation
-        if (
-          payment.paymentGatewayOrderId?.startsWith("order_") &&
-          environment.razorpayKeyId
-        ) {
-          this.openRazorpayCheckout(payment);
-        } else {
-          this.runSimulatedPayment(payment);
+        const gateway = (payment.paymentGateway || "").toUpperCase();
+
+        // TEST mode may be auto-completed in backend.
+        if (payment.status === PaymentStatus.COMPLETED) {
+          this.processing = false;
+          this.alertService.success(
+            "Payment Successful! 🎉",
+            "Your order has been confirmed and sent to the kitchen.",
+          );
+          this.goToTracking();
+          return;
         }
+
+        if (gateway === "RAZORPAY") {
+          if (!environment.razorpayKeyId) {
+            this.processing = false;
+            this.alertService.error(
+              "Razorpay key missing in frontend config.",
+              "Add razorpayKeyId in environment and retry.",
+            );
+            return;
+          }
+          this.openRazorpayCheckout(payment);
+          return;
+        }
+
+        if (gateway === "TEST") {
+          this.runSimulatedPayment(payment);
+          return;
+        }
+
+        this.processing = false;
+        this.alertService.error(
+          "Payment Gateway Error",
+          "Backend payment gateway is not configured as Razorpay.",
+        );
       },
       error: (err) => {
         this.processing = false;
@@ -100,6 +130,46 @@ export class PaymentComponent implements OnInit {
 
   /** Opens the Razorpay checkout popup with real keys */
   private openRazorpayCheckout(payment: Payment): void {
+    const selectedMethod = String(this.selectedMethod || "").toUpperCase();
+    const methodConfig =
+      selectedMethod === "UPI"
+        ? {
+            upi: true,
+            card: false,
+            netbanking: false,
+            wallet: false,
+            emi: false,
+            paylater: false,
+          }
+        : selectedMethod === "CARD"
+          ? {
+              upi: true,
+              card: true,
+              netbanking: true,
+              wallet: true,
+              emi: true,
+              paylater: true,
+            }
+          : selectedMethod === "NET_BANKING"
+            ? {
+                upi: false,
+                card: false,
+                netbanking: true,
+                wallet: false,
+                emi: false,
+                paylater: false,
+              }
+          : selectedMethod === "WALLET"
+            ? {
+                upi: false,
+                card: false,
+                netbanking: false,
+                wallet: true,
+                emi: false,
+                paylater: false,
+              }
+            : undefined;
+
     const options = {
       key: environment.razorpayKeyId,
       amount: Math.round(Number(payment.amount) * 100), // paise
@@ -115,7 +185,23 @@ export class PaymentComponent implements OnInit {
           response.razorpay_signature,
         );
       },
-      prefill: {},
+      prefill: this.getRazorpayPrefill(),
+      method: methodConfig,
+      config:
+        selectedMethod === "UPI"
+          ? {
+              display: {
+                blocks: {
+                  upi: {
+                    name: "Pay using UPI",
+                    instruments: [{ method: "upi" }],
+                  },
+                },
+                sequence: ["block.upi"],
+                preferences: { show_default_blocks: false },
+              },
+            }
+          : undefined,
       theme: { color: "#4F46E5" },
       modal: {
         ondismiss: () => {
@@ -132,16 +218,53 @@ export class PaymentComponent implements OnInit {
       },
     };
 
-    try {
-      const rzp = new Razorpay(options);
-      rzp.open();
-    } catch (e) {
-      this.processing = false;
-      this.alertService.error(
-        "Checkout Error",
-        "Could not open payment window. Please try again.",
-      );
+    this.ensureRazorpayLoaded()
+      .then(() => {
+        const rzp = new Razorpay(options);
+        rzp.open();
+      })
+      .catch(() => {
+        this.processing = false;
+        this.alertService.error(
+          "Checkout Error",
+          "Could not open payment window. Please try again.",
+        );
+      });
+  }
+
+  private getRazorpayPrefill(): { name?: string; email?: string } {
+    const user = this.authService.currentUserValue;
+    if (!user) {
+      return {};
     }
+    const fullName = `${user.firstName || ""} ${user.lastName || ""}`.trim();
+    return {
+      name: fullName || user.username || "Digital Cafe Customer",
+      email: user.email || undefined,
+    };
+  }
+
+  private ensureRazorpayLoaded(): Promise<void> {
+    if (typeof Razorpay !== "undefined") {
+      return Promise.resolve();
+    }
+    return new Promise((resolve, reject) => {
+      const existing = document.getElementById("razorpay-checkout-js") as
+        | HTMLScriptElement
+        | null;
+      if (existing) {
+        existing.addEventListener("load", () => resolve(), { once: true });
+        existing.addEventListener("error", () => reject(), { once: true });
+        return;
+      }
+      const script = document.createElement("script");
+      script.id = "razorpay-checkout-js";
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.async = true;
+      script.onload = () => resolve();
+      script.onerror = () => reject();
+      document.body.appendChild(script);
+    });
   }
 
   /** Simulates payment verification for TEST gateway mode */

@@ -23,6 +23,27 @@
       Auto-refreshing every 5 seconds
     </p>
 
+    <div class="bg-indigo-50 border border-indigo-100 rounded-lg p-4 mb-8">
+      <p class="text-sm text-gray-700">
+        <strong>Cafe:</strong>
+        {{ currentOrder.cafeName || ("Cafe #" + currentOrder.cafeId) }}
+      </p>
+      <p class="text-sm text-gray-700">
+        <strong>Booking:</strong>
+        {{ currentOrder.bookingNumber || ("#" + currentOrder.bookingId) }}
+      </p>
+      <p class="text-sm text-gray-700">
+        <strong>Payment:</strong>
+        {{ currentOrder.payment?.status || "-" }}
+        <span *ngIf="currentOrder.payment?.transactionId">
+          • {{ currentOrder.payment?.transactionId }}
+        </span>
+      </p>
+      <p class="text-sm text-gray-700">
+        <strong>Placed:</strong> {{ fmtDate(currentOrder.placedAt || currentOrder.createdAt) }}
+      </p>
+    </div>
+
     <div class="w-full px-4 sm:px-0">
       <div class="flex justify-between items-center">
         <ng-container *ngFor="let step of orderStatusSteps; let i = index">

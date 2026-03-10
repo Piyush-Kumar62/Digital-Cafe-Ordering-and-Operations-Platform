@@ -28,6 +28,45 @@
   }
 }
 
+:host-context(body.light-theme) {
+  .sidebar {
+    background: linear-gradient(180deg, #f8fbff 0%, #e9f1fb 100%);
+    border-right-color: rgba(99, 125, 155, 0.24);
+    color: #4b6078;
+  }
+
+  .sidebar-header {
+    border-bottom-color: rgba(99, 125, 155, 0.24);
+  }
+
+  .sidebar-header .logo {
+    color: #0f172a;
+  }
+
+  .sidebar-nav ul li a {
+    color: #4b6078;
+  }
+
+  .sidebar-nav ul li a:hover {
+    background: rgba(37, 99, 235, 0.1);
+    color: #0f172a;
+  }
+
+  .sidebar-nav ul li a.active {
+    color: #fff;
+  }
+
+  .sidebar-footer {
+    border-top-color: rgba(99, 125, 155, 0.24);
+  }
+
+  .sidebar-footer button {
+    background: rgba(37, 99, 235, 0.1);
+    border-color: rgba(37, 99, 235, 0.22);
+    color: #1e3a8a;
+  }
+}
+
 .sidebar-header {
   padding: 20px 18px;
   display: flex;

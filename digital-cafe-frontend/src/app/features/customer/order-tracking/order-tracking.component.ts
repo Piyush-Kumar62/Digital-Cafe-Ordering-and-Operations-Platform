@@ -30,6 +30,7 @@ export class OrderTrackingComponent implements OnInit, OnDestroy {
   private pollSub?: Subscription;
   private destroy$ = new Subject<void>();
   orderStatusSteps: OrderStatus[] = [
+    OrderStatus.PENDING_PAYMENT,
     OrderStatus.PLACED,
     OrderStatus.PREPARING,
     OrderStatus.READY,
@@ -98,6 +99,19 @@ export class OrderTrackingComponent implements OnInit, OnDestroy {
 
   getItemTotal(item: any): number {
     return item?.totalPrice ?? item?.subtotal ?? 0;
+  }
+
+  fmtDate(value?: string): string {
+    if (!value) return "-";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return value;
+    return date.toLocaleString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   }
 
   private startLiveTracking(orderId: number): void {

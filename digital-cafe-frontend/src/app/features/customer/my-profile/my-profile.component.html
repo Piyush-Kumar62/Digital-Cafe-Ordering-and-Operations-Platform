@@ -1,28 +1,280 @@
-<section class="page">
-      <header>
-        <h1>My Profile</h1>
-        <p>Profile details used for bookings and orders.</p>
-      </header>
-
-      <article class="card" *ngIf="profile; else loading">
-        <div class="row"><strong>Phone:</strong> <span>{{ profile.phoneNumber || '-' }}</span></div>
-        <div class="row"><strong>Date of Birth:</strong> <span>{{ profile.dateOfBirth || '-' }}</span></div>
-        <div class="row"><strong>Gender:</strong> <span>{{ profile.gender || '-' }}</span></div>
-        <div class="row"><strong>Completion:</strong> <span>{{ profile.profileCompletionPercentage || 0 }}%</span></div>
-        <div class="row"><strong>Address:</strong>
-          <span>
-            {{ profile.address?.street || '-' }},
-            {{ profile.address?.city || '-' }},
-            {{ profile.address?.zipCode || '-' }}
-          </span>
+<section class="profile-page">
+  <ng-container *ngIf="!loading; else loadingView">
+    <div class="profile-layout" *ngIf="!loadError; else errorView">
+      <aside class="profile-summary card">
+        <div class="avatar-wrap">
+          <img [src]="profileImageSrc" alt="Profile image" (error)="onAvatarError($event)" />
+          <div class="avatar-actions">
+            <label class="ghost-btn" [class.disabled]="uploadingImage">
+              {{ uploadingImage ? "Uploading..." : "Upload Image" }}
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/webp,image/avif"
+                (change)="onProfileImageSelected($event)"
+                [disabled]="uploadingImage"
+                hidden
+              />
+            </label>
+            <button
+              type="button"
+              class="ghost-btn danger"
+              (click)="removeProfileImage()"
+              [disabled]="removingImage"
+            >
+              {{ removingImage ? "Removing..." : "Remove" }}
+            </button>
+          </div>
         </div>
-        <div class="actions">
-          <a routerLink="/customer/complete-profile">Update Profile</a>
-        </div>
-      </article>
 
-      <ng-template #loading>
-        <div class="card" *ngIf="!loadError">Loading profile...</div>
-        <div class="card" *ngIf="loadError">{{ loadError }}</div>
-      </ng-template>
-    </section>
+        <h2>{{ form.get("displayName")?.value || "Customer" }}</h2>
+        <p>{{ user?.email || "-" }}</p>
+
+        <div class="completion-block">
+          <div class="completion-label">
+            <span>Profile Completion</span>
+            <strong>{{ profileCompletion }}%</strong>
+          </div>
+          <div class="progress-track">
+            <span class="progress-fill" [style.width.%]="profileCompletion"></span>
+          </div>
+        </div>
+      </aside>
+
+      <form class="profile-editor card" [formGroup]="form" (ngSubmit)="saveProfile()" novalidate>
+        <div class="heading-row">
+          <div>
+            <h1>My Profile</h1>
+            <p>Edit your complete profile used across booking, orders and payments.</p>
+          </div>
+          <button class="save-btn" type="submit" [disabled]="saving">
+            {{ saving ? "Saving..." : "Save Profile" }}
+          </button>
+        </div>
+
+        <section class="form-section">
+          <h3>Basic Details</h3>
+          <div class="grid three">
+            <label>
+              First Name
+              <input type="text" formControlName="firstName" />
+              <small class="err">{{ fieldError(form.get("firstName"), "First Name") }}</small>
+            </label>
+            <label>
+              Last Name
+              <input type="text" formControlName="lastName" />
+              <small class="err">{{ fieldError(form.get("lastName"), "Last Name") }}</small>
+            </label>
+            <label>
+              Display Name
+              <input type="text" formControlName="displayName" />
+              <small class="err">{{ fieldError(form.get("displayName"), "Display Name") }}</small>
+            </label>
+          </div>
+
+          <div class="grid three">
+            <label>
+              Date of Birth
+              <input type="date" formControlName="dateOfBirth" />
+              <small class="err">{{ fieldError(form.get("dateOfBirth"), "Date of Birth") }}</small>
+            </label>
+            <label>
+              Gender
+              <select formControlName="gender">
+                <option value="">Select</option>
+                <option value="MALE">Male</option>
+                <option value="FEMALE">Female</option>
+                <option value="OTHER">Other</option>
+              </select>
+              <small class="err">{{ fieldError(form.get("gender"), "Gender") }}</small>
+            </label>
+            <label>
+              Phone Number
+              <input type="tel" formControlName="phoneNumber" maxlength="20" />
+              <small class="err">{{ fieldError(form.get("phoneNumber"), "Phone Number") }}</small>
+            </label>
+          </div>
+        </section>
+
+        <section class="form-section">
+          <h3>Address</h3>
+          <div class="grid two">
+            <label>
+              Street
+              <input type="text" formControlName="street" />
+              <small class="err">{{ fieldError(form.get("street"), "Street") }}</small>
+            </label>
+            <label>
+              Plot Number
+              <input type="text" formControlName="plotNumber" />
+              <small class="err">{{ fieldError(form.get("plotNumber"), "Plot Number") }}</small>
+            </label>
+          </div>
+
+          <div class="grid four">
+            <label>
+              City
+              <input type="text" formControlName="city" />
+              <small class="err">{{ fieldError(form.get("city"), "City") }}</small>
+            </label>
+            <label>
+              State
+              <input type="text" formControlName="state" />
+            </label>
+            <label>
+              Country
+              <input type="text" formControlName="country" />
+            </label>
+            <label>
+              Pincode
+              <input type="text" formControlName="pincode" />
+              <small class="err">{{ fieldError(form.get("pincode"), "Pincode") }}</small>
+            </label>
+          </div>
+        </section>
+
+        <section class="form-section" formArrayName="academicInformation">
+          <div class="section-head">
+            <h3>Academic Information</h3>
+            <button type="button" class="mini-btn" (click)="addAcademicRecord()">+ Add</button>
+          </div>
+
+          <div
+            class="nested-card"
+            *ngFor="let academic of academicInformation.controls; let i = index; trackBy: trackByIndex"
+            [formGroupName]="i"
+          >
+            <div class="nested-head">
+              <span>Record {{ i + 1 }}</span>
+              <button
+                type="button"
+                class="mini-btn danger"
+                (click)="removeAcademicRecord(i)"
+                [disabled]="academicInformation.length <= 1"
+              >
+                Remove
+              </button>
+            </div>
+
+            <div class="grid two">
+              <label>
+                Institution Name
+                <input type="text" formControlName="institutionName" />
+                <small class="err">{{ fieldError(academic.get("institutionName"), "Institution Name") }}</small>
+              </label>
+              <label>
+                Degree
+                <input type="text" formControlName="degree" />
+                <small class="err">{{ fieldError(academic.get("degree"), "Degree") }}</small>
+              </label>
+            </div>
+
+            <div class="grid four">
+              <label>
+                Field of Study
+                <input type="text" formControlName="fieldOfStudy" />
+              </label>
+              <label>
+                Start Date
+                <input type="date" formControlName="startDate" />
+              </label>
+              <label>
+                End Date
+                <input type="date" formControlName="endDate" />
+              </label>
+              <label>
+                Grade
+                <input type="text" formControlName="grade" />
+              </label>
+            </div>
+
+            <label class="checkbox-row">
+              <input type="checkbox" formControlName="isCurrent" />
+              Currently studying
+            </label>
+
+            <label>
+              Description
+              <textarea rows="2" formControlName="description"></textarea>
+            </label>
+          </div>
+        </section>
+
+        <section class="form-section" formArrayName="workExperiences">
+          <div class="section-head">
+            <h3>Work Experience (Optional)</h3>
+            <button type="button" class="mini-btn" (click)="addWorkExperience()">+ Add</button>
+          </div>
+
+          <div
+            class="nested-card"
+            *ngFor="let work of workExperiences.controls; let i = index; trackBy: trackByIndex"
+            [formGroupName]="i"
+          >
+            <div class="nested-head">
+              <span>Experience {{ i + 1 }}</span>
+              <button type="button" class="mini-btn danger" (click)="removeWorkExperience(i)">Remove</button>
+            </div>
+
+            <div class="grid two">
+              <label>
+                Company Name
+                <input type="text" formControlName="companyName" />
+                <small class="err">{{ fieldError(work.get("companyName"), "Company Name") }}</small>
+              </label>
+              <label>
+                Position
+                <input type="text" formControlName="position" />
+                <small class="err">{{ fieldError(work.get("position"), "Position") }}</small>
+              </label>
+            </div>
+
+            <div class="grid four">
+              <label>
+                Start Date
+                <input type="date" formControlName="startDate" />
+                <small class="err">{{ fieldError(work.get("startDate"), "Start Date") }}</small>
+              </label>
+              <label>
+                End Date
+                <input type="date" formControlName="endDate" />
+              </label>
+              <label>
+                Location
+                <input type="text" formControlName="location" />
+              </label>
+              <label class="checkbox-row inline">
+                <input type="checkbox" formControlName="isCurrent" />
+                Currently working
+              </label>
+            </div>
+
+            <div class="grid two">
+              <label>
+                Description
+                <textarea rows="2" formControlName="description"></textarea>
+              </label>
+              <label>
+                Responsibilities
+                <textarea rows="2" formControlName="responsibilities"></textarea>
+              </label>
+            </div>
+          </div>
+        </section>
+
+        <div class="bottom-save">
+          <button class="save-btn" type="submit" [disabled]="saving">
+            {{ saving ? "Saving..." : "Save Profile" }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </ng-container>
+
+  <ng-template #loadingView>
+    <div class="card state-card">Loading profile...</div>
+  </ng-template>
+
+  <ng-template #errorView>
+    <div class="card state-card error">{{ loadError }}</div>
+  </ng-template>
+</section>

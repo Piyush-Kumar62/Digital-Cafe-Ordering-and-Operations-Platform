@@ -10,6 +10,7 @@ import { User } from "@shared/models/auth.model";
 import { Subject, Subscription, takeUntil } from "rxjs";
 import { WebSocketService } from "@core/websocket/websocket.service";
 import { Router } from "@angular/router";
+import { ThemeService } from "@core/services/theme.service";
 
 type HeaderNotification = {
   id: string;
@@ -39,6 +40,7 @@ export class CustomerHeaderComponent implements OnInit {
   isSavingProfile = false;
   uploadingImage = false;
   imageVersion = Date.now();
+  isDarkMode = false;
   profileForm = {
     firstName: "",
     lastName: "",
@@ -54,6 +56,7 @@ export class CustomerHeaderComponent implements OnInit {
     private alertService: AlertService,
     private webSocketService: WebSocketService,
     private router: Router,
+    private themeService: ThemeService,
   ) {}
 
   ngOnInit(): void {
@@ -66,6 +69,8 @@ export class CustomerHeaderComponent implements OnInit {
     });
     this.loadProfile();
     this.setupNotificationStream();
+    this.themeService.syncFromStorage();
+    this.isDarkMode = this.themeService.isDarkMode();
   }
 
   ngOnDestroy(): void {
@@ -264,5 +269,30 @@ export class CustomerHeaderComponent implements OnInit {
   logout(): void {
     this.authService.logout();
     this.router.navigate(["/auth/login"]);
+  }
+
+  toggleTheme(): void {
+    this.isDarkMode = !this.isDarkMode;
+    this.themeService.setTheme(this.isDarkMode);
+  }
+
+  @HostListener("window:storage", ["$event"])
+  onStorageThemeChange(event: StorageEvent): void {
+    if (event.key !== "theme" && event.key !== "cafe_theme") {
+      return;
+    }
+    this.themeService.syncFromStorage();
+    this.isDarkMode = this.themeService.isDarkMode();
+  }
+
+  @HostListener("window:theme-changed", ["$event"])
+  onThemeChanged(event: Event): void {
+    const customEvent = event as CustomEvent<{ dark: boolean }>;
+    if (typeof customEvent?.detail?.dark === "boolean") {
+      this.isDarkMode = customEvent.detail.dark;
+      return;
+    }
+    this.themeService.syncFromStorage();
+    this.isDarkMode = this.themeService.isDarkMode();
   }
 }

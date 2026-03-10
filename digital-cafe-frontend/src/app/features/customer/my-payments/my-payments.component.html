@@ -11,8 +11,11 @@
           <th>Transaction</th>
           <th>Order</th>
           <th>Amount</th>
+          <th>Method</th>
           <th>Status</th>
           <th>Date</th>
+          <th>Receipt</th>
+          <th>Email</th>
         </tr>
       </thead>
       <tbody>
@@ -20,10 +23,21 @@
           <td>{{ payment.transactionId || "Payment #" + payment.id }}</td>
           <td>{{ payment.orderNumber || payment.orderId }}</td>
           <td>{{ payment.amount | currency: "INR" }}</td>
+          <td>{{ payment.paymentMethod || "-" }}</td>
           <td>
             <span class="status">{{ payment.status }}</span>
           </td>
-          <td>{{ payment.completedAt || payment.initiatedAt || "-" }}</td>
+          <td>{{ fmtDate(payment.completedAt || payment.initiatedAt) }}</td>
+          <td>
+            <button class="receipt-btn" (click)="downloadReceipt(payment)">
+              Download PDF
+            </button>
+          </td>
+          <td>
+            <button class="email-btn" (click)="resendReceiptEmail(payment)">
+              Send Email
+            </button>
+          </td>
         </tr>
       </tbody>
     </table>

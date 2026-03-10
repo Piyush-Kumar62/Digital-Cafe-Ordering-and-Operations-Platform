@@ -2,10 +2,11 @@ package com.digitalcafe.service.impl;
 
 import com.digitalcafe.email.EmailTemplateType;
 import com.digitalcafe.service.EmailService;
-import jakarta.annotation.PostConstruct;
+import com.digitalcafe.util.PaymentReceiptPdfGenerator;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,6 +21,7 @@ import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.time.Year;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -64,30 +66,6 @@ public class EmailServiceImpl implements EmailService {
 
     @Value("${spring.mail.port:587}")
     private int smtpPort;
-
-    // ── Startup validation ───────────────────────────────────────────────────
-
-    @PostConstruct
-    public void validateEmailConfig() {
-        boolean credentialsMissing = smtpUsername.isBlank() || smtpPassword.isBlank();
-        if (!emailEnabled) {
-            log.warn("[Email] Email sending is DISABLED (app.email.enabled=false). No emails will be sent.");
-        } else if (credentialsMissing) {
-            log.warn("=================================================================");
-            log.warn("[Email] ⚠️  EMAIL CREDENTIALS NOT CONFIGURED — emails will NOT be sent!");
-            log.warn("[Email] Values read from environment:");
-            log.warn("[Email]   MAIL_HOST     = {}", smtpHost);
-            log.warn("[Email]   MAIL_PORT     = {}", smtpPort);
-            log.warn("[Email]   MAIL_USERNAME = {}", smtpUsername.isBlank() ? "<blank — not set>" : smtpUsername);
-            log.warn("[Email]   MAIL_PASSWORD = {}", smtpPassword.isBlank() ? "<blank — not set>" : "***set***");
-            log.warn("[Email] Fix: set MAIL_USERNAME and MAIL_PASSWORD in digital-cafe-backend/.env");
-            log.warn("[Email] Gmail App Password guide: https://myaccount.google.com/apppasswords");
-            log.warn("=================================================================");
-        } else {
-            log.info("[Email] ✅ Email ready — host={}:{}, from={} <{}>",
-                    smtpHost, smtpPort, fromName, fromEmail);
-        }
-    }
 
     // ── EmailService implementation ──────────────────────────────────────────
 
@@ -177,6 +155,37 @@ public class EmailServiceImpl implements EmailService {
 
     @Async("emailTaskExecutor")
     @Override
+    public void sendPaymentReceipt(String to, String username, String receiptNumber, String paymentDetails) {
+        log.info("[Email] Queuing PAYMENT_RECEIPT -> {}", to);
+        Map<String, Object> vars = new HashMap<>();
+        vars.put("username", username);
+        vars.put("receiptNumber", receiptNumber);
+        vars.put("paymentDetails", paymentDetails);
+        vars.put("paymentsUrl", frontendUrl + "/customer/payments");
+        vars.put("ordersUrl", frontendUrl + "/customer/orders");
+
+        try {
+            byte[] pdfBytes = PaymentReceiptPdfGenerator.generate(receiptNumber, username, paymentDetails);
+            EmailAttachment receiptAttachment = new EmailAttachment(
+                    "payment-receipt-" + receiptNumber + ".pdf",
+                    "application/pdf",
+                    pdfBytes
+            );
+            internalSend(
+                    to,
+                    "Payment Receipt - " + receiptNumber,
+                    EmailTemplateType.PAYMENT_RECEIPT,
+                    vars,
+                    List.of(receiptAttachment)
+            );
+        } catch (Exception ex) {
+            log.warn("[Email] Failed to generate PDF receipt for {}: {}", to, ex.getMessage());
+            internalSend(to, "Payment Receipt - " + receiptNumber, EmailTemplateType.PAYMENT_RECEIPT, vars);
+        }
+    }
+
+    @Async("emailTaskExecutor")
+    @Override
     public void sendLoginNotification(String to, String username, String loginTime) {
         log.info("[Email] Queuing LOGIN_NOTIFICATION -> {}", to);
         Map<String, Object> vars = new HashMap<>();
@@ -204,6 +213,15 @@ public class EmailServiceImpl implements EmailService {
             String subject,
             EmailTemplateType templateType,
             Map<String, Object> variables) {
+        internalSend(to, subject, templateType, variables, List.of());
+    }
+
+    private void internalSend(
+            String to,
+            String subject,
+            EmailTemplateType templateType,
+            Map<String, Object> variables,
+            List<EmailAttachment> attachments) {
 
         // Guard: skip silently if not configured rather than throwing a cryptic SMTP auth error
         if (!emailEnabled) {
@@ -236,6 +254,13 @@ public class EmailServiceImpl implements EmailService {
             helper.setTo(to);
             helper.setSubject(subject);
             helper.setText("", html);
+            for (EmailAttachment attachment : attachments) {
+                helper.addAttachment(
+                        attachment.fileName(),
+                        new ByteArrayResource(attachment.content()),
+                        attachment.contentType()
+                );
+            }
 
             mailSender.send(message);
             log.info("[Email] ✅ Sent {} -> {}", templateType, to);
@@ -248,6 +273,9 @@ public class EmailServiceImpl implements EmailService {
     private String processTemplate(EmailTemplateType templateType, Map<String, Object> variables) {
         Context context = new Context(Locale.ENGLISH, variables);
         return templateEngine.process(templateType.getTemplateName(), context);
+    }
+
+    private record EmailAttachment(String fileName, String contentType, byte[] content) {
     }
 
     /**

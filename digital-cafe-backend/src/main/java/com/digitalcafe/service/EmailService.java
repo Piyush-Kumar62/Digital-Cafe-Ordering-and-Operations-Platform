@@ -19,6 +19,7 @@ public interface EmailService {
     }
     void sendComprehensiveRegistrationSuccess(String to, String username);
     void sendOrderConfirmation(String to, String orderDetails);
+    void sendPaymentReceipt(String to, String username, String receiptNumber, String paymentDetails);
     void sendBookingConfirmation(String to, String bookingDetails);
     /** Sends a login-notification email to the user after each successful sign-in. */
     void sendLoginNotification(String to, String username, String loginTime);

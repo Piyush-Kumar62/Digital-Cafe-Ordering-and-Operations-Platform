@@ -41,10 +41,27 @@ public interface CafeMapper {
     void updateCafeFromRequest(CafeRequest request, @MappingTarget Cafe cafe);
 
     default String getOwnerName(Cafe cafe) {
-        if (cafe.getOwner() != null && cafe.getOwner().getProfile() != null) {
-            return cafe.getOwner().getProfile().getFullName();
+        if (cafe == null || cafe.getOwner() == null) {
+            return null;
         }
-        return null;
+        var owner = cafe.getOwner();
+        if (owner.getProfile() != null && owner.getProfile().getFullName() != null
+                && !owner.getProfile().getFullName().isBlank()) {
+            return owner.getProfile().getFullName();
+        }
+        if (owner.getDisplayName() != null && !owner.getDisplayName().isBlank()) {
+            return owner.getDisplayName();
+        }
+        String first = owner.getFirstName() != null ? owner.getFirstName().trim() : "";
+        String last = owner.getLastName() != null ? owner.getLastName().trim() : "";
+        String full = (first + " " + last).trim();
+        if (!full.isBlank()) {
+            return full;
+        }
+        if (owner.getEmail() != null && !owner.getEmail().isBlank()) {
+            return owner.getEmail();
+        }
+        return "Unknown Owner";
     }
 
     default Integer countAvailableTables(Cafe cafe) {

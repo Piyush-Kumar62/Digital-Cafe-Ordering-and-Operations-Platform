@@ -33,6 +33,7 @@ public enum EmailTemplateType {
 
     // ── Orders ───────────────────────────────────────────────────────────────
     ORDER_CONFIRMATION("order-confirmation"),
+    PAYMENT_RECEIPT("payment-receipt"),
     ORDER_READY("order-ready"),
     ORDER_SERVED("order-served"),
 

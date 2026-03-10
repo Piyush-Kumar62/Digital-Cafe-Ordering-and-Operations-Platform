@@ -82,7 +82,7 @@ public class TableServiceImpl implements TableService {
 
         Cafe cafe = getCafeByOwner(ownerId);
 
-        return tableRepository.findByCafeIdAndIsAvailableTrue(cafe.getId())
+        return tableRepository.findByCafeIdAndIsAvailable(cafe.getId(), true)
                 .stream()
                 .map(tableMapper::toResponse)
                 .collect(Collectors.toList());
@@ -163,8 +163,9 @@ public class TableServiceImpl implements TableService {
 
     @Override
     public List<TableResponse> getAvailableTables(Long cafeId, java.time.LocalDateTime bookingTime, Integer seatsRequired) {
-        return tableRepository.findByCafeIdAndIsAvailableTrue(cafeId).stream()
-                .filter(t -> t.getCapacity() >= seatsRequired)
+        int requiredSeats = (seatsRequired != null && seatsRequired > 0) ? seatsRequired : 1;
+        return tableRepository.findByCafeIdAndIsAvailable(cafeId, true).stream()
+                .filter(t -> t.getCapacity() != null && t.getCapacity() >= requiredSeats)
                 .map(tableMapper::toResponse)
                 .collect(Collectors.toList());
     }

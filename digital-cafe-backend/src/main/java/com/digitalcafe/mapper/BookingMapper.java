@@ -44,9 +44,26 @@ public interface BookingMapper {
     Booking toEntity(BookingRequest request);
 
     default String getCustomerName(Booking booking) {
-        if (booking.getCustomer() != null && booking.getCustomer().getProfile() != null) {
-            return booking.getCustomer().getProfile().getFullName();
+        if (booking == null || booking.getCustomer() == null) {
+            return null;
         }
-        return null;
+        var customer = booking.getCustomer();
+        if (customer.getProfile() != null && customer.getProfile().getFullName() != null
+                && !customer.getProfile().getFullName().isBlank()) {
+            return customer.getProfile().getFullName();
+        }
+        if (customer.getDisplayName() != null && !customer.getDisplayName().isBlank()) {
+            return customer.getDisplayName();
+        }
+        String first = customer.getFirstName() != null ? customer.getFirstName().trim() : "";
+        String last = customer.getLastName() != null ? customer.getLastName().trim() : "";
+        String full = (first + " " + last).trim();
+        if (!full.isBlank()) {
+            return full;
+        }
+        if (customer.getEmail() != null && !customer.getEmail().isBlank()) {
+            return customer.getEmail();
+        }
+        return "Unknown Customer";
     }
 }

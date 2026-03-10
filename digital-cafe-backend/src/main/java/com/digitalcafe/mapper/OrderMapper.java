@@ -34,24 +34,69 @@ public interface OrderMapper {
     List<OrderResponse.OrderItemResponse> toOrderItemResponseList(List<OrderItem> orderItems);
 
     default String getCustomerName(Order order) {
-        if (order.getCustomer() != null && order.getCustomer().getProfile() != null) {
-            return order.getCustomer().getProfile().getFullName();
+        if (order == null || order.getCustomer() == null) {
+            return null;
         }
-        return null;
+        var customer = order.getCustomer();
+        if (customer.getProfile() != null && customer.getProfile().getFullName() != null
+                && !customer.getProfile().getFullName().isBlank()) {
+            return customer.getProfile().getFullName();
+        }
+        if (customer.getDisplayName() != null && !customer.getDisplayName().isBlank()) {
+            return customer.getDisplayName();
+        }
+        String first = customer.getFirstName() != null ? customer.getFirstName().trim() : "";
+        String last = customer.getLastName() != null ? customer.getLastName().trim() : "";
+        String full = (first + " " + last).trim();
+        if (!full.isBlank()) {
+            return full;
+        }
+        if (customer.getEmail() != null && !customer.getEmail().isBlank()) {
+            return customer.getEmail();
+        }
+        return "Unknown Customer";
     }
 
     default String getChefName(Order order) {
-        if (order.getPreparingByChef() != null && order.getPreparingByChef().getProfile() != null) {
-            return order.getPreparingByChef().getProfile().getFullName();
+        if (order == null || order.getPreparingByChef() == null) {
+            return null;
         }
-        return null;
+        var chef = order.getPreparingByChef();
+        if (chef.getProfile() != null && chef.getProfile().getFullName() != null
+                && !chef.getProfile().getFullName().isBlank()) {
+            return chef.getProfile().getFullName();
+        }
+        if (chef.getDisplayName() != null && !chef.getDisplayName().isBlank()) {
+            return chef.getDisplayName();
+        }
+        String first = chef.getFirstName() != null ? chef.getFirstName().trim() : "";
+        String last = chef.getLastName() != null ? chef.getLastName().trim() : "";
+        String full = (first + " " + last).trim();
+        if (!full.isBlank()) {
+            return full;
+        }
+        return chef.getEmail();
     }
 
     default String getWaiterName(Order order) {
-        if (order.getServedByWaiter() != null && order.getServedByWaiter().getProfile() != null) {
-            return order.getServedByWaiter().getProfile().getFullName();
+        if (order == null || order.getServedByWaiter() == null) {
+            return null;
         }
-        return null;
+        var waiter = order.getServedByWaiter();
+        if (waiter.getProfile() != null && waiter.getProfile().getFullName() != null
+                && !waiter.getProfile().getFullName().isBlank()) {
+            return waiter.getProfile().getFullName();
+        }
+        if (waiter.getDisplayName() != null && !waiter.getDisplayName().isBlank()) {
+            return waiter.getDisplayName();
+        }
+        String first = waiter.getFirstName() != null ? waiter.getFirstName().trim() : "";
+        String last = waiter.getLastName() != null ? waiter.getLastName().trim() : "";
+        String full = (first + " " + last).trim();
+        if (!full.isBlank()) {
+            return full;
+        }
+        return waiter.getEmail();
     }
 
     default OrderResponse.PaymentSummary mapPaymentSummary(Order order) {

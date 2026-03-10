@@ -27,8 +27,16 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
      * Look up a payment by the Razorpay-generated order ID (created at order initiation).
      */
     Optional<Payment> findByPaymentGatewayOrderId(String paymentGatewayOrderId);
+    Optional<Payment> findByPaymentGatewayPaymentId(String paymentGatewayPaymentId);
+
     @Query("SELECT p FROM Payment p JOIN FETCH p.order WHERE p.id = :paymentId")
     Optional<Payment> findByIdWithOrder(Long paymentId);
+
+    @Query("SELECT p FROM Payment p JOIN FETCH p.order o JOIN FETCH o.customer WHERE p.id = :paymentId")
+    Optional<Payment> findByIdWithOrderAndCustomer(@Param("paymentId") Long paymentId);
+
+    @Query("SELECT p FROM Payment p JOIN FETCH p.order o JOIN FETCH o.customer WHERE p.paymentGatewayOrderId = :gatewayOrderId")
+    Optional<Payment> findByGatewayOrderIdWithOrderAndCustomer(@Param("gatewayOrderId") String gatewayOrderId);
 
     @Query("SELECT p FROM Payment p JOIN FETCH p.order WHERE p.order.customer.id = :customerId ORDER BY p.id DESC")
     List<Payment> findByCustomerId(@Param("customerId") Long customerId);

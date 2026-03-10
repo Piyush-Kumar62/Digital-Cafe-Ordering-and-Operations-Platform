@@ -55,6 +55,8 @@ public class SecurityConfig {
                                 "/api/cafes/**",
                                 "/api/menu-items/cafe/**",
                                 "/api/tables/cafe/**",
+                                "/api/tables/available",
+                                "/api/payments/webhook/razorpay",
                                 "/uploads/**",
                                 "/",
                                 "/health",

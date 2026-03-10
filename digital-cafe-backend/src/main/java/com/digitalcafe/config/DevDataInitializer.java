@@ -114,6 +114,17 @@ public class DevDataInitializer implements CommandLineRunner {
         ASSETS_GALLERY + "cafe-counter-illustration.png"
     };
 
+    // ── Menu image pool (rotated by cafe+item index for visual variety) ──────
+    private static final String[] MENU_IMAGE_POOL = {
+        "appetizer.jpg", "beverage.jpg", "biryani.jpg", "breakfast.jpg",
+        "brownie.jpg", "burger.jpg", "cake.jpg", "coffee.jpg",
+        "dessert.jpg", "fries.jpg", "hotdog.jpg", "ice-cream.jpg",
+        "juice.jpg", "main-course.jpg", "milkshake-lg.jpg", "milkshake.jpg",
+        "noodles.jpg", "other.jpg", "pancake.jpg", "pasta.jpg",
+        "pizza.jpg", "salad.jpg", "sandwich.jpg", "smoothie.jpg",
+        "snacks.jpg", "soup.jpg", "tea.jpg", "waffle.jpg"
+    };
+
     // ============================================================
     //  Entry point
     // ============================================================
@@ -139,6 +150,7 @@ public class DevDataInitializer implements CommandLineRunner {
 
         if (cafeRepository.count() > 0) {
             log.info("[DevSeed] Cafes already present ({}) — skipping demo seed.", cafeRepository.count());
+            repairExistingMetadata(owner1);
             logAllCredentials();
             return;
         }
@@ -564,14 +576,15 @@ public class DevDataInitializer implements CommandLineRunner {
     private void seedMenuItems(Cafe cafe, int cafeIndex) {
         List<MenuSeed> defs = getMenuItemsForCafe(cafeIndex);
         List<MenuItem> batch = new ArrayList<>(defs.size());
-        for (MenuSeed m : defs) {
+        for (int itemIndex = 0; itemIndex < defs.size(); itemIndex++) {
+            MenuSeed m = defs.get(itemIndex);
             MenuItem item = new MenuItem();
             item.setCafe(cafe);
             item.setName(m.name());
             item.setDescription(m.description());
             item.setPrice(BigDecimal.valueOf(m.price()));
             item.setCategory(m.category());
-            item.setImageUrl(ASSETS_MENU + m.imageFile());
+            item.setImageUrl(ASSETS_MENU + resolveMenuImage(cafeIndex, itemIndex, m.imageFile()));
             item.setIsAvailable(true);
             item.setIsDeleted(false);
             item.setIsVegetarian(m.isVeg());
@@ -580,6 +593,14 @@ public class DevDataInitializer implements CommandLineRunner {
         }
         menuItemRepository.saveAll(batch);
         log.info("[DevSeed] {} menu items seeded for: {}", batch.size(), cafe.getName());
+    }
+
+    private String resolveMenuImage(int cafeIndex, int itemIndex, String fallbackImage) {
+        if (MENU_IMAGE_POOL.length == 0) {
+            return fallbackImage;
+        }
+        int idx = Math.floorMod(cafeIndex * 7 + itemIndex * 3, MENU_IMAGE_POOL.length);
+        return MENU_IMAGE_POOL[idx];
     }
 
     private List<MenuSeed> getMenuItemsForCafe(int cafeIndex) {
@@ -1185,6 +1206,105 @@ public class DevDataInitializer implements CommandLineRunner {
 
         log.info("[DevSeed] seedDemoTransactions complete — {} orders created.", totalCreated);
         return totalCreated;
+    }
+
+    /**
+     * Repairs missing relationships/metadata for older dev datasets so dashboards show complete values.
+     */
+    private void repairExistingMetadata(User defaultOwner) {
+        List<Cafe> cafes = cafeRepository.findAll();
+        if (cafes.isEmpty()) {
+            return;
+        }
+
+        List<User> owners = userRepository.findByRoleName(Role.RoleName.CAFE_OWNER);
+        if (owners.isEmpty() && defaultOwner != null) {
+            owners = List.of(defaultOwner);
+        }
+        List<User> customers = userRepository.findByRoleName(Role.RoleName.CUSTOMER);
+
+        int cafesUpdated = 0;
+        for (int i = 0; i < cafes.size(); i++) {
+            Cafe cafe = cafes.get(i);
+            boolean changed = false;
+            if (cafe.getOwner() == null && !owners.isEmpty()) {
+                cafe.setOwner(owners.get(i % owners.size()));
+                changed = true;
+            }
+            if (cafe.getLogoUrl() == null || cafe.getLogoUrl().isBlank()) {
+                int logoIdx = (i % 6) + 1;
+                cafe.setLogoUrl(ASSETS_CAFE + String.format("cafe-%02d.jpg", logoIdx));
+                changed = true;
+            }
+            if ((cafe.getCoverUrl() == null || cafe.getCoverUrl().isBlank()) && cafe.getLogoUrl() != null) {
+                cafe.setCoverUrl(cafe.getLogoUrl());
+                changed = true;
+            }
+            if (changed) {
+                cafeRepository.save(cafe);
+                cafesUpdated++;
+            }
+        }
+
+        List<Booking> bookings = bookingRepository.findAll();
+        int bookingsUpdated = 0;
+        for (int i = 0; i < bookings.size(); i++) {
+            Booking booking = bookings.get(i);
+            boolean changed = false;
+            if (booking.getCafe() == null && !cafes.isEmpty()) {
+                booking.setCafe(cafes.get(i % cafes.size()));
+                changed = true;
+            }
+            if (booking.getCustomer() == null && !customers.isEmpty()) {
+                booking.setCustomer(customers.get(i % customers.size()));
+                changed = true;
+            }
+            if (booking.getBookingNumber() == null || booking.getBookingNumber().isBlank()) {
+                booking.setBookingNumber("BK-FIX-" + booking.getId());
+                changed = true;
+            }
+            if (changed) {
+                bookingRepository.save(booking);
+                bookingsUpdated++;
+            }
+        }
+
+        List<Order> orders = orderRepository.findAll();
+        int ordersUpdated = 0;
+        for (Order order : orders) {
+            boolean changed = false;
+            if (order.getBooking() != null) {
+                if (order.getCafe() == null && order.getBooking().getCafe() != null) {
+                    order.setCafe(order.getBooking().getCafe());
+                    changed = true;
+                }
+                if (order.getCustomer() == null && order.getBooking().getCustomer() != null) {
+                    order.setCustomer(order.getBooking().getCustomer());
+                    changed = true;
+                }
+            }
+            if (order.getOrderNumber() == null || order.getOrderNumber().isBlank()) {
+                order.setOrderNumber("ORD-FIX-" + order.getId());
+                changed = true;
+            }
+            if (changed) {
+                orderRepository.save(order);
+                ordersUpdated++;
+            }
+        }
+
+        List<Payment> payments = paymentRepository.findAll();
+        int paymentsUpdated = 0;
+        for (Payment payment : payments) {
+            if (payment.getTransactionId() == null || payment.getTransactionId().isBlank()) {
+                payment.setTransactionId("TXN-FIX-" + payment.getId());
+                paymentRepository.save(payment);
+                paymentsUpdated++;
+            }
+        }
+
+        log.info("[DevSeed] Metadata repair: cafesUpdated={}, bookingsUpdated={}, ordersUpdated={}, paymentsUpdated={}",
+                cafesUpdated, bookingsUpdated, ordersUpdated, paymentsUpdated);
     }
 
     /** Derives booking status from the order status for consistent FK state. */

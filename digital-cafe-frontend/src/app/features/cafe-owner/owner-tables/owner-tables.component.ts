@@ -1,4 +1,4 @@
-import { Component, OnInit } from "@angular/core";
+import { Component, OnDestroy, OnInit } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
 import { Router, ActivatedRoute } from "@angular/router";
@@ -6,6 +6,7 @@ import { ApiService } from "@core/services/api.service";
 import { TableService } from "../services/table-service";
 import { CafeContextService } from "../services/cafe-context.service";
 import { Location } from "@angular/common";
+import { Subscription } from "rxjs";
 
 @Component({
   selector: "app-owner-tables",
@@ -14,7 +15,7 @@ import { Location } from "@angular/common";
   templateUrl: "./owner-tables.component.html",
   styleUrls: ["./owner-tables.component.scss"],
 })
-export class OwnerTablesComponent implements OnInit {
+export class OwnerTablesComponent implements OnInit, OnDestroy {
   tables: any[] = [];
   loading = true;
   saving = false;
@@ -61,6 +62,7 @@ export class OwnerTablesComponent implements OnInit {
   formError: string = "";
 
   confirmDeleteId: number | null = null;
+  private activeCafeSub?: Subscription;
 
   constructor(
     private apiService: ApiService,
@@ -72,6 +74,16 @@ export class OwnerTablesComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.activeCafeSub = this.cafeCtx.activeCafe$.subscribe((cafe) => {
+      if (!cafe?.id || cafe.id === this.activeCafeId) {
+        return;
+      }
+      this.activeCafeId = cafe.id;
+      this.pageIndex = 0;
+      this.closeForm();
+      this.loadTables();
+    });
+
     const queryId = this.route.snapshot.queryParamMap.get("cafeId");
     if (queryId) {
       this.activeCafeId = +queryId;
@@ -95,6 +107,10 @@ export class OwnerTablesComponent implements OnInit {
       },
       error: () => this.router.navigate(["/owner/setup"]),
     });
+  }
+
+  ngOnDestroy(): void {
+    this.activeCafeSub?.unsubscribe();
   }
 
   goBack(): void {

@@ -1,9 +1,10 @@
 import { CommonModule } from "@angular/common";
-import { Component, OnInit } from "@angular/core";
+import { Component, OnDestroy, OnInit } from "@angular/core";
 import { Router, ActivatedRoute } from "@angular/router";
 import { ApiService } from "@core/services/api.service";
 import { CafeContextService } from "../services/cafe-context.service";
 import { Booking } from "@shared/models/booking.model";
+import { Subscription } from "rxjs";
 
 @Component({
   selector: "app-owner-bookings",
@@ -12,10 +13,11 @@ import { Booking } from "@shared/models/booking.model";
   templateUrl: "./owner-bookings.component.html",
   styleUrls: ["./owner-bookings.component.scss"],
 })
-export class OwnerBookingsComponent implements OnInit {
+export class OwnerBookingsComponent implements OnInit, OnDestroy {
   bookings: Booking[] = [];
   cafeId: number | null = null;
   loading = false;
+  private activeCafeSub?: Subscription;
 
   pageIndex = 0;
   readonly pageSize = 10;
@@ -54,6 +56,15 @@ export class OwnerBookingsComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.activeCafeSub = this.cafeCtx.activeCafe$.subscribe((cafe) => {
+      if (!cafe?.id || cafe.id === this.cafeId) {
+        return;
+      }
+      this.cafeId = cafe.id;
+      this.pageIndex = 0;
+      this.fetchBookings();
+    });
+
     // Check ?cafeId= query param (navigation from multi-cafe view)
     const queryId = this.route.snapshot.queryParamMap.get("cafeId");
     if (queryId) {
@@ -85,6 +96,10 @@ export class OwnerBookingsComponent implements OnInit {
       },
       error: () => this.router.navigate(["/owner/setup"]),
     });
+  }
+
+  ngOnDestroy(): void {
+    this.activeCafeSub?.unsubscribe();
   }
 
   fetchBookings(): void {

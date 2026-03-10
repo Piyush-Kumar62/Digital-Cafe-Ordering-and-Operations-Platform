@@ -29,11 +29,14 @@
       <div>
         <h3>Booking #{{ booking.bookingNumber || booking.id }}</h3>
         <p>Customer: {{ booking.customerName || "#" + booking.customerId }}</p>
+        <p>Email: {{ booking.customerEmail || "-" }}</p>
         <p>
           Table {{ booking.tableNumber || booking.tableId }} •
           {{ booking.numberOfGuests }} guests
         </p>
         <p>{{ booking.bookingDate }} {{ booking.bookingTime }}</p>
+        <p>Created: {{ booking.createdAt || "-" }}</p>
+        <p>Can Order: {{ booking.canOrder ? "Yes" : "No" }} • Has Order: {{ booking.hasOrder ? "Yes" : "No" }}</p>
       </div>
       <span class="status" [ngClass]="getStatusClass(booking.status)">{{
         booking.status

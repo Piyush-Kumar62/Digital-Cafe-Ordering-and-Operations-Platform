@@ -1,9 +1,10 @@
 import { CommonModule } from "@angular/common";
-import { Component, OnInit } from "@angular/core";
+import { Component, OnDestroy, OnInit } from "@angular/core";
 import { Router, ActivatedRoute } from "@angular/router";
 import { ApiService } from "@core/services/api.service";
 import { CafeContextService } from "../services/cafe-context.service";
 import { Order } from "@shared/models/order.model";
+import { Subscription } from "rxjs";
 
 @Component({
   selector: "app-owner-orders",
@@ -12,10 +13,11 @@ import { Order } from "@shared/models/order.model";
   templateUrl: "./owner-orders.component.html",
   styleUrls: ["./owner-orders.component.scss"],
 })
-export class OwnerOrdersComponent implements OnInit {
+export class OwnerOrdersComponent implements OnInit, OnDestroy {
   orders: Order[] = [];
   cafeId: number | null = null;
   loading = false;
+  private activeCafeSub?: Subscription;
 
   pageIndex = 0;
   readonly pageSize = 10;
@@ -54,6 +56,15 @@ export class OwnerOrdersComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.activeCafeSub = this.cafeCtx.activeCafe$.subscribe((cafe) => {
+      if (!cafe?.id || cafe.id === this.cafeId) {
+        return;
+      }
+      this.cafeId = cafe.id;
+      this.pageIndex = 0;
+      this.fetchOrders();
+    });
+
     // Check ?cafeId= query param (navigation from multi-cafe view)
     const queryId = this.route.snapshot.queryParamMap.get("cafeId");
     if (queryId) {
@@ -85,6 +96,10 @@ export class OwnerOrdersComponent implements OnInit {
       },
       error: () => this.router.navigate(["/owner/setup"]),
     });
+  }
+
+  ngOnDestroy(): void {
+    this.activeCafeSub?.unsubscribe();
   }
 
   fetchOrders(): void {

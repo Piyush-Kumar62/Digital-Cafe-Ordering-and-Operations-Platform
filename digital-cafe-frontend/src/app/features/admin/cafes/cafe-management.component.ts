@@ -137,4 +137,16 @@ export class CafeManagementComponent implements OnInit {
       },
     });
   }
+
+  fmtDate(value?: string): string {
+    if (!value) return "-";
+    const d = new Date(value);
+    return Number.isNaN(d.getTime()) ? value : d.toLocaleString();
+  }
+
+  ownerLabel(cafe: Cafe): string {
+    if (cafe.ownerName && cafe.ownerName.trim()) return cafe.ownerName.trim();
+    if (cafe.ownerId) return `Owner #${cafe.ownerId}`;
+    return "Unassigned";
+  }
 }

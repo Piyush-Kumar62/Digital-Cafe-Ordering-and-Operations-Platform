@@ -1,4 +1,4 @@
-import { Component, OnInit } from "@angular/core";
+import { Component, OnDestroy, OnInit } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
 import { Router, ActivatedRoute } from "@angular/router";
@@ -6,6 +6,7 @@ import { ApiService } from "@core/services/api.service";
 import { AlertService } from "@core/services/alert.service";
 import { CafeContextService } from "../services/cafe-context.service";
 import { User } from "@shared/models/auth.model";
+import { Subscription } from "rxjs";
 
 @Component({
   selector: "app-owner-staff",
@@ -14,7 +15,7 @@ import { User } from "@shared/models/auth.model";
   templateUrl: "./owner-staff.component.html",
   styleUrls: ["./owner-staff.component.scss"],
 })
-export class OwnerStaffComponent implements OnInit {
+export class OwnerStaffComponent implements OnInit, OnDestroy {
   cafeId: number | null = null;
   loading = false;
 
@@ -75,6 +76,7 @@ export class OwnerStaffComponent implements OnInit {
   joiningDate: string | null = null;
   experienceYears: number | null = null;
   shift = "MORNING";
+  private activeCafeSub?: Subscription;
 
   constructor(
     private apiService: ApiService,
@@ -85,6 +87,15 @@ export class OwnerStaffComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.activeCafeSub = this.cafeCtx.activeCafe$.subscribe((cafe) => {
+      if (!cafe?.id || cafe.id === this.cafeId) {
+        return;
+      }
+      this.cafeId = cafe.id;
+      this.pageIndex = 0;
+      this.loadStaff();
+    });
+
     // If a specific cafeId is in the query params (multi-cafe owners), use it directly
     const queryId = this.route.snapshot.queryParamMap.get("cafeId");
     if (queryId) {
@@ -100,6 +111,10 @@ export class OwnerStaffComponent implements OnInit {
       return;
     }
     this.loadMyCafe();
+  }
+
+  ngOnDestroy(): void {
+    this.activeCafeSub?.unsubscribe();
   }
 
   private loadMyCafe(): void {

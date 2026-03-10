@@ -10,7 +10,7 @@ import {
 import { CommonModule } from "@angular/common";
 import { RouterModule, Router } from "@angular/router";
 import { forkJoin, of, interval, Subscription } from "rxjs";
-import { catchError, switchMap, startWith } from "rxjs/operators";
+import { catchError, distinctUntilChanged } from "rxjs/operators";
 
 import { ApiService } from "@core/services/api.service";
 import { AlertService } from "@core/services/alert.service";
@@ -91,6 +91,7 @@ export class CafeOwnerDashboardComponent
   private charts: Chart[] = [];
   private viewInitialized = false;
   private pollingSubscription?: Subscription;
+  private cafeContextSubscription?: Subscription;
   private readonly POLL_INTERVAL_MS = 30_000;
 
   quickActions = [
@@ -151,6 +152,20 @@ export class CafeOwnerDashboardComponent
   ) {}
 
   ngOnInit(): void {
+    this.cafeContextSubscription = this.cafeCtx.activeCafe$
+      .pipe(distinctUntilChanged((a, b) => a?.id === b?.id))
+      .subscribe((cafe) => {
+        if (!cafe?.id) {
+          return;
+        }
+        const changedCafe = this.cafeId !== cafe.id;
+        this.cafeId = cafe.id;
+        this.cafeName = cafe.name || "My Cafe";
+        if (changedCafe) {
+          this.fetchAllDashboardData();
+        }
+      });
+
     this.loadDashboard();
   }
 
@@ -161,6 +176,7 @@ export class CafeOwnerDashboardComponent
 
   ngOnDestroy(): void {
     this.pollingSubscription?.unsubscribe();
+    this.cafeContextSubscription?.unsubscribe();
     this.destroyCharts();
   }
 

@@ -15,8 +15,10 @@
         <tr>
           <th>Name</th>
           <th>Owner</th>
+          <th>Owner ID</th>
           <th>Location</th>
           <th>Contact</th>
+          <th>Created</th>
           <th>Status</th>
           <th>Actions</th>
         </tr>
@@ -24,9 +26,11 @@
       <tbody>
         <tr *ngFor="let cafe of pagedCafes">
           <td>{{ cafe.name }}</td>
-          <td>{{ cafe.ownerName || "-" }}</td>
+          <td>{{ ownerLabel(cafe) }}</td>
+          <td>{{ cafe.ownerId || "-" }}</td>
           <td>{{ cafe.city }}, {{ cafe.state }}</td>
           <td>{{ cafe.email }}</td>
+          <td>{{ fmtDate(cafe.createdAt) }}</td>
           <td>
             <span
               class="badge"

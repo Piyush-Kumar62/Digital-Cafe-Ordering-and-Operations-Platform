@@ -42,6 +42,14 @@
           {{ order.items.length || 0 }} items •
           {{ order.totalAmount | currency: "INR" }}
         </p>
+        <p>
+          Payment: {{ order.payment?.status || "-" }} •
+          Txn: {{ order.payment?.transactionId || "-" }}
+        </p>
+        <p>
+          Chef: {{ order.preparingByChefName || "-" }} •
+          Waiter: {{ order.servedByWaiterName || "-" }}
+        </p>
       </div>
       <span class="status" [ngClass]="getStatusClass(order.status)">{{
         order.status

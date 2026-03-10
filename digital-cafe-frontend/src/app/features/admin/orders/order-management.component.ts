@@ -19,7 +19,14 @@ export class OrderManagementComponent implements OnInit, OnDestroy {
   orders: Order[] = [];
   loading = false;
   statusMap: Record<number, string> = {};
-  statuses = ["PENDING", "PREPARING", "READY", "SERVED", "CANCELLED"];
+  statuses = [
+    "PENDING_PAYMENT",
+    "PLACED",
+    "PREPARING",
+    "READY",
+    "SERVED",
+    "CANCELLED",
+  ];
   refreshTimer: any = null;
   refreshSeconds = 10;
 
@@ -114,5 +121,11 @@ export class OrderManagementComponent implements OnInit, OnDestroy {
   getPlacedAt(order: Order): string {
     const placed = (order as unknown as { placedAt?: string }).placedAt;
     return placed || order.createdAt || "-";
+  }
+
+  fmtDate(value?: string): string {
+    if (!value) return "-";
+    const d = new Date(value);
+    return Number.isNaN(d.getTime()) ? value : d.toLocaleString();
   }
 }

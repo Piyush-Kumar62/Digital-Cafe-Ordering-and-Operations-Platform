@@ -107,8 +107,17 @@ export class SetupCafeComponent implements OnInit {
         });
 
         if (cafe.logoUrl) {
+          const raw = String(cafe.logoUrl);
           const base = environment.apiUrl.replace(/\/api$/, "");
-          this.previewUrl = `${base}/api/cafes/${cafe.id}/logo`;
+          if (/^https?:\/\//.test(raw)) {
+            this.previewUrl = raw;
+          } else if (raw.startsWith("/")) {
+            this.previewUrl = `${base}${raw}`;
+          } else if (/^[A-Za-z]:[/\\]/.test(raw) || raw.includes("\\")) {
+            this.previewUrl = null;
+          } else {
+            this.previewUrl = raw;
+          }
         }
 
         this.loading = false;

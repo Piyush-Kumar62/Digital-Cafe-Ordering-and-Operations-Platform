@@ -126,10 +126,13 @@ export class OwnerCafesComponent implements OnInit {
         const base = environment.apiUrl.replace(/\/api$/, "");
         return `${base}${src}`;
       }
-      // Absolute filesystem path (legacy) — fall through to logo endpoint
+      // Absolute filesystem path or non-URL path (legacy) — use local fallback.
+      if (/^[A-Za-z]:[/\\]/.test(src) || src.includes("\\")) {
+        return "assets/cafe/cafe-interior-01.jpg";
+      }
+      return src;
     }
-    const base = environment.apiUrl.replace(/\/api$/, "");
-    return `${base}/api/cafes/${cafe.id}/logo`;
+    return "assets/cafe/cafe-interior-01.jpg";
   }
 
   formatRating(cafe: Cafe | null): string {

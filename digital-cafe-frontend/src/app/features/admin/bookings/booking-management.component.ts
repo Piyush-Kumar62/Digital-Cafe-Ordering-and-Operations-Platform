@@ -19,7 +19,15 @@ export class BookingManagementComponent implements OnInit, OnDestroy {
   bookings: Booking[] = [];
   loading = false;
   statusMap: Record<number, string> = {};
-  statuses = ["PENDING", "CONFIRMED", "COMPLETED", "CANCELLED", "NO_SHOW"];
+  statuses = [
+    "BOOKED",
+    "PENDING",
+    "CONFIRMED",
+    "CHECKED_IN",
+    "COMPLETED",
+    "CANCELLED",
+    "NO_SHOW",
+  ];
   refreshTimer: any = null;
   refreshSeconds = 15;
 
@@ -119,5 +127,31 @@ export class BookingManagementComponent implements OnInit, OnDestroy {
     const value = (booking as unknown as { bookingNumber?: string })
       .bookingNumber;
     return value || String(booking.id);
+  }
+
+  fmtDate(value?: string): string {
+    if (!value) return "-";
+    const d = new Date(value);
+    return Number.isNaN(d.getTime()) ? value : d.toLocaleString();
+  }
+
+  customerLabel(booking: Booking): string {
+    if (booking.customerName && booking.customerName.trim()) {
+      return booking.customerName.trim();
+    }
+    if (booking.customerEmail && booking.customerEmail.trim()) {
+      return booking.customerEmail.trim();
+    }
+    if (booking.customerId) {
+      return `Customer #${booking.customerId}`;
+    }
+    return "Unknown Customer";
+  }
+
+  customerEmailLabel(booking: Booking): string {
+    if (booking.customerEmail && booking.customerEmail.trim()) {
+      return booking.customerEmail.trim();
+    }
+    return "-";
   }
 }

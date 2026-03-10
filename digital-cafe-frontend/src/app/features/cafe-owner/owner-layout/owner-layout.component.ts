@@ -117,13 +117,6 @@ export class OwnerLayoutComponent implements OnInit, OnDestroy {
   selectCafe(cafe: Cafe): void {
     this.cafeCtx.setActiveCafe(cafe);
     this.cafePickerOpen = false;
-    // Re-navigate to the current route to trigger component reload with new cafe
-    const currentUrl = this.router.url.split("?")[0];
-    this.router
-      .navigateByUrl("/owner/dashboard", { skipLocationChange: true })
-      .then(() => {
-        this.router.navigate([currentUrl]);
-      });
   }
 
   ngOnDestroy(): void {

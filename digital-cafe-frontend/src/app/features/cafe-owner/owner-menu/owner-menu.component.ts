@@ -1,5 +1,5 @@
 import { CommonModule } from "@angular/common";
-import { Component, OnInit } from "@angular/core";
+import { Component, OnDestroy, OnInit } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { ActivatedRoute, Router } from "@angular/router";
 import { ApiService } from "@core/services/api.service";
@@ -10,6 +10,7 @@ import {
   MenuItem,
   MenuItemRequest,
 } from "@shared/models/menu.model";
+import { Subscription } from "rxjs";
 
 @Component({
   selector: "app-owner-menu",
@@ -18,7 +19,7 @@ import {
   templateUrl: "./owner-menu.component.html",
   styleUrls: ["./owner-menu.component.scss"],
 })
-export class OwnerMenuComponent implements OnInit {
+export class OwnerMenuComponent implements OnInit, OnDestroy {
   menuItems: MenuItem[] = [];
   categories = Object.values(MenuCategory);
   cafeId: number | null = null;
@@ -64,6 +65,7 @@ export class OwnerMenuComponent implements OnInit {
   editingItemId: number | null = null;
   selectedImageFile: File | null = null;
   imagePreviewUrl: string | null = null;
+  private activeCafeSub?: Subscription;
 
   draft: MenuItemRequest = this.emptyDraft();
 
@@ -76,6 +78,16 @@ export class OwnerMenuComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.activeCafeSub = this.cafeCtx.activeCafe$.subscribe((cafe) => {
+      if (!cafe?.id || cafe.id === this.cafeId) {
+        return;
+      }
+      this.cafeId = cafe.id;
+      this.pageIndex = 0;
+      this.cancelForm();
+      this.loadItems();
+    });
+
     // Check if a specific cafeId is passed via query param (multi-cafe support)
     const queryId = this.route.snapshot.queryParamMap.get("cafeId");
     if (queryId) {
@@ -107,6 +119,10 @@ export class OwnerMenuComponent implements OnInit {
       },
       error: () => this.alertService.error("Unable to validate cafe status."),
     });
+  }
+
+  ngOnDestroy(): void {
+    this.activeCafeSub?.unsubscribe();
   }
 
   private emptyDraft(): MenuItemRequest {

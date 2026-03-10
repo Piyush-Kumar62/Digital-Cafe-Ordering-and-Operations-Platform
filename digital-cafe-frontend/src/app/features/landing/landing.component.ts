@@ -5,6 +5,7 @@ import { NavbarComponent } from "@shared/components/navbar/navbar.component";
 import { FooterComponent } from "@shared/components/footer/footer.component";
 import { CtaComponent } from "@shared/components/cta/cta.component";
 import { ApiService } from "@core/services/api.service";
+import { AuthService } from "@core/auth/auth.service";
 import { PublicCafeCard } from "@shared/models/cafe.model";
 import { CafeBrowseService } from "@features/public/cafe-browse.service";
 import { Subject, interval, of } from "rxjs";
@@ -66,7 +67,7 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
       icon: "👥",
       title: "Multi-Role Platform",
       description:
-        "Five distinct roles — Admin, Café Owner, Chef, Waiter, and Customer — each with tailored dashboards.",
+        "Four focused roles — Customer, Cafe Owner, Chef, and Waiter — each with dedicated workflows and dashboards.",
     },
   ];
 
@@ -109,7 +110,7 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
   roles = [
     {
       icon: "👤",
-      title: "Customer",
+      title: "Customers",
       color: "from-blue-500 to-indigo-600",
       features: [
         "Book tables in advance",
@@ -123,7 +124,7 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
     },
     {
       icon: "🏢",
-      title: "Café Owner",
+      title: "Cafe Owners",
       color: "from-purple-500 to-pink-600",
       features: [
         "Manage multiple cafés",
@@ -141,10 +142,10 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
       color: "from-orange-500 to-red-600",
       features: [
         "Real-time order notifications",
-        "Update order status",
         "View kitchen queue",
-        "Manage preparation time",
-        "Coordinate with team",
+        "Update order preparation status",
+        "Manage prep timing efficiently",
+        "Coordinate with waiter for service",
       ],
       cta: "Join as Chef",
       route: "/contact",
@@ -155,27 +156,13 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
       color: "from-green-500 to-teal-600",
       features: [
         "View assigned tables",
-        "Check order status",
-        "Serve ready orders",
-        "Handle customer requests",
-        "Update table status",
+        "Check order readiness",
+        "Serve prepared orders",
+        "Handle table-side requests",
+        "Update table and service status",
       ],
       cta: "Join as Waiter",
       route: "/contact",
-    },
-    {
-      icon: "⚙️",
-      title: "Admin",
-      color: "from-gray-700 to-gray-900",
-      features: [
-        "Platform-wide management",
-        "User & role administration",
-        "System monitoring",
-        "Analytics dashboard",
-        "Security & compliance",
-      ],
-      cta: "Admin Access",
-      route: "/auth/login",
     },
   ];
 
@@ -277,52 +264,52 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
     {
       question: "Who can register from the public registration page?",
       answer:
-        "Only Customer can self-register. Café Owner, Chef, and Waiter accounts are created by Admin or Café Owner based on role flow.",
+        "Customers and Café Owners can register directly from the platform. Chef and Waiter accounts are created by the Café Owner inside the system.",
     },
     {
       question: "What should a new customer do first?",
       answer:
-        "Start with Register, verify your email, complete your profile, then log in. After login, you can choose a café, book a table, and place your order.",
+        "Register your account, verify your email, complete your profile, and log in. After login you can choose a café, book a table, and place your order.",
     },
     {
       question: "Why do I need email verification?",
       answer:
-        "Email verification protects your account and confirms that notifications, order updates, and password reset links go to the correct person.",
+        "Email verification confirms your identity and ensures that notifications, order updates, and password reset links reach the correct person.",
     },
     {
       question: "How does table booking work?",
       answer:
-        "Pick a café, select date and time slot, and choose an available table. The system checks availability in real time to avoid double booking.",
+        "Choose a café, select a date and time slot, and pick an available table. The system checks availability in real time to prevent double bookings.",
     },
     {
       question: "Can I order food without booking a table?",
       answer:
-        "For dine-in flow, booking first is recommended so your order is linked to your table and served faster.",
+        "For dine-in service, booking a table first is recommended so your order is linked to your reservation and served faster.",
     },
     {
       question: "How does order status update?",
       answer:
-        "Your order moves through clear stages: Pending/Placed, Preparing, Ready, and Served. You can track progress from your dashboard.",
+        "Orders move through clear stages: Placed → Preparing → Ready → Served. You can track progress in real time from your dashboard.",
     },
     {
       question: "What if I forget my password?",
       answer:
-        "Use Forgot Password on login, enter your email, open the reset link, and set a new password. Then log in again with the new password.",
+        "Use the 'Forgot Password' option on the login page. Enter your email and follow the reset link to create a new password.",
     },
     {
       question: "Can one platform manage multiple cafés?",
       answer:
-        "Yes. The system supports multi-café operations with centralized admin control and role-based dashboards for each actor.",
+        "Yes. The platform supports multi-café management with role-based dashboards and centralized administration.",
     },
     {
-      question: "Can I modify or cancel my booking after confirmation?",
+      question: "Can I modify or cancel my booking?",
       answer:
-        "Yes. Customers can update or cancel bookings based on café policy and available time windows. Changes are reflected instantly in your dashboard.",
+        "Customers can update or cancel bookings based on café policies and available time slots. Changes appear instantly in your dashboard.",
     },
     {
       question: "How do I check my past bookings and orders?",
       answer:
-        "Open your customer dashboard and go to booking history or order history. You can view past activity, status, and details for each record.",
+        "Open your dashboard and go to booking history or order history to view previous reservations and orders.",
     },
   ];
   activeFaqIndex: number | null = 0;
@@ -330,6 +317,7 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
   constructor(
     private apiService: ApiService,
     private cafeBrowseService: CafeBrowseService,
+    private authService: AuthService,
     private router: Router,
   ) {}
 
@@ -430,6 +418,32 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
 
   navigateToCafe(cafeId: number): void {
     this.router.navigate(["/cafes", cafeId]);
+  }
+
+  viewCafeMenu(cafeId: number, event?: Event): void {
+    event?.stopPropagation();
+    this.router.navigate(["/cafes", cafeId]);
+  }
+
+  bookCafeTable(cafeId: number, event?: Event): void {
+    event?.stopPropagation();
+    if (this.authService.isAuthenticated && this.authService.isCustomer()) {
+      this.router.navigate(["/customer/booking"], { queryParams: { cafeId } });
+      return;
+    }
+    this.router.navigate(["/auth/login"], {
+      queryParams: { redirect: "/customer/booking", cafeId },
+    });
+  }
+
+  bookHeroTable(): void {
+    if (this.authService.isAuthenticated && this.authService.isCustomer()) {
+      this.router.navigate(["/customer/booking"]);
+      return;
+    }
+    this.router.navigate(["/auth/login"], {
+      queryParams: { redirect: "/customer/booking" },
+    });
   }
 
   scrollToSection(sectionId: string): void {

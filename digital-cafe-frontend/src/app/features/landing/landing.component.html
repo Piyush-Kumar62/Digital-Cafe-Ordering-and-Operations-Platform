@@ -23,13 +23,12 @@
           >
         </h1>
         <p class="hero-subtitle">
-          Skip the wait. Pre-book tables, order meals ahead, and enjoy seamless
-          dining with our complete digital café management platform. Perfect for
-          customers, café owners, chefs, and staff.
+          Skip the wait. Book your table, pre-order your meal, and enjoy a
+          seamless café experience before you even arrive.
         </p>
         <div class="hero-actions">
-          <button class="btn-primary" routerLink="/auth/register">
-            <span>Get Started</span>
+          <button class="btn-primary" (click)="bookHeroTable()">
+            <span>Book Your Table</span>
             <svg
               class="btn-arrow"
               fill="none"
@@ -273,9 +272,9 @@
 <section id="roles" class="roles-section">
   <div class="container-custom">
     <div class="section-header">
-      <h2 class="section-title">Role-Based Operating Model</h2>
+      <h2 class="section-title">Built For Everyone in the Cafe Ecosystem</h2>
       <p class="section-subtitle">
-        Tailored experiences for each user role in the café ecosystem
+        Role-specific journeys for Customers, Cafe Owners, Chefs, and Waiters
       </p>
     </div>
 
@@ -406,7 +405,7 @@
 
     <div *ngIf="!loading && featuredCafes.length > 0" class="cafes-grid">
       <div
-        *ngFor="let cafe of featuredCafes"
+        *ngFor="let cafe of featuredCafes; let i = index"
         class="cafe-card"
         (click)="navigateToCafe(cafe.id)"
       >
@@ -414,6 +413,7 @@
           <img
             [src]="cafe.imageUrl || '/assets/cafe/cafe-interior-01.jpg'"
             [alt]="cafe.name"
+            [attr.loading]="i < 2 ? 'eager' : 'lazy'"
             (error)="
               $any($event.target).src = '/assets/cafe/cafe-interior-01.jpg'
             "
@@ -435,18 +435,26 @@
           <p class="cafe-description">
             {{ cafe.description || "A wonderful café experience awaits you." }}
           </p>
-          <div class="cafe-hours">
-            <span *ngIf="cafe.openTime || cafe.closeTime">
-              🕐 {{ fmt12h(cafe.openTime) || "—" }} –
-              {{ fmt12h(cafe.closeTime) || "—" }}
+          <div class="cafe-card-footer">
+            <span class="cafe-card-time">
+              <i class="bi bi-clock"></i>
+              <ng-container *ngIf="cafe.openTime || cafe.closeTime">
+                {{ fmt12h(cafe.openTime) || "—" }} –
+                {{ fmt12h(cafe.closeTime) || "—" }}
+              </ng-container>
+              <ng-container *ngIf="!cafe.openTime && !cafe.closeTime">
+                Hours not specified
+              </ng-container>
             </span>
-            <span
-              *ngIf="!cafe.openTime && !cafe.closeTime"
-              class="hours-unknown"
-              >🕐 Hours not specified</span
-            >
+            <div class="cafe-card-actions">
+              <button class="cafe-card-btn secondary" (click)="viewCafeMenu(cafe.id, $event)">
+                View Menu
+              </button>
+              <button class="cafe-card-btn primary" (click)="bookCafeTable(cafe.id, $event)">
+                Book Table
+              </button>
+            </div>
           </div>
-          <div class="cafe-card-cta">View Menu →</div>
         </div>
       </div>
     </div>

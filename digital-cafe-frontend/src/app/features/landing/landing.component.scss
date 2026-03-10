@@ -1220,19 +1220,77 @@
   opacity: 0.55;
 }
 
-// "View Menu →" link inside each landing cafe card
-.cafe-card-cta {
-  margin-top: 0.9rem;
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: #f59e0b;
-  letter-spacing: 0.01em;
-  cursor: pointer;
-  transition: letter-spacing 0.2s;
+/* Landing cafes footer/time style aligned with /cafes */
+.cafes-section .cafe-card-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 0.8rem;
+  margin-top: 0.4rem;
+  gap: 0.4rem;
+}
 
-  .cafe-card:hover & {
-    letter-spacing: 0.06em;
-  }
+.cafes-section .cafe-card-time {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  border-radius: 999px;
+  padding: 0.22rem 0.7rem;
+  align-self: flex-start;
+}
+
+.cafes-section .cafe-card-time i {
+  color: #f59e0b;
+  font-size: 0.78rem;
+}
+
+// Cafe card actions
+.cafe-card-actions {
+  margin-top: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+  width: 100%;
+}
+
+.cafe-card-btn {
+  border: 1px solid rgba(148, 163, 184, 0.34);
+  border-radius: 14px;
+  min-height: 44px;
+  padding: 0.62rem 0.9rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.18s ease, filter 0.18s ease, box-shadow 0.18s ease;
+}
+
+.cafe-card-btn.secondary {
+  background: linear-gradient(
+    135deg,
+    rgba(51, 65, 85, 0.88),
+    rgba(30, 41, 59, 0.9)
+  );
+  border-color: rgba(148, 163, 184, 0.45);
+  color: #e5e7eb;
+}
+
+.cafe-card-btn.primary {
+  background: linear-gradient(135deg, #7c3aed, #4f46e5);
+  border-color: rgba(167, 139, 250, 0.62);
+  color: #ffffff;
+  box-shadow: 0 10px 20px rgba(79, 70, 229, 0.3);
+}
+
+.cafe-card-btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
 }
 
 // "Browse All Cafés →" button below the grid
@@ -6648,4 +6706,85 @@ section,
   background: linear-gradient(160deg, rgba(2, 6, 23, 0.96), rgba(15, 23, 42, 0.94)) !important;
   border-color: rgba(71, 85, 105, 0.48) !important;
   box-shadow: 0 14px 30px rgba(2, 6, 23, 0.58) !important;
+}
+
+/* ===== Roles cards final size alignment ===== */
+.roles-section .roles-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 1.45rem !important;
+  align-items: stretch !important;
+}
+
+.roles-section .role-card {
+  width: 100% !important;
+  min-height: 760px !important;
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.roles-section .role-header {
+  min-height: 235px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.roles-section .role-body {
+  flex: 1 1 auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.roles-section .role-features {
+  flex: 1 1 auto !important;
+  margin-bottom: 1rem !important;
+}
+
+.roles-section .role-cta-btn {
+  margin-top: auto !important;
+}
+
+@media (max-width: 1400px) {
+  .roles-section .roles-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 780px) {
+  .roles-section .roles-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .roles-section .role-card {
+    min-height: 0 !important;
+  }
+}
+
+/* ===== Featured Cafes Badge Visibility (final override) ===== */
+.cafes-section .cafe-rating {
+  background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.42) !important;
+}
+
+.cafes-section .cafe-rating span {
+  color: #ffffff !important;
+  font-weight: 800 !important;
+}
+
+.cafes-section .cafe-rating-new {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: linear-gradient(135deg, #64748b, #475569) !important;
+  color: #ffffff !important;
+  border-radius: 999px !important;
+  padding: 0.24rem 0.65rem !important;
+  font-size: 0.76rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.04em !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45) !important;
 }

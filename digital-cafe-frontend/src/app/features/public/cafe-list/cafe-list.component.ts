@@ -14,6 +14,7 @@ import { CafeBrowseService } from "../cafe-browse.service";
 import { NavbarComponent } from "@shared/components/navbar/navbar.component";
 import { FooterComponent } from "@shared/components/footer/footer.component";
 import { FormsModule } from "@angular/forms";
+import { AuthService } from "@core/auth/auth.service";
 
 @Component({
   selector: "app-cafe-list",
@@ -69,6 +70,7 @@ export class CafeListComponent implements OnInit, OnDestroy {
 
   constructor(
     private cafeBrowseService: CafeBrowseService,
+    private authService: AuthService,
     private router: Router,
   ) {}
 
@@ -126,6 +128,22 @@ export class CafeListComponent implements OnInit, OnDestroy {
 
   openCafe(cafeId: number): void {
     this.router.navigate(["/cafes", cafeId]);
+  }
+
+  viewMenu(cafeId: number, event?: Event): void {
+    event?.stopPropagation();
+    this.router.navigate(["/cafes", cafeId]);
+  }
+
+  bookTable(cafeId: number, event?: Event): void {
+    event?.stopPropagation();
+    if (this.authService.isAuthenticated && this.authService.isCustomer()) {
+      this.router.navigate(["/customer/booking"], { queryParams: { cafeId } });
+      return;
+    }
+    this.router.navigate(["/auth/login"], {
+      queryParams: { redirect: "/customer/booking", cafeId },
+    });
   }
 
   previous(): void {

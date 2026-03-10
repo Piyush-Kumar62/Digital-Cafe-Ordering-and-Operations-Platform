@@ -302,23 +302,27 @@
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
-  background: rgba(251, 191, 36, 0.92);
-  color: #431407;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #ffffff;
   font-size: 0.78rem;
   font-weight: 800;
   padding: 0.3rem 0.65rem;
   border-radius: 999px;
   backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.42);
 
   i {
     font-size: 0.68rem;
+    color: #fff7cc;
   }
 
   &--new {
-    background: rgba(100, 116, 139, 0.75);
-    color: #f8fafc;
+    background: linear-gradient(135deg, #64748b, #475569);
+    color: #ffffff;
     font-size: 0.72rem;
     letter-spacing: 0.04em;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
   }
 }
 
@@ -363,12 +367,12 @@
 
 .cafe-card-footer {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   padding-top: 0.8rem;
   margin-top: 0.4rem;
-  flex-wrap: wrap;
   gap: 0.4rem;
 }
 
@@ -377,12 +381,13 @@
   align-items: center;
   gap: 0.35rem;
   font-size: 0.82rem;
-  font-weight: 500;
+  font-weight: 600;
   color: #e2e8f0;
   background: rgba(245, 158, 11, 0.1);
   border: 1px solid rgba(245, 158, 11, 0.2);
   border-radius: 999px;
   padding: 0.22rem 0.7rem;
+  align-self: flex-start;
 
   i {
     color: #f59e0b;
@@ -390,19 +395,47 @@
   }
 }
 
-.cafe-card-cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.2rem;
-  font-size: 0.83rem;
-  font-weight: 700;
-  color: #f59e0b;
-  letter-spacing: 0.01em;
-  transition: gap 0.2s;
+.cafe-card-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+  width: 100%;
+}
 
-  .cafe-card:hover & {
-    gap: 0.45rem;
-  }
+.cafe-card-btn {
+  border: 1px solid rgba(148, 163, 184, 0.34);
+  border-radius: 14px;
+  min-height: 44px;
+  padding: 0.62rem 0.9rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    transform 0.18s ease,
+    filter 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.cafe-card-btn--secondary {
+  background: linear-gradient(
+    135deg,
+    rgba(51, 65, 85, 0.88),
+    rgba(30, 41, 59, 0.9)
+  );
+  border-color: rgba(148, 163, 184, 0.45);
+  color: #e5e7eb;
+}
+
+.cafe-card-btn--primary {
+  background: linear-gradient(135deg, #7c3aed, #4f46e5);
+  border-color: rgba(167, 139, 250, 0.62);
+  color: #ffffff;
+  box-shadow: 0 10px 20px rgba(79, 70, 229, 0.3);
+}
+
+.cafe-card-btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
 }
 
 // ─── Pagination ──────────────────────────────────────────────────────────────

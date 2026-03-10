@@ -23,6 +23,9 @@ import {
   styleUrl: "./register.component.scss",
 })
 export class RegisterComponent implements OnInit {
+  readonly customerPanelImage = "assets/coffee/coffee-table-pexels.jpg";
+  readonly cafeOwnerPanelImage = "assets/cafe/cafe-ambience.jpg";
+
   currentStep = 1;
   totalSteps = 5;
   isLoading = false;
@@ -131,6 +134,20 @@ export class RegisterComponent implements OnInit {
 
   ngOnInit() {
     this.role = "CUSTOMER";
+    this.preloadImage(this.customerPanelImage);
+    this.preloadImage(this.cafeOwnerPanelImage);
+  }
+
+  get registerPanelImageSrc(): string {
+    return this.isCafeOwnerMode
+      ? this.cafeOwnerPanelImage
+      : this.customerPanelImage;
+  }
+
+  get registerPanelImageAlt(): string {
+    return this.isCafeOwnerMode
+      ? "Barista crafting coffee for cafe owner registration"
+      : "Coffee cups on table for customer registration";
   }
 
   /** Called whenever the role dropdown changes value */
@@ -650,5 +667,11 @@ export class RegisterComponent implements OnInit {
 
   isStepAccessible(step: number): boolean {
     return step <= this.currentStep;
+  }
+
+  private preloadImage(src: string): void {
+    const img = new Image();
+    img.decoding = "async";
+    img.src = src;
   }
 }

@@ -175,7 +175,10 @@ input.form-control {
   border: 1px solid var(--reg-input-border);
   border-radius: 0.5rem; /* rounded-lg */
   font-size: 1rem; /* text-base */
-  transition: all 0.3s ease;
+  transition:
+    border-color 0.3s ease,
+    box-shadow 0.3s ease,
+    background-color 0.3s ease;
   background: var(--reg-input-bg);
   color: var(--reg-text);
   font-weight: 500;
@@ -191,7 +194,6 @@ input.form-control {
     border-color: #60a5fa;
     background: rgba(255, 255, 255, 0.08);
     box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.16);
-    transform: translateY(-1px);
   }
 
   &.ng-invalid.ng-touched {
@@ -614,6 +616,17 @@ input[type="date"]:required:invalid::-webkit-datetime-edit {
   .register-image-panel:hover & {
     transform: scale(1.04);
   }
+}
+
+.register-image-panel.owner-panel {
+  background: #0b1220;
+}
+
+/* Cafe-owner panel image: keep focal subject visible and brighter */
+.register-panel-image.owner-panel-image {
+  object-fit: contain;
+  object-position: center;
+  filter: brightness(0.66) saturate(1.06);
 }
 
 .register-panel-overlay {

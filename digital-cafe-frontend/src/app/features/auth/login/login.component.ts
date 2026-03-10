@@ -19,6 +19,7 @@ import { NavbarComponent } from "@shared/components/navbar/navbar.component";
   styleUrls: ["./login.component.scss"],
 })
 export class LoginComponent implements OnInit {
+  private readonly loginHeroImage = "assets/coffee/coffee-scene-nathan-03.jpg";
   loginForm!: FormGroup;
   loading = false;
   showPassword = false;
@@ -33,6 +34,8 @@ export class LoginComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.preloadImage(this.loginHeroImage);
+
     // Initialize the form first to prevent template errors
     this.loginForm = this.fb.group({
       email: ["", [Validators.required, Validators.email]],
@@ -48,6 +51,12 @@ export class LoginComponent implements OnInit {
         this.router.navigate([this.authService.getRoleDashboardRoute()]);
       }, 0);
     }
+  }
+
+  private preloadImage(src: string): void {
+    const img = new Image();
+    img.decoding = "async";
+    img.src = src;
   }
 
   get f() {

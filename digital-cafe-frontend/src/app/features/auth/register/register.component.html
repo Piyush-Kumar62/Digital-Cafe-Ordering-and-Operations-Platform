@@ -9,11 +9,12 @@
     <!-- ╔══════════════════════════════════════╗
          ║  LEFT: Ambience image panel          ║
          ╚══════════════════════════════════════╝ -->
-    <div class="register-image-panel">
+    <div class="register-image-panel" [class.owner-panel]="isCafeOwnerMode">
       <img
-        src="assets/coffee/barista-latte-art.jpg"
-        alt="Barista crafting coffee"
+        [src]="registerPanelImageSrc"
+        [alt]="registerPanelImageAlt"
         class="register-panel-image"
+        [class.owner-panel-image]="isCafeOwnerMode"
         loading="eager"
         fetchpriority="high"
       />
@@ -802,20 +803,6 @@
                     maxlength="10"
                   />
                 </div>
-                <small class="text-slate-400 text-xs"
-                  >Your personal contact number (not the caf&eacute; business
-                  phone)</small
-                >
-              </div>
-            </div>
-
-            <!-- Temp-password info note -->
-            <div class="register-temp-pw-note mt-4">
-              <i class="bi bi-envelope-check me-2"></i>
-              <div>
-                <strong>No password needed!</strong> A secure temporary password
-                will be emailed to you after your registration is approved. You
-                can reset it on your first login.
               </div>
             </div>
           </div>

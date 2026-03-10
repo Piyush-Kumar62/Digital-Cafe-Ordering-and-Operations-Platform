@@ -323,6 +323,7 @@
 @media (max-width: 640px) {
   .auth-container {
     padding: 88px 0.9rem 1.5rem;
+    overflow-y: auto;
   }
 
   .auth-card {
@@ -398,6 +399,9 @@
   position: relative;
   overflow: hidden;
   min-height: 540px;
+  background:
+    linear-gradient(rgba(11, 18, 32, 0.25), rgba(11, 18, 32, 0.25)),
+    url("/assets/coffee/coffee-scene-nathan-03.jpg") center / cover no-repeat;
 
   @media (min-width: 768px) {
     display: block;

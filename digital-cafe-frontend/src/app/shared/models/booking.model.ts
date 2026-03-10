@@ -3,6 +3,7 @@ export interface Booking {
   bookingNumber?: string;
   customerId: number;
   customerName?: string;
+  customerEmail?: string;
   cafeId: number;
   cafeName?: string;
   tableId: number;

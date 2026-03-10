@@ -24,6 +24,7 @@ export interface PaymentRequest {
 export enum PaymentMethod {
   CASH = 'CASH',
   CARD = 'CARD',
+  NET_BANKING = 'NET_BANKING',
   UPI = 'UPI',
   WALLET = 'WALLET',
 }

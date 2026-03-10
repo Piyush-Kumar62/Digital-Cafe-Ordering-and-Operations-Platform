@@ -6,5 +6,5 @@ export const environment = {
   tokenKey: "cafe_auth_token",
   refreshTokenKey: "cafe_refresh_token",
   userKey: "cafe_user_data",
-  razorpayKeyId: "", // Set deployment Razorpay live key via env at deploy time
+  razorpayKeyId: "rzp_test_SMn71RuDHRuVty", // Set deployment Razorpay live key via env at deploy time
 };

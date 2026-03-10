@@ -6,5 +6,5 @@ export const environment = {
   tokenKey: "cafe_auth_token",
   refreshTokenKey: "cafe_refresh_token",
   userKey: "cafe_user_data",
-  razorpayKeyId: "", // Fill with your Razorpay Test Key ID (rzp_test_...)
+  razorpayKeyId: "rzp_test_SMn71RuDHRuVty",
 };

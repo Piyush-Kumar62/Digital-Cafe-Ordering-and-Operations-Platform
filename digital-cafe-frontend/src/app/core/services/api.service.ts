@@ -436,6 +436,18 @@ export class ApiService {
       );
   }
 
+  downloadPaymentReceipt(paymentId: number): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/payments/${paymentId}/receipt`, {
+      responseType: "blob",
+    });
+  }
+
+  resendPaymentReceiptEmail(paymentId: number): Observable<Payment> {
+    return this.http
+      .post<any>(`${this.baseUrl}/payments/${paymentId}/receipt/email`, {})
+      .pipe(map((res: any) => this.unwrapApiData<Payment>(res, res as Payment)));
+  }
+
   getAdminProfile(): Observable<AdminProfile> {
     return this.http
       .get<any>(`${this.baseUrl}/admin/profile`)
@@ -536,6 +548,22 @@ export class ApiService {
         }),
       ),
     );
+  }
+
+  getMyFullProfile(): Observable<any> {
+    return this.http
+      .get<any>(`${this.baseUrl}/profiles/me`)
+      .pipe(map((res: any) => this.unwrapApiData<any>(res, null)));
+  }
+
+  saveMyFullProfile(request: any): Observable<any> {
+    return this.http
+      .post<any>(`${this.baseUrl}/profiles`, request)
+      .pipe(map((res: any) => this.unwrapApiData<any>(res, null)));
+  }
+
+  deleteCustomerProfileImage(): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/users/profile/self/image`);
   }
 
   getProfile(userId: number): Observable<Profile> {
@@ -880,6 +908,50 @@ export class ApiService {
 
     return this.http
       .get<any>(`${this.baseUrl}/admin/activities`, { params })
+      .pipe(
+        map((res: any) =>
+          this.unwrapApiData(res, {
+            content: [],
+            totalElements: 0,
+            totalPages: 0,
+            pageNumber: page,
+            pageSize: size,
+          }),
+        ),
+      );
+  }
+
+  getAdminPaymentWebhookEvents(
+    page: number = 0,
+    size: number = 10,
+  ): Observable<{
+    content: Array<{
+      id: number;
+      provider: string;
+      eventId: string;
+      eventType: string;
+      status: string;
+      attemptCount: number;
+      paymentId?: number;
+      paymentGatewayOrderId?: string;
+      paymentGatewayPaymentId?: string;
+      signatureHash?: string;
+      lastError?: string;
+      processedAt?: string;
+      createdAt?: string;
+      updatedAt?: string;
+    }>;
+    totalElements: number;
+    totalPages: number;
+    pageNumber: number;
+    pageSize: number;
+  }> {
+    const params = new HttpParams()
+      .set("page", page.toString())
+      .set("size", size.toString());
+
+    return this.http
+      .get<any>(`${this.baseUrl}/admin/payment-webhooks`, { params })
       .pipe(
         map((res: any) =>
           this.unwrapApiData(res, {

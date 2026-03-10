@@ -21,6 +21,8 @@ export interface Order {
   preparingAt?: string;
   readyAt?: string;
   servedAt?: string;
+  preparingByChefName?: string;
+  servedByWaiterName?: string;
   createdAt?: string;
   updatedAt?: string;
   payment?: {

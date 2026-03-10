@@ -138,30 +138,39 @@ export class CafeBrowseService {
 
   createBooking(payload: {
     cafeId: number;
+    tableId: number;
     date: string;
     timeSlot: string;
     numberOfGuests: number;
   }): Observable<Booking> {
+    const body = {
+      cafeId: payload.cafeId,
+      tableId: payload.tableId,
+      bookingDate: payload.date,
+      bookingTime: payload.timeSlot,
+      numberOfGuests: payload.numberOfGuests,
+    };
     return this.http
-      .post<ApiResponse<Booking>>(`${this.apiUrl}/customer/bookings`, payload)
+      .post<ApiResponse<Booking>>(`${this.apiUrl}/bookings`, body)
       .pipe(map((res) => res?.data as Booking));
   }
 
   createOrder(payload: {
     bookingId: number;
-    items: Array<{ menuId: number; quantity: number }>;
+    items: Array<{ menuItemId: number; quantity: number }>;
   }): Observable<Order> {
     return this.http
-      .post<ApiResponse<Order>>(`${this.apiUrl}/customer/orders`, payload)
+      .post<ApiResponse<Order>>(`${this.apiUrl}/orders`, payload)
       .pipe(map((res) => res?.data as Order));
   }
 
   pay(payload: {
     orderId: number;
+    amount: number;
     paymentMethod: string;
   }): Observable<Payment> {
     return this.http
-      .post<ApiResponse<Payment>>(`${this.apiUrl}/customer/payments`, payload)
+      .post<ApiResponse<Payment>>(`${this.apiUrl}/payments`, payload)
       .pipe(map((res) => res?.data as Payment));
   }
 }

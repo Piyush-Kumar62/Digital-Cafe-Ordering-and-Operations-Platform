@@ -1,6 +1,7 @@
 package com.digitalcafe.controller;
 
 import com.digitalcafe.dto.request.BookingRequest;
+import com.digitalcafe.dto.response.AvailabilityTableResponse;
 import com.digitalcafe.dto.response.ApiResponse;
 import com.digitalcafe.dto.response.BookingResponse;
 import com.digitalcafe.dto.response.PageResponse;
@@ -16,7 +17,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.format.annotation.DateTimeFormat;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 
 // Exposes core reservation state mappings and statuses.
@@ -66,6 +70,32 @@ public class BookingController {
     @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<ApiResponse<List<BookingResponse>>> getMyBookingsAlias() {
         return getMyBookings();
+    }
+
+    @GetMapping("/availability")
+    @PreAuthorize("hasRole('CUSTOMER')")
+    public ResponseEntity<ApiResponse<List<AvailabilityTableResponse>>> getAvailabilityForSlot(
+            @RequestParam Long cafeId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam(required = false) String timeSlot,
+            @RequestParam(required = false) String time,
+            @RequestParam(defaultValue = "1") Integer seats) {
+
+        String rawTime = (timeSlot != null && !timeSlot.isBlank()) ? timeSlot : time;
+        LocalTime slotTime = LocalTime.now().withSecond(0).withNano(0);
+        if (rawTime != null && !rawTime.isBlank()) {
+            try {
+                slotTime = LocalTime.parse(rawTime.trim());
+            } catch (Exception ignored) {
+                // Fallback to current time instead of failing request parsing.
+            }
+        }
+
+        int seatsRequired = seats != null && seats > 0 ? seats : 1;
+        List<AvailabilityTableResponse> response =
+                bookingService.getAvailableTablesForSlot(cafeId, date, slotTime, seatsRequired);
+
+        return ResponseEntity.ok(ApiResponse.success("Table availability retrieved successfully", response));
     }
 
     @GetMapping("/cafe/{cafeId}")

@@ -5,8 +5,10 @@ import com.digitalcafe.dto.response.AdminDashboardAnalyticsResponse;
 import com.digitalcafe.dto.response.ApiResponse;
 import com.digitalcafe.dto.response.AdminDashboardStats;
 import com.digitalcafe.dto.response.PageResponse;
+import com.digitalcafe.dto.response.PaymentWebhookEventResponse;
 import com.digitalcafe.dto.response.UserResponse;
 import com.digitalcafe.service.AdminDashboardService;
+import com.digitalcafe.service.PaymentWebhookAuditService;
 import com.digitalcafe.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +31,7 @@ public class AdminController {
 
     private final UserService userService;
     private final AdminDashboardService adminDashboardService;
+    private final PaymentWebhookAuditService paymentWebhookAuditService;
 
     @GetMapping("/dashboard/stats")
     public ResponseEntity<AdminDashboardStats> getDashboardStats() {
@@ -46,6 +49,12 @@ public class AdminController {
     public ResponseEntity<ApiResponse<PageResponse<AdminDashboardAnalyticsResponse.RecentActivityPoint>>> getActivities(Pageable pageable) {
         PageResponse<AdminDashboardAnalyticsResponse.RecentActivityPoint> response = adminDashboardService.getActivities(pageable);
         return ResponseEntity.ok(ApiResponse.success("Admin activities retrieved successfully", response));
+    }
+
+    @GetMapping("/payment-webhooks")
+    public ResponseEntity<ApiResponse<PageResponse<PaymentWebhookEventResponse>>> getPaymentWebhookEvents(Pageable pageable) {
+        PageResponse<PaymentWebhookEventResponse> response = paymentWebhookAuditService.getWebhookEvents(pageable);
+        return ResponseEntity.ok(ApiResponse.success("Payment webhook events retrieved successfully", response));
     }
 
     @PostMapping("/cafe-owners")

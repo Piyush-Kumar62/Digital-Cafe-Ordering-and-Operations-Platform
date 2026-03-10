@@ -18,9 +18,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
+import org.springframework.core.io.ByteArrayResource;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.Arrays;
 import java.util.List;
@@ -177,7 +179,7 @@ public class CafeController {
         String coverPath = cafeService.getCafeById(cafeId).getCoverUrl();
 
         if (coverPath == null || coverPath.isEmpty()) {
-            return ResponseEntity.notFound().build();
+            return placeholderImageResponse("Cafe Cover");
         }
 
         Path path;
@@ -190,7 +192,7 @@ public class CafeController {
 
         File file = path.toFile();
         if (!file.exists()) {
-            return ResponseEntity.notFound().build();
+            return placeholderImageResponse("Cafe Cover");
         }
 
         Resource resource = new UrlResource(path.toUri());
@@ -217,7 +219,7 @@ public class CafeController {
         String logoPath = cafeService.getCafeById(cafeId).getLogoUrl();
 
         if (logoPath == null || logoPath.isEmpty()) {
-            return ResponseEntity.notFound().build();
+            return placeholderImageResponse("Cafe Logo");
         }
 
         // Resolve path: new format is "/uploads/<filename>", legacy is an absolute filesystem path
@@ -231,7 +233,7 @@ public class CafeController {
 
         File file = path.toFile();
         if (!file.exists()) {
-            return ResponseEntity.notFound().build();
+            return placeholderImageResponse("Cafe Logo");
         }
 
         Resource resource = new UrlResource(path.toUri());
@@ -248,6 +250,23 @@ public class CafeController {
     @GetMapping("/{cafeId}/gallery")
     public ResponseEntity<List<String>> getGallery(@PathVariable Long cafeId) {
         return ResponseEntity.ok(cafeService.getGalleryImages(cafeId));
+    }
+
+    private ResponseEntity<Resource> placeholderImageResponse(String label) {
+        String safeLabel = (label == null || label.isBlank()) ? "Image" : label.trim();
+        String svg = "<svg xmlns='http://www.w3.org/2000/svg' width='600' height='360' viewBox='0 0 600 360'>"
+                + "<defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'>"
+                + "<stop offset='0%' stop-color='#0f172a'/>"
+                + "<stop offset='100%' stop-color='#1d4ed8'/>"
+                + "</linearGradient></defs>"
+                + "<rect width='600' height='360' fill='url(#g)'/>"
+                + "<text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' "
+                + "font-family='Arial, sans-serif' font-size='30' fill='#e2e8f0'>" + safeLabel + "</text>"
+                + "</svg>";
+        ByteArrayResource resource = new ByteArrayResource(svg.getBytes(StandardCharsets.UTF_8));
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType("image/svg+xml"))
+                .body(resource);
     }
 
     @DeleteMapping("/gallery/{imageId}")

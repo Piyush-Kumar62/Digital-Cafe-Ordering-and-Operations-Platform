@@ -8,6 +8,7 @@ import com.digitalcafe.service.CafeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -26,7 +27,11 @@ public class PublicCafeController {
     public ResponseEntity<ApiResponse<PageResponse<PublicCafeCardResponse>>> getActiveCafes(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        Pageable pageable = PageRequest.of(page, size);
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                Sort.by(Sort.Order.desc("createdAt"), Sort.Order.desc("id"))
+        );
         PageResponse<PublicCafeCardResponse> response = cafeService.getPublicActiveCafes(pageable);
         return ResponseEntity.ok(ApiResponse.success("Public cafes retrieved successfully", response));
     }

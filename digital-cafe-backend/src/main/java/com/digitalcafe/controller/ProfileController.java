@@ -4,6 +4,7 @@ import com.digitalcafe.dto.request.ProfileRequest;
 import com.digitalcafe.dto.response.ApiResponse;
 import com.digitalcafe.dto.response.ProfileResponse;
 import com.digitalcafe.exception.AccessDeniedException;
+import com.digitalcafe.exception.ResourceNotFoundException;
 import com.digitalcafe.service.ProfileService;
 import com.digitalcafe.service.UserService;
 import jakarta.validation.Valid;
@@ -39,8 +40,12 @@ public class ProfileController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<ProfileResponse>> getMyProfile() {
         Long userId = userService.getCurrentUserId();
-        ProfileResponse response = profileService.getProfileByUserId(userId);
-        return ResponseEntity.ok(ApiResponse.success("Profile retrieved successfully", response));
+        try {
+            ProfileResponse response = profileService.getProfileByUserId(userId);
+            return ResponseEntity.ok(ApiResponse.success("Profile retrieved successfully", response));
+        } catch (ResourceNotFoundException ex) {
+            return ResponseEntity.ok(ApiResponse.success("Profile not created yet", null));
+        }
     }
 
     @GetMapping("/{userId}")

@@ -12,7 +12,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.format.annotation.DateTimeFormat;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 // Resolves authenticated Cafe Owner to access associated cafe automatically.
@@ -65,6 +69,33 @@ public class TableController {
         return ResponseEntity.ok(ApiResponse.success("Available tables retrieved successfully", response));
     }
 
+    @GetMapping("/available")
+    public ResponseEntity<ApiResponse<List<TableResponse>>> getAvailableTablesBySlot(
+            @RequestParam Long cafeId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam(required = false) String timeSlot,
+            @RequestParam(required = false) String time,
+            @RequestParam(defaultValue = "1") Integer seats) {
+
+        String rawTime = (timeSlot != null && !timeSlot.isBlank()) ? timeSlot : time;
+        LocalDate slotDate = date != null ? date : LocalDate.now();
+        LocalTime slotTime = LocalTime.now().withSecond(0).withNano(0);
+
+        if (rawTime != null && !rawTime.isBlank()) {
+            try {
+                slotTime = LocalTime.parse(rawTime.trim());
+            } catch (Exception ignored) {
+                // Keep default current time for resilient availability checks.
+            }
+        }
+
+        LocalDateTime bookingTime = LocalDateTime.of(slotDate, slotTime);
+        int seatsRequired = seats != null && seats > 0 ? seats : 1;
+
+        List<TableResponse> response = tableService.getAvailableTables(cafeId, bookingTime, seatsRequired);
+        return ResponseEntity.ok(ApiResponse.success("Available tables retrieved successfully", response));
+    }
+
 
     @PutMapping("/{tableId}")
     @PreAuthorize("hasRole('CAFE_OWNER')")
@@ -108,6 +139,16 @@ public class TableController {
 
         return ResponseEntity.ok(
                 ApiResponse.success("Tables retrieved successfully", tables)
+        );
+    }
+
+    @GetMapping("/cafe/{cafeId}/available")
+    public ResponseEntity<ApiResponse<List<TableResponse>>> getAvailableTablesByCafe(
+            @PathVariable Long cafeId) {
+        List<TableResponse> tables =
+                tableService.getAvailableTables(cafeId, LocalDateTime.now().withSecond(0).withNano(0), 1);
+        return ResponseEntity.ok(
+                ApiResponse.success("Available tables retrieved successfully", tables)
         );
     }
 

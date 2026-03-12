@@ -55,52 +55,25 @@ public class AuthServiceImpl implements AuthService {
   @Override
   @Transactional
   public AuthResponse register(SimpleRegisterRequest request) {
-
-    if (userRepository.existsByEmail(request.getEmail())) {
+    if (userRepository.existsByEmail(request.getEmail()))
       throw new BadRequestException("Email already registered");
-    }
-
     Role customerRole = roleRepository.findByName(Role.RoleName.CUSTOMER)
         .orElseThrow(() -> new ResourceNotFoundException("Role", "name", "CUSTOMER"));
-
     String tempPassword = PasswordGenerator.generateTemporaryPassword();
-
     User user = new User();
-    user.setEmail(request.getEmail());
-    user.setUsername(request.getEmail());
+    user.setEmail(request.getEmail()); user.setUsername(request.getEmail());
     user.setDisplayName(request.getUsername());
     user.setPassword(passwordEncoder.encode(tempPassword));
-    user.setIsActive(true);
-    user.setIsEmailVerified(false);
-    user.setIsProfileComplete(false);
-    user.setMustResetPassword(true);
-    user.setIsTempPassword(true);
-
+    user.setIsActive(true); user.setIsEmailVerified(false); user.setIsProfileComplete(false);
+    user.setMustResetPassword(true); user.setIsTempPassword(true);
     user.getRoles().add(customerRole);
-
     user = userRepository.save(user);
-
-    EmailVerificationToken token = new EmailVerificationToken();
-    token.setToken(UUID.randomUUID().toString());
-    token.setUser(user);
-    token.setExpiresAt(LocalDateTime.now().plusHours(24));
-    emailVerificationTokenRepository.save(token);
-
-    emailService.sendVerificationEmail(user.getEmail(), token.getToken(), tempPassword);
-    webSocketNotificationService.notifyAdmins(RealtimeNotification.builder()
-        .type("USER_REGISTERED")
-        .title("New Customer Signup")
-        .message("A new customer registered: " + user.getEmail())
-        .severity("info")
-        .entityType("USER")
-        .entityId(user.getId())
-        .timestamp(LocalDateTime.now())
-        .build());
-
+    String verificationTokenStr = saveVerificationToken(user);
+    emailService.sendVerificationEmail(user.getEmail(), verificationTokenStr, tempPassword);
+    notifyAdmins("USER_REGISTERED", "New Customer Signup", "A new customer registered: " + user.getEmail(), "info", user.getId());
     return AuthResponse.builder()
         .message("Registration successful. Please check your email to verify your account.")
-        .email(user.getEmail())
-        .build();
+        .email(user.getEmail()).build();
   }
 
   @Override
@@ -117,303 +90,74 @@ public class AuthServiceImpl implements AuthService {
   @Override
   @Transactional
   public AuthResponse registerCafeOwner(CafeOwnerRegisterRequest request, MultipartFile logo) {
-
-    if (userRepository.existsByEmail(request.getEmail())) {
+    if (userRepository.existsByEmail(request.getEmail()))
       throw new BadRequestException("Email already registered");
-    }
-
     Role cafeOwnerRole = roleRepository.findByName(Role.RoleName.CAFE_OWNER)
         .orElseThrow(() -> new ResourceNotFoundException("Role", "name", "CAFE_OWNER"));
-
-    // Generate a secure temporary password — owner must reset on first login
     String tempPassword = PasswordGenerator.generateTemporaryPassword();
-
-    User user = new User();
-    user.setEmail(request.getEmail());
-    user.setUsername(request.getEmail());
-    user.setFirstName(request.getFirstName());
-    user.setLastName(request.getLastName());
-    user.setDisplayName((request.getFirstName() + " " + request.getLastName()).trim());
-    user.setPassword(passwordEncoder.encode(tempPassword));
-    user.setIsActive(false);                                         // activated after admin approval
-    user.setIsEmailVerified(false);
-    user.setIsProfileComplete(true);
-    user.setProfileCompletionPercentage(100);
-    user.setMustResetPassword(true);                                 // force password reset on first login
-    user.setIsTempPassword(true);
-    user.setRegistrationStatus(User.RegistrationStatus.PENDING_APPROVAL);
-    // Store owner's personal phone number if provided
-    if (request.getOwnerPhoneNumber() != null && !request.getOwnerPhoneNumber().isBlank()) {
-      user.setPhoneNumber(request.getOwnerPhoneNumber());
-    }
-    user.getRoles().add(cafeOwnerRole);
-
-    user = userRepository.save(user);
-
-    // Optionally store the café logo
-    String logoUrl = null;
-    if (logo != null && !logo.isEmpty()) {
-      logoUrl = fileStorageService.storeMenuItemImage(logo);
-    }
-
-    // Create the Café entity and link it to this owner
-    Cafe cafe = new Cafe();
-    cafe.setName(request.getCafeName());
-    cafe.setDescription(request.getDescription());
-    cafe.setAddress(request.getAddress());
-    cafe.setCity(request.getCity());
-    cafe.setState(request.getState());
-    cafe.setPincode(request.getPincode());
-    cafe.setPhoneNumber(request.getPhoneNumber());
-    cafe.setOpenTime(request.getOpenTime());
-    cafe.setCloseTime(request.getCloseTime());
-    cafe.setFssaiNumber(request.getFssaiNumber());
-    cafe.setGstNumber(request.getGstNumber());
-    cafe.setMsmeNumber(request.getMsmeNumber());
-    cafe.setIsActive(false);                                         // activated by admin after review
-    cafe.setOwner(user);
-    if (logoUrl != null) {
-      cafe.setLogoUrl(logoUrl);
-    }
-    cafeRepository.save(cafe);
-
-    // Email verification token
-    EmailVerificationToken token = new EmailVerificationToken();
-    token.setToken(UUID.randomUUID().toString());
-    token.setUser(user);
-    token.setExpiresAt(LocalDateTime.now().plusHours(24));
-    emailVerificationTokenRepository.save(token);
-
-    // Send verification email with temp password so owner can log in after admin approval
-    emailService.sendVerificationEmail(user.getEmail(), token.getToken(), tempPassword);
-    // Also send a welcome email so the owner sees their credentials clearly
+    User user = userRepository.save(buildOwnerUser(request, tempPassword, cafeOwnerRole));
+    String logoUrl = (logo != null && !logo.isEmpty()) ? fileStorageService.storeMenuItemImage(logo) : null;
+    cafeRepository.save(buildCafe(request, user, logoUrl));
+    String verificationTokenStr = saveVerificationToken(user);
+    emailService.sendVerificationEmail(user.getEmail(), verificationTokenStr, tempPassword);
     emailService.sendWelcomeEmail(user.getEmail(), user.getDisplayName(), tempPassword, "Café Owner", "/owner/dashboard");
-
-    // Notify admins in real time
-    webSocketNotificationService.notifyAdmins(RealtimeNotification.builder()
-        .type("CAFE_OWNER_REGISTERED")
-        .title("New Café Owner Registration")
-        .message("Café owner registered: " + user.getEmail() + "  |  Café: " + request.getCafeName())
-        .severity("info")
-        .entityType("USER")
-        .entityId(user.getId())
-        .timestamp(LocalDateTime.now())
-        .build());
-
+    notifyAdmins("CAFE_OWNER_REGISTERED", "New Café Owner Registration",
+        "Café owner registered: " + user.getEmail() + "  |  Café: " + request.getCafeName(), "info", user.getId());
     return AuthResponse.builder()
         .message("Registration successful! Please verify your email. Your account and café will be activated after admin review.")
-        .email(user.getEmail())
-        .build();
+        .email(user.getEmail()).build();
   }
   private RegisterResponse comprehensiveRegisterInternal(RegisterRequest request, MultipartFile govtIdProof) {
     if (userRepository.existsByEmail(request.getPersonalDetails().getEmail())
-        || userRepository.existsByUsername(request.getUsername())) {
+        || userRepository.existsByUsername(request.getUsername()))
       throw new BadRequestException("Username or email already exists");
-    }
-
     Role.RoleName roleName;
     try {
       roleName = Role.RoleName.valueOf(request.getRole().trim().toUpperCase());
     } catch (Exception ex) {
       throw new BadRequestException("Only CUSTOMER role is allowed for public registration");
     }
-    if (roleName != Role.RoleName.CUSTOMER) {
+    if (roleName != Role.RoleName.CUSTOMER)
       throw new BadRequestException("Only CUSTOMER role is allowed for public registration");
-    }
     Role role = roleRepository.findByName(roleName)
         .orElseThrow(() -> new ResourceNotFoundException("Role", "name", request.getRole()));
-
     String tempPassword = UUID.randomUUID().toString().replace("-", "").substring(0, 12) + "Aa1!";
-
-    User user = new User();
-    user.setUsername(request.getUsername());
-    user.setEmail(request.getPersonalDetails().getEmail());
-    user.setFirstName(request.getPersonalDetails().getFirstName());
-    user.setLastName(request.getPersonalDetails().getLastName());
-    user.setDisplayName(
-        (request.getPersonalDetails().getFirstName() + " " + request.getPersonalDetails().getLastName()).trim()
-    );
-    user.setPassword(passwordEncoder.encode(tempPassword));
-    user.setIsActive(false);
-    user.setIsEmailVerified(false);
-    user.setIsProfileComplete(false);
-    user.setMustResetPassword(true);
-    user.setIsTempPassword(true);
-    user.setRegistrationStatus(User.RegistrationStatus.PENDING_APPROVAL);
-
-    user.getRoles().add(role);
-
-    user = userRepository.save(user);
-
-    Profile profile = new Profile();
-    profile.setUser(user);
-    profile.setFirstName(request.getPersonalDetails().getFirstName());
-    profile.setLastName(request.getPersonalDetails().getLastName());
-    profile.setDateOfBirth(request.getPersonalDetails().getDateOfBirth());
-    profile.setPhoneNumber(request.getPersonalDetails().getPhone());
-    profile.setGender(Profile.Gender.valueOf(request.getPersonalDetails().getGender()));
-    profile.setGovtIdType(request.getGovtIdType());
-
-    if (request.getPersonalDetails().getMaritalStatus() != null) {
-      profile.setMaritalStatus(
-          Profile.MaritalStatus.valueOf(request.getPersonalDetails().getMaritalStatus())
-      );
-    }
-
-    Address address = new Address();
-    address.setProfile(profile);
-    address.setStreet(request.getAddress().getStreet());
-    address.setPlotNumber(request.getAddress().getPlotNumber());
-    address.setCity(request.getAddress().getCity());
-    address.setState(request.getAddress().getState());
-    address.setPincode(request.getAddress().getPincode());
-    address.setCountry("India");
-    profile.setAddress(address);
-
-    for (var acadReq : request.getAcademicInfoList()) {
-      AcademicInfo acad = new AcademicInfo();
-      acad.setProfile(profile);
-      acad.setInstitutionName(acadReq.getInstitutionName());
-      acad.setDegree(acadReq.getDegree());
-      acad.setGrade(acadReq.getGrade());
-      acad.setGradePercentage(acadReq.getGradeInPercentage());
-      acad.setEndDate(LocalDate.of(acadReq.getPassingYear(), 12, 31));
-      profile.getAcademicInformation().add(acad);
-    }
-
-    if (request.getWorkExperienceList() != null) {
-      for (var workReq : request.getWorkExperienceList()) {
-        WorkExperience work = new WorkExperience();
-        work.setProfile(profile);
-        work.setCompanyName(workReq.getCompanyName());
-        work.setDesignation(workReq.getDesignation());
-        work.setPosition(workReq.getDesignation());
-        work.setStartDate(workReq.getStartDate());
-        work.setEndDate(workReq.getEndDate());
-        work.setIsCurrent(workReq.getCurrentlyWorking());
-
-        if (workReq.getCtc() != null) {
-          work.setCtcAmount(workReq.getCtc().getAmount());
-          work.setCtcCurrency(workReq.getCtc().getCurrency());
-        }
-
-        profile.getWorkExperiences().add(work);
-      }
-    }
-
-    if (govtIdProof != null && !govtIdProof.isEmpty()) {
-      DocumentStorageService.StoredDocument storedDocument = documentStorageService.storeGovtIdProof(govtIdProof);
-      profile.setGovtIdFileName(storedDocument.fileName());
-      profile.setGovtIdContentType(storedDocument.contentType());
-      profile.setGovtIdDocumentPath(storedDocument.storedPath());
-      profile.setGovtIdFileSize(storedDocument.size());
-    }
-
+    User user = userRepository.save(buildUserForComprehensiveReg(request, role, tempPassword));
+    Profile profile = buildProfile(request, user);
+    profile.setAddress(buildAddress(request, profile));
+    addAcademicInfo(request, profile);
+    addWorkExperience(request, profile);
+    if (govtIdProof != null && !govtIdProof.isEmpty()) attachGovtId(profile, govtIdProof);
     user.setProfile(profile);
-    int completionPercentage = profile.calculateCompletionPercentage();
-    user.setProfileCompletionPercentage(completionPercentage);
+    user.setProfileCompletionPercentage(profile.calculateCompletionPercentage());
     user.setIsProfileComplete(profile.isComplete());
     userRepository.save(user);
-
-    EmailVerificationToken verificationToken = new EmailVerificationToken();
-    verificationToken.setToken(UUID.randomUUID().toString());
-    verificationToken.setUser(user);
-    verificationToken.setExpiresAt(LocalDateTime.now().plusHours(24));
-    emailVerificationTokenRepository.save(verificationToken);
-
-    PasswordResetToken passwordResetToken = new PasswordResetToken();
-    passwordResetToken.setToken(UUID.randomUUID().toString());
-    passwordResetToken.setUser(user);
-    passwordResetToken.setExpiresAt(LocalDateTime.now().plusHours(24));
-    passwordResetTokenRepository.save(passwordResetToken);
-
-    emailService.sendVerificationEmail(user.getEmail(), verificationToken.getToken(), tempPassword);
-    emailService.sendWelcomeEmail(user.getEmail(), user.getUsername(), tempPassword, "Customer", "/cafes");
-    emailService.sendPasswordResetEmail(user.getEmail(), passwordResetToken.getToken());
-    webSocketNotificationService.notifyAdmins(RealtimeNotification.builder()
-        .type("REGISTRATION_PENDING")
-        .title("Registration Pending Approval")
-        .message("New customer application pending: " + user.getEmail())
-        .severity("warning")
-        .entityType("USER")
-        .entityId(user.getId())
-        .timestamp(LocalDateTime.now())
-        .build());
-
+    sendComprehensiveRegistrationEmails(user, tempPassword);
     return RegisterResponse.builder()
         .message("Registration successful. Awaiting admin approval.")
-        .userId(user.getId())
-        .username(user.getUsername())
-        .email(user.getEmail())
-        .role(request.getRole())
-        .emailVerified(false)
-        .profileCompleted(user.getIsProfileComplete())
-        .profileCompletionPercentage(user.getProfileCompletionPercentage())
-        .build();
+        .userId(user.getId()).username(user.getUsername()).email(user.getEmail())
+        .role(request.getRole()).emailVerified(false).profileCompleted(user.getIsProfileComplete())
+        .profileCompletionPercentage(user.getProfileCompletionPercentage()).build();
   }
 
   @Override
   @Transactional
   public AuthResponse login(LoginRequest request) {
-
     User user = userRepository.findByEmail(request.getEmail())
         .orElseThrow(() -> new BadRequestException("Invalid credentials"));
-
-    if (!user.getIsActive()) {
-      throw new BadRequestException("Account is disabled. Awaiting admin approval");
-    }
-
-    // Backward compatibility: existing users created before approval workflow may have null status.
-    if (user.getRegistrationStatus() != null && user.getRegistrationStatus() != User.RegistrationStatus.APPROVED) {
-      throw new BadRequestException("Registration is not approved yet");
-    }
-
-    if (userAccessPolicy.isSystemAdmin(user)) {
-      user.setIsEmailVerified(true);
-      user.setEmailVerified(true);
-      user.setAccountStatus(User.AccountStatus.ACTIVE);
-      user.setIsActive(true);
-    }
-
-    if (userAccessPolicy.requiresEmailVerification(user) && !user.getIsEmailVerified()) {
-      throw new BadRequestException("Please verify your email before logging in");
-    }
-
+    validateLoginEligibility(user);
     Authentication authentication = authenticationManager.authenticate(
         new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
     );
-
     SecurityContextHolder.getContext().setAuthentication(authentication);
-
     adminProfileService.markLastLoginAndBroadcast(user.getId());
-
-    // Send login notification email to let the user know their account was accessed
     String displayName = (user.getDisplayName() != null && !user.getDisplayName().isBlank())
         ? user.getDisplayName() : user.getUsername();
-    String loginTime = java.time.format.DateTimeFormatter
-        .ofPattern("dd MMM yyyy, hh:mm a")
-        .withZone(java.time.ZoneId.of("UTC"))
-        .format(java.time.Instant.now()) + " UTC";
+    String loginTime = java.time.format.DateTimeFormatter.ofPattern("dd MMM yyyy, hh:mm a")
+        .withZone(java.time.ZoneId.of("UTC")).format(java.time.Instant.now()) + " UTC";
     emailService.sendLoginNotification(user.getEmail(), displayName, loginTime);
-
-    String accessToken = jwtUtil.generateToken(authentication);
-    String refreshToken = jwtUtil.generateRefreshToken(authentication);
-
-    return AuthResponse.builder()
-        .token(accessToken)
-        .refreshToken(refreshToken)
-        .tokenType("Bearer")
-        .userId(user.getId())
-        .username(user.getUsername())
-        .email(user.getEmail())
-        .cafeId(resolveCafeId(user))
-        .roles(user.getRoles().stream().map(r -> "ROLE_" + r.getName().name()).toList())
-        .isEmailVerified(user.getIsEmailVerified())
-        .mustResetPassword(user.getMustResetPassword())
-        .isProfileComplete(user.getIsProfileComplete())
-        .profileCompletionPercentage(user.getProfileCompletionPercentage())
-        .message("Login successful")
-        .build();
+    return buildAuthResponse(user, jwtUtil.generateToken(authentication),
+        jwtUtil.generateRefreshToken(authentication), "Login successful");
   }
 
   @Override
@@ -542,42 +286,171 @@ public class AuthServiceImpl implements AuthService {
 
   @Override
   public AuthResponse refreshToken(String refreshToken) {
-
-    if (!jwtUtil.validateToken(refreshToken)) {
+    if (!jwtUtil.validateToken(refreshToken))
       throw new BadRequestException("Invalid refresh token");
-    }
-
     String username = jwtUtil.extractUsername(refreshToken);
-
     User user = userRepository.findByEmail(username)
         .orElseThrow(() -> new ResourceNotFoundException("User", "email", username));
-
     Authentication authentication = new UsernamePasswordAuthenticationToken(
-        username,
-        null,
+        username, null,
         user.getRoles().stream()
-            .map(r -> new org.springframework.security.core.authority.SimpleGrantedAuthority(
-                "ROLE_" + r.getName().name()))
+            .map(r -> new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_" + r.getName().name()))
             .toList()
     );
+    return buildAuthResponse(user, jwtUtil.generateToken(authentication), refreshToken, "Token refreshed successfully");
+  }
 
-    String newAccessToken = jwtUtil.generateToken(authentication);
+  private String saveVerificationToken(User user) {
+    EmailVerificationToken token = new EmailVerificationToken();
+    token.setToken(UUID.randomUUID().toString());
+    token.setUser(user);
+    token.setExpiresAt(LocalDateTime.now().plusHours(24));
+    emailVerificationTokenRepository.save(token);
+    return token.getToken();
+  }
 
+  private void notifyAdmins(String type, String title, String message, String severity, Long entityId) {
+    webSocketNotificationService.notifyAdmins(RealtimeNotification.builder()
+        .type(type).title(title).message(message).severity(severity)
+        .entityType("USER").entityId(entityId).timestamp(LocalDateTime.now()).build());
+  }
+
+  private void validateLoginEligibility(User user) {
+    if (!user.getIsActive()) throw new BadRequestException("Account is disabled. Awaiting admin approval");
+    if (user.getRegistrationStatus() != null && user.getRegistrationStatus() != User.RegistrationStatus.APPROVED)
+      throw new BadRequestException("Registration is not approved yet");
+    if (userAccessPolicy.isSystemAdmin(user)) {
+      user.setIsEmailVerified(true); user.setEmailVerified(true);
+      user.setAccountStatus(User.AccountStatus.ACTIVE); user.setIsActive(true);
+    }
+    if (userAccessPolicy.requiresEmailVerification(user) && !user.getIsEmailVerified())
+      throw new BadRequestException("Please verify your email before logging in");
+  }
+
+  private AuthResponse buildAuthResponse(User user, String accessToken, String refreshToken, String message) {
     return AuthResponse.builder()
-        .token(newAccessToken)
-        .refreshToken(refreshToken)
-        .tokenType("Bearer")
-        .userId(user.getId())
-        .username(user.getUsername())
-        .email(user.getEmail())
-        .cafeId(resolveCafeId(user))
+        .token(accessToken).refreshToken(refreshToken).tokenType("Bearer")
+        .userId(user.getId()).username(user.getUsername()).email(user.getEmail())
+        .firstName(user.getFirstName()).lastName(user.getLastName()).cafeId(resolveCafeId(user))
         .roles(user.getRoles().stream().map(r -> "ROLE_" + r.getName().name()).toList())
-        .isEmailVerified(user.getIsEmailVerified())
-        .mustResetPassword(user.getMustResetPassword())
+        .isEmailVerified(user.getIsEmailVerified()).mustResetPassword(user.getMustResetPassword())
         .isProfileComplete(user.getIsProfileComplete())
         .profileCompletionPercentage(user.getProfileCompletionPercentage())
-        .message("Token refreshed successfully")
-        .build();
+        .message(message).build();
+  }
+
+  private User buildOwnerUser(CafeOwnerRegisterRequest request, String tempPassword, Role role) {
+    User user = new User();
+    user.setEmail(request.getEmail()); user.setUsername(request.getEmail());
+    user.setFirstName(request.getFirstName()); user.setLastName(request.getLastName());
+    user.setDisplayName((request.getFirstName() + " " + request.getLastName()).trim());
+    user.setPassword(passwordEncoder.encode(tempPassword));
+    user.setIsActive(false); user.setIsEmailVerified(false); user.setIsProfileComplete(true);
+    user.setProfileCompletionPercentage(100); user.setMustResetPassword(true); user.setIsTempPassword(true);
+    user.setRegistrationStatus(User.RegistrationStatus.PENDING_APPROVAL);
+    if (request.getOwnerPhoneNumber() != null && !request.getOwnerPhoneNumber().isBlank())
+      user.setPhoneNumber(request.getOwnerPhoneNumber());
+    user.getRoles().add(role);
+    return user;
+  }
+
+  private Cafe buildCafe(CafeOwnerRegisterRequest request, User owner, String logoUrl) {
+    Cafe cafe = new Cafe();
+    cafe.setName(request.getCafeName()); cafe.setDescription(request.getDescription());
+    cafe.setAddress(request.getAddress()); cafe.setCity(request.getCity()); cafe.setState(request.getState());
+    cafe.setPincode(request.getPincode()); cafe.setPhoneNumber(request.getPhoneNumber());
+    cafe.setOpenTime(request.getOpenTime()); cafe.setCloseTime(request.getCloseTime());
+    cafe.setFssaiNumber(request.getFssaiNumber()); cafe.setGstNumber(request.getGstNumber());
+    cafe.setMsmeNumber(request.getMsmeNumber()); cafe.setIsActive(false); cafe.setOwner(owner);
+    if (logoUrl != null) cafe.setLogoUrl(logoUrl);
+    return cafe;
+  }
+
+  private User buildUserForComprehensiveReg(RegisterRequest request, Role role, String tempPassword) {
+    User user = new User();
+    user.setUsername(request.getUsername()); user.setEmail(request.getPersonalDetails().getEmail());
+    user.setFirstName(request.getPersonalDetails().getFirstName());
+    user.setLastName(request.getPersonalDetails().getLastName());
+    user.setDisplayName((request.getPersonalDetails().getFirstName() + " " + request.getPersonalDetails().getLastName()).trim());
+    user.setPassword(passwordEncoder.encode(tempPassword));
+    user.setIsActive(false); user.setIsEmailVerified(false); user.setIsProfileComplete(false);
+    user.setMustResetPassword(true); user.setIsTempPassword(true);
+    user.setRegistrationStatus(User.RegistrationStatus.PENDING_APPROVAL);
+    user.getRoles().add(role);
+    return user;
+  }
+
+  private Profile buildProfile(RegisterRequest request, User user) {
+    Profile profile = new Profile();
+    profile.setUser(user);
+    profile.setFirstName(request.getPersonalDetails().getFirstName());
+    profile.setLastName(request.getPersonalDetails().getLastName());
+    profile.setDateOfBirth(request.getPersonalDetails().getDateOfBirth());
+    profile.setPhoneNumber(request.getPersonalDetails().getPhone());
+    profile.setGender(Profile.Gender.valueOf(request.getPersonalDetails().getGender()));
+    profile.setGovtIdType(request.getGovtIdType());
+    if (request.getPersonalDetails().getMaritalStatus() != null)
+      profile.setMaritalStatus(Profile.MaritalStatus.valueOf(request.getPersonalDetails().getMaritalStatus()));
+    return profile;
+  }
+
+  private Address buildAddress(RegisterRequest request, Profile profile) {
+    Address address = new Address();
+    address.setProfile(profile);
+    address.setStreet(request.getAddress().getStreet());
+    address.setPlotNumber(request.getAddress().getPlotNumber());
+    address.setCity(request.getAddress().getCity());
+    address.setState(request.getAddress().getState());
+    address.setPincode(request.getAddress().getPincode());
+    address.setCountry("India");
+    return address;
+  }
+
+  private void addAcademicInfo(RegisterRequest request, Profile profile) {
+    for (var acadReq : request.getAcademicInfoList()) {
+      AcademicInfo acad = new AcademicInfo();
+      acad.setProfile(profile); acad.setInstitutionName(acadReq.getInstitutionName());
+      acad.setDegree(acadReq.getDegree()); acad.setGrade(acadReq.getGrade());
+      acad.setGradePercentage(acadReq.getGradeInPercentage());
+      acad.setEndDate(LocalDate.of(acadReq.getPassingYear(), 12, 31));
+      profile.getAcademicInformation().add(acad);
+    }
+  }
+
+  private void addWorkExperience(RegisterRequest request, Profile profile) {
+    if (request.getWorkExperienceList() == null) return;
+    for (var workReq : request.getWorkExperienceList()) {
+      WorkExperience work = new WorkExperience();
+      work.setProfile(profile); work.setCompanyName(workReq.getCompanyName());
+      work.setDesignation(workReq.getDesignation()); work.setPosition(workReq.getDesignation());
+      work.setStartDate(workReq.getStartDate()); work.setEndDate(workReq.getEndDate());
+      work.setIsCurrent(workReq.getCurrentlyWorking());
+      if (workReq.getCtc() != null) {
+        work.setCtcAmount(workReq.getCtc().getAmount()); work.setCtcCurrency(workReq.getCtc().getCurrency());
+      }
+      profile.getWorkExperiences().add(work);
+    }
+  }
+
+  private void attachGovtId(Profile profile, MultipartFile govtIdProof) {
+    DocumentStorageService.StoredDocument doc = documentStorageService.storeGovtIdProof(govtIdProof);
+    profile.setGovtIdFileName(doc.fileName());
+    profile.setGovtIdContentType(doc.contentType());
+    profile.setGovtIdDocumentPath(doc.storedPath());
+    profile.setGovtIdFileSize(doc.size());
+  }
+
+  private void sendComprehensiveRegistrationEmails(User user, String tempPassword) {
+    String verificationTokenStr = saveVerificationToken(user);
+    PasswordResetToken passwordResetToken = new PasswordResetToken();
+    passwordResetToken.setToken(UUID.randomUUID().toString()); passwordResetToken.setUser(user);
+    passwordResetToken.setExpiresAt(LocalDateTime.now().plusHours(24));
+    passwordResetTokenRepository.save(passwordResetToken);
+    emailService.sendVerificationEmail(user.getEmail(), verificationTokenStr, tempPassword);
+    emailService.sendWelcomeEmail(user.getEmail(), user.getUsername(), tempPassword, "Customer", "/cafes");
+    emailService.sendPasswordResetEmail(user.getEmail(), passwordResetToken.getToken());
+    notifyAdmins("REGISTRATION_PENDING", "Registration Pending Approval",
+        "New customer application pending: " + user.getEmail(), "warning", user.getId());
   }
 
   private Long resolveCafeId(User user) {

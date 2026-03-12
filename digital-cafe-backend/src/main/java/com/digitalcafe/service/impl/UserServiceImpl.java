@@ -45,62 +45,11 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public UserResponse createCafeOwner(CreateUserRequest request) {
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new BadRequestException("Email already registered");
-        }
-
-        Role ownerRole = roleRepository.findByName(Role.RoleName.CAFE_OWNER)
-                .orElseThrow(() -> new ResourceNotFoundException("Role", "name", "CAFE_OWNER"));
-
-        String tempPassword = PasswordGenerator.generateTemporaryPassword();
-
-        User user = User.builder()
-                .username(request.getEmail())
-                .email(request.getEmail())
-                .password(passwordEncoder.encode(tempPassword))
-                .roles(Collections.singleton(ownerRole))
-                .isActive(true)
-                .isEmailVerified(true) // Admin creates, so verified by default
-                .isProfileComplete(false)
-                .mustResetPassword(true)
-                .registrationStatus(User.RegistrationStatus.APPROVED)
-                .profileCompletionPercentage(0)
-                .build();
-
-        user = userRepository.save(user);
-        log.info("Cafe owner created: {}", user.getEmail());
-
-        emailService.sendWelcomeEmail(user.getEmail(), user.getUsername(), tempPassword, "Café Owner", "/owner/dashboard");
-
-        return mapToUserResponse(user);
-    }
-
-
-
-    @Override
-    @Transactional
     public UserResponse createStaffByOwner(CreateStaffRequest request) {
 
         User currentOwner = getCurrentUserEntity();
-
-        if (!currentOwner.hasRole(Role.RoleName.CAFE_OWNER)) {
+        if (!currentOwner.hasRole(Role.RoleName.CAFE_OWNER))
             throw new BadRequestException("Only Cafe Owner can create staff");
-        }
-
-        Cafe cafe;
-        if (request.getCafeId() != null) {
-            cafe = cafeRepository.findById(request.getCafeId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Cafe not found with ID: " + request.getCafeId()));
-            if (!cafe.getOwner().getId().equals(currentOwner.getId())) {
-                throw new AccessDeniedException("You do not own this cafe");
-            }
-        } else {
-            cafe = currentOwner.getCafe();
-        }
-        if (cafe == null) {
-            throw new BadRequestException("Owner is not linked to any cafe");
-        }
 
         Role.RoleName roleName;
         try {
@@ -108,51 +57,20 @@ public class UserServiceImpl implements UserService {
         } catch (Exception e) {
             throw new BadRequestException("Invalid role. Allowed roles: CHEF, WAITER");
         }
-
-        if (roleName != Role.RoleName.CHEF && roleName != Role.RoleName.WAITER) {
+        if (roleName != Role.RoleName.CHEF && roleName != Role.RoleName.WAITER)
             throw new BadRequestException("Only CHEF or WAITER can be created");
-        }
 
-        if (userRepository.existsByEmail(request.getEmail()) ||
-                userRepository.existsByUsername(request.getUsername())) {
+        if (userRepository.existsByEmail(request.getEmail()) || userRepository.existsByUsername(request.getUsername()))
             throw new BadRequestException("Username or Email already exists");
-        }
 
+        Cafe cafe = resolveAndValidateCafe(currentOwner, request.getCafeId());
         Role role = roleRepository.findByName(roleName)
                 .orElseThrow(() -> new ResourceNotFoundException("Role", "name", roleName.name()));
-
         String tempPassword = PasswordGenerator.generateTemporaryPassword();
-
-        User user = new User();
-        user.setUsername(request.getUsername());
-        user.setEmail(request.getEmail());
-        user.setPassword(passwordEncoder.encode(tempPassword));
-
-        user.setCreatedByUser(currentOwner);
-        user.setCafe(cafe);
-
-        user.setIsActive(true);
-        user.setIsEmailVerified(true);
-        user.setMustResetPassword(true);
-        user.setIsTempPassword(true);
-        user.setRegistrationStatus(User.RegistrationStatus.APPROVED);
-
-        user.getRoles().add(role);
-
-        user.setJoiningDate(request.getJoiningDate());
-        user.setExperienceYears(request.getExperienceYears());
-        user.setShift(request.getShift());
-        user.setGovtIdType(request.getGovtIdType());
-        user.setGovtIdNumber(request.getGovtIdNumber());
-
-        user = userRepository.save(user);
-
-        log.info("{} created by owner {} for cafe {}",
-                roleName, currentOwner.getEmail(), cafe.getName());
-
+        User user = userRepository.save(buildStaffUser(cafe, currentOwner, role, request, tempPassword));
+        log.info("{} created by owner {} for cafe {}", roleName, currentOwner.getEmail(), cafe.getName());
         String roleLabel = roleName == Role.RoleName.CHEF ? "Chef" : "Waiter";
         emailService.sendWelcomeEmail(user.getEmail(), user.getUsername(), tempPassword, roleLabel, "/" + roleLabel.toLowerCase() + "/dashboard");
-
         return mapToUserResponse(user);
     }
 
@@ -233,59 +151,6 @@ public class UserServiceImpl implements UserService {
         log.info("User deleted: {}", user.getEmail());
     }
 
-    @Transactional
-    public User createStaffByOwner(Long cafeId, CreateStaffRequest request) {
-
-        Role.RoleName roleName;
-        try {
-            roleName = Role.RoleName.valueOf(request.getRole().toUpperCase());
-        } catch (Exception e) {
-            throw new BadRequestException("Invalid role");
-        }
-
-        if (roleName != Role.RoleName.CHEF &&
-                roleName != Role.RoleName.WAITER) {
-            throw new BadRequestException("Only CHEF or WAITER allowed");
-        }
-
-        if (userRepository.existsByEmail(request.getEmail()) ||
-                userRepository.existsByUsername(request.getUsername())) {
-            throw new BadRequestException("Username or Email already exists");
-        }
-
-        Role role = roleRepository.findByName(roleName)
-                .orElseThrow(() -> new ResourceNotFoundException("Role", "name", roleName.name()));
-
-        Cafe cafe = cafeRepository.findById(cafeId)
-                .orElseThrow(() -> new ResourceNotFoundException("Cafe", "id", cafeId));
-
-        String tempPassword = PasswordGenerator.generateTemporaryPassword();
-
-        User user = new User();
-        user.setUsername(request.getUsername());
-        user.setEmail(request.getEmail());
-        user.setPassword(passwordEncoder.encode(tempPassword));
-        user.setIsActive(true);
-        user.setIsEmailVerified(true);
-        user.setMustResetPassword(true);
-        user.setIsTempPassword(true);
-
-        user.getRoles().add(role);
-        user.setCafe(cafe);
-
-        user.setJoiningDate(request.getJoiningDate());
-        user.setExperienceYears(request.getExperienceYears());
-        user.setShift(request.getShift());
-        user.setGovtIdType(request.getGovtIdType());
-        user.setGovtIdNumber(request.getGovtIdNumber());
-
-        user = userRepository.save(user);
-
-        String roleLabel2 = roleName == Role.RoleName.CHEF ? "Chef" : "Waiter";
-        emailService.sendWelcomeEmail(user.getEmail(), user.getUsername(), tempPassword, roleLabel2, "/" + roleLabel2.toLowerCase() + "/dashboard");
-
-        return user;
-    }
     @Override
     @Transactional
     public UserResponse toggleUserStatus(Long id, boolean isActive) {
@@ -379,50 +244,55 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public UserResponse updateStaffByOwner(Long staffId, CreateStaffRequest request) {
-
         User user = userRepository.findById(staffId)
                 .orElseThrow(() -> new ResourceNotFoundException("Staff not found"));
-
-
-        userRepository.findByEmail(request.getEmail())
-                .ifPresent(existing -> {
-                    if (!existing.getId().equals(staffId)) {
-                        throw new BadRequestException("Email already exists");
-                    }
-                });
-
-        userRepository.findByUsername(request.getUsername())
-                .ifPresent(existing -> {
-                    if (!existing.getId().equals(staffId)) {
-                        throw new BadRequestException("Username already exists");
-                    }
-                });
-
-
+        userRepository.findByEmail(request.getEmail()).ifPresent(existing -> {
+            if (!existing.getId().equals(staffId)) throw new BadRequestException("Email already exists");
+        });
+        userRepository.findByUsername(request.getUsername()).ifPresent(existing -> {
+            if (!existing.getId().equals(staffId)) throw new BadRequestException("Username already exists");
+        });
         user.setUsername(request.getUsername());
         user.setEmail(request.getEmail());
-
-
         Profile profile = user.getProfile();
-        if (profile == null) {
-            profile = new Profile();
-            profile.setUser(user);
-            user.setProfile(profile);
-        }
-
+        if (profile == null) { profile = new Profile(); profile.setUser(user); user.setProfile(profile); }
         profile.setFirstName(request.getFirstName());
         profile.setLastName(request.getLastName());
-
-
         user.setJoiningDate(request.getJoiningDate());
         user.setExperienceYears(request.getExperienceYears());
         user.setShift(request.getShift());
         user.setGovtIdType(request.getGovtIdType());
         user.setGovtIdNumber(request.getGovtIdNumber());
-
         userRepository.save(user);
-
         return mapToUserResponse(user);
+    }
+
+    private Cafe resolveAndValidateCafe(User owner, Long requestedCafeId) {
+        if (requestedCafeId != null) {
+            Cafe cafe = cafeRepository.findById(requestedCafeId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Cafe not found with ID: " + requestedCafeId));
+            if (!cafe.getOwner().getId().equals(owner.getId()))
+                throw new AccessDeniedException("You do not own this cafe");
+            return cafe;
+        }
+        Cafe cafe = owner.getCafe();
+        if (cafe == null) throw new BadRequestException("Owner is not linked to any cafe");
+        return cafe;
+    }
+
+    private User buildStaffUser(Cafe cafe, User owner, Role role, CreateStaffRequest req, String tempPassword) {
+        User user = new User();
+        user.setUsername(req.getUsername()); user.setEmail(req.getEmail());
+        user.setPassword(passwordEncoder.encode(tempPassword));
+        user.setCreatedByUser(owner); user.setCafe(cafe);
+        user.setIsActive(true); user.setIsEmailVerified(true);
+        user.setMustResetPassword(true); user.setIsTempPassword(true);
+        user.setRegistrationStatus(User.RegistrationStatus.APPROVED);
+        user.getRoles().add(role);
+        user.setJoiningDate(req.getJoiningDate()); user.setExperienceYears(req.getExperienceYears());
+        user.setShift(req.getShift()); user.setGovtIdType(req.getGovtIdType());
+        user.setGovtIdNumber(req.getGovtIdNumber());
+        return user;
     }
 
     private User getCurrentUserEntity() {

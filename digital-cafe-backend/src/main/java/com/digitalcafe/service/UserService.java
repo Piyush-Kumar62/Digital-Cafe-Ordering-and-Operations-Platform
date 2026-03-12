@@ -10,7 +10,6 @@ import org.springframework.data.domain.Pageable;
 import java.util.List;
 
 public interface UserService {
-    UserResponse createCafeOwner(CreateUserRequest request);
     UserResponse createStaffByOwner(CreateStaffRequest request);
     UserResponse getUserById(Long id);
     UserResponse updateUser(Long id, CreateUserRequest request);
@@ -20,7 +19,6 @@ public interface UserService {
     List<UserResponse> getUsersByRole(String roleName);
     Page<UserResponse> getUsersByCafe(Long cafeId, Pageable pageable);
     void deleteUser(Long id);
-    User createStaffByOwner(Long cafeId, CreateStaffRequest request);
     UserResponse toggleUserStatus(Long id, boolean isActive);
     List<UserResponse> getStaffByCafeId(Long cafeId);
     List<UserResponse> getChefsByCafeId(Long cafeId);

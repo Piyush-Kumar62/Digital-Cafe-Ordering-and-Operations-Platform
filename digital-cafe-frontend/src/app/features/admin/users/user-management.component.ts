@@ -16,14 +16,9 @@ export class UserManagementComponent implements OnInit {
   users: User[] = [];
   filteredUsers: User[] = [];
   loading = false;
-  creatingOwner = false;
-
   statusFilter = "ALL";
   roleFilter = "ALL";
   searchText = "";
-  ownerFirstName = "";
-  ownerLastName = "";
-  ownerEmail = "";
 
   pageIndex = 0;
   readonly pageSize = 10;
@@ -76,46 +71,6 @@ export class UserManagementComponent implements OnInit {
         this.alertService.error(error?.message || "Failed to load users");
       },
     });
-  }
-
-  createCafeOwner(): void {
-    const email = this.ownerEmail.trim();
-    const firstName = this.ownerFirstName.trim();
-    const lastName = this.ownerLastName.trim();
-
-    if (!firstName || !lastName || !email) {
-      this.alertService.error(
-        "First name, last name, and email are required to create a cafe owner.",
-      );
-      return;
-    }
-
-    this.creatingOwner = true;
-    this.apiService
-      .createCafeOwner({
-        firstName,
-        lastName,
-        email,
-      })
-      .subscribe({
-        next: () => {
-          this.creatingOwner = false;
-          this.ownerFirstName = "";
-          this.ownerLastName = "";
-          this.ownerEmail = "";
-          this.alertService.success(
-            "Cafe owner created successfully. Credentials sent via email.",
-          );
-          this.roleFilter = "CAFE_OWNER";
-          this.refresh();
-        },
-        error: (error) => {
-          this.creatingOwner = false;
-          this.alertService.error(
-            error?.message || "Failed to create cafe owner",
-          );
-        },
-      });
   }
 
   applyFilters(): void {

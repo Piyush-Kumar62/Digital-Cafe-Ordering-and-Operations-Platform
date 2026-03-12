@@ -1,166 +1,288 @@
-<!-- Profile completion warning -->
-<div
-  class="profile-warning"
-  *ngIf="
-    user &&
-    user.profileCompletionPercentage &&
-    user.profileCompletionPercentage < 100
-  "
->
-  <span class="material-icons warn-icon">warning</span>
-  <div class="warn-body">
-    <strong>Complete Your Profile</strong>
-    <p>
-      Your profile is {{ user.profileCompletionPercentage }}% complete. Finish
-      it to unlock all features.
-    </p>
-  </div>
-  <a routerLink="/customer/complete-profile" class="warn-btn">Complete Now</a>
-</div>
-
-<div class="dashboard-grid" *ngIf="!loading; else loadingState">
-  <section class="summary-cards">
-    <app-card
-      *ngFor="let stat of summaryStats"
-      [title]="stat.title"
-      [value]="stat.value"
-      [icon]="stat.icon"
-      [description]="stat.description"
-      [variant]="stat.variant"
-    ></app-card>
-  </section>
-
-  <!-- Charts -->
-  <div class="chart-container booking-trend-card">
-    <h3>Monthly Booking Trend</h3>
-    <app-chart
-      [data]="monthlyBookingTrend"
-      chartType="line"
-      xAxisLabel="Month"
-      yAxisLabel="Number of Bookings"
-    >
-    </app-chart>
-  </div>
-  <div class="chart-container order-status-card">
-    <h3>Order Status Distribution</h3>
-    <app-chart [data]="orderStatusDistribution" chartType="pie"> </app-chart>
-  </div>
-  <div class="chart-container monthly-spending-card">
-    <h3>Monthly Spending</h3>
-    <app-chart
-      [data]="monthlySpending"
-      chartType="bar-vertical"
-      xAxisLabel="Month"
-      yAxisLabel="Amount Spent (INR)"
-    >
-    </app-chart>
-  </div>
-
-  <!-- ── Quick Actions ──────────────────────────────────────────── -->
-  <div class="section-card quick-actions-card">
-    <h3 class="section-title">
-      <span class="material-icons">flash_on</span> Quick Actions
-    </h3>
-    <div class="quick-actions">
-      <a routerLink="/customer/browse-cafes" class="qa-btn qa-primary">
-        <span class="material-icons">storefront</span>
-        Browse Cafés
-      </a>
-      <a routerLink="/customer/booking" class="qa-btn qa-teal">
-        <span class="material-icons">book_online</span>
-        My Bookings
-      </a>
-      <a routerLink="/customer/order-tracking" class="qa-btn qa-violet">
-        <span class="material-icons">receipt_long</span>
-        My Orders
-      </a>
-      <a routerLink="/customer/payments" class="qa-btn qa-orange">
-        <span class="material-icons">payment</span>
-        My Payments
-      </a>
-      <a routerLink="/customer/profile" class="qa-btn qa-indigo">
-        <span class="material-icons">person</span>
-        My Profile
-      </a>
-      <a routerLink="/customer/notifications" class="qa-btn qa-rose">
-        <span class="material-icons">notifications</span>
-        Notifications
-      </a>
-    </div>
-  </div>
-
-  <!-- ── Recent Activity ────────────────────────────────────────── -->
-  <div class="section-card recent-activity-card">
-    <h3 class="section-title">
-      <span class="material-icons">history</span> Recent Activity
-    </h3>
-    <div class="activity-tables">
-      <div class="activity-table">
-        <h4>Recent Bookings</h4>
-        <table>
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Café</th>
-              <th>Time</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let booking of upcomingBookings">
-              <td>{{ booking.bookingDate | date: "shortDate" }}</td>
-              <td>{{ booking.cafeName }}</td>
-              <td>{{ booking.bookingTime }}</td>
-              <td>
-                <span
-                  class="badge"
-                  [ngClass]="getStatusClass(booking.status)"
-                  >{{ booking.status }}</span
-                >
-              </td>
-            </tr>
-            <tr *ngIf="upcomingBookings.length === 0">
-              <td colspan="4" class="empty-row">
-                No bookings yet.
-                <a routerLink="/customer/browse-cafes">Browse cafés →</a>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+<!-- ═══════════════════════════ CUSTOMER DASHBOARD ═══════════════════════════ -->
+<div class="db-page">
+  <!-- ══ Hero welcome banner ══════════════════════════════════════════════════ -->
+  <div class="db-hero">
+    <!-- left: greeting + CTA -->
+    <div class="db-hero__content">
+      <p class="db-hero__greeting">
+        <span class="material-icons">{{ greetingIcon }}</span>
+        {{ greeting }}
+      </p>
+      <h1 class="db-hero__name">
+        Welcome back, <span class="db-hero__hl">{{ displayName }}</span
+        >!
+      </h1>
+      <p class="db-hero__date">{{ todayFormatted }}</p>
+      <div class="db-hero__btns">
+        <a routerLink="/customer/browse-cafes" class="db-hero__cta">
+          <span class="material-icons">storefront</span> Browse Cafés
+        </a>
+        <a
+          routerLink="/customer/my-bookings"
+          class="db-hero__cta db-hero__cta--ghost"
+        >
+          <span class="material-icons">book_online</span> My Bookings
+        </a>
       </div>
-      <div class="activity-table">
-        <h4>Recent Orders</h4>
-        <table>
-          <thead>
-            <tr>
-              <th>Order ID</th>
-              <th>Status</th>
-              <th>Amount</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let order of recentOrders">
-              <td>#{{ order.orderNumber }}</td>
-              <td>
-                <span class="badge" [ngClass]="getStatusClass(order.status)">{{
-                  order.status
-                }}</span>
-              </td>
-              <td>{{ order.totalAmount | currency: "INR" }}</td>
-            </tr>
-            <tr *ngIf="recentOrders.length === 0">
-              <td colspan="3">No recent orders.</td>
-            </tr>
-          </tbody>
-        </table>
+    </div>
+    <!-- right: avatar + mini-stats -->
+    <div class="db-hero__right">
+      <div class="db-hero__avatar">
+        <img
+          *ngIf="resolvedAvatarUrl"
+          [src]="resolvedAvatarUrl"
+          alt="Profile"
+        />
+        <span *ngIf="!resolvedAvatarUrl" class="material-icons">person</span>
+      </div>
+      <div class="db-hero__mini-stats">
+        <div class="db-mini-stat">
+          <span class="material-icons">book_online</span>
+          <strong>{{ upcomingBookings.length }}</strong>
+          <span>Active</span>
+        </div>
+        <div class="db-mini-stat">
+          <span class="material-icons">receipt_long</span>
+          <strong>{{ recentOrders.length }}</strong>
+          <span>Orders</span>
+        </div>
       </div>
     </div>
   </div>
-</div>
 
-<ng-template #loadingState>
-  <div class="loading-page">
-    <div class="loading-spinner"></div>
-    <p>Loading your dashboard…</p>
+  <!-- ══ Profile completion banner ════════════════════════════════════════════ -->
+  <div
+    class="db-profile-banner"
+    *ngIf="
+      user &&
+      user.profileCompletionPercentage !== undefined &&
+      user.profileCompletionPercentage < 100
+    "
+  >
+    <div class="dpb__left">
+      <span class="material-icons dpb__icon">account_circle</span>
+      <div class="dpb__text">
+        <strong>Complete Your Profile</strong>
+        <p>
+          {{ user.profileCompletionPercentage }}% done — finish to unlock all
+          features
+        </p>
+      </div>
+    </div>
+    <div class="dpb__right">
+      <div class="dpb__bar-track">
+        <div
+          class="dpb__bar"
+          [style.width.%]="user.profileCompletionPercentage"
+        ></div>
+      </div>
+      <a routerLink="/customer/profile" class="dpb__btn">Complete Now</a>
+    </div>
   </div>
-</ng-template>
+
+  <!-- ══ Loading skeleton ══════════════════════════════════════════════════════ -->
+  <ng-container *ngIf="loading">
+    <div class="db-skel-stats">
+      <div
+        class="db-skel db-skel--card"
+        *ngFor="let _ of [0, 1, 2, 3, 4, 5]"
+      ></div>
+    </div>
+    <div class="db-skel-charts">
+      <div class="db-skel db-skel--chart" *ngFor="let _ of [0, 1, 2]"></div>
+    </div>
+    <div class="db-skel db-skel--section"></div>
+  </ng-container>
+
+  <!-- ══ Main content ══════════════════════════════════════════════════════════ -->
+  <ng-container *ngIf="!loading">
+    <!-- ── Stats grid ────────────────────────────────────────────────────────── -->
+    <div class="db-stats-grid">
+      <app-card
+        *ngFor="let stat of summaryStats"
+        [title]="stat.title"
+        [value]="stat.value"
+        [icon]="stat.icon"
+        [description]="stat.description"
+        [variant]="stat.variant"
+      >
+      </app-card>
+    </div>
+
+    <!-- ── Charts row ────────────────────────────────────────────────────────── -->
+    <div class="db-charts-row">
+      <div class="db-section db-chart--booking">
+        <h3 class="db-section__title">
+          <span class="material-icons">trending_up</span> Monthly Bookings
+        </h3>
+        <app-chart
+          [data]="monthlyBookingTrend"
+          chartType="line"
+          xAxisLabel="Month"
+          yAxisLabel="Bookings"
+        >
+        </app-chart>
+      </div>
+
+      <div class="db-section db-chart--orders">
+        <h3 class="db-section__title">
+          <span class="material-icons">donut_small</span> Order Status
+        </h3>
+        <app-chart [data]="orderStatusDistribution" chartType="pie"></app-chart>
+      </div>
+
+      <div class="db-section db-chart--spending">
+        <h3 class="db-section__title">
+          <span class="material-icons">bar_chart</span> Monthly Spending
+        </h3>
+        <app-chart
+          [data]="monthlySpending"
+          chartType="bar-vertical"
+          xAxisLabel="Month"
+          yAxisLabel="Amount (₹)"
+        >
+        </app-chart>
+      </div>
+    </div>
+    <!-- /.db-charts-row -->
+
+    <!-- ── Bottom row: Quick Actions + Recent Activity ───────────────────────── -->
+    <div class="db-bottom-row">
+      <!-- Quick Actions -->
+      <div class="db-section db-qa-card">
+        <h3 class="db-section__title">
+          <span class="material-icons">flash_on</span> Quick Actions
+        </h3>
+        <div class="db-qa-grid">
+          <a
+            routerLink="/customer/browse-cafes"
+            class="db-qa-item db-qa--amber"
+          >
+            <span class="material-icons">storefront</span>
+            <span>Browse Cafés</span>
+          </a>
+          <a routerLink="/customer/my-bookings" class="db-qa-item db-qa--teal">
+            <span class="material-icons">book_online</span>
+            <span>My Bookings</span>
+          </a>
+          <a
+            routerLink="/customer/order-tracking"
+            class="db-qa-item db-qa--violet"
+          >
+            <span class="material-icons">receipt_long</span>
+            <span>My Orders</span>
+          </a>
+          <a routerLink="/customer/payments" class="db-qa-item db-qa--blue">
+            <span class="material-icons">payment</span>
+            <span>Payments</span>
+          </a>
+          <a routerLink="/customer/profile" class="db-qa-item db-qa--indigo">
+            <span class="material-icons">person</span>
+            <span>My Profile</span>
+          </a>
+          <a
+            routerLink="/customer/notifications"
+            class="db-qa-item db-qa--rose"
+          >
+            <span class="material-icons">notifications</span>
+            <span>Alerts</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Recent Activity -->
+      <div class="db-section db-recent-card">
+        <h3 class="db-section__title">
+          <span class="material-icons">history</span> Recent Activity
+        </h3>
+
+        <!-- Upcoming bookings table -->
+        <div class="db-activity-block">
+          <div class="db-activity-hd">
+            <span class="material-icons">calendar_today</span>
+            Upcoming Bookings
+            <a routerLink="/customer/my-bookings" class="db-activity-hd__link"
+              >View all</a
+            >
+          </div>
+          <div class="db-table-wrap">
+            <table class="db-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Café</th>
+                  <th>Time</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let b of upcomingBookings" class="db-table-row">
+                  <td>{{ b.bookingDate | date: "mediumDate" }}</td>
+                  <td class="db-td--name">{{ b.cafeName || "—" }}</td>
+                  <td>{{ b.bookingTime }}</td>
+                  <td>
+                    <span
+                      class="db-badge"
+                      [ngClass]="getStatusClass(b.status)"
+                      >{{ b.status }}</span
+                    >
+                  </td>
+                </tr>
+                <tr *ngIf="upcomingBookings.length === 0">
+                  <td colspan="4" class="db-td--empty">
+                    No bookings yet.
+                    <a routerLink="/customer/browse-cafes">Browse cafés →</a>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Recent orders table -->
+        <div class="db-activity-block">
+          <div class="db-activity-hd">
+            <span class="material-icons">receipt_long</span>
+            Recent Orders
+            <a
+              routerLink="/customer/order-tracking"
+              class="db-activity-hd__link"
+              >View all</a
+            >
+          </div>
+          <div class="db-table-wrap">
+            <table class="db-table">
+              <thead>
+                <tr>
+                  <th>Order #</th>
+                  <th>Café</th>
+                  <th>Status</th>
+                  <th>Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let o of recentOrders" class="db-table-row">
+                  <td class="db-td--mono">#{{ o.orderNumber }}</td>
+                  <td class="db-td--name">{{ o.cafeName || "—" }}</td>
+                  <td>
+                    <span
+                      class="db-badge"
+                      [ngClass]="getStatusClass(o.status)"
+                      >{{ o.status }}</span
+                    >
+                  </td>
+                  <td>₹{{ o.totalAmount | number: "1.2-2" }}</td>
+                </tr>
+                <tr *ngIf="recentOrders.length === 0">
+                  <td colspan="4" class="db-td--empty">No recent orders.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <!-- /.db-recent-card -->
+    </div>
+    <!-- /.db-bottom-row -->
+  </ng-container>
+</div>

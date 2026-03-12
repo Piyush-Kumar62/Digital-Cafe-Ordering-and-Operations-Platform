@@ -1,65 +1,430 @@
-<div class="profile-page">
-  <div class="page-header">
-    <h1 class="page-title">
-      <i class="bi bi-person-circle"></i>
-      My Profile
-    </h1>
-    <p class="page-subtitle">Your account information</p>
+<div class="cp-page">
+  <!-- Loading Skeleton -->
+  <div class="cp-loading" *ngIf="loading">
+    <div class="cp-spinner"></div>
+    <span>Loading profile…</span>
   </div>
 
-  <div class="profile-grid">
-    <!-- Profile Card -->
-    <div class="profile-card">
-      <div class="card-banner"></div>
-      <div class="card-content">
-        <div class="avatar-wrap">
-          <div class="avatar-large">
-            <img *ngIf="profileImage" [src]="profileImage" alt="Profile" />
-            <span *ngIf="!profileImage" class="avatar-initials">{{ getAvatarText() }}</span>
+  <ng-container *ngIf="!loading">
+    <!-- ── HERO BANNER ── -->
+    <div class="cp-hero">
+      <div class="cp-hero__bg"></div>
+      <div class="cp-hero__content">
+        <!-- Avatar with upload -->
+        <div class="cp-avatar-wrap">
+          <div
+            class="cp-avatar"
+            [class.uploading]="uploadingImage"
+            (click)="triggerFileInput()"
+          >
+            <img
+              *ngIf="profileData.profileImageUrl"
+              [src]="profileData.profileImageUrl"
+              alt="Profile photo"
+            />
+            <span
+              *ngIf="!profileData.profileImageUrl"
+              class="cp-avatar__initials"
+            >
+              {{ getAvatarText() }}
+            </span>
+            <div class="cp-avatar__overlay">
+              <span class="material-icons">{{
+                uploadingImage ? "sync" : "photo_camera"
+              }}</span>
+              <span>{{ uploadingImage ? "Uploading…" : "Change Photo" }}</span>
+            </div>
+          </div>
+          <input
+            #fileInput
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/avif"
+            style="display: none"
+            (change)="onFileSelected($event)"
+          />
+          <div class="cp-avatar__badge">
+            <span class="material-icons">restaurant</span>
           </div>
         </div>
-        <h2 class="user-name">{{ getDisplayName() }}</h2>
-        <p class="user-email">{{ getUserEmail() }}</p>
-        <span class="role-badge">
-          <i class="bi bi-shield-check"></i>
-          {{ getRoleLabel() }}
-        </span>
+
+        <!-- Name + meta -->
+        <div class="cp-hero__info">
+          <h1 class="cp-hero__name">{{ getDisplayName() }}</h1>
+          <p class="cp-hero__email">{{ getUserEmail() }}</p>
+          <div class="cp-hero__chips">
+            <span class="cp-chip cp-chip--role">
+              <span class="material-icons">shield</span>
+              {{ getRoleLabel() }}
+            </span>
+            <span class="cp-chip cp-chip--cafe" *ngIf="getCafeName() !== '—'">
+              <span class="material-icons">storefront</span>
+              {{ getCafeName() }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Hero actions -->
+        <div class="cp-hero__actions">
+          <button
+            class="cp-btn cp-btn--edit"
+            (click)="openEditMode()"
+            *ngIf="!editMode"
+          >
+            <span class="material-icons">edit</span>
+            Edit Profile
+          </button>
+          <button class="cp-btn cp-btn--pw" (click)="togglePasswordForm()">
+            <span class="material-icons">lock</span>
+            {{ showPasswordForm ? "Cancel" : "Change Password" }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Kitchen stat mini-tiles in hero -->
+      <div class="cp-hero__stats">
+        <div class="cp-hstat">
+          <span class="cp-hstat__num">{{ chefStats.pendingOrders }}</span>
+          <span class="cp-hstat__lbl">Pending</span>
+        </div>
+        <div class="cp-hstat">
+          <span class="cp-hstat__num">{{ chefStats.preparingOrders }}</span>
+          <span class="cp-hstat__lbl">Preparing</span>
+        </div>
+        <div class="cp-hstat">
+          <span class="cp-hstat__num">{{ chefStats.completedToday }}</span>
+          <span class="cp-hstat__lbl">Done Today</span>
+        </div>
       </div>
     </div>
 
-    <!-- Details Card -->
-    <div class="details-card">
-      <h3 class="details-title">Account Details</h3>
-      <div class="detail-row">
-        <span class="detail-label">
-          <i class="bi bi-person"></i> Username
+    <!-- ── PROFILE COMPLETION BAR ── -->
+    <div
+      class="cp-progress"
+      *ngIf="profileData.profileCompletionPercentage > 0"
+    >
+      <div class="cp-progress__top">
+        <span class="material-icons">bar_chart</span>
+        <span>Profile Completion</span>
+        <span class="cp-progress__pct" [class]="getCompletionClass()">
+          {{ profileData.profileCompletionPercentage }}%
         </span>
-        <span class="detail-value">{{ currentUser?.username || '—' }}</span>
       </div>
-      <div class="detail-row">
-        <span class="detail-label">
-          <i class="bi bi-envelope"></i> Email
-        </span>
-        <span class="detail-value">{{ getUserEmail() || '—' }}</span>
+      <div class="cp-progress__track">
+        <div
+          class="cp-progress__fill"
+          [class]="getCompletionClass()"
+          [style.width.%]="profileData.profileCompletionPercentage"
+        ></div>
       </div>
-      <div class="detail-row">
-        <span class="detail-label">
-          <i class="bi bi-shop"></i> Café
-        </span>
-        <span class="detail-value">{{ getCafeName() }}</span>
-      </div>
-      <div class="detail-row">
-        <span class="detail-label">
-          <i class="bi bi-shield-lock"></i> Role
-        </span>
-        <span class="detail-value">{{ getRoleLabel() }}</span>
-      </div>
-      <div class="detail-row">
-        <span class="detail-label">
-          <i class="bi bi-calendar"></i> Joined
-        </span>
-        <span class="detail-value">{{ getJoinDate() }}</span>
-      </div>
+      <p
+        class="cp-progress__hint"
+        *ngIf="profileData.profileCompletionPercentage < 100"
+      >
+        Add more details to complete your chef profile.
+      </p>
     </div>
-  </div>
+
+    <!-- ── MAIN GRID ── -->
+    <div class="cp-grid">
+      <!-- ── LEFT COLUMN ── -->
+      <div class="cp-left">
+        <!-- Edit Profile Form -->
+        <div class="cp-card cp-card--form" *ngIf="editMode">
+          <div class="cp-card__head">
+            <span class="material-icons">edit_note</span>
+            <h3>Edit Profile</h3>
+            <button class="cp-close" (click)="cancelEdit()">
+              <span class="material-icons">close</span>
+            </button>
+          </div>
+          <div class="cp-form-grid">
+            <div class="cp-form-group">
+              <label>First Name <span class="cp-req">*</span></label>
+              <input
+                type="text"
+                [(ngModel)]="editForm.firstName"
+                placeholder="First name"
+                class="cp-input"
+                maxlength="100"
+              />
+            </div>
+            <div class="cp-form-group">
+              <label>Last Name <span class="cp-req">*</span></label>
+              <input
+                type="text"
+                [(ngModel)]="editForm.lastName"
+                placeholder="Last name"
+                class="cp-input"
+                maxlength="100"
+              />
+            </div>
+            <div class="cp-form-group cp-form-group--full">
+              <label>Display Name <span class="cp-req">*</span></label>
+              <input
+                type="text"
+                [(ngModel)]="editForm.displayName"
+                placeholder="How you appear to others"
+                class="cp-input"
+                maxlength="150"
+              />
+            </div>
+          </div>
+          <div class="cp-form-actions">
+            <button class="cp-btn-cancel" (click)="cancelEdit()">Cancel</button>
+            <button
+              class="cp-btn-save"
+              (click)="saveProfile()"
+              [disabled]="saving"
+            >
+              <span class="material-icons">{{
+                saving ? "sync" : "check"
+              }}</span>
+              {{ saving ? "Saving…" : "Save Changes" }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Change Password Form -->
+        <div class="cp-card cp-card--password" *ngIf="showPasswordForm">
+          <div class="cp-card__head">
+            <span class="material-icons">lock</span>
+            <h3>Change Password</h3>
+            <button class="cp-close" (click)="togglePasswordForm()">
+              <span class="material-icons">close</span>
+            </button>
+          </div>
+          <div class="cp-form-grid">
+            <div class="cp-form-group cp-form-group--full">
+              <label>Current Password <span class="cp-req">*</span></label>
+              <div class="cp-input-group">
+                <input
+                  [type]="showOldPass ? 'text' : 'password'"
+                  [(ngModel)]="passwordForm.oldPassword"
+                  placeholder="Enter current password"
+                  class="cp-input"
+                />
+                <button
+                  class="cp-eye"
+                  (click)="showOldPass = !showOldPass"
+                  type="button"
+                >
+                  <span class="material-icons">{{
+                    showOldPass ? "visibility_off" : "visibility"
+                  }}</span>
+                </button>
+              </div>
+            </div>
+            <div class="cp-form-group">
+              <label>New Password <span class="cp-req">*</span></label>
+              <div class="cp-input-group">
+                <input
+                  [type]="showNewPass ? 'text' : 'password'"
+                  [(ngModel)]="passwordForm.newPassword"
+                  placeholder="Min. 8 characters"
+                  class="cp-input"
+                />
+                <button
+                  class="cp-eye"
+                  (click)="showNewPass = !showNewPass"
+                  type="button"
+                >
+                  <span class="material-icons">{{
+                    showNewPass ? "visibility_off" : "visibility"
+                  }}</span>
+                </button>
+              </div>
+            </div>
+            <div class="cp-form-group">
+              <label>Confirm Password <span class="cp-req">*</span></label>
+              <div class="cp-input-group">
+                <input
+                  [type]="showConfirmPass ? 'text' : 'password'"
+                  [(ngModel)]="passwordForm.confirmPassword"
+                  placeholder="Repeat new password"
+                  class="cp-input"
+                />
+                <button
+                  class="cp-eye"
+                  (click)="showConfirmPass = !showConfirmPass"
+                  type="button"
+                >
+                  <span class="material-icons">{{
+                    showConfirmPass ? "visibility_off" : "visibility"
+                  }}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="cp-form-actions">
+            <button class="cp-btn-cancel" (click)="togglePasswordForm()">
+              Cancel
+            </button>
+            <button
+              class="cp-btn-save cp-btn-save--red"
+              (click)="savePassword()"
+              [disabled]="passwordSaving"
+            >
+              <span class="material-icons">{{
+                passwordSaving ? "sync" : "lock_reset"
+              }}</span>
+              {{ passwordSaving ? "Updating…" : "Update Password" }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Account Details Card -->
+        <div class="cp-card">
+          <div class="cp-card__head">
+            <span class="material-icons">badge</span>
+            <h3>Account Details</h3>
+          </div>
+          <div class="cp-detail-list">
+            <div class="cp-detail-row">
+              <div class="cp-detail-icon">
+                <span class="material-icons">person</span>
+              </div>
+              <div class="cp-detail-body">
+                <span class="cp-detail-lbl">Username</span>
+                <span class="cp-detail-val">{{
+                  currentUser?.username || "—"
+                }}</span>
+              </div>
+            </div>
+            <div class="cp-detail-row">
+              <div class="cp-detail-icon">
+                <span class="material-icons">email</span>
+              </div>
+              <div class="cp-detail-body">
+                <span class="cp-detail-lbl">Email Address</span>
+                <span class="cp-detail-val">{{ getUserEmail() || "—" }}</span>
+              </div>
+            </div>
+            <div class="cp-detail-row">
+              <div class="cp-detail-icon">
+                <span class="material-icons">account_box</span>
+              </div>
+              <div class="cp-detail-body">
+                <span class="cp-detail-lbl">Display Name</span>
+                <span class="cp-detail-val">{{
+                  profileData.displayName || getDisplayName()
+                }}</span>
+              </div>
+            </div>
+            <div class="cp-detail-row">
+              <div class="cp-detail-icon">
+                <span class="material-icons">storefront</span>
+              </div>
+              <div class="cp-detail-body">
+                <span class="cp-detail-lbl">Assigned Café</span>
+                <span class="cp-detail-val">{{ getCafeName() }}</span>
+              </div>
+            </div>
+            <div class="cp-detail-row">
+              <div class="cp-detail-icon">
+                <span class="material-icons">verified_user</span>
+              </div>
+              <div class="cp-detail-body">
+                <span class="cp-detail-lbl">Role</span>
+                <span class="cp-detail-val cp-detail-val--badge">{{
+                  getRoleLabel()
+                }}</span>
+              </div>
+            </div>
+            <div class="cp-detail-row">
+              <div class="cp-detail-icon">
+                <span class="material-icons">history</span>
+              </div>
+              <div class="cp-detail-body">
+                <span class="cp-detail-lbl">Last Login</span>
+                <span class="cp-detail-val">{{ getLastLogin() }}</span>
+              </div>
+            </div>
+            <div class="cp-detail-row">
+              <div class="cp-detail-icon">
+                <span class="material-icons">event_available</span>
+              </div>
+              <div class="cp-detail-body">
+                <span class="cp-detail-lbl">Member Since</span>
+                <span class="cp-detail-val">{{ getJoinDate() }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── RIGHT COLUMN ── -->
+      <div class="cp-right">
+        <!-- Kitchen Stats Card -->
+        <div class="cp-card cp-card--stats">
+          <div class="cp-card__head">
+            <span class="material-icons">local_fire_department</span>
+            <h3>Kitchen Stats</h3>
+            <span class="cp-live-dot"></span>
+            <span class="cp-live-text">Live</span>
+          </div>
+          <div class="cp-stats-grid">
+            <div class="cp-stat-tile cp-stat--pending">
+              <span class="material-icons cp-stat-icon">schedule</span>
+              <span class="cp-stat-num">{{ chefStats.pendingOrders }}</span>
+              <span class="cp-stat-lbl">Awaiting Kitchen</span>
+            </div>
+            <div class="cp-stat-tile cp-stat--preparing">
+              <span class="material-icons cp-stat-icon">whatshot</span>
+              <span class="cp-stat-num">{{ chefStats.preparingOrders }}</span>
+              <span class="cp-stat-lbl">In Preparation</span>
+            </div>
+            <div class="cp-stat-tile cp-stat--done">
+              <span class="material-icons cp-stat-icon">task_alt</span>
+              <span class="cp-stat-num">{{ chefStats.completedToday }}</span>
+              <span class="cp-stat-lbl">Completed Today</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Work Information Card -->
+        <div class="cp-card">
+          <div class="cp-card__head">
+            <span class="material-icons">work</span>
+            <h3>Work Information</h3>
+          </div>
+          <div class="cp-detail-list">
+            <div class="cp-detail-row">
+              <div class="cp-detail-icon">
+                <span class="material-icons">wb_sunny</span>
+              </div>
+              <div class="cp-detail-body">
+                <span class="cp-detail-lbl">Shift</span>
+                <span
+                  class="cp-detail-val"
+                  [class.cp-chip-inline]="getShift() !== '—'"
+                >
+                  {{ getShift() }}
+                </span>
+              </div>
+            </div>
+            <div class="cp-detail-row">
+              <div class="cp-detail-icon">
+                <span class="material-icons">star</span>
+              </div>
+              <div class="cp-detail-body">
+                <span class="cp-detail-lbl">Specialization</span>
+                <span class="cp-detail-val">{{ getSpecialization() }}</span>
+              </div>
+            </div>
+            <div class="cp-detail-row">
+              <div class="cp-detail-icon">
+                <span class="material-icons">workspace_premium</span>
+              </div>
+              <div class="cp-detail-body">
+                <span class="cp-detail-lbl">Experience</span>
+                <span class="cp-detail-val">{{ getExperience() }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- /cp-right -->
+    </div>
+    <!-- /cp-grid -->
+  </ng-container>
 </div>

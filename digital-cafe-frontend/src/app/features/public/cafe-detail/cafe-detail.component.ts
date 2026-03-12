@@ -35,7 +35,15 @@ export class CafeDetailComponent implements OnInit {
   bookingInProgress = false;
   orderInProgress = false;
   paymentInProgress = false;
+  placeAndPayInProgress = false;
   availableTables = 0;
+  availableTablesList: Array<{
+    id: number;
+    tableNumber: string;
+    capacity: number;
+  }> = [];
+  selectedTableId: number | null = null;
+  tablesLoading = false;
   bookingId: number | null = null;
   orderId: number | null = null;
   orderAmount = 0;
@@ -125,13 +133,17 @@ export class CafeDetailComponent implements OnInit {
   }
 
   onSlotChange(): void {
+    this.selectedTableId = null;
     this.loadAvailability();
   }
 
+  selectTable(tableId: number): void {
+    if (this.bookingId) return; // already booked
+    this.selectedTableId = this.selectedTableId === tableId ? null : tableId;
+  }
+
   bookTable(): void {
-    if (!this.cafe) {
-      return;
-    }
+    if (!this.cafe) return;
     if (this.bookingId) {
       this.alertService.info("Table already booked for this session.");
       return;
@@ -149,53 +161,151 @@ export class CafeDetailComponent implements OnInit {
       this.alertService.error("Select date and time before booking.");
       return;
     }
+    if (!this.selectedTableId) {
+      this.alertService.error("Please select a table first.");
+      return;
+    }
 
     this.bookingInProgress = true;
     this.cafeBrowseService
-      .getTableAvailability(
-        this.cafe.cafeDetails.id,
-        this.selectedDate,
+      .createBooking({
+        cafeId: this.cafe.cafeDetails.id,
+        tableId: this.selectedTableId,
+        date: this.selectedDate,
         timeSlot,
-        this.guests,
+        numberOfGuests: this.guests,
+      })
+      .subscribe({
+        next: (booking) => {
+          this.bookingId = booking.id;
+          this.bookingInProgress = false;
+          this.alertService.success(
+            "Table booked successfully! You can now browse the menu.",
+          );
+        },
+        error: (err) => {
+          this.bookingInProgress = false;
+          this.alertService.error(
+            err?.error?.message || "Unable to book table.",
+          );
+        },
+      });
+  }
+
+  /**
+   * Unified flow: creates the order (PENDING_PAYMENT) and immediately
+   * initiates payment in a single click — no two-step UI.
+   */
+  placeOrderAndPay(): void {
+    if (this.placeAndPayInProgress || this.paymentInProgress) {
+      return; // prevent double-click
+    }
+    if (!this.bookingId) {
+      this.alertService.error("Book a table first.");
+      return;
+    }
+    if (!this.authService.isAuthenticated || !this.authService.isCustomer()) {
+      this.router.navigate(["/auth/login"], {
+        queryParams: { returnUrl: this.router.url },
+      });
+      return;
+    }
+
+    this.placeAndPayInProgress = true;
+
+    this.cartItems$
+      .pipe(
+        take(1),
+        map((items) => items.filter((l) => l.quantity > 0)),
       )
       .subscribe({
-        next: (tables) => {
-          const selectedTable = (tables || [])[0];
-          if (!selectedTable?.id) {
-            this.bookingInProgress = false;
-            this.alertService.error(
-              "No available tables for selected slot. Try another time.",
-            );
+        next: (lines) => {
+          if (lines.length === 0) {
+            this.placeAndPayInProgress = false;
+            this.alertService.error("Cart is empty.");
             return;
           }
 
+          // ── Fast-retry path ────────────────────────────────────────────────
+          // If an orderId is already held from a prior cancelled/failed payment
+          // attempt, skip createOrder (backend would reuse it anyway) and go
+          // straight to payment — avoids an unnecessary round-trip.
+          if (this.orderId) {
+            this.cafeBrowseService
+              .pay({
+                orderId: this.orderId,
+                amount: this.orderAmount || 1,
+                paymentMethod: this.paymentMethod,
+              })
+              .subscribe({
+                next: (payment) => {
+                  this.placeAndPayInProgress = false;
+                  this.paymentInProgress = true;
+                  this.handlePaymentFlow(payment);
+                },
+                error: (err) => {
+                  // Payment init failed — clear stale orderId so next click creates fresh order
+                  this.orderId = null;
+                  this.placeAndPayInProgress = false;
+                  this.alertService.error(
+                    err?.error?.message || "Payment initiation failed.",
+                  );
+                },
+              });
+            return;
+          }
+
+          // ── Normal path: create order then pay ─────────────────────────────
           this.cafeBrowseService
-            .createBooking({
-              cafeId: this.cafe!.cafeDetails.id,
-              tableId: selectedTable.id,
-              date: this.selectedDate,
-              timeSlot,
-              numberOfGuests: this.guests,
+            .createOrder({
+              bookingId: this.bookingId as number,
+              items: lines.map((line) => ({
+                menuItemId: line.item.id,
+                quantity: line.quantity,
+              })),
             })
             .subscribe({
-              next: (booking) => {
-                this.bookingId = booking.id;
-                this.bookingInProgress = false;
-                this.alertService.success("Table booked successfully.");
+              next: (order) => {
+                this.orderId = order.id;
+                this.orderAmount = Number(
+                  order.totalAmount ||
+                    lines.reduce(
+                      (s, l) => s + Number(l.item.price || 0) * l.quantity,
+                      0,
+                    ),
+                );
+
+                // Immediately initiate payment after order creation
+                this.cafeBrowseService
+                  .pay({
+                    orderId: this.orderId as number,
+                    amount: this.orderAmount || 1,
+                    paymentMethod: this.paymentMethod,
+                  })
+                  .subscribe({
+                    next: (payment) => {
+                      this.placeAndPayInProgress = false;
+                      this.paymentInProgress = true;
+                      this.handlePaymentFlow(payment);
+                    },
+                    error: (err) => {
+                      this.placeAndPayInProgress = false;
+                      this.alertService.error(
+                        err?.error?.message || "Payment initiation failed.",
+                      );
+                    },
+                  });
               },
               error: (err) => {
-                this.bookingInProgress = false;
+                this.placeAndPayInProgress = false;
                 this.alertService.error(
-                  err?.error?.message || "Unable to book table.",
+                  err?.error?.message || "Unable to place order.",
                 );
               },
             });
         },
         error: () => {
-          this.bookingInProgress = false;
-          this.alertService.error(
-            "Unable to check table availability. Please retry.",
-          );
+          this.placeAndPayInProgress = false;
         },
       });
   }
@@ -233,7 +343,8 @@ export class CafeDetailComponent implements OnInit {
                 this.orderAmount = Number(
                   order.totalAmount ||
                     lines.reduce(
-                      (sum, line) => sum + Number(line.item.price || 0) * line.quantity,
+                      (sum, line) =>
+                        sum + Number(line.item.price || 0) * line.quantity,
                       0,
                     ),
                 );
@@ -285,14 +396,12 @@ export class CafeDetailComponent implements OnInit {
   }
 
   private loadAvailability(): void {
-    if (!this.cafe) {
-      return;
-    }
-    // Normalize time to HH:mm (strip seconds if present)
+    if (!this.cafe) return;
     const timeSlot = this.selectedTime
       ? this.selectedTime.split(":").slice(0, 2).join(":")
       : "";
     if (!this.selectedDate || !timeSlot) return;
+    this.tablesLoading = true;
     this.cafeBrowseService
       .getTableAvailability(
         this.cafe.cafeDetails.id,
@@ -302,10 +411,14 @@ export class CafeDetailComponent implements OnInit {
       )
       .subscribe({
         next: (tables) => {
-          this.availableTables = tables.length;
+          this.availableTablesList = tables || [];
+          this.availableTables = this.availableTablesList.length;
+          this.tablesLoading = false;
         },
         error: () => {
+          this.availableTablesList = [];
           this.availableTables = 0;
+          this.tablesLoading = false;
         },
       });
   }
@@ -447,16 +560,16 @@ export class CafeDetailComponent implements OnInit {
                 emi: false,
                 paylater: false,
               }
-          : selectedMethod === "WALLET"
-            ? {
-                upi: false,
-                card: false,
-                netbanking: false,
-                wallet: true,
-                emi: false,
-                paylater: false,
-              }
-          : undefined;
+            : selectedMethod === "WALLET"
+              ? {
+                  upi: false,
+                  card: false,
+                  netbanking: false,
+                  wallet: true,
+                  emi: false,
+                  paylater: false,
+                }
+              : undefined;
 
     const options = {
       key: environment.razorpayKeyId,
@@ -517,9 +630,9 @@ export class CafeDetailComponent implements OnInit {
       return Promise.resolve();
     }
     return new Promise((resolve, reject) => {
-      const existing = document.getElementById("razorpay-checkout-js") as
-        | HTMLScriptElement
-        | null;
+      const existing = document.getElementById(
+        "razorpay-checkout-js",
+      ) as HTMLScriptElement | null;
       if (existing) {
         existing.addEventListener("load", () => resolve(), { once: true });
         existing.addEventListener("error", () => reject(), { once: true });
@@ -558,21 +671,30 @@ export class CafeDetailComponent implements OnInit {
     gatewayPaymentId: string,
     signature: string,
   ): void {
-    this.apiService.verifyPayment(paymentId, gatewayPaymentId, signature).subscribe({
-      next: () => this.completePaymentSuccess(),
-      error: (err) => {
-        this.paymentInProgress = false;
-        this.alertService.error(
-          err?.error?.message || "Payment verification failed.",
-        );
-      },
-    });
+    this.apiService
+      .verifyPayment(paymentId, gatewayPaymentId, signature)
+      .subscribe({
+        next: () => this.completePaymentSuccess(),
+        error: (err) => {
+          this.paymentInProgress = false;
+          this.alertService.error(
+            err?.error?.message || "Payment verification failed.",
+          );
+        },
+      });
   }
 
   private completePaymentSuccess(): void {
     this.paymentInProgress = false;
     this.cartService.clearCart();
-    this.alertService.success("Payment successful.");
-    this.router.navigate(["/customer/order-tracking", this.orderId]);
+    this.alertService
+      .successWithButton(
+        "Payment Successful! 🎉",
+        "Your order has been placed and sent to the kitchen.",
+        "Track My Order 🍽️",
+      )
+      .then(() => {
+        this.router.navigate(["/customer/order-tracking", this.orderId]);
+      });
   }
 }

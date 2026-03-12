@@ -1,54 +1,323 @@
-import { Component, OnInit } from "@angular/core";
+import { Component, OnInit, ViewChild, ElementRef } from "@angular/core";
 import { CommonModule } from "@angular/common";
+import { FormsModule } from "@angular/forms";
 import { AuthService } from "@core/auth/auth.service";
+import { ApiService } from "@core/services/api.service";
+import { AlertService } from "@core/services/alert.service";
+import { ChefDashboard } from "@shared/models/dashboard.model";
 
 @Component({
   selector: "app-chef-profile",
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: "./chef-profile.component.html",
   styleUrls: ["./chef-profile.component.scss"],
 })
 export class ChefProfileComponent implements OnInit {
-  currentUser: any;
-  profileImage = "";
+  currentUser: any = null;
+  loading = true;
+  saving = false;
+  uploadingImage = false;
 
-  constructor(private authService: AuthService) {}
+  profileData = {
+    firstName: "",
+    lastName: "",
+    displayName: "",
+    email: "",
+    role: "",
+    profileImageUrl: "",
+    profileCompletionPercentage: 0,
+    lastLogin: "",
+  };
+
+  editMode = false;
+  editForm = { firstName: "", lastName: "", displayName: "" };
+
+  showPasswordForm = false;
+  passwordForm = { oldPassword: "", newPassword: "", confirmPassword: "" };
+  passwordSaving = false;
+  showOldPass = false;
+  showNewPass = false;
+  showConfirmPass = false;
+
+  chefStats = {
+    pendingOrders: 0,
+    preparingOrders: 0,
+    completedToday: 0,
+    cafeName: "—",
+  };
+
+  @ViewChild("fileInput") fileInput!: ElementRef<HTMLInputElement>;
+
+  constructor(
+    private authService: AuthService,
+    private apiService: ApiService,
+    private alertService: AlertService,
+  ) {}
 
   ngOnInit(): void {
     this.currentUser = this.authService.currentUserValue;
-    this.profileImage = localStorage.getItem("chef_profile_image") || "";
+    this.loadProfile();
+    this.loadChefStats();
+  }
+
+  private loadProfile(): void {
+    this.loading = true;
+    this.apiService.getCustomerProfile().subscribe({
+      next: (data: any) => {
+        this.profileData = {
+          firstName: data?.firstName || this.currentUser?.firstName || "",
+          lastName: data?.lastName || this.currentUser?.lastName || "",
+          displayName: data?.displayName || "",
+          email: data?.email || this.currentUser?.email || "",
+          role: data?.role || "",
+          profileImageUrl: data?.profileImageUrl || "",
+          profileCompletionPercentage: data?.profileCompletionPercentage || 0,
+          lastLogin: data?.lastLogin || "",
+        };
+        this.loading = false;
+      },
+      error: () => {
+        this.profileData.firstName = this.currentUser?.firstName || "";
+        this.profileData.lastName = this.currentUser?.lastName || "";
+        this.profileData.email = this.currentUser?.email || "";
+        this.loading = false;
+      },
+    });
+  }
+
+  private loadChefStats(): void {
+    const cafeId = this.currentUser?.cafeId;
+    if (!cafeId) return;
+    this.apiService.getChefDashboard(cafeId).subscribe({
+      next: (data: ChefDashboard) => {
+        this.chefStats = {
+          pendingOrders: data?.pendingOrders ?? 0,
+          preparingOrders: data?.preparingOrders ?? 0,
+          completedToday: data?.completedToday ?? 0,
+          cafeName: data?.cafeName || "—",
+        };
+      },
+      error: () => {},
+    });
   }
 
   getDisplayName(): string {
-    return this.currentUser?.name || this.currentUser?.username || "Chef";
-  }
-
-  getUserEmail(): string {
-    return this.currentUser?.email || "";
+    if (this.profileData.displayName) return this.profileData.displayName;
+    const fn = this.profileData.firstName;
+    const ln = this.profileData.lastName;
+    if (fn || ln) return `${fn} ${ln}`.trim();
+    return this.currentUser?.username || "Chef";
   }
 
   getAvatarText(): string {
-    const name = this.getDisplayName();
-    return name?.charAt(0)?.toUpperCase() || "C";
+    return this.getDisplayName().charAt(0).toUpperCase() || "C";
+  }
+
+  getUserEmail(): string {
+    return this.profileData.email || this.currentUser?.email || "";
   }
 
   getRoleLabel(): string {
-    const role = this.currentUser?.roles?.[0] || "ROLE_CHEF";
+    const role =
+      this.profileData.role || this.currentUser?.roles?.[0] || "ROLE_CHEF";
     return String(role).replace("ROLE_", "");
   }
 
+  getCafeName(): string {
+    return this.chefStats.cafeName !== "—"
+      ? this.chefStats.cafeName
+      : this.currentUser?.cafeName || "—";
+  }
+
+  getShift(): string {
+    return this.currentUser?.shift || "—";
+  }
+
+  getSpecialization(): string {
+    return this.currentUser?.specialization || "—";
+  }
+
+  getExperience(): string {
+    const exp = this.currentUser?.experienceYears;
+    if (exp == null) return "—";
+    return `${exp} ${exp === 1 ? "year" : "years"}`;
+  }
+
   getJoinDate(): string {
-    const date = this.currentUser?.createdAt;
+    const date = this.currentUser?.joiningDate || this.currentUser?.createdAt;
     if (!date) return "—";
-    return new Date(date).toLocaleDateString("en-US", {
+    return new Date(date).toLocaleDateString("en-IN", {
       year: "numeric",
       month: "long",
       day: "numeric",
     });
   }
 
-  getCafeName(): string {
-    return this.currentUser?.cafeName || "Assigned Café";
+  getLastLogin(): string {
+    const l = this.profileData.lastLogin || this.currentUser?.lastLogin;
+    if (!l) return "—";
+    return new Date(l).toLocaleString("en-IN", {
+      dateStyle: "medium",
+      timeStyle: "short",
+    });
+  }
+
+  getCompletionClass(): string {
+    const p = this.profileData.profileCompletionPercentage;
+    if (p >= 80) return "high";
+    if (p >= 50) return "mid";
+    return "low";
+  }
+
+  // ── Edit Profile ────────────────────────────────────────────
+  openEditMode(): void {
+    this.editForm = {
+      firstName: this.profileData.firstName,
+      lastName: this.profileData.lastName,
+      displayName:
+        this.profileData.displayName ||
+        `${this.profileData.firstName} ${this.profileData.lastName}`.trim(),
+    };
+    this.editMode = true;
+  }
+
+  cancelEdit(): void {
+    this.editMode = false;
+  }
+
+  saveProfile(): void {
+    if (
+      !this.editForm.firstName.trim() ||
+      !this.editForm.lastName.trim() ||
+      !this.editForm.displayName.trim()
+    ) {
+      this.alertService.error("Validation", "All fields are required.");
+      return;
+    }
+    this.saving = true;
+    this.apiService.updateCustomerProfile(this.editForm).subscribe({
+      next: (data: any) => {
+        this.profileData.firstName = data?.firstName || this.editForm.firstName;
+        this.profileData.lastName = data?.lastName || this.editForm.lastName;
+        this.profileData.displayName =
+          data?.displayName || this.editForm.displayName;
+        if (data?.profileImageUrl)
+          this.profileData.profileImageUrl = data.profileImageUrl;
+        this.saving = false;
+        this.editMode = false;
+        this.alertService.success("Saved", "Profile updated successfully.");
+      },
+      error: () => {
+        this.saving = false;
+        this.alertService.error("Error", "Failed to update profile.");
+      },
+    });
+  }
+
+  // ── Image Upload ─────────────────────────────────────────────
+  triggerFileInput(): void {
+    this.fileInput.nativeElement.click();
+  }
+
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      this.alertService.error(
+        "File Too Large",
+        "Please upload an image under 5MB.",
+      );
+      return;
+    }
+    const allowed = ["image/jpeg", "image/png", "image/webp", "image/avif"];
+    if (!allowed.includes(file.type)) {
+      this.alertService.error(
+        "Invalid Format",
+        "Please upload a JPEG, PNG, WEBP or AVIF image.",
+      );
+      return;
+    }
+
+    this.uploadingImage = true;
+    this.apiService.uploadCustomerProfileImage(file).subscribe({
+      next: (res: any) => {
+        const url = res?.profileImageUrl || res?.imageUrl || res?.url || "";
+        this.profileData.profileImageUrl = url;
+        this.uploadingImage = false;
+        this.alertService.success("Uploaded", "Profile picture updated.");
+      },
+      error: () => {
+        this.uploadingImage = false;
+        this.alertService.error("Upload Failed", "Could not upload image.");
+      },
+    });
+    input.value = "";
+  }
+
+  // ── Change Password ──────────────────────────────────────────
+  togglePasswordForm(): void {
+    this.showPasswordForm = !this.showPasswordForm;
+    if (!this.showPasswordForm) {
+      this.passwordForm = {
+        oldPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      };
+    }
+  }
+
+  savePassword(): void {
+    if (
+      !this.passwordForm.oldPassword ||
+      !this.passwordForm.newPassword ||
+      !this.passwordForm.confirmPassword
+    ) {
+      this.alertService.error(
+        "Validation",
+        "All password fields are required.",
+      );
+      return;
+    }
+    if (this.passwordForm.newPassword !== this.passwordForm.confirmPassword) {
+      this.alertService.error(
+        "Mismatch",
+        "New password and confirm password do not match.",
+      );
+      return;
+    }
+    if (this.passwordForm.newPassword.length < 8) {
+      this.alertService.error(
+        "Too Short",
+        "New password must be at least 8 characters.",
+      );
+      return;
+    }
+
+    this.passwordSaving = true;
+    this.authService
+      .changePassword({
+        oldPassword: this.passwordForm.oldPassword,
+        newPassword: this.passwordForm.newPassword,
+      })
+      .subscribe({
+        next: () => {
+          this.passwordSaving = false;
+          this.togglePasswordForm();
+          this.alertService.success(
+            "Password Changed",
+            "Your password has been updated.",
+          );
+        },
+        error: (err: any) => {
+          this.passwordSaving = false;
+          const msg =
+            err?.error?.message ||
+            "Incorrect current password or server error.";
+          this.alertService.error("Failed", msg);
+        },
+      });
   }
 }

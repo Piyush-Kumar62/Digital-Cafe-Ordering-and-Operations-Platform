@@ -19,107 +19,328 @@
   </header>
 
   <section class="controls">
-    <h2>Book Your Slot</h2>
-    <div class="booking-grid">
-      <label>
-        Date
+    <div class="booking-header">
+      <h2>Reserve Your Table</h2>
+      <p class="booking-subtitle">
+        Pick a slot, choose your table, and you're all set
+      </p>
+    </div>
+
+    <!-- Step indicator -->
+    <div class="booking-steps">
+      <div
+        class="step"
+        [class.step--active]="!selectedDate || !selectedTime"
+        [class.step--done]="selectedDate && selectedTime"
+      >
+        <span class="step-num">1</span>
+        <span class="step-label">Choose Slot</span>
+      </div>
+      <div class="step-connector"></div>
+      <div
+        class="step"
+        [class.step--active]="
+          selectedDate && selectedTime && !selectedTableId && !bookingId
+        "
+        [class.step--done]="!!selectedTableId || !!bookingId"
+      >
+        <span class="step-num">2</span>
+        <span class="step-label">Select Table</span>
+      </div>
+      <div class="step-connector"></div>
+      <div
+        class="step"
+        [class.step--active]="!!bookingId"
+        [class.step--done]="!!bookingId"
+      >
+        <span class="step-num">3</span>
+        <span class="step-label">Confirmed</span>
+      </div>
+    </div>
+
+    <!-- Step 1: Slot inputs -->
+    <div class="slot-row">
+      <label class="slot-field">
+        <span class="field-label">Date</span>
         <input
           type="date"
           [(ngModel)]="selectedDate"
           (change)="onSlotChange()"
+          [disabled]="!!bookingId"
         />
       </label>
-      <label>
-        Time
+      <label class="slot-field">
+        <span class="field-label">Time</span>
         <input
           type="time"
           [(ngModel)]="selectedTime"
           (change)="onSlotChange()"
+          [disabled]="!!bookingId"
         />
       </label>
-      <label>
-        Guests
+      <label class="slot-field slot-field--guests">
+        <span class="field-label">Guests</span>
         <input
           type="number"
           min="1"
           max="20"
           [(ngModel)]="guests"
           (change)="onSlotChange()"
+          [disabled]="!!bookingId"
         />
       </label>
-      <div class="availability">
-        <p>Tables available</p>
-        <strong>{{ availableTables }}</strong>
+    </div>
+
+    <!-- Step 2: Table picker -->
+    <div
+      class="table-picker"
+      *ngIf="selectedDate && selectedTime && !bookingId"
+    >
+      <div class="table-picker-header">
+        <span class="picker-title">Available Tables</span>
+        <span class="availability-badge" *ngIf="!tablesLoading">
+          {{ availableTables }}
+          {{ availableTables === 1 ? "table" : "tables" }} available
+        </span>
       </div>
-      <button
-        (click)="bookTable()"
-        [disabled]="bookingInProgress || !!bookingId"
+
+      <!-- Loading skeleton -->
+      <div class="table-skeleton-row" *ngIf="tablesLoading">
+        <div class="table-skeleton" *ngFor="let i of [1, 2, 3, 4]"></div>
+      </div>
+
+      <!-- No tables empty state -->
+      <div
+        class="no-tables"
+        *ngIf="!tablesLoading && availableTablesList.length === 0"
       >
-        {{
-          bookingId
-            ? "Table Booked"
-            : bookingInProgress
-              ? "Booking..."
-              : "Book Table"
-        }}
+        <svg
+          width="40"
+          height="40"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+        >
+          <circle cx="12" cy="12" r="10" />
+          <line x1="12" y1="8" x2="12" y2="12" />
+          <line x1="12" y1="16" x2="12.01" y2="16" />
+        </svg>
+        <p>No tables available for this slot.</p>
+        <span>Try a different date or time.</span>
+      </div>
+
+      <!-- Table cards -->
+      <div
+        class="table-grid"
+        *ngIf="!tablesLoading && availableTablesList.length > 0"
+      >
+        <button
+          type="button"
+          class="table-card"
+          *ngFor="let table of availableTablesList"
+          [class.table-card--selected]="selectedTableId === table.id"
+          (click)="selectTable(table.id)"
+        >
+          <span class="table-icon">
+            <svg
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+            >
+              <rect x="3" y="8" width="18" height="5" rx="1" />
+              <line x1="7" y1="13" x2="7" y2="18" />
+              <line x1="17" y1="13" x2="17" y2="18" />
+              <line x1="5" y1="18" x2="9" y2="18" />
+              <line x1="15" y1="18" x2="19" y2="18" />
+              <line x1="7" y1="8" x2="7" y2="6" />
+              <line x1="17" y1="8" x2="17" y2="6" />
+            </svg>
+          </span>
+          <span class="table-num">{{ table.tableNumber }}</span>
+          <span class="capacity-badge">
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+            </svg>
+            {{ table.capacity }}
+          </span>
+          <span class="selected-check" *ngIf="selectedTableId === table.id">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="3"
+            >
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </span>
+        </button>
+      </div>
+
+      <!-- Confirm booking button -->
+      <button
+        class="confirm-btn"
+        (click)="bookTable()"
+        [disabled]="bookingInProgress || !selectedTableId"
+        *ngIf="availableTablesList.length > 0"
+      >
+        <span class="btn-spinner" *ngIf="bookingInProgress"></span>
+        {{ bookingInProgress ? "Booking..." : "Confirm Booking" }}
       </button>
     </div>
-    <p class="status" *ngIf="bookingId">Booking confirmed: #{{ bookingId }}</p>
+
+    <!-- Step 3: Confirmation banner -->
+    <div class="booking-confirmed" *ngIf="bookingId">
+      <svg
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2.5"
+      >
+        <circle cx="12" cy="12" r="10" />
+        <polyline points="9 12 11 14 15 10" />
+      </svg>
+      <div class="confirmed-text">
+        <strong>Table Booked!</strong>
+        <span
+          >Booking #{{ bookingId }} — you can now browse the menu and place your
+          order.</span
+        >
+      </div>
+    </div>
   </section>
 
   <section class="layout">
-    <section class="menu-grid">
-      <article class="item-card" *ngFor="let item of data.menuItems">
-        <img
-          [src]="
-            item.imageUrl ||
-            'assets/downloads/unsplash/cafe-detail-item-default.jpg'
-          "
-          [alt]="item.name"
-        />
-        <div class="body">
-          <h3>{{ item.name }}</h3>
-          <p>{{ item.description || "No description available." }}</p>
-          <div class="meta">
-            <strong>₹{{ item.price | number: "1.2-2" }}</strong>
+    <section class="menu-section">
+      <!-- Menu header -->
+      <div class="menu-header">
+        <div>
+          <h2 class="menu-title">Menu</h2>
+          <p class="menu-count">
+            {{ data.menuItems.length }} item{{
+              data.menuItems.length !== 1 ? "s" : ""
+            }}
+          </p>
+        </div>
+      </div>
+
+      <!-- Empty menu state -->
+      <div class="menu-empty" *ngIf="data.menuItems.length === 0">
+        <svg
+          width="48"
+          height="48"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.3"
+        >
+          <path
+            d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"
+          />
+          <rect x="9" y="3" width="6" height="4" rx="1" />
+          <line x1="9" y1="12" x2="15" y2="12" />
+          <line x1="9" y1="16" x2="12" y2="16" />
+        </svg>
+        <p>No menu items yet</p>
+        <span>The cafe owner hasn't added items yet. Check back soon!</span>
+      </div>
+
+      <div class="menu-grid">
+        <article
+          class="item-card"
+          *ngFor="let item of data.menuItems"
+          [class.item-card--unavailable]="!item.available"
+        >
+          <div class="item-img-wrap">
+            <img
+              [src]="
+                item.imageUrl ||
+                'assets/downloads/unsplash/cafe-detail-item-default.jpg'
+              "
+              [alt]="item.name"
+              loading="lazy"
+            />
+            <div class="unavailable-overlay" *ngIf="!item.available">
+              <span>Unavailable</span>
+            </div>
             <small
               class="menu-category"
               [ngClass]="getCategoryClass(item.category)"
+              >{{ item.category }}</small
             >
-              {{ item.category }}
-            </small>
           </div>
-          <div class="actions">
-            <div class="qty-control">
-              <button
-                type="button"
-                (click)="decrementQuantity(item.id)"
-                [disabled]="!item.available"
+          <div class="body">
+            <h3>{{ item.name }}</h3>
+            <p>{{ item.description || "No description available." }}</p>
+            <div class="item-footer">
+              <strong class="item-price"
+                >₹{{ item.price | number: "1.2-2" }}</strong
               >
-                -
-              </button>
-              <input
-                type="number"
-                min="1"
-                max="10"
-                [value]="getQuantity(item.id)"
-                (input)="setQuantity(item.id, $any($event.target).value)"
-                [disabled]="!item.available"
-              />
-              <button
-                type="button"
-                (click)="incrementQuantity(item.id)"
-                [disabled]="!item.available"
-              >
-                +
-              </button>
+              <div class="actions">
+                <div class="qty-control">
+                  <button
+                    type="button"
+                    (click)="decrementQuantity(item.id)"
+                    [disabled]="!item.available"
+                  >
+                    -
+                  </button>
+                  <input
+                    type="number"
+                    min="1"
+                    max="10"
+                    [value]="getQuantity(item.id)"
+                    (input)="setQuantity(item.id, $any($event.target).value)"
+                    [disabled]="!item.available"
+                  />
+                  <button
+                    type="button"
+                    (click)="incrementQuantity(item.id)"
+                    [disabled]="!item.available"
+                  >
+                    +
+                  </button>
+                </div>
+                <button
+                  class="add-btn"
+                  (click)="addToCart(item)"
+                  [disabled]="!item.available"
+                >
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                  >
+                    <line x1="12" y1="5" x2="12" y2="19" />
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                  </svg>
+                  Add to Cart
+                </button>
+              </div>
             </div>
-            <button (click)="addToCart(item)" [disabled]="!item.available">
-              Add to Cart
-            </button>
           </div>
-        </div>
-      </article>
+        </article>
+      </div>
     </section>
 
     <aside
@@ -128,57 +349,137 @@
       [class.scroll-mode]="cartItems.length > 4"
       *ngIf="cartItems$ | async as cartItems"
     >
-      <h3>Cart</h3>
+      <div class="cart-head">
+        <h3>Cart</h3>
+        <span class="cart-badge" *ngIf="cartItems.length > 0">{{
+          cartItems.length
+        }}</span>
+      </div>
       <div class="cart-items">
         <div class="line" *ngFor="let line of cartItems">
-          <div>
+          <div class="line-info">
             <strong>{{ line.item.name }}</strong>
-            <p>Qty {{ line.quantity }}</p>
+            <p>
+              {{ line.quantity }} × ₹{{ line.item.price | number: "1.2-2" }}
+            </p>
           </div>
-          <div class="line-controls">
-            <button
-              class="qty-btn"
-              type="button"
-              (click)="removeFromCart(line.item.id)"
+          <div class="line-right">
+            <span class="line-total"
+              >₹{{ line.item.price * line.quantity | number: "1.2-2" }}</span
             >
-              -
-            </button>
-            <button
-              class="qty-btn"
-              type="button"
-              (click)="addOneToCart(line.item)"
-            >
-              +
-            </button>
+            <div class="line-controls">
+              <button
+                class="qty-btn"
+                type="button"
+                (click)="removeFromCart(line.item.id)"
+              >
+                −
+              </button>
+              <button
+                class="qty-btn"
+                type="button"
+                (click)="addOneToCart(line.item)"
+              >
+                +
+              </button>
+            </div>
           </div>
         </div>
-        <p class="empty" *ngIf="cartItems.length === 0">Cart is empty.</p>
+        <!-- Empty cart illustration -->
+        <div class="empty-cart" *ngIf="cartItems.length === 0">
+          <svg
+            width="52"
+            height="52"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.3"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="9" cy="21" r="1" />
+            <circle cx="20" cy="21" r="1" />
+            <path
+              d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"
+            />
+          </svg>
+          <p>Your cart is empty</p>
+          <span>Browse the menu and add items to get started</span>
+        </div>
       </div>
 
       <div class="cart-footer">
-        <p class="total">
-          Total: <strong>₹{{ cartTotal$ | async | number: "1.2-2" }}</strong>
-        </p>
-        <button
-          (click)="placeOrder()"
-          [disabled]="orderInProgress || !bookingId || cartItems.length === 0"
-        >
-          {{ orderInProgress ? "Placing..." : "Place Order" }}
-        </button>
-        <p class="status" *ngIf="orderId">Order placed: #{{ orderId }}</p>
+        <!-- Order Summary — always visible -->
+        <div class="order-summary">
+          <div class="summary-row" *ngIf="data.cafeDetails.name">
+            <span class="summary-label">☕ Cafe</span>
+            <span class="summary-val">{{ data.cafeDetails.name }}</span>
+          </div>
+          <div class="summary-row" *ngIf="bookingId">
+            <span class="summary-label">🪑 Booking</span>
+            <span class="summary-val">#{{ bookingId }}</span>
+          </div>
+          <div class="summary-row">
+            <span class="summary-label">🛒 Items</span>
+            <span class="summary-val">{{ cartItems.length }}</span>
+          </div>
+          <div class="summary-divider"></div>
+          <div class="summary-row summary-total">
+            <span>Total</span>
+            <strong>₹{{ cartTotal$ | async | number: "1.2-2" }}</strong>
+          </div>
+        </div>
 
+        <!-- Payment Method selector — always visible -->
         <label class="payment">
           Payment Method
-          <select [(ngModel)]="paymentMethod">
+          <select
+            [(ngModel)]="paymentMethod"
+            [disabled]="
+              cartItems.length === 0 ||
+              placeAndPayInProgress ||
+              paymentInProgress
+            "
+          >
             <option value="UPI">UPI</option>
             <option value="CARD">Card</option>
             <option value="NET_BANKING">Net Banking</option>
             <option value="WALLET">Wallet</option>
           </select>
         </label>
-        <button (click)="payNow()" [disabled]="paymentInProgress || !orderId">
-          {{ paymentInProgress ? "Processing..." : "Make Payment" }}
+
+        <!-- Single unified Pay & Place Order button — always visible -->
+        <button
+          class="pay-btn"
+          (click)="placeOrderAndPay()"
+          [disabled]="
+            cartItems.length === 0 ||
+            placeAndPayInProgress ||
+            paymentInProgress ||
+            !bookingId
+          "
+        >
+          <ng-container *ngIf="placeAndPayInProgress || paymentInProgress">
+            <span class="btn-spinner"></span>
+            Processing Payment...
+          </ng-container>
+          <ng-container *ngIf="!(placeAndPayInProgress || paymentInProgress)">
+            <ng-container *ngIf="cartItems.length === 0"
+              >Add items to order</ng-container
+            >
+            <ng-container *ngIf="cartItems.length > 0 && !bookingId"
+              >Book a table to order</ng-container
+            >
+            <ng-container *ngIf="cartItems.length > 0 && bookingId">
+              Pay ₹{{ cartTotal$ | async | number: "1.2-2" }} &amp; Place Order
+            </ng-container>
+          </ng-container>
         </button>
+
+        <!-- No booking hint -->
+        <p class="no-booking-hint" *ngIf="!bookingId && cartItems.length > 0">
+          ⚠️ Book a table first to place your order.
+        </p>
       </div>
     </aside>
   </section>

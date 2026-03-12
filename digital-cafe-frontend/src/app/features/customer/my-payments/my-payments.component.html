@@ -1,79 +1,224 @@
-<section class="page">
-  <header>
-    <h1>Payments</h1>
-    <p>View payment history and transaction status.</p>
-  </header>
-
-  <div class="table-wrap" *ngIf="pagedPayments.length; else empty">
-    <table>
-      <thead>
-        <tr>
-          <th>Transaction</th>
-          <th>Order</th>
-          <th>Amount</th>
-          <th>Method</th>
-          <th>Status</th>
-          <th>Date</th>
-          <th>Receipt</th>
-          <th>Email</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let payment of pagedPayments">
-          <td>{{ payment.transactionId || "Payment #" + payment.id }}</td>
-          <td>{{ payment.orderNumber || payment.orderId }}</td>
-          <td>{{ payment.amount | currency: "INR" }}</td>
-          <td>{{ payment.paymentMethod || "-" }}</td>
-          <td>
-            <span class="status">{{ payment.status }}</span>
-          </td>
-          <td>{{ fmtDate(payment.completedAt || payment.initiatedAt) }}</td>
-          <td>
-            <button class="receipt-btn" (click)="downloadReceipt(payment)">
-              Download PDF
-            </button>
-          </td>
-          <td>
-            <button class="email-btn" (click)="resendReceiptEmail(payment)">
-              Send Email
-            </button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-
-  <div class="pager" *ngIf="totalElements > 0">
-    <div class="pager-left">
-      <span class="range-text"
-        >Showing {{ rangeStart }}–{{ rangeEnd }} of {{ totalElements }}</span
-      >
-    </div>
-    <div class="pager-right">
-      <button
-        class="page-btn nav-btn"
-        [disabled]="pageIndex === 0"
-        (click)="goToPage(pageIndex - 1)"
-      >
-        ← Prev</button>
-      <button
-        class="page-btn"
-        *ngFor="let p of allPages"
-        [class.active]="p === pageIndex"
-        (click)="goToPage(p)"
-      >
-        {{ p + 1 }}
-      </button>
-      <button
-        class="page-btn nav-btn"
-        [disabled]="pageIndex >= totalPages - 1"
-        (click)="goToPage(pageIndex + 1)"
-      >
-        Next →</button>
+<div class="pay-page">
+  <!-- ══ Page header ══════════════════════════════════════════════════════════ -->
+  <div class="pay-heading">
+    <div class="pay-heading__left">
+      <span class="pay-heading__icon material-icons">receipt_long</span>
+      <div>
+        <h1 class="pay-heading__title">Payment History</h1>
+        <p class="pay-heading__sub">All your transactions in one place</p>
+      </div>
     </div>
   </div>
 
-  <ng-template #empty>
-    <div class="empty">No payments found.</div>
-  </ng-template>
-</section>
+  <!-- ══ Loading skeleton ══════════════════════════════════════════════════════ -->
+  <ng-container *ngIf="loading">
+    <div class="pay-stats-grid">
+      <div class="pay-stat-card pay-skel" *ngFor="let _ of [0, 1, 2, 3]"></div>
+    </div>
+    <div class="pay-skel pay-skel--table"></div>
+  </ng-container>
+
+  <!-- ══ Error ═══════════════════════════════════════════════════════════════ -->
+  <div *ngIf="!loading && error" class="pay-error">
+    <span class="material-icons">error_outline</span>
+    <h3>Couldn't load payments</h3>
+    <p>Please refresh the page or try again later.</p>
+  </div>
+
+  <!-- ══ Content ══════════════════════════════════════════════════════════════ -->
+  <ng-container *ngIf="!loading && !error">
+    <!-- Stats strip -->
+    <div class="pay-stats-grid">
+      <div class="pay-stat-card pay-stat-card--indigo">
+        <span class="material-icons psc__icon">receipt</span>
+        <div>
+          <p class="psc__lbl">Total Payments</p>
+          <p class="psc__val">{{ payments.length }}</p>
+        </div>
+      </div>
+      <div class="pay-stat-card pay-stat-card--green">
+        <span class="material-icons psc__icon">currency_rupee</span>
+        <div>
+          <p class="psc__lbl">Total Spent</p>
+          <p class="psc__val">₹{{ totalSpent | number: "1.2-2" }}</p>
+        </div>
+      </div>
+      <div class="pay-stat-card pay-stat-card--emerald">
+        <span class="material-icons psc__icon">check_circle</span>
+        <div>
+          <p class="psc__lbl">Successful</p>
+          <p class="psc__val">{{ successCount }}</p>
+        </div>
+      </div>
+      <div class="pay-stat-card pay-stat-card--red">
+        <span class="material-icons psc__icon">cancel</span>
+        <div>
+          <p class="psc__lbl">Failed</p>
+          <p class="psc__val">{{ failedCount }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Table card -->
+    <div class="pay-card" *ngIf="pagedPayments.length; else empty">
+      <div class="pay-table-wrap">
+        <table class="pay-table">
+          <thead>
+            <tr>
+              <th>Transaction</th>
+              <th>Order</th>
+              <th>Method</th>
+              <th>Amount</th>
+              <th>Status</th>
+              <th>Date</th>
+              <th class="pay-th--center">Receipt</th>
+              <th class="pay-th--center">Email</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let p of pagedPayments" class="pay-row">
+              <!-- Transaction ID -->
+              <td class="pay-td--mono">
+                <span class="pay-txn">{{
+                  p.transactionId || "Pay #" + p.id
+                }}</span>
+              </td>
+
+              <!-- Order No -->
+              <td>
+                <a
+                  class="pay-order-link"
+                  [routerLink]="['/customer/order-tracking', p.orderId]"
+                  title="Track order"
+                >
+                  {{ p.orderNumber || "#" + p.orderId }}
+                  <span class="material-icons pay-order-link__ico"
+                    >open_in_new</span
+                  >
+                </a>
+              </td>
+
+              <!-- Method pill -->
+              <td>
+                <span class="pay-method">
+                  <span class="material-icons pay-method__ico">{{
+                    methodIcon(p.paymentMethod)
+                  }}</span>
+                  {{ p.paymentMethod || "—" }}
+                </span>
+              </td>
+
+              <!-- Amount -->
+              <td>
+                <span class="pay-amount"
+                  >₹{{ p.amount | number: "1.2-2" }}</span
+                >
+              </td>
+
+              <!-- Status badge -->
+              <td>
+                <span
+                  class="pay-badge"
+                  [class.pay-badge--completed]="
+                    p.status === PaymentStatus.COMPLETED
+                  "
+                  [class.pay-badge--pending]="
+                    p.status === PaymentStatus.PENDING
+                  "
+                  [class.pay-badge--failed]="p.status === PaymentStatus.FAILED"
+                  [class.pay-badge--refunded]="
+                    p.status === PaymentStatus.REFUNDED
+                  "
+                >
+                  {{ p.status }}
+                </span>
+              </td>
+
+              <!-- Date -->
+              <td class="pay-td--date">
+                {{ fmtDate(p.completedAt || p.initiatedAt) }}
+              </td>
+
+              <!-- Download receipt -->
+              <td class="pay-td--center">
+                <button
+                  class="pay-icon-btn pay-icon-btn--blue"
+                  (click)="downloadReceipt(p)"
+                  title="Download PDF receipt"
+                >
+                  <span class="material-icons">download</span>
+                </button>
+              </td>
+
+              <!-- Resend email -->
+              <td class="pay-td--center">
+                <button
+                  class="pay-icon-btn pay-icon-btn--violet"
+                  (click)="resendReceiptEmail(p)"
+                  title="Resend by email"
+                >
+                  <span class="material-icons">mail</span>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- ══ Pagination ══════════════════════════════════════════════════════ -->
+      <div class="pager" *ngIf="totalElements > 0">
+        <!-- Left: range info -->
+        <div class="pager__info">
+          Showing {{ rangeStart }}–{{ rangeEnd }} of {{ totalElements }}
+        </div>
+
+        <!-- Right: nav -->
+        <div class="pager__nav">
+          <button
+            class="pg-btn pg-btn--nav"
+            [disabled]="pageIndex === 0"
+            (click)="goToPage(pageIndex - 1)"
+          >
+            <span class="material-icons">chevron_left</span>
+            Prev
+          </button>
+
+          <ng-container *ngFor="let p of visiblePages">
+            <span *ngIf="p === -1" class="pg-ellipsis">…</span>
+            <button
+              *ngIf="p !== -1"
+              class="pg-btn"
+              [class.pg-btn--active]="p === pageIndex"
+              (click)="goToPage(p)"
+            >
+              {{ p + 1 }}
+            </button>
+          </ng-container>
+
+          <button
+            class="pg-btn pg-btn--nav"
+            [disabled]="pageIndex >= totalPages - 1"
+            (click)="goToPage(pageIndex + 1)"
+          >
+            Next
+            <span class="material-icons">chevron_right</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    <!-- /.pay-card -->
+
+    <!-- Empty state -->
+    <ng-template #empty>
+      <div class="pay-empty">
+        <span class="material-icons">receipt_long</span>
+        <h3>No payments yet</h3>
+        <p>Your completed transactions will appear here.</p>
+        <a routerLink="/customer/browse-cafes" class="pay-empty__link">
+          <span class="material-icons">storefront</span>
+          Browse Cafes
+        </a>
+      </div>
+    </ng-template>
+  </ng-container>
+</div>

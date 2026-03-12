@@ -1,190 +1,197 @@
-<div class="container mx-auto px-4 py-8 max-w-4xl">
-  <div *ngIf="loading" class="text-center py-16">
-    <p class="text-lg text-gray-500">Loading order details...</p>
+<div class="ot-wrap">
+  <!-- ── Initial loading ──────────────────────────────────────────────────── -->
+  <div *ngIf="loading" class="ot-skeleton">
+    <div class="ot-skeleton__hero"></div>
+    <div class="ot-skeleton__meta">
+      <div class="ot-skeleton__chip"></div>
+      <div class="ot-skeleton__chip"></div>
+      <div class="ot-skeleton__chip"></div>
+      <div class="ot-skeleton__chip"></div>
+    </div>
+    <div class="ot-skeleton__timeline"></div>
+    <div class="ot-skeleton__card"></div>
   </div>
 
-  <div
-    *ngIf="!loading && error"
-    class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6"
-    role="alert"
-  >
-    <p class="font-bold">Error</p>
+  <!-- ── Error state ───────────────────────────────────────────────────────── -->
+  <div *ngIf="!loading && error" class="ot-error-state">
+    <span class="material-icons">wifi_off</span>
+    <h3>Couldn't load order</h3>
     <p>{{ error }}</p>
+    <a routerLink="/customer/my-orders" class="ot-btn ot-btn--primary"
+      >View My Orders</a
+    >
   </div>
 
-  <div *ngIf="!loading && order as currentOrder">
-    <h1 class="text-4xl font-extrabold text-gray-800 mb-4 text-center">
-      Order #{{ currentOrder.orderNumber || currentOrder.id }}
-    </h1>
-    <p class="text-center text-gray-500 mb-2">
-      Track the status of your order below.
-    </p>
-    <p class="text-center text-xs text-indigo-600 mb-8">
-      Auto-refreshing every 5 seconds
-    </p>
-
-    <div class="bg-indigo-50 border border-indigo-100 rounded-lg p-4 mb-8">
-      <p class="text-sm text-gray-700">
-        <strong>Cafe:</strong>
-        {{ currentOrder.cafeName || ("Cafe #" + currentOrder.cafeId) }}
-      </p>
-      <p class="text-sm text-gray-700">
-        <strong>Booking:</strong>
-        {{ currentOrder.bookingNumber || ("#" + currentOrder.bookingId) }}
-      </p>
-      <p class="text-sm text-gray-700">
-        <strong>Payment:</strong>
-        {{ currentOrder.payment?.status || "-" }}
-        <span *ngIf="currentOrder.payment?.transactionId">
-          • {{ currentOrder.payment?.transactionId }}
+  <!-- ── Order detail ──────────────────────────────────────────────────────── -->
+  <ng-container *ngIf="!loading && order as o">
+    <!-- Hero header -->
+    <div class="ot-hero">
+      <div class="ot-hero__top">
+        <span class="ot-status-badge" [ngClass]="getStatusClass(o.status)">
+          {{ formatStatus(o.status) }}
         </span>
-      </p>
-      <p class="text-sm text-gray-700">
-        <strong>Placed:</strong> {{ fmtDate(currentOrder.placedAt || currentOrder.createdAt) }}
-      </p>
+        <!-- Silent live pulse — no text, no loading flash -->
+        <span
+          class="ot-live-dot"
+          title="Live — auto-refreshing every 5 s"
+          aria-hidden="true"
+        ></span>
+      </div>
+      <h1 class="ot-hero__order-num">Order #{{ o.orderNumber || o.id }}</h1>
+      <p class="ot-hero__sub">Track the status of your order in real time</p>
     </div>
 
-    <div class="w-full px-4 sm:px-0">
-      <div class="flex justify-between items-center">
+    <!-- Info strip -->
+    <div class="ot-meta-strip">
+      <div class="ot-meta-card">
+        <span class="material-icons">store</span>
+        <div>
+          <p class="label">Cafe</p>
+          <p class="value">{{ o.cafeName || "Cafe #" + o.cafeId }}</p>
+        </div>
+      </div>
+      <div class="ot-meta-card">
+        <span class="material-icons">event_seat</span>
+        <div>
+          <p class="label">Booking</p>
+          <p class="value">{{ o.bookingNumber || "#" + o.bookingId }}</p>
+        </div>
+      </div>
+      <div class="ot-meta-card">
+        <span class="material-icons">payments</span>
+        <div>
+          <p class="label">Payment</p>
+          <p class="value">{{ o.payment?.status || "-" }}</p>
+          <p class="sub" *ngIf="o.payment?.transactionId">
+            {{ o.payment?.transactionId }}
+          </p>
+        </div>
+      </div>
+      <div class="ot-meta-card">
+        <span class="material-icons">schedule</span>
+        <div>
+          <p class="label">Placed</p>
+          <p class="value">{{ fmtDate(o.placedAt || o.createdAt) }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Status timeline -->
+    <div class="ot-timeline-card">
+      <div class="ot-timeline">
         <ng-container *ngFor="let step of orderStatusSteps; let i = index">
-          <div class="flex-1 text-center">
-            <div class="relative mb-2">
+          <div class="ot-step" [ngClass]="getStepStatus(step, o.status)">
+            <!-- Connecting line (before each step except the first) -->
+            <div class="ot-step__line" *ngIf="i > 0">
               <div
-                *ngIf="i > 0"
-                class="absolute w-full h-1 bg-gray-200"
-                style="top: 50%; right: 50%"
+                class="ot-step__line-fill"
+                [class.filled]="
+                  getStepStatus(step, o.status) === 'completed' ||
+                  getStepStatus(step, o.status) === 'current'
+                "
               ></div>
-              <div
-                *ngIf="getStepStatus(step, currentOrder.status) === 'completed'"
-                class="absolute w-full h-1 bg-indigo-600"
-                style="top: 50%; right: 50%"
-              ></div>
-              <div
-                class="w-8 h-8 mx-auto rounded-full text-lg flex items-center justify-center transition-colors duration-500"
-                [ngClass]="{
-                  'bg-indigo-600 text-white':
-                    getStepStatus(step, currentOrder.status) === 'completed' ||
-                    getStepStatus(step, currentOrder.status) === 'current',
-                  'bg-white border-2 border-gray-300':
-                    getStepStatus(step, currentOrder.status) === 'upcoming',
-                }"
-              >
-                <span
-                  *ngIf="
-                    getStepStatus(step, currentOrder.status) !== 'completed'
-                  "
-                  >{{ i + 1 }}</span
-                >
-                <span
-                  *ngIf="
-                    getStepStatus(step, currentOrder.status) === 'completed'
-                  "
-                  >&#10003;</span
-                >
-              </div>
             </div>
-            <div
-              class="text-xs sm:text-sm capitalize transition-colors duration-500"
-              [ngClass]="{
-                'text-indigo-600 font-bold':
-                  getStepStatus(step, currentOrder.status) === 'current',
-                'text-gray-500':
-                  getStepStatus(step, currentOrder.status) !== 'current',
-              }"
-            >
-              {{ step.toLowerCase().replace("_", " ") }}
+            <!-- Icon dot -->
+            <div class="ot-step__dot">
+              <span class="material-icons">{{ getStepIcon(step) }}</span>
             </div>
+            <!-- Label -->
+            <p class="ot-step__label">{{ getStepLabel(step) }}</p>
           </div>
         </ng-container>
       </div>
     </div>
 
-    <div class="mt-12 bg-white rounded-lg shadow-lg p-8">
-      <h2 class="text-2xl font-bold text-gray-800 mb-6">Order Summary</h2>
-      <div class="space-y-4">
-        <div
-          *ngFor="let item of currentOrder.items"
-          class="flex justify-between items-start border-b border-gray-100 pb-2"
-        >
-          <div>
-            <p class="font-semibold">{{ item.menuItemName }}</p>
-            <p class="text-sm text-gray-600">Qty: {{ item.quantity }}</p>
+    <!-- Cancelled banner -->
+    <div *ngIf="o.status === OrderStatus.CANCELLED" class="ot-cancelled-banner">
+      <span class="material-icons">cancel</span>
+      <div>
+        <p class="title">Order Cancelled</p>
+        <p class="sub">
+          This order has been cancelled and will not be prepared.
+        </p>
+      </div>
+    </div>
+
+    <!-- Order summary card -->
+    <div class="ot-summary-card">
+      <div class="ot-summary-card__header">
+        <span class="material-icons">receipt_long</span>
+        <h2>Order Summary</h2>
+      </div>
+
+      <div class="ot-items">
+        <div *ngFor="let item of o.items" class="ot-item">
+          <div class="ot-item__left">
+            <p class="ot-item__name">{{ item.menuItemName }}</p>
+            <span class="ot-item__qty">× {{ item.quantity }}</span>
           </div>
-          <p class="font-semibold">
+          <p class="ot-item__price">
             ₹{{ getItemTotal(item) | number: "1.2-2" }}
           </p>
         </div>
       </div>
-      <div class="mt-6 pt-4 border-t-2 border-dashed">
-        <div
-          class="flex justify-between items-center text-xl font-extrabold text-indigo-600"
+
+      <div class="ot-total-row">
+        <span>Total</span>
+        <span class="ot-total-row__amount"
+          >₹{{ o.totalAmount | number: "1.2-2" }}</span
         >
-          <span>Total:</span>
-          <span>₹{{ currentOrder.totalAmount | number: "1.2-2" }}</span>
-        </div>
       </div>
     </div>
 
-    <div
-      *ngIf="currentOrder.status === OrderStatus.CANCELLED"
-      class="mt-8 bg-red-100 border-l-4 border-red-500 text-red-700 p-4"
-      role="alert"
-    >
-      <p class="font-bold">Order Cancelled</p>
+    <!-- Footer actions -->
+    <div class="ot-actions">
+      <a routerLink="/customer/browse-cafes" class="ot-btn ot-btn--primary">
+        <span class="material-icons">add_shopping_cart</span>
+        Place another order
+      </a>
+      <a routerLink="/customer/my-orders" class="ot-btn ot-btn--ghost">
+        <span class="material-icons">list_alt</span>
+        All my orders
+      </a>
     </div>
-  </div>
+  </ng-container>
 
-  <div
-    *ngIf="!loading && !order && recentOrders.length > 0"
-    class="bg-white rounded-lg shadow-lg p-8"
-  >
-    <h2 class="text-2xl font-bold text-gray-800 mb-2">Your Recent Orders</h2>
-    <p class="text-sm text-gray-500 mb-6">
-      Select an order to track live status.
-    </p>
-    <div class="space-y-3">
+  <!-- ── Recent orders (no specific order selected) ────────────────────────── -->
+  <ng-container *ngIf="!loading && !order && recentOrders.length > 0">
+    <div class="ot-hero ot-hero--plain">
+      <h1 class="ot-hero__order-num">Your Recent Orders</h1>
+      <p class="ot-hero__sub">Select an order to track its live status</p>
+    </div>
+    <div class="ot-recent-list">
       <a
         *ngFor="let item of recentOrders"
         [routerLink]="['/customer/order-tracking', item.id]"
-        class="block border border-gray-200 rounded-lg p-4 hover:border-indigo-300 hover:bg-indigo-50 transition"
+        class="ot-recent-card"
       >
-        <div class="flex items-center justify-between gap-3">
-          <div>
-            <p class="font-semibold text-gray-800">
-              Order #{{ item.orderNumber || item.id }}
-            </p>
-            <p class="text-sm text-gray-500">
-              {{ item.items.length }} items • ₹{{
-                item.totalAmount | number: "1.2-2"
-              }}
-            </p>
-          </div>
-          <span
-            class="text-xs font-semibold px-3 py-1 rounded-full bg-gray-100 text-gray-700"
-            >{{ item.status }}</span
-          >
+        <div class="ot-recent-card__left">
+          <p class="num">Order #{{ item.orderNumber || item.id }}</p>
+          <p class="meta">
+            {{ item.items.length }} item{{
+              item.items.length !== 1 ? "s" : ""
+            }}
+            &nbsp;·&nbsp; ₹{{ item.totalAmount | number: "1.2-2" }}
+          </p>
         </div>
+        <span class="ot-status-badge" [ngClass]="getStatusClass(item.status)">
+          {{ formatStatus(item.status) }}
+        </span>
+        <span class="material-icons ot-recent-card__arrow">chevron_right</span>
       </a>
     </div>
-  </div>
+  </ng-container>
 
+  <!-- ── Empty state ───────────────────────────────────────────────────────── -->
   <div
     *ngIf="!loading && !order && recentOrders.length === 0 && !error"
-    class="text-center py-16"
+    class="ot-empty"
   >
-    <p class="text-lg text-gray-500">No orders found yet.</p>
-    <a
-      routerLink="/customer/cafe"
-      class="text-indigo-600 hover:text-indigo-800 font-semibold"
-      >Browse cafes and place your first order</a
-    >
-  </div>
-
-  <div class="text-center mt-8">
-    <a
-      routerLink="/customer/cafe"
-      class="text-indigo-600 hover:text-indigo-800 font-semibold"
-      >Place another order</a
+    <span class="material-icons">receipt_long</span>
+    <h3>No orders yet</h3>
+    <p>Browse our cafes and place your first order</p>
+    <a routerLink="/customer/browse-cafes" class="ot-btn ot-btn--primary"
+      >Browse Cafes</a
     >
   </div>
 </div>

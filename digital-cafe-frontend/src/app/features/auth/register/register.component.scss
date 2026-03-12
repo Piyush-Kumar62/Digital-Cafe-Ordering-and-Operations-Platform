@@ -19,9 +19,13 @@
 }
 
 .register-auth-container {
-  /* Push content below the fixed 76 px navbar; extra 16 px breathing room.
-     This overrides Tailwind's py-8 (32 px) for the top edge only. */
-  padding-top: 92px !important;
+  /* Navbar is 76px fixed — push content below it and lock to viewport so
+     ONLY the right form panel scrolls, not the page. */
+  padding-top: 76px !important;
+  padding-bottom: 0 !important;
+  height: 100vh !important;
+  min-height: unset !important;
+  overflow: hidden !important;
   background:
     radial-gradient(
       circle at 14% 14%,
@@ -45,7 +49,7 @@
       var(--reg-bg-3) 100%
     );
   position: relative;
-  overflow: hidden;
+  align-items: center !important;
 }
 
 .register-auth-card {
@@ -525,9 +529,19 @@ input[type="date"]:required:invalid::-webkit-datetime-edit {
 /* Mobile refinements */
 @media (max-width: 640px) {
   .register-auth-container {
-    align-items: flex-start;
-    padding-top: 76px;
-    overflow-y: auto;
+    align-items: flex-start !important;
+    overflow-y: auto !important; // on mobile allow page to scroll since image is hidden
+    height: auto !important;
+  }
+
+  .register-auth-card.register-card-grid {
+    height: auto;
+    max-height: none;
+  }
+
+  .register-form-side {
+    height: auto;
+    overflow-y: visible;
   }
 
   .register-auth-card {
@@ -580,6 +594,10 @@ input[type="date"]:required:invalid::-webkit-datetime-edit {
   display: grid;
   grid-template-columns: 1fr; // mobile: stacked (image hidden)
   padding: 0;
+  /* Card fills the available viewport height (100vh minus 76px navbar minus
+     32px top/bottom breathing room = 16px each side).               */
+  height: calc(100vh - 76px - 32px);
+  max-height: calc(100vh - 76px - 32px);
   /* No overflow:hidden here — the image panel handles its own clipping;
      keeping this off lets the ::before gradient border render on all 4 sides */
 
@@ -588,13 +606,13 @@ input[type="date"]:required:invalid::-webkit-datetime-edit {
   }
 }
 
-/* Left: image panel */
+/* Left: image panel — fixed, fills card height, does NOT scroll */
 .register-image-panel {
   display: none; // hidden on mobile
   position: relative;
   overflow: hidden;
   border-radius: 1rem 0 0 1rem;
-  min-height: 520px;
+  height: 100%; // fills the card grid row height
 
   @media (min-width: 768px) {
     display: block;
@@ -689,13 +707,17 @@ input[type="date"]:required:invalid::-webkit-datetime-edit {
   }
 }
 
-/* Right: scrollable form region */
+/* Right: form side — this is the ONLY scrolling region on the page */
 .register-form-side {
+  height: 100%;
   overflow-y: auto;
-  /* Fill the visible area below the navbar; card cannot grow past viewport */
-  max-height: calc(100vh - 110px);
+  overflow-x: hidden;
 
-  // Custom scrollbar
+  // Firefox — thin scrollbar
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.7) transparent;
+
+  // WebKit / Blink — thin scrollbar
   &::-webkit-scrollbar {
     width: 4px;
   }
@@ -703,8 +725,11 @@ input[type="date"]:required:invalid::-webkit-datetime-edit {
     background: transparent;
   }
   &::-webkit-scrollbar-thumb {
-    background: rgba(148, 163, 184, 0.3);
+    background: rgba(148, 163, 184, 0.7);
     border-radius: 4px;
+  }
+  &::-webkit-scrollbar-thumb:hover {
+    background: rgba(148, 163, 184, 0.95);
   }
 }
 

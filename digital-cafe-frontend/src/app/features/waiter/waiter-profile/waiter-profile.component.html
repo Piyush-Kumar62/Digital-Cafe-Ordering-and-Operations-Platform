@@ -1,5 +1,4 @@
 <div class="profile-page">
-
   <!-- Loading Skeleton -->
   <div class="loading-wrap" *ngIf="loading">
     <div class="spinner"></div>
@@ -7,11 +6,10 @@
   </div>
 
   <ng-container *ngIf="!loading">
-
     <!-- Page Header -->
     <div class="page-header">
       <div class="page-header-left">
-        <i class="bi bi-person-circle page-icon"></i>
+        <span class="material-icons page-icon">account_circle</span>
         <div>
           <h1 class="page-title">My Profile</h1>
           <p class="page-sub">Manage your account details and security</p>
@@ -20,43 +18,56 @@
     </div>
 
     <div class="profile-layout">
-
       <!-- ── LEFT COLUMN ── -->
       <aside class="left-col">
-
         <!-- Profile Card -->
         <div class="profile-card">
           <div class="card-banner">
             <div class="banner-pattern"></div>
           </div>
           <div class="card-body">
-
             <!-- Avatar with upload overlay -->
             <div class="avatar-wrap">
               <div class="avatar-ring" [class.uploading]="uploadingImage">
-                <img *ngIf="profileData.profileImageUrl"
-                     [src]="profileData.profileImageUrl"
-                     alt="Profile photo" />
-                <span *ngIf="!profileData.profileImageUrl" class="avatar-initials">
+                <img
+                  *ngIf="profileData.profileImageUrl"
+                  [src]="profileData.profileImageUrl"
+                  alt="Profile photo"
+                />
+                <span
+                  *ngIf="!profileData.profileImageUrl"
+                  class="avatar-initials"
+                >
                   {{ getAvatarText() }}
                 </span>
                 <div class="upload-overlay" (click)="triggerFileInput()">
-                  <i class="bi" [class.bi-camera-fill]="!uploadingImage" [class.bi-arrow-repeat]="uploadingImage"></i>
-                  <span>{{ uploadingImage ? 'Uploading…' : 'Change' }}</span>
+                  <span class="material-icons">{{
+                    uploadingImage ? "sync" : "photo_camera"
+                  }}</span>
+                  <span>{{ uploadingImage ? "Uploading…" : "Change" }}</span>
                 </div>
               </div>
-              <input #fileInput type="file" accept="image/jpeg,image/png,image/webp,image/avif"
-                     style="display:none" (change)="onFileSelected($event)" />
+              <input
+                #fileInput
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/avif"
+                style="display: none"
+                (change)="onFileSelected($event)"
+              />
             </div>
 
             <h2 class="user-name">{{ getDisplayName() }}</h2>
             <p class="user-email">{{ profileData.email }}</p>
             <span class="role-badge">
-              <i class="bi bi-shield-check"></i> {{ getRoleLabel() }}
+              <span class="material-icons">verified_user</span>
+              {{ getRoleLabel() }}
             </span>
 
             <!-- Completion Bar -->
-            <div class="completion-wrap" *ngIf="profileData.profileCompletionPercentage > 0">
+            <div
+              class="completion-wrap"
+              *ngIf="profileData.profileCompletionPercentage > 0"
+            >
               <div class="completion-header">
                 <span>Profile Completion</span>
                 <span class="completion-pct" [class]="getCompletionClass()">
@@ -64,9 +75,11 @@
                 </span>
               </div>
               <div class="completion-bar">
-                <div class="completion-fill" [class]="getCompletionClass()"
-                     [style.width.%]="profileData.profileCompletionPercentage">
-                </div>
+                <div
+                  class="completion-fill"
+                  [class]="getCompletionClass()"
+                  [style.width.%]="profileData.profileCompletionPercentage"
+                ></div>
               </div>
             </div>
 
@@ -81,58 +94,82 @@
                 <span class="stile-lbl">Served Today</span>
               </div>
             </div>
-
           </div>
         </div>
 
         <!-- Quick Actions -->
         <div class="actions-card">
-          <button class="action-btn primary" (click)="openEditMode()" *ngIf="!editMode">
-            <i class="bi bi-pencil-fill"></i> Edit Profile
+          <button
+            class="action-btn primary"
+            (click)="openEditMode()"
+            *ngIf="!editMode"
+          >
+            <span class="material-icons">edit</span> Edit Profile
           </button>
           <button class="action-btn secondary" (click)="togglePasswordForm()">
-            <i class="bi bi-lock-fill"></i>
-            {{ showPasswordForm ? 'Cancel Password' : 'Change Password' }}
+            <span class="material-icons">lock</span>
+            {{ showPasswordForm ? "Cancel Password" : "Change Password" }}
           </button>
         </div>
-
       </aside>
 
       <!-- ── RIGHT COLUMN ── -->
       <main class="right-col">
-
         <!-- Edit Profile Form -->
         <div class="info-card" *ngIf="editMode">
           <div class="card-head">
-            <h3 class="card-title"><i class="bi bi-pencil-square"></i> Edit Profile</h3>
+            <h3 class="card-title">
+              <span class="material-icons">edit_note</span> Edit Profile
+            </h3>
             <button class="close-btn" (click)="cancelEdit()">
-              <i class="bi bi-x-lg"></i>
+              <span class="material-icons">close</span>
             </button>
           </div>
 
           <div class="form-grid">
             <div class="form-group">
               <label>First Name <span class="req">*</span></label>
-              <input type="text" [(ngModel)]="editForm.firstName" placeholder="Enter first name"
-                     class="form-input" maxlength="100" />
+              <input
+                type="text"
+                [(ngModel)]="editForm.firstName"
+                placeholder="Enter first name"
+                class="form-input"
+                maxlength="100"
+              />
             </div>
             <div class="form-group">
               <label>Last Name <span class="req">*</span></label>
-              <input type="text" [(ngModel)]="editForm.lastName" placeholder="Enter last name"
-                     class="form-input" maxlength="100" />
+              <input
+                type="text"
+                [(ngModel)]="editForm.lastName"
+                placeholder="Enter last name"
+                class="form-input"
+                maxlength="100"
+              />
             </div>
             <div class="form-group full-width">
               <label>Display Name <span class="req">*</span></label>
-              <input type="text" [(ngModel)]="editForm.displayName" placeholder="How you appear to others"
-                     class="form-input" maxlength="150" />
+              <input
+                type="text"
+                [(ngModel)]="editForm.displayName"
+                placeholder="How you appear to others"
+                class="form-input"
+                maxlength="150"
+              />
             </div>
           </div>
 
           <div class="form-actions">
             <button class="btn-cancel" (click)="cancelEdit()">Cancel</button>
-            <button class="btn-save" (click)="saveProfile()" [disabled]="saving">
-              <i class="bi" [class.bi-check-lg]="!saving" [class.bi-arrow-repeat]="saving"></i>
-              {{ saving ? 'Saving…' : 'Save Changes' }}
+            <button
+              class="btn-save"
+              (click)="saveProfile()"
+              [disabled]="saving"
+            >
+              <span class="material-icons">{{
+                saving ? "sync" : "check"
+              }}</span>
+              {{ saving ? "Saving…" : "Save Changes" }}
             </button>
           </div>
         </div>
@@ -140,9 +177,11 @@
         <!-- Change Password Form -->
         <div class="info-card password-card" *ngIf="showPasswordForm">
           <div class="card-head">
-            <h3 class="card-title"><i class="bi bi-lock-fill"></i> Change Password</h3>
+            <h3 class="card-title">
+              <span class="material-icons">lock</span> Change Password
+            </h3>
             <button class="close-btn" (click)="togglePasswordForm()">
-              <i class="bi bi-x-lg"></i>
+              <span class="material-icons">close</span>
             </button>
           </div>
 
@@ -150,40 +189,78 @@
             <div class="form-group full-width">
               <label>Current Password <span class="req">*</span></label>
               <div class="input-group">
-                <input [type]="showOldPass ? 'text' : 'password'" [(ngModel)]="passwordForm.oldPassword"
-                       placeholder="Enter current password" class="form-input" />
-                <button class="eye-btn" (click)="showOldPass = !showOldPass" type="button">
-                  <i class="bi" [class.bi-eye]="!showOldPass" [class.bi-eye-slash]="showOldPass"></i>
+                <input
+                  [type]="showOldPass ? 'text' : 'password'"
+                  [(ngModel)]="passwordForm.oldPassword"
+                  placeholder="Enter current password"
+                  class="form-input"
+                />
+                <button
+                  class="eye-btn"
+                  (click)="showOldPass = !showOldPass"
+                  type="button"
+                >
+                  <span class="material-icons">{{
+                    showOldPass ? "visibility_off" : "visibility"
+                  }}</span>
                 </button>
               </div>
             </div>
             <div class="form-group">
               <label>New Password <span class="req">*</span></label>
               <div class="input-group">
-                <input [type]="showNewPass ? 'text' : 'password'" [(ngModel)]="passwordForm.newPassword"
-                       placeholder="Min. 8 characters" class="form-input" />
-                <button class="eye-btn" (click)="showNewPass = !showNewPass" type="button">
-                  <i class="bi" [class.bi-eye]="!showNewPass" [class.bi-eye-slash]="showNewPass"></i>
+                <input
+                  [type]="showNewPass ? 'text' : 'password'"
+                  [(ngModel)]="passwordForm.newPassword"
+                  placeholder="Min. 8 characters"
+                  class="form-input"
+                />
+                <button
+                  class="eye-btn"
+                  (click)="showNewPass = !showNewPass"
+                  type="button"
+                >
+                  <span class="material-icons">{{
+                    showNewPass ? "visibility_off" : "visibility"
+                  }}</span>
                 </button>
               </div>
             </div>
             <div class="form-group">
               <label>Confirm New Password <span class="req">*</span></label>
               <div class="input-group">
-                <input [type]="showConfirmPass ? 'text' : 'password'" [(ngModel)]="passwordForm.confirmPassword"
-                       placeholder="Repeat new password" class="form-input" />
-                <button class="eye-btn" (click)="showConfirmPass = !showConfirmPass" type="button">
-                  <i class="bi" [class.bi-eye]="!showConfirmPass" [class.bi-eye-slash]="showConfirmPass"></i>
+                <input
+                  [type]="showConfirmPass ? 'text' : 'password'"
+                  [(ngModel)]="passwordForm.confirmPassword"
+                  placeholder="Repeat new password"
+                  class="form-input"
+                />
+                <button
+                  class="eye-btn"
+                  (click)="showConfirmPass = !showConfirmPass"
+                  type="button"
+                >
+                  <span class="material-icons">{{
+                    showConfirmPass ? "visibility_off" : "visibility"
+                  }}</span>
                 </button>
               </div>
             </div>
           </div>
 
           <div class="form-actions">
-            <button class="btn-cancel" (click)="togglePasswordForm()">Cancel</button>
-            <button class="btn-save btn-danger" (click)="savePassword()" [disabled]="passwordSaving">
-              <i class="bi" [class.bi-lock-fill]="!passwordSaving" [class.bi-arrow-repeat]="passwordSaving"></i>
-              {{ passwordSaving ? 'Updating…' : 'Update Password' }}
+            <button class="btn-cancel" (click)="togglePasswordForm()">
+              Cancel
+            </button>
+            <button
+              class="btn-save btn-danger"
+              (click)="savePassword()"
+              [disabled]="passwordSaving"
+            >
+              <span class="material-icons">{{
+                passwordSaving ? "sync" : "lock"
+              }}</span>
+              {{ passwordSaving ? "Updating…" : "Update Password" }}
             </button>
           </div>
         </div>
@@ -191,54 +268,74 @@
         <!-- Account Details Card -->
         <div class="info-card">
           <div class="card-head">
-            <h3 class="card-title"><i class="bi bi-person-vcard"></i> Account Details</h3>
+            <h3 class="card-title">
+              <span class="material-icons">badge</span> Account Details
+            </h3>
           </div>
 
           <div class="detail-list">
             <div class="detail-row">
-              <span class="detail-icon"><i class="bi bi-person"></i></span>
+              <span class="detail-icon"
+                ><span class="material-icons">person</span></span
+              >
               <div class="detail-content">
                 <span class="detail-lbl">Username</span>
-                <span class="detail-val">{{ currentUser?.username || '—' }}</span>
+                <span class="detail-val">{{
+                  currentUser?.username || "—"
+                }}</span>
               </div>
             </div>
             <div class="detail-row">
-              <span class="detail-icon"><i class="bi bi-envelope"></i></span>
+              <span class="detail-icon"
+                ><span class="material-icons">email</span></span
+              >
               <div class="detail-content">
                 <span class="detail-lbl">Email Address</span>
-                <span class="detail-val">{{ profileData.email || '—' }}</span>
+                <span class="detail-val">{{ profileData.email || "—" }}</span>
               </div>
             </div>
             <div class="detail-row">
-              <span class="detail-icon"><i class="bi bi-person-badge"></i></span>
+              <span class="detail-icon"
+                ><span class="material-icons">account_box</span></span
+              >
               <div class="detail-content">
                 <span class="detail-lbl">Display Name</span>
-                <span class="detail-val">{{ profileData.displayName || getDisplayName() }}</span>
+                <span class="detail-val">{{
+                  profileData.displayName || getDisplayName()
+                }}</span>
               </div>
             </div>
             <div class="detail-row">
-              <span class="detail-icon"><i class="bi bi-shop"></i></span>
+              <span class="detail-icon"
+                ><span class="material-icons">store</span></span
+              >
               <div class="detail-content">
                 <span class="detail-lbl">Assigned Café</span>
                 <span class="detail-val">{{ getCafeName() }}</span>
               </div>
             </div>
             <div class="detail-row">
-              <span class="detail-icon"><i class="bi bi-shield-lock"></i></span>
+              <span class="detail-icon"
+                ><span class="material-icons">security</span></span
+              >
               <div class="detail-content">
                 <span class="detail-lbl">Role</span>
                 <span class="detail-val badge-val">{{ getRoleLabel() }}</span>
               </div>
             </div>
             <div class="detail-row">
-              <span class="detail-icon"><i class="bi bi-clock-history"></i></span>
+              <span class="detail-icon"
+                ><span class="material-icons">history</span></span
+              >
               <div class="detail-content">
                 <span class="detail-lbl">Last Login</span>
                 <span class="detail-val">{{ getLastLogin() }}</span>
               </div>
             </div>
             <div class="detail-row">
-              <span class="detail-icon"><i class="bi bi-calendar-check"></i></span>
+              <span class="detail-icon"
+                ><span class="material-icons">event_available</span></span
+              >
               <div class="detail-content">
                 <span class="detail-lbl">Member Since</span>
                 <span class="detail-val">{{ getJoinDate() }}</span>
@@ -250,18 +347,26 @@
         <!-- Work Info Card -->
         <div class="info-card">
           <div class="card-head">
-            <h3 class="card-title"><i class="bi bi-briefcase"></i> Work Information</h3>
+            <h3 class="card-title">
+              <span class="material-icons">work</span> Work Information
+            </h3>
           </div>
           <div class="detail-list">
             <div class="detail-row">
-              <span class="detail-icon"><i class="bi bi-sun"></i></span>
+              <span class="detail-icon"
+                ><span class="material-icons">wb_sunny</span></span
+              >
               <div class="detail-content">
                 <span class="detail-lbl">Shift</span>
-                <span class="detail-val" [class.chip]="getShift() !== '—'">{{ getShift() }}</span>
+                <span class="detail-val" [class.chip]="getShift() !== '—'">{{
+                  getShift()
+                }}</span>
               </div>
             </div>
             <div class="detail-row">
-              <span class="detail-icon"><i class="bi bi-briefcase-fill"></i></span>
+              <span class="detail-icon"
+                ><span class="material-icons">work_history</span></span
+              >
               <div class="detail-content">
                 <span class="detail-lbl">Experience</span>
                 <span class="detail-val">{{ getExperience() }}</span>
@@ -269,9 +374,7 @@
             </div>
           </div>
         </div>
-
       </main>
     </div>
-
   </ng-container>
 </div>

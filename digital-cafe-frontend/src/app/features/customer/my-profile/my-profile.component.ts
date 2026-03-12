@@ -56,6 +56,7 @@ export class MyProfileComponent implements OnInit {
   removingImage = false;
   loadError = "";
   profileCompletion = 0;
+  activeSection: "basic" | "address" | "academic" | "work" = "basic";
   imageVersion = Date.now();
 
   constructor(
@@ -70,7 +71,10 @@ export class MyProfileComponent implements OnInit {
       displayName: ["", [Validators.required, Validators.maxLength(120)]],
       dateOfBirth: ["", Validators.required],
       gender: ["", Validators.required],
-      phoneNumber: ["", [Validators.required, Validators.pattern(/^[0-9]{10,20}$/)]],
+      phoneNumber: [
+        "",
+        [Validators.required, Validators.pattern(/^[0-9]{10,20}$/)],
+      ],
       street: ["", [Validators.required, Validators.maxLength(200)]],
       plotNumber: ["", [Validators.required, Validators.maxLength(50)]],
       city: ["", [Validators.required, Validators.maxLength(100)]],
@@ -144,7 +148,10 @@ export class MyProfileComponent implements OnInit {
 
     const twoMb = 2 * 1024 * 1024;
     if (file.size > twoMb) {
-      this.alertService.error("File too large", "Please upload an image below 2MB.");
+      this.alertService.error(
+        "File too large",
+        "Please upload an image below 2MB.",
+      );
       (event.target as HTMLInputElement).value = "";
       return;
     }
@@ -157,7 +164,10 @@ export class MyProfileComponent implements OnInit {
         next: (res) => {
           const uploadedUrl = res?.profileImageUrl || "";
           if (this.user) {
-            this.user = { ...this.user, profileImageUrl: uploadedUrl || this.user.profileImageUrl };
+            this.user = {
+              ...this.user,
+              profileImageUrl: uploadedUrl || this.user.profileImageUrl,
+            };
             this.authService.updateUserData(this.user);
           }
           this.form.patchValue({ profilePictureUrl: uploadedUrl });
@@ -165,7 +175,8 @@ export class MyProfileComponent implements OnInit {
           this.alertService.success("Profile image updated");
         },
         error: (error) => {
-          const message = error?.error?.message || "Unable to upload image right now.";
+          const message =
+            error?.error?.message || "Unable to upload image right now.";
           this.alertService.error("Upload failed", message);
         },
       });
@@ -189,7 +200,8 @@ export class MyProfileComponent implements OnInit {
           this.alertService.success("Profile image removed");
         },
         error: (error) => {
-          const message = error?.error?.message || "Unable to remove image right now.";
+          const message =
+            error?.error?.message || "Unable to remove image right now.";
           this.alertService.error("Remove failed", message);
         },
       });
@@ -198,12 +210,17 @@ export class MyProfileComponent implements OnInit {
   saveProfile(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
-      this.alertService.error("Missing details", "Please complete required profile fields.");
+      this.alertService.error(
+        "Missing details",
+        "Please complete required profile fields.",
+      );
       return;
     }
 
     const v = this.form.value;
-    const displayName = (v.displayName || `${v.firstName} ${v.lastName}`).trim();
+    const displayName = (
+      v.displayName || `${v.firstName} ${v.lastName}`
+    ).trim();
 
     const fullPayload = {
       firstName: v.firstName,
@@ -211,7 +228,8 @@ export class MyProfileComponent implements OnInit {
       dateOfBirth: v.dateOfBirth,
       gender: v.gender,
       phoneNumber: v.phoneNumber,
-      profilePictureUrl: v.profilePictureUrl || this.user?.profileImageUrl || null,
+      profilePictureUrl:
+        v.profilePictureUrl || this.user?.profileImageUrl || null,
       address: {
         street: v.street,
         plotNumber: v.plotNumber,
@@ -286,7 +304,9 @@ export class MyProfileComponent implements OnInit {
                 this.alertService.success("Profile saved successfully");
               },
               error: (error) => {
-                const message = error?.error?.message || "Failed to save complete profile details.";
+                const message =
+                  error?.error?.message ||
+                  "Failed to save complete profile details.";
                 this.alertService.error("Save failed", message);
               },
             });
@@ -314,7 +334,9 @@ export class MyProfileComponent implements OnInit {
     this.loadError = "";
 
     forkJoin({
-      basic: this.apiService.getCustomerProfile().pipe(catchError(() => of(null))),
+      basic: this.apiService
+        .getCustomerProfile()
+        .pipe(catchError(() => of(null))),
       full: this.apiService.getMyFullProfile().pipe(catchError(() => of(null))),
     })
       .pipe(finalize(() => (this.loading = false)))
@@ -325,8 +347,10 @@ export class MyProfileComponent implements OnInit {
             return;
           }
 
-          const firstName = full?.firstName || basic?.firstName || this.user?.firstName || "";
-          const lastName = full?.lastName || basic?.lastName || this.user?.lastName || "";
+          const firstName =
+            full?.firstName || basic?.firstName || this.user?.firstName || "";
+          const lastName =
+            full?.lastName || basic?.lastName || this.user?.lastName || "";
           const displayName =
             basic?.displayName ||
             `${firstName} ${lastName}`.trim() ||
@@ -352,7 +376,8 @@ export class MyProfileComponent implements OnInit {
             state: full?.address?.state || "",
             country: full?.address?.country || "India",
             pincode: full?.address?.pincode || "",
-            profilePictureUrl: full?.profilePictureUrl || basic?.profileImageUrl || "",
+            profilePictureUrl:
+              full?.profilePictureUrl || basic?.profileImageUrl || "",
           });
 
           this.replaceAcademicArray(full?.academicInformation || []);
@@ -363,7 +388,8 @@ export class MyProfileComponent implements OnInit {
               ...this.user,
               firstName,
               lastName,
-              profileImageUrl: basic?.profileImageUrl || this.user.profileImageUrl,
+              profileImageUrl:
+                basic?.profileImageUrl || this.user.profileImageUrl,
               profileCompletionPercentage: this.profileCompletion,
               isProfileComplete: this.profileCompletion >= 100,
               lastLogin: basic?.lastLogin || this.user.lastLogin,
@@ -420,8 +446,14 @@ export class MyProfileComponent implements OnInit {
 
   private createAcademicGroup(initial?: Partial<AcademicFormValue>): FormGroup {
     return this.fb.group({
-      institutionName: [initial?.institutionName || "", [Validators.required, Validators.maxLength(200)]],
-      degree: [initial?.degree || "", [Validators.required, Validators.maxLength(100)]],
+      institutionName: [
+        initial?.institutionName || "",
+        [Validators.required, Validators.maxLength(200)],
+      ],
+      degree: [
+        initial?.degree || "",
+        [Validators.required, Validators.maxLength(100)],
+      ],
       fieldOfStudy: [initial?.fieldOfStudy || "", [Validators.maxLength(100)]],
       startDate: [initial?.startDate || ""],
       endDate: [initial?.endDate || ""],
@@ -433,8 +465,14 @@ export class MyProfileComponent implements OnInit {
 
   private createWorkGroup(initial?: Partial<WorkFormValue>): FormGroup {
     return this.fb.group({
-      companyName: [initial?.companyName || "", [Validators.required, Validators.maxLength(200)]],
-      position: [initial?.position || "", [Validators.required, Validators.maxLength(100)]],
+      companyName: [
+        initial?.companyName || "",
+        [Validators.required, Validators.maxLength(200)],
+      ],
+      position: [
+        initial?.position || "",
+        [Validators.required, Validators.maxLength(100)],
+      ],
       startDate: [initial?.startDate || "", Validators.required],
       endDate: [initial?.endDate || ""],
       isCurrent: [initial?.isCurrent || false],

@@ -3,7 +3,11 @@ import { Component, OnInit } from "@angular/core";
 import { RouterModule } from "@angular/router";
 import { ApiService } from "@core/services/api.service";
 import { AlertService } from "@core/services/alert.service";
-import { Payment } from "@shared/models/payment.model";
+import {
+  Payment,
+  PaymentMethod,
+  PaymentStatus,
+} from "@shared/models/payment.model";
 
 @Component({
   selector: "app-my-payments",
@@ -18,6 +22,8 @@ export class MyPaymentsComponent implements OnInit {
   error = false;
   pageIndex = 0;
   readonly pageSize = 10;
+  readonly PaymentStatus = PaymentStatus;
+  readonly PaymentMethod = PaymentMethod;
 
   constructor(
     private apiService: ApiService,
@@ -57,6 +63,56 @@ export class MyPaymentsComponent implements OnInit {
   }
   get allPages(): number[] {
     return Array.from({ length: this.totalPages }, (_, i) => i);
+  }
+
+  get totalSpent(): number {
+    return this.payments
+      .filter((p) => p.status === PaymentStatus.COMPLETED)
+      .reduce((sum, p) => sum + Number(p.amount ?? 0), 0);
+  }
+
+  get successCount(): number {
+    return this.payments.filter((p) => p.status === PaymentStatus.COMPLETED)
+      .length;
+  }
+
+  get failedCount(): number {
+    return this.payments.filter((p) => p.status === PaymentStatus.FAILED)
+      .length;
+  }
+
+  get pendingCount(): number {
+    return this.payments.filter((p) => p.status === PaymentStatus.PENDING)
+      .length;
+  }
+
+  get visiblePages(): number[] {
+    const total = this.totalPages;
+    const cur = this.pageIndex;
+    if (total <= 7) return Array.from({ length: total }, (_, i) => i);
+    const pages: number[] = [];
+    for (let i = 0; i < total; i++) {
+      if (i === 0 || i === total - 1 || Math.abs(i - cur) <= 1) pages.push(i);
+      else if (pages[pages.length - 1] !== -1) pages.push(-1); // ellipsis sentinel
+    }
+    return pages;
+  }
+
+  methodIcon(method?: string): string {
+    switch ((method || "").toUpperCase()) {
+      case "UPI":
+        return "account_balance_wallet";
+      case "CARD":
+        return "credit_card";
+      case "NET_BANKING":
+        return "account_balance";
+      case "WALLET":
+        return "wallet";
+      case "CASH":
+        return "payments";
+      default:
+        return "payment";
+    }
   }
   goToPage(page: number): void {
     if (page < 0 || page >= this.totalPages) return;

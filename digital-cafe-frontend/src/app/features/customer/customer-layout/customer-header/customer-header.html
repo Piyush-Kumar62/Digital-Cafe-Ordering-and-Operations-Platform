@@ -1,18 +1,73 @@
 <header class="top-header" (click)="closePopovers()">
+  <!-- ── Left: Welcome greeting ─────────────────────────────────────────── -->
   <div class="header-left">
-    <h1 class="welcome-message">Welcome, {{ user?.firstName || profileForm.displayName || user?.username || 'Guest' }}!</h1>
+    <h1 class="welcome-message">
+      Welcome, {{ user?.firstName || profileForm.displayName || user?.username
+      || 'Guest' }}!
+    </h1>
     <div class="last-login">Last login: {{ lastLogin | date:'short' }}</div>
   </div>
 
+  <!-- ── Right: Controls ────────────────────────────────────────────────── -->
   <div class="header-right">
+    <!-- Profile completion chip -->
     <div class="profile-completion">
-      <span>Profile Completion</span>
-      <div class="progress-bar">
+      <span class="pc-label">Profile</span>
+      <div
+        class="progress-bar"
+        role="progressbar"
+        [attr.aria-valuenow]="profileCompletion"
+        aria-valuemin="0"
+        aria-valuemax="100"
+      >
         <div class="progress" [style.width.%]="profileCompletion"></div>
       </div>
-      <span>{{ profileCompletion }}%</span>
+      <span class="pc-value">{{ profileCompletion }}%</span>
     </div>
 
+    <!-- Divider (hidden alongside the chip on small screens) -->
+    <span class="h-divider h-divider--prog" aria-hidden="true"></span>
+
+    <!-- Notifications -->
+    <button
+      class="icon-button"
+      (click)="toggleNotifications($event)"
+      title="Notifications"
+      aria-label="View notifications"
+    >
+      <span class="material-icons">notifications</span>
+      <span class="notification-badge" *ngIf="unreadNotifications > 0">
+        {{ unreadNotifications }}
+      </span>
+    </button>
+
+    <!-- User profile pill -->
+    <div
+      class="user-menu"
+      (click)="toggleProfileMenu($event)"
+      role="button"
+      tabindex="0"
+      aria-label="Open profile menu"
+      aria-haspopup="true"
+      [attr.aria-expanded]="showProfileMenu"
+    >
+      <img
+        [src]="profileImageSrc"
+        alt="User Avatar"
+        class="avatar"
+        (error)="onAvatarError($event)"
+      />
+      <div class="user-meta">
+        <p>{{ profileForm.displayName || user?.username || 'Customer' }}</p>
+        <small>{{ displayRole }}</small>
+      </div>
+      <span class="material-icons chevron" aria-hidden="true">expand_more</span>
+    </div>
+
+    <!-- Divider before theme toggle -->
+    <span class="h-divider" aria-hidden="true"></span>
+
+    <!-- Theme toggle — always anchored at far right -->
     <button
       class="theme-toggle"
       [class.dark]="isDarkMode"
@@ -21,35 +76,31 @@
       [title]="isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'"
     >
       <span class="toggle-track">
-        <span class="toggle-icon sun" aria-hidden="true">☀</span>
-        <span class="toggle-icon moon" aria-hidden="true">
-          <span class="moon-crescent"></span>
-          <span class="moon-sparkle sparkle-1">✦</span>
-          <span class="moon-sparkle sparkle-2">✦</span>
-        </span>
+        <span class="t-icon t-sun material-icons" aria-hidden="true"
+          >light_mode</span
+        >
+        <span class="t-icon t-moon material-icons" aria-hidden="true"
+          >dark_mode</span
+        >
         <span class="toggle-thumb" aria-hidden="true"></span>
       </span>
     </button>
 
-    <button class="icon-button" (click)="toggleNotifications($event)" title="Notifications">
-      <span class="material-icons">notifications</span>
-      <span class="notification-badge" *ngIf="unreadNotifications > 0">{{ unreadNotifications }}</span>
-    </button>
+    <!-- ── Floating panels (position: absolute, anchored to header) ─────── -->
 
-    <div class="user-menu" (click)="toggleProfileMenu($event)">
-      <img [src]="profileImageSrc" alt="User Avatar" class="avatar" (error)="onAvatarError($event)">
-      <div class="user-meta">
-        <p>{{ profileForm.displayName || user?.username || 'Customer' }}</p>
-        <small>{{ displayRole }}</small>
-      </div>
-    </div>
-
-    <div class="notifications-panel" *ngIf="showNotifications" (click)="$event.stopPropagation()">
+    <div
+      class="notifications-panel"
+      *ngIf="showNotifications"
+      (click)="$event.stopPropagation()"
+    >
       <div class="panel-header">
         <h4>Notifications</h4>
         <button class="link-btn" (click)="markAllRead()">Mark all read</button>
       </div>
-      <div class="panel-list" *ngIf="notifications.length > 0; else noNotifications">
+      <div
+        class="panel-list"
+        *ngIf="notifications.length > 0; else noNotifications"
+      >
         <article class="notification-item" *ngFor="let n of notifications">
           <h5>{{ n.title }}</h5>
           <p>{{ n.message }}</p>
@@ -59,21 +110,39 @@
       <ng-template #noNotifications>
         <div class="empty-panel">No notifications yet.</div>
       </ng-template>
-      <a class="panel-footer-link" routerLink="/customer/notifications">View all notifications</a>
+      <a class="panel-footer-link" routerLink="/customer/notifications"
+        >View all notifications</a
+      >
     </div>
 
-    <div class="profile-panel" *ngIf="showProfileMenu" (click)="$event.stopPropagation()">
+    <div
+      class="profile-panel"
+      *ngIf="showProfileMenu"
+      (click)="$event.stopPropagation()"
+    >
       <div class="panel-header">
         <h4>My Profile</h4>
       </div>
       <div class="profile-image-edit">
-        <img [src]="profileImageSrc" alt="User Avatar" class="profile-avatar" (error)="onAvatarError($event)">
+        <img
+          [src]="profileImageSrc"
+          alt="User Avatar"
+          class="profile-avatar"
+          (error)="onAvatarError($event)"
+        />
         <div class="profile-image-actions">
-          <p class="profile-name">{{ profileForm.displayName || user?.username || 'Customer' }}</p>
+          <p class="profile-name">
+            {{ profileForm.displayName || user?.username || 'Customer' }}
+          </p>
           <small>{{ displayRole }}</small>
           <label class="upload-btn">
             {{ uploadingImage ? 'Uploading...' : 'Upload Image' }}
-            <input type="file" accept="image/png,image/jpeg" (change)="onProfileImageSelected($event)" hidden>
+            <input
+              type="file"
+              accept="image/png,image/jpeg"
+              (change)="onProfileImageSelected($event)"
+              hidden
+            />
           </label>
         </div>
       </div>
@@ -92,12 +161,22 @@
         </label>
       </div>
       <div class="panel-actions">
-        <button class="primary" [disabled]="isSavingProfile" (click)="saveProfile()">
+        <button
+          class="primary"
+          [disabled]="isSavingProfile"
+          (click)="saveProfile()"
+        >
           {{ isSavingProfile ? 'Saving...' : 'Save Profile' }}
         </button>
-        <a routerLink="/customer/profile" class="secondary-link">Open full profile</a>
+        <a
+          routerLink="/customer/profile"
+          class="secondary-link"
+          (click)="closePopovers()"
+          >Open full profile</a
+        >
       </div>
       <button class="logout-btn" (click)="logout()">Logout</button>
     </div>
   </div>
+  <!-- /.header-right -->
 </header>

@@ -1,1 +1,689 @@
-/* You can add component-specific styles here if needed */
+/* =========================================================
+   Order Tracking  –  Component styles
+   Light mode default, dark mode via body.dark-theme
+   ========================================================= */
+
+// ── Tokens ────────────────────────────────────────────────────────────────────
+:host {
+  --ot-bg: #f3f4f8;
+  --ot-card-bg: #ffffff;
+  --ot-card-border: #e5e7ef;
+  --ot-text: #1e2340;
+  --ot-text-muted: #64748b;
+  --ot-indigo: #4f46e5;
+  --ot-indigo-light: #e0e7ff;
+  --ot-radius: 14px;
+  --ot-shadow: 0 2px 12px rgba(0, 0, 0, 0.07);
+  display: block;
+}
+
+:host-context(body.dark-theme) {
+  --ot-bg: #10111a;
+  --ot-card-bg: #1b1d2e;
+  --ot-card-border: #2a2d44;
+  --ot-text: #e2e4f0;
+  --ot-text-muted: #8892b0;
+  --ot-indigo: #818cf8;
+  --ot-indigo-light: #1e1b4b;
+  --ot-shadow: 0 2px 16px rgba(0, 0, 0, 0.3);
+}
+
+// ── Layout wrapper ─────────────────────────────────────────────────────────
+.ot-wrap {
+  background: var(--ot-bg);
+  min-height: 100vh;
+  padding: 24px 16px 60px;
+}
+
+// ── Skeleton loading ────────────────────────────────────────────────────────
+@keyframes ot-shimmer {
+  0% {
+    background-position: -600px 0;
+  }
+  100% {
+    background-position: 600px 0;
+  }
+}
+
+%shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--ot-card-border) 25%,
+    var(--ot-card-bg) 50%,
+    var(--ot-card-border) 75%
+  );
+  background-size: 1200px 100%;
+  animation: ot-shimmer 1.4s infinite linear;
+}
+
+.ot-skeleton {
+  max-width: 760px;
+  margin: 0 auto;
+
+  &__hero {
+    @extend %shimmer;
+    height: 136px;
+    border-radius: var(--ot-radius);
+    margin-bottom: 16px;
+  }
+
+  &__meta {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 16px;
+
+    @media (max-width: 640px) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  &__chip {
+    @extend %shimmer;
+    height: 70px;
+    border-radius: 10px;
+  }
+
+  &__timeline {
+    @extend %shimmer;
+    height: 110px;
+    border-radius: var(--ot-radius);
+    margin-bottom: 16px;
+  }
+
+  &__card {
+    @extend %shimmer;
+    height: 180px;
+    border-radius: var(--ot-radius);
+  }
+}
+
+// ── Error state ─────────────────────────────────────────────────────────────
+.ot-error-state {
+  max-width: 400px;
+  margin: 60px auto 0;
+  text-align: center;
+  color: var(--ot-text-muted);
+
+  .material-icons {
+    font-size: 48px;
+    color: #ef4444;
+    margin-bottom: 12px;
+  }
+
+  h3 {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--ot-text);
+    margin: 0 0 6px;
+  }
+
+  p {
+    font-size: 0.9rem;
+    margin: 0 0 20px;
+  }
+}
+
+// ── Hero header card ────────────────────────────────────────────────────────
+.ot-hero {
+  max-width: 760px;
+  margin: 0 auto 16px;
+  background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%);
+  border-radius: var(--ot-radius);
+  padding: 28px 28px 24px;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+
+  // Subtle decorative circle
+  &::after {
+    content: "";
+    position: absolute;
+    width: 220px;
+    height: 220px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 50%;
+    right: -60px;
+    top: -70px;
+    pointer-events: none;
+  }
+
+  &--plain {
+    background: linear-gradient(135deg, #1e1b4b, #312e81);
+  }
+
+  &__top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  &__order-num {
+    font-size: 1.9rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin: 0 0 4px;
+    line-height: 1;
+  }
+
+  &__sub {
+    font-size: 0.85rem;
+    opacity: 0.7;
+    margin: 0;
+  }
+}
+
+// ── Status badges ────────────────────────────────────────────────────────────
+.ot-status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+
+  &.badge-pending-payment {
+    background: #854d0e;
+    color: #fef3c7;
+  }
+  &.badge-placed {
+    background: #1e40af;
+    color: #dbeafe;
+  }
+  &.badge-preparing {
+    background: #9a3412;
+    color: #ffedd5;
+  }
+  &.badge-ready {
+    background: #14532d;
+    color: #dcfce7;
+  }
+  &.badge-served {
+    background: #3730a3;
+    color: #e0e7ff;
+  }
+  &.badge-cancelled {
+    background: #7f1d1d;
+    color: #fee2e2;
+  }
+}
+
+// ── Live pulse indicator ─────────────────────────────────────────────────────
+@keyframes ot-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(134, 239, 172, 0.6);
+  }
+  50% {
+    box-shadow: 0 0 0 7px rgba(134, 239, 172, 0);
+  }
+}
+
+.ot-live-dot {
+  width: 10px;
+  height: 10px;
+  background: #4ade80;
+  border-radius: 50%;
+  animation: ot-pulse 2s ease-in-out infinite;
+  flex-shrink: 0;
+  cursor: default;
+}
+
+// ── Meta info strip ─────────────────────────────────────────────────────────
+.ot-meta-strip {
+  max-width: 760px;
+  margin: 0 auto 16px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+
+  @media (max-width: 640px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  @media (max-width: 380px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ot-meta-card {
+  background: var(--ot-card-bg);
+  border: 1px solid var(--ot-card-border);
+  border-radius: 12px;
+  padding: 13px 14px;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  box-shadow: var(--ot-shadow);
+
+  .material-icons {
+    font-size: 20px;
+    color: var(--ot-indigo);
+    margin-top: 1px;
+    flex-shrink: 0;
+  }
+
+  .label {
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ot-text-muted);
+    margin: 0 0 2px;
+  }
+
+  .value {
+    font-size: 0.84rem;
+    font-weight: 700;
+    color: var(--ot-text);
+    margin: 0;
+    word-break: break-all;
+  }
+
+  .sub {
+    font-size: 0.7rem;
+    color: var(--ot-text-muted);
+    margin: 2px 0 0;
+  }
+}
+
+// ── Status timeline ──────────────────────────────────────────────────────────
+.ot-timeline-card {
+  max-width: 760px;
+  margin: 0 auto 16px;
+  background: var(--ot-card-bg);
+  border: 1px solid var(--ot-card-border);
+  border-radius: var(--ot-radius);
+  padding: 28px 24px 22px;
+  box-shadow: var(--ot-shadow);
+  overflow-x: auto;
+}
+
+.ot-timeline {
+  display: flex;
+  align-items: flex-start;
+  min-width: 420px;
+}
+
+// ── Single timeline step ────────────────────────────────────────────────────
+.ot-step {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+
+  // Connecting line (drawn BEFORE the dot via flex sibling)
+  &__line {
+    position: absolute;
+    top: 22px; /* vertically centred on dot */
+    right: 50%;
+    left: -50%;
+    height: 3px;
+    background: var(--ot-card-border);
+    z-index: 0;
+
+    &-fill {
+      height: 100%;
+      background: var(--ot-card-border);
+      transition: background 0.4s;
+
+      &.filled {
+        background: var(--ot-indigo);
+      }
+    }
+  }
+
+  // Icon dot circle
+  &__dot {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--ot-card-border);
+    border: 3px solid var(--ot-card-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    z-index: 1;
+    transition:
+      background 0.4s,
+      border-color 0.4s,
+      box-shadow 0.4s;
+
+    .material-icons {
+      font-size: 20px;
+      color: var(--ot-text-muted);
+      transition: color 0.4s;
+    }
+  }
+
+  &__label {
+    margin: 8px 0 0;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--ot-text-muted);
+    text-align: center;
+    line-height: 1.3;
+    transition: color 0.4s;
+    padding: 0 4px;
+  }
+
+  // State: completed
+  &.completed {
+    .ot-step__dot {
+      background: var(--ot-indigo);
+      border-color: var(--ot-indigo);
+      .material-icons {
+        color: #fff;
+      }
+    }
+    .ot-step__label {
+      color: var(--ot-indigo);
+    }
+  }
+
+  // State: current (pulsing)
+  @keyframes step-glow {
+    0%,
+    100% {
+      box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.4);
+    }
+    50% {
+      box-shadow: 0 0 0 8px rgba(79, 70, 229, 0);
+    }
+  }
+
+  &.current {
+    .ot-step__dot {
+      background: var(--ot-indigo);
+      border-color: var(--ot-indigo);
+      animation: step-glow 2s ease-in-out infinite;
+      .material-icons {
+        color: #fff;
+      }
+    }
+    .ot-step__label {
+      color: var(--ot-indigo);
+      font-weight: 800;
+    }
+  }
+}
+
+// ── Cancelled banner ─────────────────────────────────────────────────────────
+.ot-cancelled-banner {
+  max-width: 760px;
+  margin: 0 auto 16px;
+  background: #fff1f2;
+  border: 1px solid #fecdd3;
+  border-left: 4px solid #ef4444;
+  border-radius: 10px;
+  padding: 14px 18px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  color: #991b1b;
+
+  .material-icons {
+    font-size: 22px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .title {
+    font-weight: 700;
+    margin: 0 0 2px;
+    font-size: 0.92rem;
+  }
+  .sub {
+    font-size: 0.82rem;
+    margin: 0;
+    opacity: 0.85;
+  }
+}
+
+:host-context(body.dark-theme) .ot-cancelled-banner {
+  background: #2d0e0e;
+  border-color: #7f1d1d;
+  color: #fca5a5;
+}
+
+// ── Order summary card ───────────────────────────────────────────────────────
+.ot-summary-card {
+  max-width: 760px;
+  margin: 0 auto 16px;
+  background: var(--ot-card-bg);
+  border: 1px solid var(--ot-card-border);
+  border-radius: var(--ot-radius);
+  box-shadow: var(--ot-shadow);
+  overflow: hidden;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 22px;
+    border-bottom: 1px solid var(--ot-card-border);
+    background: var(--ot-indigo-light);
+
+    .material-icons {
+      color: var(--ot-indigo);
+      font-size: 22px;
+    }
+
+    h2 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--ot-indigo);
+      margin: 0;
+    }
+  }
+}
+
+// ── Items list ───────────────────────────────────────────────────────────────
+.ot-items {
+  padding: 8px 0;
+}
+
+.ot-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 22px;
+  border-bottom: 1px solid var(--ot-card-border);
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &__left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--ot-text);
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__qty {
+    font-size: 0.75rem;
+    font-weight: 700;
+    background: var(--ot-indigo-light);
+    color: var(--ot-indigo);
+    border-radius: 999px;
+    padding: 2px 8px;
+    flex-shrink: 0;
+  }
+
+  &__price {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--ot-text);
+    margin: 0;
+    flex-shrink: 0;
+  }
+}
+
+// ── Total row ────────────────────────────────────────────────────────────────
+.ot-total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 22px;
+  border-top: 2px dashed var(--ot-card-border);
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--ot-text-muted);
+
+  &__amount {
+    font-size: 1.25rem;
+    font-weight: 800;
+    background: linear-gradient(90deg, #4338ca, #7c3aed);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+}
+
+// ── Footer actions ────────────────────────────────────────────────────────────
+.ot-actions {
+  max-width: 760px;
+  margin: 0 auto 0;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+// ── Buttons ───────────────────────────────────────────────────────────────────
+.ot-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 11px 20px;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  transition:
+    opacity 0.18s,
+    transform 0.12s;
+
+  &:hover {
+    opacity: 0.88;
+    transform: translateY(-1px);
+  }
+  &:active {
+    transform: translateY(0);
+  }
+
+  .material-icons {
+    font-size: 18px;
+  }
+
+  &--primary {
+    background: var(--ot-indigo);
+    color: #fff;
+  }
+
+  &--ghost {
+    background: transparent;
+    border: 2px solid var(--ot-card-border);
+    color: var(--ot-text-muted);
+
+    &:hover {
+      border-color: var(--ot-indigo);
+      color: var(--ot-indigo);
+    }
+  }
+}
+
+// ── Recent orders list ────────────────────────────────────────────────────────
+.ot-recent-list {
+  max-width: 760px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ot-recent-card {
+  background: var(--ot-card-bg);
+  border: 1px solid var(--ot-card-border);
+  border-radius: 12px;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  text-decoration: none;
+  box-shadow: var(--ot-shadow);
+  transition:
+    border-color 0.18s,
+    box-shadow 0.18s;
+
+  &:hover {
+    border-color: var(--ot-indigo);
+    box-shadow: 0 4px 16px rgba(79, 70, 229, 0.15);
+  }
+
+  &__left {
+    flex: 1;
+    min-width: 0;
+
+    .num {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: var(--ot-text);
+      margin: 0 0 3px;
+    }
+    .meta {
+      font-size: 0.78rem;
+      color: var(--ot-text-muted);
+      margin: 0;
+    }
+  }
+
+  &__arrow {
+    font-size: 20px;
+    color: var(--ot-text-muted);
+    flex-shrink: 0;
+  }
+}
+
+// ── Empty state ───────────────────────────────────────────────────────────────
+.ot-empty {
+  max-width: 340px;
+  margin: 70px auto 0;
+  text-align: center;
+  color: var(--ot-text-muted);
+
+  .material-icons {
+    font-size: 52px;
+    color: var(--ot-indigo);
+    opacity: 0.4;
+  }
+
+  h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--ot-text);
+    margin: 12px 0 6px;
+  }
+
+  p {
+    font-size: 0.88rem;
+    margin: 0 0 20px;
+  }
+}

@@ -1,280 +1,622 @@
-<section class="profile-page">
-  <ng-container *ngIf="!loading; else loadingView">
-    <div class="profile-layout" *ngIf="!loadError; else errorView">
-      <aside class="profile-summary card">
-        <div class="avatar-wrap">
-          <img [src]="profileImageSrc" alt="Profile image" (error)="onAvatarError($event)" />
-          <div class="avatar-actions">
-            <label class="ghost-btn" [class.disabled]="uploadingImage">
-              {{ uploadingImage ? "Uploading..." : "Upload Image" }}
-              <input
-                type="file"
-                accept="image/png,image/jpeg,image/webp,image/avif"
-                (change)="onProfileImageSelected($event)"
-                [disabled]="uploadingImage"
-                hidden
-              />
-            </label>
+<div class="pp">
+  <!-- ── Loading skeleton ──────────────────────────────────────────────────── -->
+  <ng-container *ngIf="loading">
+    <div class="pp-hero pp-hero--skel">
+      <div class="pp-skel-circle"></div>
+      <div class="pp-skel-lines">
+        <div class="pp-skel-line pp-skel-line--70"></div>
+        <div class="pp-skel-line pp-skel-line--40"></div>
+        <div class="pp-skel-line pp-skel-line--55"></div>
+      </div>
+    </div>
+    <div class="pp-skel-tabs"></div>
+    <div class="pp-skel-card"></div>
+  </ng-container>
+
+  <!-- ── Error state ───────────────────────────────────────────────────────── -->
+  <div *ngIf="!loading && loadError" class="pp-error">
+    <span class="material-icons">error_outline</span>
+    <h3>Couldn't load profile</h3>
+    <p>{{ loadError }}</p>
+  </div>
+
+  <!-- ── Main ──────────────────────────────────────────────────────────────── -->
+  <ng-container *ngIf="!loading && !loadError">
+    <form
+      [formGroup]="form"
+      (ngSubmit)="saveProfile()"
+      novalidate
+      autocomplete="off"
+    >
+      <!-- ── Hero banner ────────────────────────────────────────────────────── -->
+      <div class="pp-hero">
+        <!-- Avatar + SVG completion ring -->
+        <div class="pp-avatar-wrap">
+          <svg class="pp-ring" viewBox="0 0 120 120" aria-hidden="true">
+            <circle class="pp-ring__track" cx="60" cy="60" r="54" />
+            <circle
+              class="pp-ring__fill"
+              cx="60"
+              cy="60"
+              r="54"
+              [style.stroke-dashoffset]="
+                339.3 - (339.3 * profileCompletion) / 100
+              "
+            />
+          </svg>
+          <img
+            class="pp-avatar"
+            [src]="profileImageSrc"
+            alt="Profile photo"
+            (error)="onAvatarError($event)"
+          />
+          <label
+            class="pp-cam"
+            [class.pp-cam--busy]="uploadingImage"
+            title="Change photo"
+          >
+            <span class="material-icons">{{
+              uploadingImage ? "pending" : "photo_camera"
+            }}</span>
+            <input
+              type="file"
+              accept="image/png,image/jpeg,image/webp,image/avif"
+              (change)="onProfileImageSelected($event)"
+              [disabled]="uploadingImage"
+              hidden
+            />
+          </label>
+          <span class="pp-ring-pct">{{ profileCompletion }}%</span>
+        </div>
+
+        <!-- Name + meta -->
+        <div class="pp-hero__body">
+          <div class="pp-hero__nameline">
+            <h1 class="pp-hero__name">
+              {{
+                form.get("displayName")?.value || user?.username || "Customer"
+              }}
+            </h1>
+            <span class="pp-role-chip">Customer</span>
+          </div>
+          <p class="pp-hero__email">
+            <span class="material-icons">mail_outline</span>
+            {{ user?.email || "—" }}
+          </p>
+          <div class="pp-hero__progress">
+            <div class="pp-bar-track">
+              <div
+                class="pp-bar-fill"
+                [style.width.%]="profileCompletion"
+              ></div>
+            </div>
+            <span class="pp-bar-lbl">{{ profileCompletion }}% complete</span>
+          </div>
+          <div class="pp-hero__btns">
+            <button
+              type="submit"
+              class="pp-btn pp-btn--glass"
+              [disabled]="saving"
+            >
+              <span class="material-icons">{{
+                saving ? "autorenew" : "check_circle"
+              }}</span>
+              {{ saving ? "Saving…" : "Save Profile" }}
+            </button>
             <button
               type="button"
-              class="ghost-btn danger"
+              class="pp-btn pp-btn--ghost"
               (click)="removeProfileImage()"
               [disabled]="removingImage"
             >
-              {{ removingImage ? "Removing..." : "Remove" }}
+              <span class="material-icons">no_photography</span>
+              {{ removingImage ? "Removing…" : "Remove Photo" }}
             </button>
           </div>
         </div>
+      </div>
+      <!-- /.pp-hero -->
 
-        <h2>{{ form.get("displayName")?.value || "Customer" }}</h2>
-        <p>{{ user?.email || "-" }}</p>
+      <!-- ── Tab strip ──────────────────────────────────────────────────────── -->
+      <nav class="pp-tabs" role="tablist" aria-label="Profile sections">
+        <button
+          type="button"
+          role="tab"
+          class="pp-tab"
+          [class.pp-tab--on]="activeSection === 'basic'"
+          (click)="activeSection = 'basic'"
+        >
+          <span class="material-icons">person</span>
+          <span class="pp-tab__lbl">Basic Info</span>
+        </button>
+        <button
+          type="button"
+          role="tab"
+          class="pp-tab"
+          [class.pp-tab--on]="activeSection === 'address'"
+          (click)="activeSection = 'address'"
+        >
+          <span class="material-icons">location_on</span>
+          <span class="pp-tab__lbl">Address</span>
+        </button>
+        <button
+          type="button"
+          role="tab"
+          class="pp-tab"
+          [class.pp-tab--on]="activeSection === 'academic'"
+          (click)="activeSection = 'academic'"
+        >
+          <span class="material-icons">school</span>
+          <span class="pp-tab__lbl">Academic</span>
+        </button>
+        <button
+          type="button"
+          role="tab"
+          class="pp-tab"
+          [class.pp-tab--on]="activeSection === 'work'"
+          (click)="activeSection = 'work'"
+        >
+          <span class="material-icons">work</span>
+          <span class="pp-tab__lbl">Work</span>
+        </button>
+      </nav>
 
-        <div class="completion-block">
-          <div class="completion-label">
-            <span>Profile Completion</span>
-            <strong>{{ profileCompletion }}%</strong>
+      <!-- ── Basic Info panel ────────────────────────────────────────────────── -->
+      <div class="pp-panel" [class.pp-panel--on]="activeSection === 'basic'">
+        <div class="pp-card">
+          <div class="pp-card__hd">
+            <span class="material-icons pp-card__ico">person_outline</span>
+            <div>
+              <h2 class="pp-card__title">Basic Details</h2>
+              <p class="pp-card__sub">
+                Your personal information shown across orders and bookings
+              </p>
+            </div>
           </div>
-          <div class="progress-track">
-            <span class="progress-fill" [style.width.%]="profileCompletion"></span>
-          </div>
-        </div>
-      </aside>
 
-      <form class="profile-editor card" [formGroup]="form" (ngSubmit)="saveProfile()" novalidate>
-        <div class="heading-row">
-          <div>
-            <h1>My Profile</h1>
-            <p>Edit your complete profile used across booking, orders and payments.</p>
+          <div class="pp-g pp-g3">
+            <div class="pp-f">
+              <label class="pp-lbl"
+                >First Name <span class="req">*</span></label
+              >
+              <input
+                class="pp-inp"
+                type="text"
+                formControlName="firstName"
+                placeholder="First name"
+              />
+              <span class="pp-err">{{
+                fieldError(form.get("firstName"), "First Name")
+              }}</span>
+            </div>
+            <div class="pp-f">
+              <label class="pp-lbl">Last Name <span class="req">*</span></label>
+              <input
+                class="pp-inp"
+                type="text"
+                formControlName="lastName"
+                placeholder="Last name"
+              />
+              <span class="pp-err">{{
+                fieldError(form.get("lastName"), "Last Name")
+              }}</span>
+            </div>
+            <div class="pp-f">
+              <label class="pp-lbl"
+                >Display Name <span class="req">*</span></label
+              >
+              <input
+                class="pp-inp"
+                type="text"
+                formControlName="displayName"
+                placeholder="Shown publicly"
+              />
+              <span class="pp-err">{{
+                fieldError(form.get("displayName"), "Display Name")
+              }}</span>
+            </div>
           </div>
-          <button class="save-btn" type="submit" [disabled]="saving">
-            {{ saving ? "Saving..." : "Save Profile" }}
-          </button>
-        </div>
 
-        <section class="form-section">
-          <h3>Basic Details</h3>
-          <div class="grid three">
-            <label>
-              First Name
-              <input type="text" formControlName="firstName" />
-              <small class="err">{{ fieldError(form.get("firstName"), "First Name") }}</small>
-            </label>
-            <label>
-              Last Name
-              <input type="text" formControlName="lastName" />
-              <small class="err">{{ fieldError(form.get("lastName"), "Last Name") }}</small>
-            </label>
-            <label>
-              Display Name
-              <input type="text" formControlName="displayName" />
-              <small class="err">{{ fieldError(form.get("displayName"), "Display Name") }}</small>
-            </label>
-          </div>
-
-          <div class="grid three">
-            <label>
-              Date of Birth
-              <input type="date" formControlName="dateOfBirth" />
-              <small class="err">{{ fieldError(form.get("dateOfBirth"), "Date of Birth") }}</small>
-            </label>
-            <label>
-              Gender
-              <select formControlName="gender">
-                <option value="">Select</option>
+          <div class="pp-g pp-g3">
+            <div class="pp-f">
+              <label class="pp-lbl"
+                >Date of Birth <span class="req">*</span></label
+              >
+              <input class="pp-inp" type="date" formControlName="dateOfBirth" />
+              <span class="pp-err">{{
+                fieldError(form.get("dateOfBirth"), "Date of Birth")
+              }}</span>
+            </div>
+            <div class="pp-f">
+              <label class="pp-lbl">Gender <span class="req">*</span></label>
+              <select class="pp-inp" formControlName="gender">
+                <option value="">Select gender</option>
                 <option value="MALE">Male</option>
                 <option value="FEMALE">Female</option>
                 <option value="OTHER">Other</option>
               </select>
-              <small class="err">{{ fieldError(form.get("gender"), "Gender") }}</small>
-            </label>
-            <label>
-              Phone Number
-              <input type="tel" formControlName="phoneNumber" maxlength="20" />
-              <small class="err">{{ fieldError(form.get("phoneNumber"), "Phone Number") }}</small>
-            </label>
-          </div>
-        </section>
-
-        <section class="form-section">
-          <h3>Address</h3>
-          <div class="grid two">
-            <label>
-              Street
-              <input type="text" formControlName="street" />
-              <small class="err">{{ fieldError(form.get("street"), "Street") }}</small>
-            </label>
-            <label>
-              Plot Number
-              <input type="text" formControlName="plotNumber" />
-              <small class="err">{{ fieldError(form.get("plotNumber"), "Plot Number") }}</small>
-            </label>
-          </div>
-
-          <div class="grid four">
-            <label>
-              City
-              <input type="text" formControlName="city" />
-              <small class="err">{{ fieldError(form.get("city"), "City") }}</small>
-            </label>
-            <label>
-              State
-              <input type="text" formControlName="state" />
-            </label>
-            <label>
-              Country
-              <input type="text" formControlName="country" />
-            </label>
-            <label>
-              Pincode
-              <input type="text" formControlName="pincode" />
-              <small class="err">{{ fieldError(form.get("pincode"), "Pincode") }}</small>
-            </label>
-          </div>
-        </section>
-
-        <section class="form-section" formArrayName="academicInformation">
-          <div class="section-head">
-            <h3>Academic Information</h3>
-            <button type="button" class="mini-btn" (click)="addAcademicRecord()">+ Add</button>
-          </div>
-
-          <div
-            class="nested-card"
-            *ngFor="let academic of academicInformation.controls; let i = index; trackBy: trackByIndex"
-            [formGroupName]="i"
-          >
-            <div class="nested-head">
-              <span>Record {{ i + 1 }}</span>
-              <button
-                type="button"
-                class="mini-btn danger"
-                (click)="removeAcademicRecord(i)"
-                [disabled]="academicInformation.length <= 1"
+              <span class="pp-err">{{
+                fieldError(form.get("gender"), "Gender")
+              }}</span>
+            </div>
+            <div class="pp-f">
+              <label class="pp-lbl"
+                >Phone Number <span class="req">*</span></label
               >
-                Remove
-              </button>
+              <input
+                class="pp-inp"
+                type="tel"
+                formControlName="phoneNumber"
+                placeholder="+91 98765 43210"
+                maxlength="20"
+              />
+              <span class="pp-err">{{
+                fieldError(form.get("phoneNumber"), "Phone Number")
+              }}</span>
             </div>
-
-            <div class="grid two">
-              <label>
-                Institution Name
-                <input type="text" formControlName="institutionName" />
-                <small class="err">{{ fieldError(academic.get("institutionName"), "Institution Name") }}</small>
-              </label>
-              <label>
-                Degree
-                <input type="text" formControlName="degree" />
-                <small class="err">{{ fieldError(academic.get("degree"), "Degree") }}</small>
-              </label>
-            </div>
-
-            <div class="grid four">
-              <label>
-                Field of Study
-                <input type="text" formControlName="fieldOfStudy" />
-              </label>
-              <label>
-                Start Date
-                <input type="date" formControlName="startDate" />
-              </label>
-              <label>
-                End Date
-                <input type="date" formControlName="endDate" />
-              </label>
-              <label>
-                Grade
-                <input type="text" formControlName="grade" />
-              </label>
-            </div>
-
-            <label class="checkbox-row">
-              <input type="checkbox" formControlName="isCurrent" />
-              Currently studying
-            </label>
-
-            <label>
-              Description
-              <textarea rows="2" formControlName="description"></textarea>
-            </label>
           </div>
-        </section>
+        </div>
+      </div>
 
-        <section class="form-section" formArrayName="workExperiences">
-          <div class="section-head">
-            <h3>Work Experience (Optional)</h3>
-            <button type="button" class="mini-btn" (click)="addWorkExperience()">+ Add</button>
+      <!-- ── Address panel ──────────────────────────────────────────────────── -->
+      <div class="pp-panel" [class.pp-panel--on]="activeSection === 'address'">
+        <div class="pp-card">
+          <div class="pp-card__hd">
+            <span class="material-icons pp-card__ico">location_on</span>
+            <div>
+              <h2 class="pp-card__title">Address</h2>
+              <p class="pp-card__sub">Used for deliveries and billing</p>
+            </div>
           </div>
 
-          <div
-            class="nested-card"
-            *ngFor="let work of workExperiences.controls; let i = index; trackBy: trackByIndex"
-            [formGroupName]="i"
+          <div class="pp-g pp-g2">
+            <div class="pp-f">
+              <label class="pp-lbl">Street <span class="req">*</span></label>
+              <input
+                class="pp-inp"
+                type="text"
+                formControlName="street"
+                placeholder="Street name"
+              />
+              <span class="pp-err">{{
+                fieldError(form.get("street"), "Street")
+              }}</span>
+            </div>
+            <div class="pp-f">
+              <label class="pp-lbl"
+                >Plot / Flat Number <span class="req">*</span></label
+              >
+              <input
+                class="pp-inp"
+                type="text"
+                formControlName="plotNumber"
+                placeholder="Flat or plot no."
+              />
+              <span class="pp-err">{{
+                fieldError(form.get("plotNumber"), "Plot Number")
+              }}</span>
+            </div>
+          </div>
+
+          <div class="pp-g pp-g4">
+            <div class="pp-f">
+              <label class="pp-lbl">City <span class="req">*</span></label>
+              <input
+                class="pp-inp"
+                type="text"
+                formControlName="city"
+                placeholder="City"
+              />
+              <span class="pp-err">{{
+                fieldError(form.get("city"), "City")
+              }}</span>
+            </div>
+            <div class="pp-f">
+              <label class="pp-lbl">State</label>
+              <input
+                class="pp-inp"
+                type="text"
+                formControlName="state"
+                placeholder="State"
+              />
+            </div>
+            <div class="pp-f">
+              <label class="pp-lbl">Country</label>
+              <input
+                class="pp-inp"
+                type="text"
+                formControlName="country"
+                placeholder="Country"
+              />
+            </div>
+            <div class="pp-f">
+              <label class="pp-lbl">Pincode <span class="req">*</span></label>
+              <input
+                class="pp-inp"
+                type="text"
+                formControlName="pincode"
+                placeholder="Pincode"
+              />
+              <span class="pp-err">{{
+                fieldError(form.get("pincode"), "Pincode")
+              }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Academic panel ─────────────────────────────────────────────────── -->
+      <div
+        class="pp-panel"
+        [class.pp-panel--on]="activeSection === 'academic'"
+        formArrayName="academicInformation"
+      >
+        <div class="pp-card pp-card--listhead">
+          <div class="pp-card__hd pp-card__hd--actions">
+            <span class="material-icons pp-card__ico">school</span>
+            <div>
+              <h2 class="pp-card__title">Academic Information</h2>
+              <p class="pp-card__sub">Your educational background</p>
+            </div>
+            <button
+              type="button"
+              class="pp-add-btn"
+              (click)="addAcademicRecord()"
+            >
+              <span class="material-icons">add</span> Add Record
+            </button>
+          </div>
+        </div>
+
+        <div
+          class="pp-nested"
+          *ngFor="
+            let academic of academicInformation.controls;
+            let i = index;
+            trackBy: trackByIndex
+          "
+          [formGroupName]="i"
+        >
+          <div class="pp-nested__hd">
+            <span class="pp-badge">{{ i + 1 }}</span>
+            <span class="pp-nested__title">Academic Record</span>
+            <button
+              type="button"
+              class="pp-rm-btn"
+              (click)="removeAcademicRecord(i)"
+              [disabled]="academicInformation.length <= 1"
+            >
+              <span class="material-icons">close</span>
+            </button>
+          </div>
+
+          <div class="pp-g pp-g2">
+            <div class="pp-f">
+              <label class="pp-lbl"
+                >Institution Name <span class="req">*</span></label
+              >
+              <input
+                class="pp-inp"
+                type="text"
+                formControlName="institutionName"
+                placeholder="e.g. IIT Delhi"
+              />
+              <span class="pp-err">{{
+                fieldError(academic.get("institutionName"), "Institution Name")
+              }}</span>
+            </div>
+            <div class="pp-f">
+              <label class="pp-lbl">Degree <span class="req">*</span></label>
+              <input
+                class="pp-inp"
+                type="text"
+                formControlName="degree"
+                placeholder="e.g. B.Tech"
+              />
+              <span class="pp-err">{{
+                fieldError(academic.get("degree"), "Degree")
+              }}</span>
+            </div>
+          </div>
+
+          <div class="pp-g pp-g4">
+            <div class="pp-f">
+              <label class="pp-lbl">Field of Study</label>
+              <input
+                class="pp-inp"
+                type="text"
+                formControlName="fieldOfStudy"
+                placeholder="e.g. Computer Science"
+              />
+            </div>
+            <div class="pp-f">
+              <label class="pp-lbl">Start Date</label>
+              <input class="pp-inp" type="date" formControlName="startDate" />
+            </div>
+            <div class="pp-f">
+              <label class="pp-lbl">End Date</label>
+              <input class="pp-inp" type="date" formControlName="endDate" />
+            </div>
+            <div class="pp-f">
+              <label class="pp-lbl">Grade / CGPA</label>
+              <input
+                class="pp-inp"
+                type="text"
+                formControlName="grade"
+                placeholder="e.g. 9.2"
+              />
+            </div>
+          </div>
+
+          <label class="pp-chk">
+            <input type="checkbox" formControlName="isCurrent" />
+            <span class="pp-chk__box"></span>
+            <span class="pp-chk__lbl">Currently studying here</span>
+          </label>
+
+          <div class="pp-f pp-f--span">
+            <label class="pp-lbl">Description</label>
+            <textarea
+              class="pp-inp"
+              rows="2"
+              formControlName="description"
+              placeholder="Brief description…"
+            ></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Work Experience panel ───────────────────────────────────────────── -->
+      <div
+        class="pp-panel"
+        [class.pp-panel--on]="activeSection === 'work'"
+        formArrayName="workExperiences"
+      >
+        <div class="pp-card pp-card--listhead">
+          <div class="pp-card__hd pp-card__hd--actions">
+            <span class="material-icons pp-card__ico">work</span>
+            <div>
+              <h2 class="pp-card__title">Work Experience</h2>
+              <p class="pp-card__sub">
+                Your professional background (optional)
+              </p>
+            </div>
+            <button
+              type="button"
+              class="pp-add-btn"
+              (click)="addWorkExperience()"
+            >
+              <span class="material-icons">add</span> Add Job
+            </button>
+          </div>
+        </div>
+
+        <div *ngIf="workExperiences.length === 0" class="pp-empty">
+          <span class="material-icons">work_outline</span>
+          <p>No work experience added yet</p>
+          <button
+            type="button"
+            class="pp-add-btn"
+            (click)="addWorkExperience()"
           >
-            <div class="nested-head">
-              <span>Experience {{ i + 1 }}</span>
-              <button type="button" class="mini-btn danger" (click)="removeWorkExperience(i)">Remove</button>
-            </div>
-
-            <div class="grid two">
-              <label>
-                Company Name
-                <input type="text" formControlName="companyName" />
-                <small class="err">{{ fieldError(work.get("companyName"), "Company Name") }}</small>
-              </label>
-              <label>
-                Position
-                <input type="text" formControlName="position" />
-                <small class="err">{{ fieldError(work.get("position"), "Position") }}</small>
-              </label>
-            </div>
-
-            <div class="grid four">
-              <label>
-                Start Date
-                <input type="date" formControlName="startDate" />
-                <small class="err">{{ fieldError(work.get("startDate"), "Start Date") }}</small>
-              </label>
-              <label>
-                End Date
-                <input type="date" formControlName="endDate" />
-              </label>
-              <label>
-                Location
-                <input type="text" formControlName="location" />
-              </label>
-              <label class="checkbox-row inline">
-                <input type="checkbox" formControlName="isCurrent" />
-                Currently working
-              </label>
-            </div>
-
-            <div class="grid two">
-              <label>
-                Description
-                <textarea rows="2" formControlName="description"></textarea>
-              </label>
-              <label>
-                Responsibilities
-                <textarea rows="2" formControlName="responsibilities"></textarea>
-              </label>
-            </div>
-          </div>
-        </section>
-
-        <div class="bottom-save">
-          <button class="save-btn" type="submit" [disabled]="saving">
-            {{ saving ? "Saving..." : "Save Profile" }}
+            <span class="material-icons">add</span> Add Experience
           </button>
         </div>
-      </form>
-    </div>
+
+        <div
+          class="pp-nested"
+          *ngFor="
+            let work of workExperiences.controls;
+            let i = index;
+            trackBy: trackByIndex
+          "
+          [formGroupName]="i"
+        >
+          <div class="pp-nested__hd">
+            <span class="pp-badge">{{ i + 1 }}</span>
+            <span class="pp-nested__title">Work Experience</span>
+            <button
+              type="button"
+              class="pp-rm-btn"
+              (click)="removeWorkExperience(i)"
+            >
+              <span class="material-icons">close</span>
+            </button>
+          </div>
+
+          <div class="pp-g pp-g2">
+            <div class="pp-f">
+              <label class="pp-lbl"
+                >Company Name <span class="req">*</span></label
+              >
+              <input
+                class="pp-inp"
+                type="text"
+                formControlName="companyName"
+                placeholder="e.g. Google"
+              />
+              <span class="pp-err">{{
+                fieldError(work.get("companyName"), "Company Name")
+              }}</span>
+            </div>
+            <div class="pp-f">
+              <label class="pp-lbl">Position <span class="req">*</span></label>
+              <input
+                class="pp-inp"
+                type="text"
+                formControlName="position"
+                placeholder="e.g. Software Engineer"
+              />
+              <span class="pp-err">{{
+                fieldError(work.get("position"), "Position")
+              }}</span>
+            </div>
+          </div>
+
+          <div class="pp-g pp-g4">
+            <div class="pp-f">
+              <label class="pp-lbl"
+                >Start Date <span class="req">*</span></label
+              >
+              <input class="pp-inp" type="date" formControlName="startDate" />
+              <span class="pp-err">{{
+                fieldError(work.get("startDate"), "Start Date")
+              }}</span>
+            </div>
+            <div class="pp-f">
+              <label class="pp-lbl">End Date</label>
+              <input class="pp-inp" type="date" formControlName="endDate" />
+            </div>
+            <div class="pp-f">
+              <label class="pp-lbl">Location</label>
+              <input
+                class="pp-inp"
+                type="text"
+                formControlName="location"
+                placeholder="City, Country"
+              />
+            </div>
+            <div class="pp-f pp-f--center">
+              <label class="pp-chk">
+                <input type="checkbox" formControlName="isCurrent" />
+                <span class="pp-chk__box"></span>
+                <span class="pp-chk__lbl">Currently working here</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="pp-g pp-g2">
+            <div class="pp-f">
+              <label class="pp-lbl">Description</label>
+              <textarea
+                class="pp-inp"
+                rows="3"
+                formControlName="description"
+                placeholder="Role description…"
+              ></textarea>
+            </div>
+            <div class="pp-f">
+              <label class="pp-lbl">Responsibilities</label>
+              <textarea
+                class="pp-inp"
+                rows="3"
+                formControlName="responsibilities"
+                placeholder="Key responsibilities…"
+              ></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom save bar -->
+      <div class="pp-bottombar">
+        <button type="submit" class="pp-btn pp-btn--solid" [disabled]="saving">
+          <span class="material-icons">{{
+            saving ? "autorenew" : "check"
+          }}</span>
+          {{ saving ? "Saving…" : "Save All Changes" }}
+        </button>
+      </div>
+    </form>
   </ng-container>
-
-  <ng-template #loadingView>
-    <div class="card state-card">Loading profile...</div>
-  </ng-template>
-
-  <ng-template #errorView>
-    <div class="card state-card error">{{ loadError }}</div>
-  </ng-template>
-</section>
+</div>

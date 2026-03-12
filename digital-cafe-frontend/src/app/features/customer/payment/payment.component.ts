@@ -85,11 +85,13 @@ export class PaymentComponent implements OnInit {
         // TEST mode may be auto-completed in backend.
         if (payment.status === PaymentStatus.COMPLETED) {
           this.processing = false;
-          this.alertService.success(
-            "Payment Successful! 🎉",
-            "Your order has been confirmed and sent to the kitchen.",
-          );
-          this.goToTracking();
+          this.alertService
+            .successWithButton(
+              "Payment Successful! 🎉",
+              "Your order has been confirmed and sent to the kitchen.",
+              "Track My Order 🍽️",
+            )
+            .then(() => this.goToTracking());
           return;
         }
 
@@ -130,6 +132,14 @@ export class PaymentComponent implements OnInit {
 
   /** Opens the Razorpay checkout popup with real keys */
   private openRazorpayCheckout(payment: Payment): void {
+    if (!payment.paymentGatewayOrderId?.startsWith("order_")) {
+      this.processing = false;
+      this.alertService.error(
+        "Payment Error",
+        "Invalid Razorpay order reference. Please try again.",
+      );
+      return;
+    }
     const selectedMethod = String(this.selectedMethod || "").toUpperCase();
     const methodConfig =
       selectedMethod === "UPI"
@@ -159,16 +169,16 @@ export class PaymentComponent implements OnInit {
                 emi: false,
                 paylater: false,
               }
-          : selectedMethod === "WALLET"
-            ? {
-                upi: false,
-                card: false,
-                netbanking: false,
-                wallet: true,
-                emi: false,
-                paylater: false,
-              }
-            : undefined;
+            : selectedMethod === "WALLET"
+              ? {
+                  upi: false,
+                  card: false,
+                  netbanking: false,
+                  wallet: true,
+                  emi: false,
+                  paylater: false,
+                }
+              : undefined;
 
     const options = {
       key: environment.razorpayKeyId,
@@ -249,9 +259,9 @@ export class PaymentComponent implements OnInit {
       return Promise.resolve();
     }
     return new Promise((resolve, reject) => {
-      const existing = document.getElementById("razorpay-checkout-js") as
-        | HTMLScriptElement
-        | null;
+      const existing = document.getElementById(
+        "razorpay-checkout-js",
+      ) as HTMLScriptElement | null;
       if (existing) {
         existing.addEventListener("load", () => resolve(), { once: true });
         existing.addEventListener("error", () => reject(), { once: true });
@@ -287,11 +297,13 @@ export class PaymentComponent implements OnInit {
           this.processing = false;
           this.alertService.close();
           this.payment = verified;
-          this.alertService.success(
-            "Payment Successful! 🎉",
-            "Your order has been confirmed and sent to the kitchen.",
-          );
-          this.goToTracking();
+          this.alertService
+            .successWithButton(
+              "Payment Successful! 🎉",
+              "Your order has been confirmed and sent to the kitchen.",
+              "Track My Order 🍽️",
+            )
+            .then(() => this.goToTracking());
         },
         error: (err) => {
           this.processing = false;

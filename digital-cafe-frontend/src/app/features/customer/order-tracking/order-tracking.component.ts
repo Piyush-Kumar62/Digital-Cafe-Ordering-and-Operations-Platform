@@ -14,6 +14,8 @@ import { Order, OrderStatus } from "@shared/models/order.model";
 import { OrderTrackingService } from "./order-tracking.service";
 import { WebSocketService } from "@core/websocket/websocket.service";
 
+const TERMINAL_STATUSES = new Set([OrderStatus.SERVED, OrderStatus.CANCELLED]);
+
 @Component({
   selector: "app-order-tracking",
   standalone: true,
@@ -26,6 +28,7 @@ export class OrderTrackingComponent implements OnInit, OnDestroy {
   recentOrders: Order[] = [];
   loading = true;
   error = "";
+  lastRefreshed: Date | null = null;
   private orderId: number | null = null;
   private pollSub?: Subscription;
   private destroy$ = new Subject<void>();
@@ -101,6 +104,41 @@ export class OrderTrackingComponent implements OnInit, OnDestroy {
     return item?.totalPrice ?? item?.subtotal ?? 0;
   }
 
+  getStepIcon(step: OrderStatus): string {
+    const icons: Partial<Record<OrderStatus, string>> = {
+      [OrderStatus.PENDING_PAYMENT]: "schedule",
+      [OrderStatus.PLACED]: "receipt_long",
+      [OrderStatus.PREPARING]: "restaurant",
+      [OrderStatus.READY]: "notifications_active",
+      [OrderStatus.SERVED]: "done_all",
+      [OrderStatus.CANCELLED]: "cancel",
+    };
+    return icons[step] ?? "radio_button_unchecked";
+  }
+
+  getStepLabel(step: OrderStatus): string {
+    const labels: Partial<Record<OrderStatus, string>> = {
+      [OrderStatus.PENDING_PAYMENT]: "Pending Payment",
+      [OrderStatus.PLACED]: "Placed",
+      [OrderStatus.PREPARING]: "Preparing",
+      [OrderStatus.READY]: "Ready",
+      [OrderStatus.SERVED]: "Served",
+      [OrderStatus.CANCELLED]: "Cancelled",
+    };
+    return labels[step] ?? step;
+  }
+
+  getStatusClass(status: OrderStatus): string {
+    return "badge-" + status.toLowerCase().replace("_", "-");
+  }
+
+  formatStatus(status: string): string {
+    return status
+      .replace(/_/g, " ")
+      .toLowerCase()
+      .replace(/\b\w/g, (c) => c.toUpperCase());
+  }
+
   fmtDate(value?: string): string {
     if (!value) return "-";
     const date = new Date(value);
@@ -136,6 +174,11 @@ export class OrderTrackingComponent implements OnInit, OnDestroy {
         }
         this.order = order;
         this.loading = false;
+        this.lastRefreshed = new Date();
+        // Stop polling when order reaches a terminal state — no more updates expected
+        if (TERMINAL_STATUSES.has(order.status)) {
+          this.stopPolling();
+        }
       });
   }
 

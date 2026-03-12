@@ -226,7 +226,9 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
       case "CONFIRMED":
         return "ok";
       case "PENDING":
+      case "PLACING":
       case "PREPARING":
+      case "PENDING_PAYMENT":
         return "warn";
       case "CANCELLED":
       case "NO_SHOW":
@@ -234,5 +236,38 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
       default:
         return "neutral";
     }
+  }
+
+  get greeting(): string {
+    const h = new Date().getHours();
+    if (h < 12) return "Good Morning";
+    if (h < 17) return "Good Afternoon";
+    return "Good Evening";
+  }
+
+  get greetingIcon(): string {
+    const h = new Date().getHours();
+    if (h < 12) return "wb_sunny";
+    if (h < 17) return "light_mode";
+    return "nights_stay";
+  }
+
+  get todayFormatted(): string {
+    return new Date().toLocaleDateString("en-IN", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  }
+
+  get displayName(): string {
+    return this.user?.firstName || this.user?.username || "there";
+  }
+
+  get resolvedAvatarUrl(): string {
+    return this.apiService.resolveImageUrl(
+      this.user?.profileImageUrl ?? this.user?.avatarUrl,
+    );
   }
 }

@@ -1,7 +1,9 @@
 package com.digitalcafe.controller;
 
+import com.digitalcafe.dto.WaiterDashboardDTO;
 import com.digitalcafe.dto.request.OrderStatusUpdateRequest;
 import com.digitalcafe.dto.response.ApiResponse;
+import com.digitalcafe.dto.response.CafeResponse;
 import com.digitalcafe.dto.response.OrderResponse;
 import com.digitalcafe.entity.Order;
 import com.digitalcafe.service.CafeService;
@@ -23,6 +25,16 @@ public class WaiterOrderFlowController {
     private final OrderService orderService;
     private final CafeService cafeService;
 
+    @GetMapping("/dashboard")
+    @PreAuthorize("hasRole('WAITER')")
+    public ResponseEntity<ApiResponse<WaiterDashboardDTO>> getWaiterDashboard() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        Long cafeId = getCafeIdFromAuthentication(auth);
+        CafeResponse cafe = cafeService.getCafeById(cafeId);
+        WaiterDashboardDTO dashboard = orderService.getWaiterDashboard(cafeId, cafe.getName());
+        return ResponseEntity.ok(ApiResponse.success("Waiter dashboard retrieved successfully", dashboard));
+    }
+
     @GetMapping("/ready-orders")
     @PreAuthorize("hasRole('WAITER')")
     public ResponseEntity<ApiResponse<List<OrderResponse>>> getReadyOrders() {
@@ -39,12 +51,6 @@ public class WaiterOrderFlowController {
                 .build();
         OrderResponse response = orderService.updateOrderStatus(orderId, request);
         return ResponseEntity.ok(ApiResponse.success("Order marked as SERVED", response));
-    }
-
-    @PutMapping("/orders/{orderId}/serve")
-    @PreAuthorize("hasRole('WAITER')")
-    public ResponseEntity<ApiResponse<OrderResponse>> serveOrder(@PathVariable Long orderId) {
-        return markServed(orderId);
     }
 
     private Long getCafeIdFromAuthentication(Authentication authentication) {

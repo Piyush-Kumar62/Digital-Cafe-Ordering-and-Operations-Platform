@@ -1,7 +1,9 @@
 package com.digitalcafe.controller;
 
+import com.digitalcafe.dto.ChefDashboardDTO;
 import com.digitalcafe.dto.request.OrderStatusUpdateRequest;
 import com.digitalcafe.dto.response.ApiResponse;
+import com.digitalcafe.dto.response.CafeResponse;
 import com.digitalcafe.dto.response.OrderResponse;
 import com.digitalcafe.entity.Order;
 import com.digitalcafe.service.CafeService;
@@ -23,6 +25,16 @@ public class ChefOrderFlowController {
 
     private final OrderService orderService;
     private final CafeService cafeService;
+
+    @GetMapping("/dashboard")
+    @PreAuthorize("hasRole('CHEF')")
+    public ResponseEntity<ApiResponse<ChefDashboardDTO>> getChefDashboard() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        Long cafeId = getCafeIdFromAuthentication(auth);
+        CafeResponse cafe = cafeService.getCafeById(cafeId);
+        ChefDashboardDTO dashboard = orderService.getChefDashboard(cafeId, cafe.getName());
+        return ResponseEntity.ok(ApiResponse.success("Chef dashboard retrieved successfully", dashboard));
+    }
 
     @GetMapping("/orders")
     @PreAuthorize("hasRole('CHEF')")

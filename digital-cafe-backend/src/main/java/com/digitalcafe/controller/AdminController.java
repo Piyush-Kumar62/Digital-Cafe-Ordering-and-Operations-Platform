@@ -1,6 +1,5 @@
 package com.digitalcafe.controller;
 
-import com.digitalcafe.dto.request.CreateUserRequest;
 import com.digitalcafe.dto.response.AdminDashboardAnalyticsResponse;
 import com.digitalcafe.dto.response.ApiResponse;
 import com.digitalcafe.dto.response.AdminDashboardStats;
@@ -14,15 +13,13 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
-// Manages system-wide operations and cafe owner provisioning.
+// Manages system-wide operations: user/approval management and analytics.
 @RestController
 @RequestMapping("/api/admin")
 @RequiredArgsConstructor
@@ -34,9 +31,9 @@ public class AdminController {
     private final PaymentWebhookAuditService paymentWebhookAuditService;
 
     @GetMapping("/dashboard/stats")
-    public ResponseEntity<AdminDashboardStats> getDashboardStats() {
+    public ResponseEntity<ApiResponse<AdminDashboardStats>> getDashboardStats() {
         AdminDashboardStats stats = adminDashboardService.getDashboardStats();
-        return ResponseEntity.ok(stats);
+        return ResponseEntity.ok(ApiResponse.success("Admin dashboard stats retrieved successfully", stats));
     }
 
     @GetMapping("/dashboard")
@@ -57,63 +54,58 @@ public class AdminController {
         return ResponseEntity.ok(ApiResponse.success("Payment webhook events retrieved successfully", response));
     }
 
-    @PostMapping("/cafe-owners")
-    public ResponseEntity<UserResponse> createCafeOwner(@Valid @RequestBody CreateUserRequest request) {
-        UserResponse response = userService.createCafeOwner(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
-    }
-
     @GetMapping("/users")
-    public ResponseEntity<Page<UserResponse>> getAllUsers(Pageable pageable) {
+    public ResponseEntity<ApiResponse<Page<UserResponse>>> getAllUsers(Pageable pageable) {
         Page<UserResponse> users = userService.getAllUsers(pageable);
-        return ResponseEntity.ok(users);
+        return ResponseEntity.ok(ApiResponse.success("Users retrieved successfully", users));
     }
 
     @GetMapping("/users/{id}")
-    public ResponseEntity<UserResponse> getUserById(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<UserResponse>> getUserById(@PathVariable Long id) {
         UserResponse user = userService.getUserById(id);
-        return ResponseEntity.ok(user);
+        return ResponseEntity.ok(ApiResponse.success("User retrieved successfully", user));
     }
 
     @GetMapping("/users/role/{roleName}")
-    public ResponseEntity<List<UserResponse>> getUsersByRole(@PathVariable String roleName) {
+    public ResponseEntity<ApiResponse<List<UserResponse>>> getUsersByRole(@PathVariable String roleName) {
         List<UserResponse> users = userService.getUsersByRole(roleName);
-        return ResponseEntity.ok(users);
+        return ResponseEntity.ok(ApiResponse.success("Users retrieved successfully", users));
     }
 
     @GetMapping("/pending-users")
-    public ResponseEntity<List<UserResponse>> getPendingUsers() {
-        return ResponseEntity.ok(userService.getPendingApprovalUsers());
+    public ResponseEntity<ApiResponse<List<UserResponse>>> getPendingUsers() {
+        return ResponseEntity.ok(ApiResponse.success("Pending users retrieved successfully", userService.getPendingApprovalUsers()));
     }
 
     @PutMapping("/approve/{userId}")
-    public ResponseEntity<Map<String, String>> approveUser(@PathVariable Long userId) {
+    public ResponseEntity<ApiResponse<Void>> approveUser(@PathVariable Long userId) {
         userService.approveUser(userId);
-        return ResponseEntity.ok(Map.of("message", "User approved successfully"));
+        return ResponseEntity.ok(ApiResponse.success("User approved successfully", (Void) null));
     }
 
     @PutMapping("/reject/{userId}")
-    public ResponseEntity<Map<String, String>> rejectUser(@PathVariable Long userId) {
+    public ResponseEntity<ApiResponse<Void>> rejectUser(@PathVariable Long userId) {
         userService.rejectUser(userId);
-        return ResponseEntity.ok(Map.of("message", "User rejected successfully"));
+        return ResponseEntity.ok(ApiResponse.success("User rejected successfully", (Void) null));
     }
 
     @PatchMapping("/users/{id}/activate")
-    public ResponseEntity<Map<String, String>> activateUser(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> activateUser(@PathVariable Long id) {
         userService.activateUser(id);
-        return ResponseEntity.ok(Map.of("message", "User activated successfully"));
+        return ResponseEntity.ok(ApiResponse.success("User activated successfully", (Void) null));
     }
 
     @PatchMapping("/users/{id}/deactivate")
-    public ResponseEntity<Map<String, String>> deactivateUser(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> deactivateUser(@PathVariable Long id) {
         userService.deactivateUser(id);
-        return ResponseEntity.ok(Map.of("message", "User deactivated successfully"));
+        return ResponseEntity.ok(ApiResponse.success("User deactivated successfully", (Void) null));
     }
 
     @DeleteMapping("/users/{id}")
-    public ResponseEntity<Map<String, String>> deleteUser(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
-        return ResponseEntity.ok(Map.of("message", "User deleted successfully"));
+        return ResponseEntity.ok(ApiResponse.success("User deleted successfully", (Void) null));
     }
+
 }
 

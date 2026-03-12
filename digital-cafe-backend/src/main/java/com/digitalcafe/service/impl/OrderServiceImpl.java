@@ -2,6 +2,8 @@ package com.digitalcafe.service.impl;
 
 import com.digitalcafe.dto.request.OrderRequest;
 import com.digitalcafe.dto.request.OrderStatusUpdateRequest;
+import com.digitalcafe.dto.ChefDashboardDTO;
+import com.digitalcafe.dto.WaiterDashboardDTO;
 import com.digitalcafe.dto.response.OrderResponse;
 import com.digitalcafe.dto.response.PageResponse;
 import com.digitalcafe.entity.*;
@@ -9,6 +11,7 @@ import com.digitalcafe.exception.BusinessException;
 import com.digitalcafe.exception.ResourceNotFoundException;
 import com.digitalcafe.mapper.OrderMapper;
 import com.digitalcafe.repository.*;
+import com.digitalcafe.service.EmailService;
 import com.digitalcafe.service.NotificationService;
 import com.digitalcafe.service.OrderService;
 import lombok.RequiredArgsConstructor;
@@ -47,6 +50,7 @@ public class OrderServiceImpl implements OrderService {
     private final OrderStatusHistoryRepository statusHistoryRepository;
     private final NotificationService notificationService;
     private final OrderMapper orderMapper;
+    private final EmailService emailService;
 
 
     @Override
@@ -59,7 +63,49 @@ public class OrderServiceImpl implements OrderService {
 
         validateBookingOwnership(booking, customerId);
         validateBookingIsConfirmed(booking);
-        assertNoExistingOrder(booking.getId());
+
+        // ── Idempotent order creation: handle existing orders for this booking ──────────
+        // If a confirmed/active order exists → block (customer already has a live order).
+        // If an unpaid order exists (PENDING_PAYMENT) → reuse it, updating items & total
+        //   so cart changes between retry attempts are captured.
+        // If only CANCELLED orders exist → fall through and create a fresh order.
+        List<Order> existingOrders = orderRepository.findByBookingId(booking.getId());
+        if (!existingOrders.isEmpty()) {
+            for (Order existing : existingOrders) {
+                Order.OrderStatus st = existing.getStatus();
+                if (st == Order.OrderStatus.PLACED || st == Order.OrderStatus.PREPARING
+                        || st == Order.OrderStatus.READY || st == Order.OrderStatus.SERVED) {
+                    throw new BusinessException(
+                            "An active order already exists for this booking (status: " + st + ")."
+                            + " Cancel it before placing a new order.");
+                }
+            }
+            // No confirmed order — look for a re-usable PENDING_PAYMENT order
+            Optional<Order> pendingOpt = existingOrders.stream()
+                    .filter(o -> o.getStatus() == Order.OrderStatus.PENDING_PAYMENT)
+                    .findFirst();
+            if (pendingOpt.isPresent()) {
+                Order existing = pendingOpt.get();
+                log.info("Reusing PENDING_PAYMENT order for payment retry: orderId={}, bookingId={}",
+                        existing.getId(), booking.getId());
+                // Refresh items in case the customer changed their cart
+                existing.getOrderItems().clear();
+                List<OrderItem> freshItems = buildOrderItems(
+                        request.getItems(), existing, booking.getCafe().getId());
+                existing.getOrderItems().addAll(freshItems);
+                BigDecimal subtotal = freshItems.stream()
+                        .map(OrderItem::getTotalPrice)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+                existing.setSubtotal(subtotal);
+                existing.setTax(subtotal.multiply(new BigDecimal("0.10")));
+                existing.setDiscount(BigDecimal.ZERO);
+                existing.setTotalAmount(subtotal.add(existing.getTax()));
+                existing.setSpecialInstructions(request.getSpecialInstructions());
+                existing = orderRepository.save(existing);
+                return orderMapper.toResponse(existing);
+            }
+            // Only CANCELLED orders exist — create a brand-new order below
+        }
 
         Order order = buildOrder(request, booking);
         order = orderRepository.save(order);
@@ -213,6 +259,10 @@ public class OrderServiceImpl implements OrderService {
         notificationService.pushOrderEvent(order, "ORDER_PLACED", "/topic/chef/" + order.getCafe().getId());
         // Also notify the customer that their order is confirmed
         notificationService.pushOrderEvent(order, "ORDER_CONFIRMED", "/topic/customer/" + order.getCustomer().getId());
+        // Send order confirmation email to customer
+        emailService.sendOrderConfirmation(
+                order.getCustomer().getEmail(),
+                buildOrderConfirmationDetails(order));
         return orderMapper.toResponse(order);
     }
 
@@ -246,12 +296,6 @@ public class OrderServiceImpl implements OrderService {
     private void validateBookingIsConfirmed(Booking booking) {
         if (booking.getStatus() != Booking.BookingStatus.CONFIRMED) {
             throw new BusinessException("Booking must be CONFIRMED to place an order. Current status: " + booking.getStatus());
-        }
-    }
-
-    private void assertNoExistingOrder(Long bookingId) {
-        if (orderRepository.existsByBookingId(bookingId)) {
-            throw new BusinessException("An order already exists for bookingId=" + bookingId);
         }
     }
 
@@ -352,11 +396,16 @@ public class OrderServiceImpl implements OrderService {
             case READY      -> {
                 notificationService.pushOrderEvent(order, "ORDER_READY", "/topic/waiter/"   + order.getCafe().getId());
                 notificationService.pushOrderEvent(order, "ORDER_READY", "/topic/customer/" + order.getCustomer().getId());
+                emailService.sendOrderReadyNotification(order.getCustomer().getEmail(), order.getOrderNumber());
             }
-            case SERVED     -> notificationService.pushOrderEvent(order, "ORDER_SERVED",    "/topic/customer/" + order.getCustomer().getId());
+            case SERVED     -> {
+                notificationService.pushOrderEvent(order, "ORDER_SERVED", "/topic/customer/" + order.getCustomer().getId());
+                emailService.sendOrderServedNotification(order.getCustomer().getEmail(), order.getOrderNumber());
+            }
             case CANCELLED  -> {
                 notificationService.pushOrderEvent(order, "ORDER_CANCELLED", "/topic/customer/" + order.getCustomer().getId());
                 notificationService.pushOrderEvent(order, "ORDER_CANCELLED", "/topic/chef/"     + order.getCafe().getId());
+                emailService.sendOrderCancelledNotification(order.getCustomer().getEmail(), order.getOrderNumber());
             }
         }
     }
@@ -372,5 +421,52 @@ public class OrderServiceImpl implements OrderService {
                 .reason(reason)
                 .build();
         statusHistoryRepository.save(history);
+    }
+
+    private String buildOrderConfirmationDetails(Order order) {
+        String items = order.getOrderItems().isEmpty() ? "-" :
+                order.getOrderItems().stream()
+                        .map(i -> i.getMenuItem().getName() + " x" + i.getQuantity()
+                                + " (INR " + i.getTotalPrice().toPlainString() + ")")
+                        .collect(Collectors.joining("\n"));
+        return String.format(
+                "Order Number: %s\nCafe: %s\nItems:\n%s\n\nTotal Amount: INR %s",
+                order.getOrderNumber(),
+                order.getCafe().getName(),
+                items,
+                order.getTotalAmount().toPlainString());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ChefDashboardDTO getChefDashboard(Long cafeId, String cafeName) {
+        LocalDateTime startOfDay = LocalDateTime.now().toLocalDate().atStartOfDay();
+        LocalDateTime endOfDay = startOfDay.plusDays(1);
+        return ChefDashboardDTO.builder()
+                .cafeId(cafeId)
+                .cafeName(cafeName)
+                .pendingOrders(orderRepository.countByCafeIdAndStatus(cafeId, Order.OrderStatus.PLACED))
+                .preparingOrders(orderRepository.countByCafeIdAndStatus(cafeId, Order.OrderStatus.PREPARING))
+                .completedToday(orderRepository.countByCafeIdAndStatusAndCreatedAtBetween(
+                        cafeId, Order.OrderStatus.READY, startOfDay, endOfDay))
+                .recentOrders(Collections.emptyList())
+                .build();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public WaiterDashboardDTO getWaiterDashboard(Long cafeId, String cafeName) {
+        LocalDateTime startOfDay = LocalDateTime.now().toLocalDate().atStartOfDay();
+        LocalDateTime endOfDay = startOfDay.plusDays(1);
+        return WaiterDashboardDTO.builder()
+                .cafeId(cafeId)
+                .cafeName(cafeName)
+                .readyOrders(orderRepository.countByCafeIdAndStatus(cafeId, Order.OrderStatus.READY))
+                .activeOrders(orderRepository.countByCafeIdAndStatusIn(
+                        cafeId, List.of(Order.OrderStatus.PLACED, Order.OrderStatus.PREPARING)))
+                .servedToday(orderRepository.countByCafeIdAndStatusAndCreatedAtBetween(
+                        cafeId, Order.OrderStatus.SERVED, startOfDay, endOfDay))
+                .recentOrders(Collections.emptyList())
+                .build();
     }
 }

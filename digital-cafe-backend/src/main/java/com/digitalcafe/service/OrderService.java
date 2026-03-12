@@ -2,6 +2,8 @@ package com.digitalcafe.service;
 
 import com.digitalcafe.dto.request.OrderRequest;
 import com.digitalcafe.dto.request.OrderStatusUpdateRequest;
+import com.digitalcafe.dto.ChefDashboardDTO;
+import com.digitalcafe.dto.WaiterDashboardDTO;
 import com.digitalcafe.dto.response.OrderResponse;
 import com.digitalcafe.dto.response.PageResponse;
 import com.digitalcafe.entity.Order;
@@ -84,4 +86,14 @@ public interface OrderService {
      * Get the raw Order entity by ID (for internal service-to-service use).
      */
     Order getOrderEntity(Long orderId);
+
+    /**
+     * Get chef dashboard stats for a given cafe.
+     */
+    ChefDashboardDTO getChefDashboard(Long cafeId, String cafeName);
+
+    /**
+     * Get waiter dashboard stats for a given cafe.
+     */
+    WaiterDashboardDTO getWaiterDashboard(Long cafeId, String cafeName);
 }

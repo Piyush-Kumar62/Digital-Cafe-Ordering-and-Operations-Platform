@@ -18,6 +18,7 @@ import com.digitalcafe.repository.CafeRepository;
 import com.digitalcafe.repository.CafeTableRepository;
 import com.digitalcafe.repository.UserRepository;
 import com.digitalcafe.service.BookingService;
+import com.digitalcafe.service.EmailService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -58,6 +59,7 @@ public class BookingServiceImpl implements BookingService {
     private final CafeTableRepository tableRepository;
     private final BookingMapper bookingMapper;
     private final SimpMessagingTemplate messagingTemplate;
+    private final EmailService emailService;
 
 
     @Override
@@ -94,6 +96,7 @@ public class BookingServiceImpl implements BookingService {
                 booking.getId(), booking.getBookingNumber(), customerId,
                 table.getId(), booking.getBookingDate(), startTime, endTime);
 
+        emailService.sendBookingConfirmation(customer.getEmail(), buildBookingDetails(booking));
         notifyTableAvailabilityChanged(booking, "BOOKING_CREATED");
         return bookingMapper.toResponse(booking);
     }
@@ -131,6 +134,7 @@ public class BookingServiceImpl implements BookingService {
         booking = bookingRepository.save(booking);
 
         log.info("Auto-allocation booking created: bookingId={}, tableId={}", booking.getId(), table.getId());
+        emailService.sendBookingConfirmation(customer.getEmail(), buildBookingDetails(booking));
         notifyTableAvailabilityChanged(booking, "BOOKING_CREATED");
         return bookingMapper.toResponse(booking);
     }
@@ -208,6 +212,7 @@ public class BookingServiceImpl implements BookingService {
         booking = bookingRepository.save(booking);
 
         log.info("Booking cancelled: bookingId={}, bookingNumber={}", booking.getId(), booking.getBookingNumber());
+        emailService.sendBookingCancelledEmail(booking.getCustomer().getEmail(), buildBookingDetails(booking));
         notifyTableAvailabilityChanged(booking, "BOOKING_CANCELLED");
         return bookingMapper.toResponse(booking);
     }
@@ -219,6 +224,7 @@ public class BookingServiceImpl implements BookingService {
         booking.setStatus(status);
         if (status == Booking.BookingStatus.CANCELLED) {
             booking.setCancelledAt(LocalDateTime.now());
+            emailService.sendBookingCancelledEmail(booking.getCustomer().getEmail(), buildBookingDetails(booking));
         }
         booking = bookingRepository.save(booking);
         log.info("Booking status updated: bookingId={}, bookingNumber={}, newStatus={}",
@@ -325,5 +331,19 @@ public class BookingServiceImpl implements BookingService {
         } catch (Exception e) {
             log.warn("Failed to publish table availability update for bookingId={}: {}", booking.getId(), e.getMessage());
         }
+    }
+
+    private String buildBookingDetails(Booking booking) {
+        String tableInfo = booking.getTable() != null ? booking.getTable().getTableNumber() : "-";
+        String cafeName = booking.getCafe() != null ? booking.getCafe().getName() : "-";
+        return String.format(
+                "Booking Number: %s\nCafe: %s\nTable: %s\nDate: %s\nTime: %s - %s\nGuests: %d",
+                booking.getBookingNumber(),
+                cafeName,
+                tableInfo,
+                booking.getBookingDate(),
+                booking.getStartTime(),
+                booking.getEndTime(),
+                booking.getNumberOfGuests());
     }
 }

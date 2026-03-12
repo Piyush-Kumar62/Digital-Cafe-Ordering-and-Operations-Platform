@@ -32,6 +32,8 @@ export interface AuthResponse {
   userId: number;
   username: string;
   email: string;
+  firstName?: string;
+  lastName?: string;
   cafeId?: number;
   roles: string[];
   isEmailVerified: boolean;

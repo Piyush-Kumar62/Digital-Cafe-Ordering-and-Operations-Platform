@@ -180,3 +180,50 @@
     font-size: clamp(1.6rem, 7vw, 2rem);
   }
 }
+
+/* ── Dark mode ─────────────────────────────────────────────────── */
+:host-context(body.dark-theme) {
+  .card {
+    --card-title: #e2e8f0;
+    --card-value: #f1f5f9;
+    --card-description: #94a3b8;
+    --card-shadow: rgba(0, 0, 0, 0.35);
+    --card-hover-shadow: rgba(0, 0, 0, 0.5);
+  }
+  .card.variant-blue {
+    --card-bg: linear-gradient(145deg, #0f1e35 0%, #1e3a5f 60%, #1d4ed8 100%);
+    --card-border: #1d4ed8;
+    --icon-bg: linear-gradient(145deg, #1e3a5f, #1d4ed8);
+    --icon-color: #93c5fd;
+  }
+  .card.variant-teal {
+    --card-bg: linear-gradient(145deg, #022c22 0%, #064e3b 60%, #0f766e 100%);
+    --card-border: #0f766e;
+    --icon-bg: linear-gradient(145deg, #064e3b, #0f766e);
+    --icon-color: #6ee7b7;
+  }
+  .card.variant-violet {
+    --card-bg: linear-gradient(145deg, #2e1065 0%, #4c1d95 60%, #6d28d9 100%);
+    --card-border: #5b21b6;
+    --icon-bg: linear-gradient(145deg, #4c1d95, #6d28d9);
+    --icon-color: #c4b5fd;
+  }
+  .card.variant-orange {
+    --card-bg: linear-gradient(145deg, #431407 0%, #7c2d12 60%, #c2410c 100%);
+    --card-border: #9a3412;
+    --icon-bg: linear-gradient(145deg, #7c2d12, #c2410c);
+    --icon-color: #fdba74;
+  }
+  .card.variant-rose {
+    --card-bg: linear-gradient(145deg, #450a0a 0%, #7f1d1d 60%, #be123c 100%);
+    --card-border: #991b1b;
+    --icon-bg: linear-gradient(145deg, #7f1d1d, #be123c);
+    --icon-color: #fca5a5;
+  }
+  .card.variant-indigo {
+    --card-bg: linear-gradient(145deg, #1e1b4b 0%, #312e81 60%, #4338ca 100%);
+    --card-border: #3730a3;
+    --icon-bg: linear-gradient(145deg, #312e81, #4338ca);
+    --icon-color: #a5b4fc;
+  }
+}

@@ -63,20 +63,24 @@ h6 {
   font-family: "Poppins", sans-serif;
 }
 
-/* Custom Scrollbar */
+/* Custom Scrollbar — thin, always visible */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #64748b transparent;
+}
+
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 5px;
+  height: 5px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #1e293b;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
   background: #64748b;
   border-radius: 4px;
-  border: 2px solid #1e293b;
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -427,130 +431,237 @@ html.dark {
   }
 }
 
-/* SweetAlert global styles */
-.swal-modal {
-  border-radius: 14px;
-  padding: 0.25rem;
-}
+/* ============================================================
+   SweetAlert2 — Digital Café Premium Theme
+   ============================================================ */
 
-.swal-title {
-  color: #0f172a;
-  font-family: "Poppins", sans-serif;
-}
-
-.swal-text {
-  color: #475569;
-  font-family: "Inter", sans-serif;
-}
-
-.swal-button {
-  border-radius: 10px;
-  font-weight: 600;
-}
-
-.swal-button--confirm {
-  background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
-}
-
-html.dark .swal-modal,
-html.dark-mode .swal-modal {
-  background: #0f172a;
-  border: 1px solid #334155;
-}
-
-html.dark .swal-title,
-html.dark-mode .swal-title {
-  color: #e2e8f0;
-}
-
-html.dark .swal-text,
-html.dark-mode .swal-text {
-  color: #cbd5e1;
-}
-
-/* SweetAlert hardened app theme styles */
-.swal-modal.dc-swal {
-  border-radius: 16px !important;
-  border: 1px solid #dbe4f0;
-  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.24) !important;
-}
-
-.swal-modal.dc-swal .swal-title {
-  font-family: "Poppins", sans-serif;
-  font-size: 2rem;
-  font-weight: 700;
-  margin-bottom: 0.25rem;
-}
-
-.swal-modal.dc-swal .swal-text {
-  font-family: "Inter", sans-serif;
-  font-size: 1.05rem;
-  line-height: 1.55;
-}
-
-.swal-modal.dc-swal .swal-button {
-  border-radius: 10px !important;
-  font-weight: 600 !important;
-  padding: 0.55rem 1.1rem !important;
-}
-
-.swal-overlay {
+/* Backdrop */
+.swal2-container {
   z-index: 20000 !important;
 }
 
-.swal-modal.dc-swal .swal-icon--success:before,
-.swal-modal.dc-swal .swal-icon--success:after,
-.swal-modal.dc-swal .swal-icon--success__hide-corners {
-  background: #ffffff !important;
+.swal2-backdrop-show {
+  background: rgba(15, 23, 42, 0.55) !important;
+  backdrop-filter: blur(3px) !important;
 }
 
-.swal-modal.dc-swal.dc-swal-light {
-  background: #ffffff !important;
-  border-color: #dbe4f0 !important;
+/* ── Base popup ─────────────────────────────────────────────── */
+.dc-swal2-popup.swal2-popup {
+  width: 440px !important;
+  max-width: calc(100vw - 2rem) !important;
+  border-radius: 20px !important;
+  padding: 2.25rem 2rem 2rem !important;
+  font-family: "Inter", sans-serif;
+  border: 1px solid rgba(226, 232, 240, 0.9) !important;
+  box-shadow:
+    0 24px 64px rgba(15, 23, 42, 0.14),
+    0 4px 18px rgba(15, 23, 42, 0.07) !important;
+  overflow: hidden;
 }
 
-.swal-modal.dc-swal.dc-swal-light .swal-title {
+/* ── Icon ───────────────────────────────────────────────────── */
+.dc-swal2-popup .swal2-icon {
+  width: 76px !important;
+  height: 76px !important;
+  margin: 0 auto 1.4rem !important;
+  border-width: 3px !important;
+}
+
+/* Success */
+.dc-swal2-popup .swal2-icon.swal2-success {
+  border-color: #22c55e !important;
+}
+.dc-swal2-popup .swal2-icon.swal2-success [class^="swal2-success-line"] {
+  background-color: #22c55e !important;
+}
+.dc-swal2-popup .swal2-icon.swal2-success .swal2-success-ring {
+  border-color: rgba(34, 197, 94, 0.25) !important;
+}
+/* Fix white-line artifact on success icon */
+.dc-swal2-popup .swal2-success-fix {
+  background-color: transparent !important;
+}
+
+/* Error */
+.dc-swal2-popup .swal2-icon.swal2-error {
+  border-color: #ef4444 !important;
+}
+.dc-swal2-popup .swal2-icon.swal2-error [class^="swal2-x-mark-line"] {
+  background-color: #ef4444 !important;
+}
+
+/* Warning */
+.dc-swal2-popup .swal2-icon.swal2-warning {
+  border-color: #f59e0b !important;
+  color: #f59e0b !important;
+}
+
+/* Info */
+.dc-swal2-popup .swal2-icon.swal2-info {
+  border-color: #3b82f6 !important;
+  color: #3b82f6 !important;
+}
+
+/* ── Title ──────────────────────────────────────────────────── */
+.dc-swal2-title {
+  font-family: "Poppins", sans-serif !important;
+  font-size: 1.3rem !important;
+  font-weight: 700 !important;
+  line-height: 1.35 !important;
   color: #0f172a !important;
+  padding: 0 0 0.2rem !important;
+  margin: 0 !important;
 }
 
-.swal-modal.dc-swal.dc-swal-light .swal-text {
+/* ── Body text ──────────────────────────────────────────────── */
+.dc-swal2-body {
+  font-family: "Inter", sans-serif !important;
+  font-size: 0.925rem !important;
+  line-height: 1.65 !important;
+  color: #64748b !important;
+  padding: 0.2rem 0 0 !important;
+  margin: 0 !important;
+}
+
+/* ── Actions row ────────────────────────────────────────────── */
+.dc-swal2-actions {
+  margin-top: 1.75rem !important;
+  gap: 0.75rem !important;
+  padding: 0 !important;
+  justify-content: center !important;
+}
+
+/* ── Buttons (buttonsStyling: false gives us full control) ──── */
+.dc-swal2-btn-confirm,
+.dc-swal2-btn-cancel {
+  border: none !important;
+  border-radius: 12px !important;
+  font-family: "Inter", sans-serif !important;
+  font-size: 0.9rem !important;
+  font-weight: 600 !important;
+  padding: 0.65rem 1.8rem !important;
+  min-width: 110px !important;
+  cursor: pointer !important;
+  transition:
+    filter 0.15s ease,
+    transform 0.12s ease,
+    box-shadow 0.15s ease !important;
+  letter-spacing: 0.01em !important;
+}
+
+.dc-swal2-btn-confirm:hover,
+.dc-swal2-btn-cancel:hover {
+  filter: brightness(1.07) !important;
+  transform: translateY(-1px) !important;
+}
+
+.dc-swal2-btn-confirm:active,
+.dc-swal2-btn-cancel:active {
+  transform: translateY(0) !important;
+  filter: brightness(0.97) !important;
+}
+
+/* Cancel — neutral grey */
+.dc-swal2-btn-cancel {
+  background: #f1f5f9 !important;
   color: #475569 !important;
 }
 
-.swal-modal.dc-swal.dc-swal-dark {
-  background: #0f172a !important;
-  border-color: #334155 !important;
+/* ── Per-type confirm button gradients ──────────────────────── */
+.dc-type-success .dc-swal2-btn-confirm {
+  background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.38) !important;
 }
 
-.swal-modal.dc-swal.dc-swal-dark .swal-title {
+.dc-type-error .dc-swal2-btn-confirm {
+  background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.38) !important;
+}
+
+.dc-type-warning .dc-swal2-btn-confirm {
+  background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(217, 119, 6, 0.38) !important;
+}
+
+.dc-type-info .dc-swal2-btn-confirm {
+  background: linear-gradient(135deg, #0284c7 0%, #38bdf8 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.38) !important;
+}
+
+.dc-type-confirm .dc-swal2-btn-confirm {
+  background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.38) !important;
+}
+
+.dc-type-loading .dc-swal2-btn-confirm {
+  background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%) !important;
+  color: #ffffff !important;
+}
+
+/* ── Loading spinner ────────────────────────────────────────── */
+.dc-swal2-popup .swal2-loader {
+  border-color: #4f46e5 transparent #4f46e5 transparent !important;
+  width: 56px !important;
+  height: 56px !important;
+  margin: 0.5rem auto 1rem !important;
+}
+
+/* ── Timer progress bar ─────────────────────────────────────── */
+.swal2-timer-progress-bar {
+  background: linear-gradient(90deg, #4f46e5, #818cf8) !important;
+  height: 4px !important;
+  border-radius: 2px !important;
+}
+
+/* ── Dark mode ──────────────────────────────────────────────── */
+.dc-swal2-dark.swal2-popup,
+html.dark .dc-swal2-popup.swal2-popup,
+html.dark-mode .dc-swal2-popup.swal2-popup,
+body.dark-theme .dc-swal2-popup.swal2-popup {
+  background: #0f172a !important;
+  border: 1px solid #1e293b !important;
+  box-shadow:
+    0 24px 64px rgba(0, 0, 0, 0.5),
+    0 4px 18px rgba(0, 0, 0, 0.3) !important;
+}
+
+.dc-swal2-dark .dc-swal2-title,
+html.dark .dc-swal2-title,
+html.dark-mode .dc-swal2-title,
+body.dark-theme .dc-swal2-title {
   color: #f8fafc !important;
 }
 
-.swal-modal.dc-swal.dc-swal-dark .swal-text {
-  color: #cbd5e1 !important;
+.dc-swal2-dark .dc-swal2-body,
+html.dark .dc-swal2-body,
+html.dark-mode .dc-swal2-body,
+body.dark-theme .dc-swal2-body {
+  color: #94a3b8 !important;
 }
 
-.swal-modal.dc-swal.dc-swal-dark .swal-button {
-  color: #f8fafc !important;
+.dc-swal2-dark .dc-swal2-btn-cancel,
+html.dark .dc-swal2-btn-cancel,
+html.dark-mode .dc-swal2-btn-cancel,
+body.dark-theme .dc-swal2-btn-cancel {
+  background: #1e293b !important;
+  color: #94a3b8 !important;
 }
 
-.swal-modal.dc-swal.dc-swal-dark .swal-icon--success:before,
-.swal-modal.dc-swal.dc-swal-dark .swal-icon--success:after,
-.swal-modal.dc-swal.dc-swal-dark .swal-icon--success__hide-corners {
-  background: #0f172a !important;
+/* Fix success icon ring artifact on dark backgrounds */
+.dc-swal2-dark .swal2-success-fix,
+html.dark .swal2-success-fix,
+html.dark-mode .swal2-success-fix {
+  background: transparent !important;
 }
-
-.swal-modal.dc-swal.dc-swal-success .swal-button--confirm,
-.swal-modal.dc-swal.dc-swal-info .swal-button--confirm {
-  background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
-}
-
-.swal-modal.dc-swal.dc-swal-warning .swal-button--confirm {
-  background: linear-gradient(135deg, #d97706, #b45309) !important;
-}
-
-.swal-modal.dc-swal.dc-swal-error .swal-button--confirm {
-  background: linear-gradient(135deg, #dc2626, #b91c1c) !important;
+.dc-swal2-dark .swal2-success-ring,
+html.dark .swal2-success-ring,
+html.dark-mode .swal2-success-ring {
+  background: transparent !important;
 }
 
 /* Global body theme classes */
@@ -562,65 +673,6 @@ body.light-theme {
 body.dark-theme {
   background-color: #0f172a;
   color: #e2e8f0;
-}
-
-/* SweetAlert performance + theme overrides (instant open, no flicker) */
-.swal-overlay {
-  backdrop-filter: none !important;
-}
-
-.swal-modal,
-.swal-modal * {
-  transition: none !important;
-  animation: none !important;
-}
-
-.swal-modal.swal-light-mode {
-  background-color: #ffffff !important;
-  color: #1f2937 !important;
-  border: 1px solid #e5e7eb !important;
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.14) !important;
-}
-
-.swal-modal.swal-light-mode .swal-title {
-  color: #0f172a !important;
-}
-
-.swal-modal.swal-light-mode .swal-text {
-  color: #475569 !important;
-}
-
-.swal-modal.swal-dark-mode {
-  background-color: #1f2937 !important;
-  color: #f9fafb !important;
-  border: 1px solid #374151 !important;
-  box-shadow: 0 8px 24px rgba(2, 6, 23, 0.32) !important;
-}
-
-.swal-modal.swal-dark-mode .swal-title {
-  color: #f9fafb !important;
-}
-
-.swal-modal.swal-dark-mode .swal-text {
-  color: #cbd5e1 !important;
-}
-
-.swal-modal.swal-dark-mode .swal-button {
-  background-color: #2563eb !important;
-}
-
-.swal-modal.swal-dark-mode .swal-button--cancel {
-  background-color: #374151 !important;
-}
-
-.swal-modal.swal-dark-mode .swal-icon--success:before,
-.swal-modal.swal-dark-mode .swal-icon--success:after,
-.swal-modal.swal-dark-mode .swal-icon--success__hide-corners {
-  background: #1f2937 !important;
-}
-
-.swal-modal.swal-dark-mode .swal-icon--success__ring {
-  border-color: rgba(163, 230, 53, 0.28) !important;
 }
 
 /* ── Global Paginator ─────────────────────────────────────────── */

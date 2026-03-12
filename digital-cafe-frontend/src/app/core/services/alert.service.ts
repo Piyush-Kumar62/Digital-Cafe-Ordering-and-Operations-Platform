@@ -1,18 +1,14 @@
-import { DOCUMENT } from '@angular/common';
-import { Inject, Injectable } from '@angular/core';
-import { ThemeService } from '@core/services/theme.service';
-import swal from 'sweetalert';
-
-type AlertType = 'success' | 'error' | 'warning' | 'info';
-type SweetAlertFn = (options: Record<string, unknown>) => Promise<unknown>;
+import { DOCUMENT } from "@angular/common";
+import { Inject, Injectable } from "@angular/core";
+import { ThemeService } from "@core/services/theme.service";
+import Swal, { SweetAlertOptions, SweetAlertResult } from "sweetalert2";
 
 @Injectable({
-  providedIn: 'root',
+  providedIn: "root",
 })
 export class AlertService {
-  private lastAlertKey = '';
+  private lastAlertKey = "";
   private lastAlertAt = 0;
-  private loadingOpen = false;
 
   constructor(
     @Inject(DOCUMENT) private document: Document,
@@ -20,161 +16,134 @@ export class AlertService {
   ) {}
 
   success(title: string, message?: string): void {
-    void this.show('success', title, message);
+    if (!this.shouldDisplay("success", title, message ?? "")) return;
+    void Swal.fire({
+      ...this.swalOpts("success"),
+      title,
+      text: message,
+      icon: "success",
+      confirmButtonText: "Got it",
+    });
   }
 
   error(title: string, message?: string): void {
-    void this.show('error', title, message);
+    if (!this.shouldDisplay("error", title, message ?? "")) return;
+    void Swal.fire({
+      ...this.swalOpts("error"),
+      title,
+      text: message,
+      icon: "error",
+      confirmButtonText: "OK",
+    });
   }
 
   warning(title: string, message?: string): void {
-    void this.show('warning', title, message);
+    if (!this.shouldDisplay("warning", title, message ?? "")) return;
+    void Swal.fire({
+      ...this.swalOpts("warning"),
+      title,
+      text: message,
+      icon: "warning",
+      confirmButtonText: "OK",
+    });
   }
 
   info(title: string, message?: string): void {
-    void this.show('info', title, message);
+    if (!this.shouldDisplay("info", title, message ?? "")) return;
+    void Swal.fire({
+      ...this.swalOpts("info"),
+      title,
+      text: message,
+      icon: "info",
+      confirmButtonText: "OK",
+    });
   }
 
   async confirm(title: string, message: string): Promise<boolean> {
-    const swalFn = await this.getSwal();
-    if (!swalFn) {
-      return false;
-    }
-
-    this.loadingOpen = false;
-    const result = await swalFn({
+    const result: SweetAlertResult = await Swal.fire({
+      ...this.swalOpts("confirm"),
       title,
       text: message,
-      icon: 'warning',
-      className: this.getSwalThemeClass(),
-      dangerMode: true,
-      closeOnClickOutside: false,
-      closeOnEsc: false,
-      buttons: {
-        cancel: {
-          text: 'Cancel',
-          value: false,
-          visible: true,
-          className: 'swal-btn-cancel',
-          closeModal: true,
-        },
-        confirm: {
-          text: 'Confirm',
-          value: true,
-          visible: true,
-          className: 'swal-btn-confirm',
-          closeModal: true,
-        },
-      },
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, Confirm",
+      cancelButtonText: "Cancel",
+      reverseButtons: true,
+      allowOutsideClick: false,
+      allowEscapeKey: false,
     });
-    return result === true;
+    return result.isConfirmed;
+  }
+
+  /** Shows a success dialog that requires an explicit button click before resolving. */
+  async successWithButton(
+    title: string,
+    message: string,
+    buttonText = "Continue",
+  ): Promise<void> {
+    await Swal.fire({
+      ...this.swalOpts("success"),
+      title,
+      text: message,
+      icon: "success",
+      confirmButtonText: buttonText,
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+    });
   }
 
   loading(message: string): void {
-    void this.showLoading(message);
+    Swal.fire({
+      ...this.swalOpts("loading"),
+      title: "Please wait…",
+      text: message || "Processing your request",
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      showConfirmButton: false,
+      didOpen: () => Swal.showLoading(),
+    });
   }
 
   close(): void {
-    (swal as unknown as { close?: () => void }).close?.();
-    this.loadingOpen = false;
+    Swal.close();
   }
 
-  private async show(type: AlertType, titleOrMessage: string, message?: string): Promise<void> {
-    const swalFn = await this.getSwal();
-    if (!swalFn) {
-      return;
-    }
-
-    const title = message ? titleOrMessage : this.getDefaultTitle(type);
-    const text = message ?? titleOrMessage;
-    if (!this.shouldDisplay(type, title, text)) {
-      return;
-    }
-
-    if (this.loadingOpen) {
-      this.close();
-    }
-
-    try {
-      await swalFn({
-        title,
-        text,
-        icon: type,
-        className: this.getSwalThemeClass(),
-        timer: 2800,
-        buttons: false,
-        closeOnClickOutside: true,
-        closeOnEsc: true,
-      });
-    } catch {
-      // SweetAlert threw — fail silently to avoid blocking the UI
-    }
+  private swalOpts(type: string): SweetAlertOptions {
+    const dark = this.isDark();
+    return {
+      width: "440px",
+      background: dark ? "#0f172a" : "#ffffff",
+      color: dark ? "#f1f5f9" : "#0f172a",
+      buttonsStyling: false,
+      customClass: {
+        popup: `dc-swal2-popup dc-type-${type}${dark ? " dc-swal2-dark" : ""}`,
+        title: "dc-swal2-title",
+        htmlContainer: "dc-swal2-body",
+        confirmButton: "dc-swal2-btn-confirm",
+        cancelButton: "dc-swal2-btn-cancel",
+        actions: "dc-swal2-actions",
+      },
+    };
   }
 
-  private async showLoading(message: string): Promise<void> {
-    const swalFn = await this.getSwal();
-    if (!swalFn) {
-      return;
-    }
-
-    if (this.loadingOpen) {
-      this.close();
-    }
-
-    this.loadingOpen = true;
-    try {
-      await swalFn({
-        title: 'Processing...',
-        text: message || 'Please wait',
-        icon: 'info',
-        className: this.getSwalThemeClass(),
-        buttons: false,
-        closeOnClickOutside: false,
-        closeOnEsc: false,
-      });
-    } catch {
-      this.loadingOpen = false;
-    }
+  private isDark(): boolean {
+    const root = this.document?.documentElement;
+    const body = this.document?.body;
+    return (
+      this.themeService.isDarkMode() ||
+      (!!root &&
+        (root.classList.contains("dark") ||
+          root.classList.contains("dark-mode"))) ||
+      (!!body && body.classList.contains("dark-theme"))
+    );
   }
 
-  private getDefaultTitle(type: AlertType): string {
-    switch (type) {
-      case 'success':
-        return 'Success';
-      case 'error':
-        return 'Error';
-      case 'warning':
-        return 'Warning';
-      default:
-        return 'Information';
-    }
-  }
-
-  private shouldDisplay(type: AlertType, title: string, text: string): boolean {
+  private shouldDisplay(type: string, title: string, text: string): boolean {
     const now = Date.now();
     const key = `${type}|${title}|${text}`;
-    if (key === this.lastAlertKey && now - this.lastAlertAt < 1000) {
-      return false;
-    }
+    if (key === this.lastAlertKey && now - this.lastAlertAt < 800) return false;
     this.lastAlertKey = key;
     this.lastAlertAt = now;
     return true;
-  }
-
-  private getSwalThemeClass(): string {
-    const root = this.document?.documentElement;
-    const body = this.document?.body;
-    const isDark =
-      this.themeService.isDarkMode() ||
-      (!!root && (root.classList.contains('dark') || root.classList.contains('dark-mode'))) ||
-      (!!body && body.classList.contains('dark-theme'));
-    return isDark ? 'swal-dark-mode' : 'swal-light-mode';
-  }
-
-  private getSwal(): Promise<SweetAlertFn | null> {
-    if (typeof window === 'undefined' || typeof swal !== 'function') {
-      return Promise.resolve(null);
-    }
-    return Promise.resolve(swal as unknown as SweetAlertFn);
   }
 }

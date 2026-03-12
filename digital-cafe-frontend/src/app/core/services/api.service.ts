@@ -445,7 +445,9 @@ export class ApiService {
   resendPaymentReceiptEmail(paymentId: number): Observable<Payment> {
     return this.http
       .post<any>(`${this.baseUrl}/payments/${paymentId}/receipt/email`, {})
-      .pipe(map((res: any) => this.unwrapApiData<Payment>(res, res as Payment)));
+      .pipe(
+        map((res: any) => this.unwrapApiData<Payment>(res, res as Payment)),
+      );
   }
 
   getAdminProfile(): Observable<AdminProfile> {
@@ -598,9 +600,9 @@ export class ApiService {
   }
 
   getAdminDashboard(): Observable<AdminDashboard> {
-    return this.http.get<AdminDashboard>(
-      `${this.baseUrl}/admin/dashboard/stats`,
-    );
+    return this.http
+      .get<any>(`${this.baseUrl}/admin/dashboard/stats`)
+      .pipe(map((res: any) => res?.data ?? res));
   }
 
   getAdminCafes(
@@ -753,15 +755,15 @@ export class ApiService {
   }
 
   getChefDashboard(cafeId: number): Observable<ChefDashboard> {
-    return this.http.get<ChefDashboard>(
-      `${this.baseUrl}/dashboard/chef/${cafeId}`,
-    );
+    return this.http
+      .get<{ data?: ChefDashboard }>(`${this.baseUrl}/chef/dashboard`)
+      .pipe(map((res: any) => res?.data ?? res));
   }
 
   getWaiterDashboard(cafeId: number): Observable<WaiterDashboard> {
-    return this.http.get<WaiterDashboard>(
-      `${this.baseUrl}/dashboard/waiter/${cafeId}`,
-    );
+    return this.http
+      .get<{ data?: WaiterDashboard }>(`${this.baseUrl}/waiter/dashboard`)
+      .pipe(map((res: any) => res?.data ?? res));
   }
 
   getAllUsers(
@@ -777,39 +779,41 @@ export class ApiService {
     const params = new HttpParams()
       .set("page", page.toString())
       .set("size", size.toString());
-    return this.http.get<{
-      content: User[];
-      totalElements: number;
-      totalPages: number;
-      number: number;
-      size: number;
-    }>(`${this.baseUrl}/admin/users`, { params });
+    return this.http
+      .get<any>(`${this.baseUrl}/admin/users`, { params })
+      .pipe(map((res: any) => res?.data || res));
   }
 
   getUserById(id: number): Observable<User> {
-    return this.http.get<User>(`${this.baseUrl}/admin/users/${id}`);
+    return this.http
+      .get<any>(`${this.baseUrl}/admin/users/${id}`)
+      .pipe(map((res: any) => res?.data || res));
   }
 
   getUsersByRole(role: string): Observable<User[]> {
-    return this.http.get<User[]>(`${this.baseUrl}/admin/users/role/${role}`);
-  }
-
-  createCafeOwner(request: any): Observable<any> {
-    return this.http.post<any>(`${this.baseUrl}/admin/cafe-owners`, request);
+    return this.http
+      .get<any>(`${this.baseUrl}/admin/users/role/${role}`)
+      .pipe(map((res: any) => res?.data || res));
   }
 
   createChef(cafeId: number, request: any): Observable<any> {
-    return this.http.post<any>(`${this.baseUrl}/staff/chef`, {
-      ...request,
-      cafeId,
-    });
+    return this.http
+      .post<any>(`${this.baseUrl}/staff`, {
+        ...request,
+        cafeId,
+        role: "CHEF",
+      })
+      .pipe(map((res) => res?.data || res));
   }
 
   createWaiter(cafeId: number, request: any): Observable<any> {
-    return this.http.post<any>(`${this.baseUrl}/staff/waiter`, {
-      ...request,
-      cafeId,
-    });
+    return this.http
+      .post<any>(`${this.baseUrl}/staff`, {
+        ...request,
+        cafeId,
+        role: "WAITER",
+      })
+      .pipe(map((res) => res?.data || res));
   }
 
   createStaff(data: any): Observable<User> {
@@ -869,7 +873,9 @@ export class ApiService {
   }
 
   getPendingUsers(): Observable<User[]> {
-    return this.http.get<User[]>(`${this.baseUrl}/admin/pending-users`);
+    return this.http
+      .get<any>(`${this.baseUrl}/admin/pending-users`)
+      .pipe(map((res: any) => res?.data || res));
   }
 
   approveUser(userId: number): Observable<MessageResponse> {

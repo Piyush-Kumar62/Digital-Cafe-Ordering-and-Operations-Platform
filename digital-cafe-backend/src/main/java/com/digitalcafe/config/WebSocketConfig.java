@@ -1,5 +1,6 @@
 package com.digitalcafe.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
@@ -13,6 +14,9 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @Configuration
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
+
+    @Value("${app.cors.allowed-origins:http://localhost:4200,http://localhost:3000}")
+    private String allowedOriginsConfig;
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
@@ -28,14 +32,15 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
+        String[] origins = allowedOriginsConfig.split(",");
         // Register the /ws endpoint for WebSocket connections
         registry.addEndpoint("/ws")
-                .setAllowedOriginPatterns("*")
+                .setAllowedOrigins(origins)
                 .withSockJS(); // Enable SockJS fallback options
 
         // Also register without SockJS for native WebSocket support
         registry.addEndpoint("/ws")
-                .setAllowedOriginPatterns("*");
+                .setAllowedOrigins(origins);
     }
 }
 

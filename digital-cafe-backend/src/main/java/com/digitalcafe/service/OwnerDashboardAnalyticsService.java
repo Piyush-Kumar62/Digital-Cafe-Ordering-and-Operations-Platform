@@ -26,8 +26,8 @@ public class OwnerDashboardAnalyticsService {
     private final CafeTableRepository cafeTableRepository;
 
     public OwnerDashboardAnalyticsResponse getOwnerDashboard(Long cafeId) {
-        Long totalBookings = (long) bookingRepository.findByCafeId(cafeId).size();
-        Long totalOrders = (long) orderRepository.findByCafeId(cafeId).size();
+        long totalBookings = bookingRepository.countByCafeId(cafeId);
+        long totalOrders = orderRepository.countByCafeId(cafeId);
         BigDecimal revenue = paymentRepository.sumAmountByCafeAndStatus(cafeId, Payment.PaymentStatus.COMPLETED);
         Long activeTables = cafeTableRepository.countByCafeIdAndIsAvailable(cafeId, true);
 

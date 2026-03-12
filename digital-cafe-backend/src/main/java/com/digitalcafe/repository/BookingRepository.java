@@ -36,6 +36,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
      */
     List<Booking> findByCafeId(Long cafeId);
     Page<Booking> findByCafeId(Long cafeId, Pageable pageable);
+    long countByCafeId(Long cafeId);
 
     /**
      * Finds bookings for a specific table.

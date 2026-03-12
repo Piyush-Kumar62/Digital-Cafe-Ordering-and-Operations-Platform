@@ -10,6 +10,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Collections;
@@ -29,6 +30,7 @@ public class DataInitializationConfig {
     private final PasswordEncoder passwordEncoder;
 
     @Bean
+    @Order(1)
     public CommandLineRunner initializeData() {
         return args -> {
             log.info("Starting database initialization...");
@@ -80,8 +82,10 @@ public class DataInitializationConfig {
                     .isEmailVerified(true)
                     .emailVerified(true)
                     .accountStatus(User.AccountStatus.ACTIVE)
+                    .registrationStatus(User.RegistrationStatus.APPROVED)
                     .isProfileComplete(true)
                     .mustResetPassword(false)
+                    .isTempPassword(false)
                     .profileCompletionPercentage(100)
                     .roles(Collections.singleton(adminRole))
                     .build();

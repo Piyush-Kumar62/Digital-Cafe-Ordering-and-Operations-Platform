@@ -31,7 +31,6 @@ import java.util.UUID;
  * (Requires app.dev.seed.enabled=true — set automatically via application-dev.properties)
  *
  * What gets created (idempotent — guarded by cafeRepository.count() > 0):
- *   1  ADMIN         — admin@cafe.com / Admin@123
  *   5  CAFE_OWNERs   — owner1–5@cafe.com / Owner1–5@123  (owner1 has 6 cafes, others 1–2 each)
  *   11 Cafes         — each with unique logo, gallery, open/close times, address
  *   10 Tables per cafe  (total: 110, seeded with saveAll)
@@ -44,6 +43,7 @@ import java.util.UUID;
  */
 @Slf4j
 @Component
+@org.springframework.core.annotation.Order(2)
 @Profile("dev")
 @ConditionalOnProperty(name = "app.dev.seed.enabled", havingValue = "true")
 @RequiredArgsConstructor
@@ -67,7 +67,6 @@ public class DevDataInitializer implements CommandLineRunner {
     private static final String ASSETS_GALLERY = "assets/cafe/";
 
     // ── Passwords ─────────────────────────────────────────────────────────────
-    private static final String ADMIN_PW    = "Admin@123";
     private static final String OWNER_PW    = "Owner@123";   // primary demo owner (owner@cafe.com)
     private static final String OWNER2_PW   = "Owner2@123";
     private static final String OWNER3_PW   = "Owner3@123";
@@ -132,18 +131,13 @@ public class DevDataInitializer implements CommandLineRunner {
     @Transactional
     public void run(String... args) {
         // ── 1. Roles — always idempotent ────────────────────────────────────────
-        Role adminRole    = ensureRole(Role.RoleName.ADMIN,      "System Administrator");
+        ensureRole(Role.RoleName.ADMIN, "System Administrator");
         Role ownerRole    = ensureRole(Role.RoleName.CAFE_OWNER, "Cafe Owner");
         Role chefRole     = ensureRole(Role.RoleName.CHEF,       "Chef");
         Role waiterRole   = ensureRole(Role.RoleName.WAITER,     "Waiter");
         Role customerRole = ensureRole(Role.RoleName.CUSTOMER,   "Customer");
 
-        // ── 2. Admin — always idempotent ────────────────────────────────────────
-        if (!userRepository.existsByEmail("admin@cafe.com")) {
-            createAdmin(adminRole);
-        }
-
-        // ── 3. Primary demo owner — always ensure owner@cafe.com exists and is activated.
+        // ── 2. Primary demo owner — always ensure owner@cafe.com exists and is activated.
         //    Runs on every startup so a previously-registered but still-pending account
         //    (isActive=false / PENDING_APPROVAL) gets dev-approved automatically.
         User owner1 = findOrCreateOwner("owner@cafe.com", "Raj",     "Sharma",   "9876540001", OWNER_PW,  ownerRole);
@@ -189,7 +183,6 @@ public class DevDataInitializer implements CommandLineRunner {
 
         log.info("[DevSeed] =====================================================");
         log.info("[DevSeed]  Seed complete — summary:");
-        log.info("[DevSeed]   Admin      → admin@cafe.com         / {}", ADMIN_PW);
         log.info("[DevSeed]   Owner      → owner@cafe.com  (6 cafes) / {}", OWNER_PW);
         log.info("[DevSeed]   Owner 2    → owner2@cafe.com (2 cafes) / {}", OWNER2_PW);
         log.info("[DevSeed]   Owner 3    → owner3@cafe.com (1 cafe)  / {}", OWNER3_PW);
@@ -210,8 +203,6 @@ public class DevDataInitializer implements CommandLineRunner {
         log.info("[DevSeed] ║                DEV SEED — LOGIN CREDENTIALS                         ║");
         log.info("[DevSeed] ╠══════════════════════════════════════════════════════════════════════╣");
         log.info("[DevSeed] ║  ROLE        EMAIL                           PASSWORD                ║");
-        log.info("[DevSeed] ╠══════════════════════════════════════════════════════════════════════╣");
-        log.info("[DevSeed] ║  ADMIN       admin@cafe.com                  {}                ║", ADMIN_PW);
         log.info("[DevSeed] ╠══════════════════════════════════════════════════════════════════════╣");
         log.info("[DevSeed] ║  CAFE_OWNER  owner@cafe.com   (6 cafes)      {}               ║", OWNER_PW);
         log.info("[DevSeed] ║  CAFE_OWNER  owner2@cafe.com  (2 cafes)      {}               ║", OWNER2_PW);
@@ -310,17 +301,6 @@ public class DevDataInitializer implements CommandLineRunner {
         u.setMustResetPassword(false);
         u.setIsTempPassword(false);
         return u;
-    }
-
-    // ============================================================
-    //  Admin
-    // ============================================================
-    private User createAdmin(Role adminRole) {
-        User u = buildBaseUser("System", "Admin", "admin@cafe.com", "admin@cafe.com", ADMIN_PW);
-        u.getRoles().add(adminRole);
-        User saved = userRepository.save(u);
-        log.info("[DevSeed] Created admin: admin@cafe.com");
-        return saved;
     }
 
     // ============================================================

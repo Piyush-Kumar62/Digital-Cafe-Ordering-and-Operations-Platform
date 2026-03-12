@@ -38,7 +38,11 @@ public enum EmailTemplateType {
     ORDER_SERVED("order-served"),
 
     // ── Bookings ─────────────────────────────────────────────────────────────
-    BOOKING_CONFIRMATION("booking-confirmation");
+    BOOKING_CONFIRMATION("booking-confirmation"),
+    BOOKING_CANCELLED("booking-cancelled"),
+
+    // ── Cancellations ────────────────────────────────────────────────────────
+    ORDER_CANCELLED("order-cancelled");
 
     // ─────────────────────────────────────────────────────────────────────────
 

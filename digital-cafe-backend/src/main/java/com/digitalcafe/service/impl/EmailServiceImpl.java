@@ -3,6 +3,7 @@ package com.digitalcafe.service.impl;
 import com.digitalcafe.email.EmailTemplateType;
 import com.digitalcafe.service.EmailService;
 import com.digitalcafe.util.PaymentReceiptPdfGenerator;
+import jakarta.annotation.PostConstruct;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
 import lombok.extern.slf4j.Slf4j;
@@ -66,6 +67,20 @@ public class EmailServiceImpl implements EmailService {
 
     @Value("${spring.mail.port:587}")
     private int smtpPort;
+
+    @PostConstruct
+    public void logEmailConfig() {
+        if (!emailEnabled) {
+            log.warn("[Email] ⚠️  Service is DISABLED (MAIL_ENABLED=false). No emails will be sent.");
+            return;
+        }
+        if (smtpUsername == null || smtpUsername.isBlank() || smtpPassword == null || smtpPassword.isBlank()) {
+            log.warn("[Email] ⚠️  SMTP credentials NOT configured! Set MAIL_USERNAME + MAIL_PASSWORD in .env. ALL emails will be skipped.");
+        } else {
+            log.info("[Email] ✅ Ready — from=\"{}\" <{}>, smtp={}:{}, username={}",
+                    fromName, fromEmail, smtpHost, smtpPort, smtpUsername);
+        }
+    }
 
     // ── EmailService implementation ──────────────────────────────────────────
 
@@ -206,6 +221,46 @@ public class EmailServiceImpl implements EmailService {
         internalSend(to, "Your Digital Cafe table booking is confirmed!", EmailTemplateType.BOOKING_CONFIRMATION, vars);
     }
 
+    @Async("emailTaskExecutor")
+    @Override
+    public void sendOrderReadyNotification(String to, String orderNumber) {
+        log.info("[Email] Queuing ORDER_READY -> {}", to);
+        Map<String, Object> vars = new HashMap<>();
+        vars.put("orderNumber", orderNumber);
+        vars.put("ordersUrl", frontendUrl + "/customer/orders");
+        internalSend(to, "Your Digital Cafe order is ready! — " + orderNumber, EmailTemplateType.ORDER_READY, vars);
+    }
+
+    @Async("emailTaskExecutor")
+    @Override
+    public void sendOrderServedNotification(String to, String orderNumber) {
+        log.info("[Email] Queuing ORDER_SERVED -> {}", to);
+        Map<String, Object> vars = new HashMap<>();
+        vars.put("orderNumber", orderNumber);
+        vars.put("ordersUrl", frontendUrl + "/customer/orders");
+        internalSend(to, "Your Digital Cafe order has been served — " + orderNumber, EmailTemplateType.ORDER_SERVED, vars);
+    }
+
+    @Async("emailTaskExecutor")
+    @Override
+    public void sendOrderCancelledNotification(String to, String orderNumber) {
+        log.info("[Email] Queuing ORDER_CANCELLED -> {}", to);
+        Map<String, Object> vars = new HashMap<>();
+        vars.put("orderNumber", orderNumber);
+        vars.put("ordersUrl", frontendUrl + "/customer/orders");
+        internalSend(to, "Your Digital Cafe order has been cancelled — " + orderNumber, EmailTemplateType.ORDER_CANCELLED, vars);
+    }
+
+    @Async("emailTaskExecutor")
+    @Override
+    public void sendBookingCancelledEmail(String to, String bookingDetails) {
+        log.info("[Email] Queuing BOOKING_CANCELLED -> {}", to);
+        Map<String, Object> vars = new HashMap<>();
+        vars.put("bookingDetails", bookingDetails);
+        vars.put("bookingsUrl", frontendUrl + "/customer/bookings");
+        internalSend(to, "Your Digital Cafe booking has been cancelled", EmailTemplateType.BOOKING_CANCELLED, vars);
+    }
+
     // ── Internal helpers ─────────────────────────────────────────────────────
 
     private void internalSend(
@@ -252,8 +307,9 @@ public class EmailServiceImpl implements EmailService {
             }
 
             helper.setTo(to);
+            helper.setReplyTo(fromEmail);
             helper.setSubject(subject);
-            helper.setText("", html);
+            helper.setText(toPlainText(html), html);
             for (EmailAttachment attachment : attachments) {
                 helper.addAttachment(
                         attachment.fileName(),
@@ -266,13 +322,33 @@ public class EmailServiceImpl implements EmailService {
             log.info("[Email] ✅ Sent {} -> {}", templateType, to);
 
         } catch (Exception e) {
-            log.error("[Email] ❌ Failed to send {} -> {}: {}", templateType, to, e.getMessage(), e);
+            Throwable cause = e.getCause();
+            log.error("[Email] ❌ FAILED {} -> {} | Error: {} | Root cause: {}",
+                    templateType, to, e.getMessage(),
+                    cause != null ? cause.getClass().getSimpleName() + ": " + cause.getMessage() : "none");
+            log.debug("[Email] Full SMTP exception stack:", e);
         }
     }
 
     private String processTemplate(EmailTemplateType templateType, Map<String, Object> variables) {
         Context context = new Context(Locale.ENGLISH, variables);
         return templateEngine.process(templateType.getTemplateName(), context);
+    }
+
+    /** Strips HTML tags and entities to produce a plain-text fallback body for multipart emails. */
+    private static String toPlainText(String html) {
+        return html
+                .replaceAll("(?si)<style[^>]*>.*?</style>", " ")
+                .replaceAll("(?si)<script[^>]*>.*?</script>", " ")
+                .replaceAll("<[^>]+>", " ")
+                .replaceAll("&nbsp;", " ")
+                .replaceAll("&amp;", "&")
+                .replaceAll("&lt;", "<")
+                .replaceAll("&gt;", ">")
+                .replaceAll("&quot;", "\"")
+                .replaceAll("&#39;", "'")
+                .replaceAll("\\s{2,}", " ")
+                .trim();
     }
 
     private record EmailAttachment(String fileName, String contentType, byte[] content) {

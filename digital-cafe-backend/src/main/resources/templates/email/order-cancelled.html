@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1.0" />
-    <title>Order Ready — Digital Cafe</title>
+    <title>Order Cancelled — Digital Cafe</title>
     <style>
       @media (prefers-color-scheme: dark) {
         .email-card {
@@ -24,7 +24,7 @@
       background-color: #f3f4f6;
       background-image: radial-gradient(
         ellipse at top,
-        #d1fae5 0%,
+        #fef2f2 0%,
         #f3f4f6 60%
       );
     "
@@ -52,7 +52,7 @@
                   text-align: center;
                 "
               >
-                <div style="font-size: 56px; margin-bottom: 16px">🍽️</div>
+                <div style="font-size: 56px; margin-bottom: 16px">🚫</div>
                 <h2
                   style="
                     margin: 0 0 8px;
@@ -64,7 +64,7 @@
                     color: #111827;
                   "
                 >
-                  Your Order is Ready!
+                  Order Cancelled
                 </h2>
                 <p
                   th:if="${orderNumber}"
@@ -72,14 +72,14 @@
                     display: inline-block;
                     margin: 0 0 16px;
                     padding: 6px 14px;
-                    background: #d1fae5;
+                    background: #fee2e2;
                     border-radius: 999px;
                     font-family:
                       -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;,
                       Roboto, Arial, sans-serif;
                     font-size: 13px;
                     font-weight: 600;
-                    color: #065f46;
+                    color: #b91c1c;
                     letter-spacing: 0.3px;
                   "
                   th:text="'Order #' + ${orderNumber}"
@@ -96,12 +96,27 @@
                     text-align: center;
                   "
                 >
-                  Your freshly prepared order is waiting for you. Bon appétit!
-                  😄
+                  Your order has been cancelled. If you believe this is a
+                  mistake or need assistance, please contact our support.
                 </p>
+
                 <div
                   th:replace="~{fragments/button :: ctaButton(label='View My Orders', url=${ordersUrl})}"
                 ></div>
+
+                <p
+                  style="
+                    margin: 24px 0 0;
+                    font-family:
+                      -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;,
+                      Roboto, Arial, sans-serif;
+                    font-size: 12px;
+                    color: #9ca3af;
+                    text-align: center;
+                  "
+                >
+                  We&apos;d love to serve you another time. Come back soon! ☕
+                </p>
               </td>
             </tr>
 

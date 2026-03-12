@@ -23,5 +23,16 @@ public interface EmailService {
     void sendBookingConfirmation(String to, String bookingDetails);
     /** Sends a login-notification email to the user after each successful sign-in. */
     void sendLoginNotification(String to, String username, String loginTime);
+    /** Notifies the customer that their order is ready for pickup / being brought to the table. */
+    void sendOrderReadyNotification(String to, String orderNumber);
+    /** Notifies the customer that their order has been served. */
+    void sendOrderServedNotification(String to, String orderNumber);
+
+    /** Notifies the customer that their order has been cancelled. */
+    void sendOrderCancelledNotification(String to, String orderNumber);
+
+    /** Notifies the customer that their table booking has been cancelled. */
+    void sendBookingCancelledEmail(String to, String bookingDetails);
+
 }
 

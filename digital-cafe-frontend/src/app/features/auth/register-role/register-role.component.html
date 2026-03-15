@@ -1,0 +1,70 @@
+<app-navbar></app-navbar>
+
+<div class="register-role-page">
+  <div class="register-role-container text-white">
+    <div
+      class="max-w-6xl w-full mx-4 xl:mx-auto register-role-card register-role-grid"
+    >
+      <div class="register-role-image-panel">
+        <img
+          [src]="panelImage"
+          [alt]="panelImageAlt"
+          class="register-role-image"
+          loading="eager"
+          fetchpriority="high"
+        />
+        <div class="register-role-image-overlay">
+          <div class="register-role-image-brand">
+            <i class="bi bi-cup"></i>
+            <span>Digital Caf&eacute;</span>
+          </div>
+          <p class="register-role-image-tagline">
+            Choose your account type to begin the Digital Caf&eacute; experience.
+          </p>
+        </div>
+      </div>
+
+      <div class="register-role-form-side">
+        <div class="text-center mb-8">
+          <h2 class="text-3xl md:text-4xl font-bold text-white mb-2">
+            Create Your Account
+          </h2>
+          <p class="text-slate-300 text-sm md:text-base">
+            How will you use Digital Cafe?
+          </p>
+        </div>
+
+        <div class="role-grid">
+          <a
+            *ngFor="let role of roles"
+            class="role-option-card"
+            [routerLink]="role.route"
+          >
+            <div class="role-icon">
+              <i [class]="role.iconClass"></i>
+            </div>
+            <div class="role-content">
+              <div class="role-header">
+                <h3>{{ role.title }}</h3>
+                <span class="role-badge">{{ role.badge }}</span>
+              </div>
+              <p class="role-subtitle">{{ role.subtitle }}</p>
+              <p class="role-description">{{ role.description }}</p>
+              <div class="role-cta">
+                Continue as {{ role.title }}
+                <i class="bi bi-arrow-right"></i>
+              </div>
+            </div>
+          </a>
+        </div>
+
+        <div class="text-center register-role-footer">
+          <p>
+            Already have an account?
+            <a routerLink="/auth/login" class="register-role-link">Login</a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

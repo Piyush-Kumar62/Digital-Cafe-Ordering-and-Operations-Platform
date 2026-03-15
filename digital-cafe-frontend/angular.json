@@ -45,6 +45,14 @@
                   "with": "src/environments/environment.deployment.ts"
                 }
               ],
+              "optimization": {
+                "scripts": true,
+                "styles": {
+                  "minify": true,
+                  "inlineCritical": true
+                },
+                "fonts": false
+              },
               "budgets": [
                 {
                   "type": "initial",
@@ -60,7 +68,7 @@
               "allowedCommonJsDependencies": [
                 "@stomp/stompjs",
                 "sockjs-client",
-                "sweetalert"
+                "sweetalert2"
               ],
               "outputHashing": "all"
             },

@@ -46,8 +46,6 @@ type WorkFormValue = {
   styleUrls: ["./my-profile.component.scss"],
 })
 export class MyProfileComponent implements OnInit {
-  readonly defaultAvatar = "assets/branding/brand-logo.png";
-
   form: FormGroup;
   user: User | null = null;
   loading = true;
@@ -58,6 +56,7 @@ export class MyProfileComponent implements OnInit {
   profileCompletion = 0;
   activeSection: "basic" | "address" | "academic" | "work" = "basic";
   imageVersion = Date.now();
+  private avatarLoadFailed = false;
 
   constructor(
     private fb: FormBuilder,
@@ -101,22 +100,30 @@ export class MyProfileComponent implements OnInit {
   }
 
   get profileImageSrc(): string {
+    if (this.avatarLoadFailed) {
+      return "";
+    }
+
     const fullProfileUrl = this.form.get("profilePictureUrl")?.value as string;
     const rawUrl = fullProfileUrl || this.user?.profileImageUrl || "";
     if (!rawUrl) {
-      return this.defaultAvatar;
+      return "";
     }
 
     const resolved = this.apiService.resolveImageUrl(rawUrl);
     if (!resolved) {
-      return this.defaultAvatar;
+      return "";
     }
 
     return `${resolved}${resolved.includes("?") ? "&" : "?"}v=${this.imageVersion}`;
   }
 
-  onAvatarError(event: Event): void {
-    (event.target as HTMLImageElement).src = this.defaultAvatar;
+  get hasProfileImage(): boolean {
+    return !!this.profileImageSrc;
+  }
+
+  onAvatarError(): void {
+    this.avatarLoadFailed = true;
   }
 
   addAcademicRecord(): void {
@@ -162,6 +169,7 @@ export class MyProfileComponent implements OnInit {
       .pipe(finalize(() => (this.uploadingImage = false)))
       .subscribe({
         next: (res) => {
+          this.avatarLoadFailed = false;
           const uploadedUrl = res?.profileImageUrl || "";
           if (this.user) {
             this.user = {
@@ -191,6 +199,7 @@ export class MyProfileComponent implements OnInit {
       .pipe(finalize(() => (this.removingImage = false)))
       .subscribe({
         next: () => {
+          this.avatarLoadFailed = false;
           if (this.user) {
             this.user = { ...this.user, profileImageUrl: "" };
             this.authService.updateUserData(this.user);
@@ -399,6 +408,7 @@ export class MyProfileComponent implements OnInit {
           }
 
           this.imageVersion = Date.now();
+          this.avatarLoadFailed = false;
         },
       });
   }

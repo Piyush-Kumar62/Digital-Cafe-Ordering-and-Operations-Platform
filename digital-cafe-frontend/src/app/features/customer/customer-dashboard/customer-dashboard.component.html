@@ -12,7 +12,7 @@
         Welcome back, <span class="db-hero__hl">{{ displayName }}</span
         >!
       </h1>
-      <p class="db-hero__date">{{ todayFormatted }}</p>
+      <p class="db-hero__date">{{ dateTimeFormatted }}</p>
       <div class="db-hero__btns">
         <a routerLink="/customer/browse-cafes" class="db-hero__cta">
           <span class="material-icons">storefront</span> Browse Cafés
@@ -271,7 +271,7 @@
                       >{{ o.status }}</span
                     >
                   </td>
-                  <td>₹{{ o.totalAmount | number: "1.2-2" }}</td>
+                  <td>{{ formatInrCurrency(o.totalAmount) }}</td>
                 </tr>
                 <tr *ngIf="recentOrders.length === 0">
                   <td colspan="4" class="db-td--empty">No recent orders.</td>

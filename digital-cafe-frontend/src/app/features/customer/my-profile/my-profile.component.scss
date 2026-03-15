@@ -10,6 +10,7 @@
   --pp-danger: #ef4444;
   --pp-radius: 14px;
   --pp-shadow: 0 1px 6px rgba(0, 0, 0, 0.06), 0 4px 18px rgba(0, 0, 0, 0.04);
+  --pp-content-max: 1100px;
   display: block;
 }
 
@@ -85,7 +86,8 @@
 
 .pp-skel-tabs {
   @extend %shimmer;
-  max-width: 860px;
+  max-width: var(--pp-content-max);
+  width: 100%;
   margin: 0 auto 14px;
   height: 52px;
   border-radius: 12px;
@@ -93,7 +95,8 @@
 
 .pp-skel-card {
   @extend %shimmer;
-  max-width: 860px;
+  max-width: var(--pp-content-max);
+  width: 100%;
   margin: 0 auto;
   height: 260px;
   border-radius: var(--pp-radius);
@@ -127,7 +130,8 @@
 
 // ── Hero banner ───────────────────────────────────────────────────────────────
 .pp-hero {
-  max-width: 860px;
+  max-width: var(--pp-content-max);
+  width: 100%;
   margin: 0 auto 14px;
   background: linear-gradient(
     135deg,
@@ -173,7 +177,8 @@
 
   // Skeleton variant
   &--skel {
-    max-width: 860px;
+    max-width: var(--pp-content-max);
+    width: 100%;
     margin: 0 auto 14px;
     background: var(--pp-surface);
     border: 1px solid var(--pp-border);
@@ -229,6 +234,18 @@
   object-fit: cover;
   border: 3px solid rgba(255, 255, 255, 0.3);
   background: #1e1b4b;
+
+  &--icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #312e81, #4338ca);
+
+    .material-icons {
+      font-size: 42px;
+      color: #e0e7ff;
+    }
+  }
 }
 
 .pp-cam {
@@ -426,7 +443,8 @@
 
 // ── Tab strip ─────────────────────────────────────────────────────────────────
 .pp-tabs {
-  max-width: 860px;
+  max-width: var(--pp-content-max);
+  width: 100%;
   margin: 0 auto 14px;
   background: var(--pp-surface);
   border: 1px solid var(--pp-border);
@@ -478,7 +496,8 @@
 // ── Panels ─────────────────────────────────────────────────────────────────────
 .pp-panel {
   display: none;
-  max-width: 860px;
+  max-width: var(--pp-content-max);
+  width: 100%;
   margin: 0 auto;
 
   &--on {
@@ -537,6 +556,7 @@
   display: grid;
   gap: 14px;
   margin-bottom: 14px;
+  align-items: start;
 
   &.pp-g2 {
     grid-template-columns: repeat(2, 1fr);
@@ -551,24 +571,56 @@
 
 // ── Form fields ────────────────────────────────────────────────────────────────
 .pp-f {
+  --pp-label-track: 22px;
+
   // 3-row grid: label | input | error-space
   // The 3rd row is always at least 1rem so every cell is the same height
   // regardless of whether a pp-err span is present or not → inputs align.
   display: grid;
-  grid-template-rows: auto auto minmax(1rem, auto);
+  grid-template-rows: var(--pp-label-track) auto minmax(1rem, auto);
   row-gap: 4px;
-  align-items: start;    // items don't stretch inside their row track
-  align-content: start;  // all rows packed to top; extra space at bottom
+  align-items: start; // items don't stretch inside their row track
+  align-content: start; // all rows packed to top; extra space at bottom
 
   &--span {
     grid-column: 1 / -1;
   }
 
   &--center {
-    // Checkbox / toggle cells: override to flex so the single child
-    // centres vertically, aligned with the input track of adjacent cells.
-    display: flex;
-    align-items: center;
+    display: grid;
+    grid-template-rows: var(--pp-label-track) auto minmax(1rem, auto);
+    row-gap: 4px;
+
+    &::before {
+      content: "";
+      display: block;
+      height: var(--pp-label-track);
+    }
+
+    .pp-chk {
+      grid-row: 2;
+      min-height: 44px;
+      width: 100%;
+      border: 1.5px solid var(--pp-border);
+      background: var(--pp-bg);
+      border-radius: 9px;
+      padding: 0 12px;
+      box-sizing: border-box;
+      display: inline-flex;
+      align-items: center;
+      transition:
+        border-color 0.15s,
+        box-shadow 0.15s,
+        background 0.15s;
+
+      &:hover {
+        border-color: color-mix(
+          in srgb,
+          var(--pp-accent) 40%,
+          var(--pp-border)
+        );
+      }
+    }
   }
 }
 
@@ -582,11 +634,22 @@
   font-weight: 600;
   color: var(--pp-sub);
   letter-spacing: 0.03em;
+  text-align: left;
+  justify-content: flex-start;
+  width: 100%;
+  min-height: var(--pp-label-track);
+  line-height: 1.2;
 
   .req {
     color: var(--pp-danger);
     flex-shrink: 0;
     line-height: 1;
+    display: inline-block;
+  }
+
+  > .req {
+    display: inline-flex;
+    align-items: center;
   }
 }
 
@@ -595,10 +658,14 @@
   background: var(--pp-bg);
   color: var(--pp-text);
   border-radius: 9px;
-  padding: 9px 12px;
+  min-height: 44px;
+  padding: 10px 12px;
   font-size: 0.9rem;
+  line-height: 1.25;
   width: 100%;
   box-sizing: border-box;
+  display: block;
+  font-family: inherit;
   transition:
     border-color 0.15s,
     box-shadow 0.15s;
@@ -616,11 +683,38 @@
 }
 
 select.pp-inp {
+  min-height: 44px;
+  padding-right: 36px;
   cursor: pointer;
 }
+
+input.pp-inp[type="date"] {
+  min-height: 44px;
+  padding-right: 36px;
+}
+
+input.pp-inp[type="date"]::-webkit-datetime-edit {
+  padding: 0;
+}
+
+input.pp-inp[type="date"]::-webkit-calendar-picker-indicator {
+  opacity: 0.9;
+}
+
 textarea.pp-inp {
+  min-height: 96px;
+  padding-top: 10px;
+  line-height: 1.4;
   resize: vertical;
-  min-height: 80px;
+}
+
+select.pp-inp option {
+  color: var(--pp-text);
+}
+
+select.pp-inp:required:invalid {
+  color: var(--pp-sub);
+  opacity: 0.8;
 }
 
 .pp-err {
@@ -731,9 +825,10 @@ textarea.pp-inp {
 .pp-chk {
   display: inline-flex;
   align-items: center;
-  gap: 9px;
+  gap: 12px;
   cursor: pointer;
-  margin-bottom: 12px;
+  margin: 0;
+  width: 100%;
 
   input[type="checkbox"] {
     opacity: 0;
@@ -744,37 +839,42 @@ textarea.pp-inp {
   }
 
   &__box {
-    width: 18px;
-    height: 18px;
-    border-radius: 5px;
-    border: 2px solid var(--pp-border);
-    background: var(--pp-bg);
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    border: 2px solid #9fb1c7;
+    background: #f8fbff;
     position: relative;
     flex-shrink: 0;
     transition:
       border-color 0.15s,
-      background 0.15s;
+      background 0.15s,
+      transform 0.12s,
+      box-shadow 0.15s;
 
     &::after {
       content: "";
       position: absolute;
-      top: 1px;
-      left: 4px;
-      width: 5px;
-      height: 8px;
-      border: 2px solid #fff;
+      top: 2px;
+      left: 6px;
+      width: 6px;
+      height: 11px;
+      border: 3px solid #fff;
       border-top: none;
       border-left: none;
       transform: rotate(45deg);
       opacity: 0;
-      transition: opacity 0.12s;
+      transition: opacity 0.12s ease;
     }
   }
 
   &__lbl {
-    font-size: 0.84rem;
-    color: var(--pp-sub);
+    font-size: 0.92rem;
+    color: var(--pp-text);
+    font-weight: 700;
     user-select: none;
+    white-space: normal;
+    line-height: 1.3;
   }
 }
 
@@ -782,9 +882,27 @@ textarea.pp-inp {
 .pp-chk input[type="checkbox"]:checked + .pp-chk__box {
   background: var(--pp-accent);
   border-color: var(--pp-accent);
+  transform: scale(1.03);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
 
   &::after {
     opacity: 1;
+  }
+}
+
+.pp-chk input[type="checkbox"]:focus-visible + .pp-chk__box {
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.24);
+}
+
+:host-context(body.dark-theme) {
+  .pp-f--center .pp-chk {
+    background: #121628;
+    border-color: #2b3453;
+  }
+
+  .pp-chk__box {
+    border-color: #7385a3;
+    background: #171d32;
   }
 }
 
@@ -812,7 +930,8 @@ textarea.pp-inp {
 
 // ── Bottom save bar ────────────────────────────────────────────────────────────
 .pp-bottombar {
-  max-width: 860px;
+  max-width: var(--pp-content-max);
+  width: 100%;
   margin: 6px auto 0;
   display: flex;
   justify-content: flex-end;
@@ -1117,7 +1236,7 @@ textarea.pp-inp {
   }
 }
 
-label {
+.profile-layout label {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
@@ -1125,9 +1244,9 @@ label {
   color: #c3d8f4;
 }
 
-input,
-select,
-textarea {
+.profile-layout input,
+.profile-layout select,
+.profile-layout textarea {
   border: 1px solid rgba(98, 134, 166, 0.35);
   background: rgba(6, 10, 18, 0.8);
   color: #f1f6ff;
@@ -1142,12 +1261,12 @@ textarea {
   }
 }
 
-textarea {
+.profile-layout textarea {
   resize: vertical;
   min-height: 72px;
 }
 
-.checkbox-row {
+.profile-layout .checkbox-row {
   flex-direction: row;
   align-items: center;
   gap: 0.5rem;
@@ -1281,13 +1400,13 @@ textarea {
     border-color: rgba(100, 130, 160, 0.25);
   }
 
-  label {
+  .profile-layout label {
     color: #334155;
   }
 
-  input,
-  select,
-  textarea {
+  .profile-layout input,
+  .profile-layout select,
+  .profile-layout textarea {
     background: #ffffff;
     color: #0f172a;
     border-color: rgba(100, 130, 160, 0.36);

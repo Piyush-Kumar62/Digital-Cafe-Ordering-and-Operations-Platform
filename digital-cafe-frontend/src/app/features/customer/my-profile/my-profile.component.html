@@ -45,11 +45,17 @@
             />
           </svg>
           <img
+            *ngIf="hasProfileImage; else profileIconFallback"
             class="pp-avatar"
             [src]="profileImageSrc"
             alt="Profile photo"
-            (error)="onAvatarError($event)"
+            (error)="onAvatarError()"
           />
+          <ng-template #profileIconFallback>
+            <div class="pp-avatar pp-avatar--icon" aria-hidden="true">
+              <span class="material-icons">person</span>
+            </div>
+          </ng-template>
           <label
             class="pp-cam"
             [class.pp-cam--busy]="uploadingImage"

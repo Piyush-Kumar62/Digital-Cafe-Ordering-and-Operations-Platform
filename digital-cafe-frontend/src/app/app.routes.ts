@@ -49,10 +49,26 @@ export const routes: Routes = [
           ),
       },
       {
-        path: "register",
+        path: "register/customer",
         loadComponent: () =>
           import("./features/auth/register/register.component").then(
             (m) => m.RegisterComponent,
+          ),
+        data: { role: "CUSTOMER" },
+      },
+      {
+        path: "register/cafe-owner",
+        loadComponent: () =>
+          import("./features/auth/register/register.component").then(
+            (m) => m.RegisterComponent,
+          ),
+        data: { role: "CAFE_OWNER" },
+      },
+      {
+        path: "register",
+        loadComponent: () =>
+          import("./features/auth/register-role/register-role.component").then(
+            (m) => m.RegisterRoleComponent,
           ),
       },
       {

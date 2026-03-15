@@ -13,6 +13,8 @@ import {
 import { Order, OrderStatus } from "@shared/models/order.model";
 import { OrderTrackingService } from "./order-tracking.service";
 import { WebSocketService } from "@core/websocket/websocket.service";
+import { ApiService } from "@core/services/api.service";
+import { AlertService } from "@core/services/alert.service";
 
 const TERMINAL_STATUSES = new Set([OrderStatus.SERVED, OrderStatus.CANCELLED]);
 
@@ -45,6 +47,8 @@ export class OrderTrackingComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private orderTrackingService: OrderTrackingService,
     private webSocketService: WebSocketService,
+    private apiService: ApiService,
+    private alertService: AlertService,
   ) {}
 
   ngOnInit(): void {
@@ -149,6 +153,45 @@ export class OrderTrackingComponent implements OnInit, OnDestroy {
       year: "numeric",
       hour: "2-digit",
       minute: "2-digit",
+    });
+  }
+
+  canDownloadReceipt(order: Order | null): boolean {
+    if (!order?.payment?.paymentId) {
+      return false;
+    }
+    return (order.payment.status || "").toUpperCase() === "COMPLETED";
+  }
+
+  downloadReceipt(order: Order, event?: Event): void {
+    event?.preventDefault();
+    event?.stopPropagation();
+
+    const paymentId = order?.payment?.paymentId;
+    if (!paymentId) {
+      this.alertService.error("Payment receipt is not available yet.");
+      return;
+    }
+
+    this.apiService.downloadPaymentReceipt(paymentId).subscribe({
+      next: (blob) => {
+        const receiptNo =
+          order.payment?.transactionId ||
+          order.orderNumber ||
+          `payment-${paymentId}`;
+        const fileName = `payment-receipt-${receiptNo}.pdf`;
+        const url = URL.createObjectURL(blob);
+        const anchor = document.createElement("a");
+        anchor.href = url;
+        anchor.download = fileName;
+        document.body.appendChild(anchor);
+        anchor.click();
+        anchor.remove();
+        URL.revokeObjectURL(url);
+      },
+      error: () => {
+        this.alertService.error("Failed to download receipt.");
+      },
     });
   }
 

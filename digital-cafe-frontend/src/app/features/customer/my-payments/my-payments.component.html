@@ -40,7 +40,9 @@
         <span class="material-icons psc__icon">currency_rupee</span>
         <div>
           <p class="psc__lbl">Total Spent</p>
-          <p class="psc__val">₹{{ totalSpent | number: "1.2-2" }}</p>
+          <p class="psc__val">
+            {{ totalSpent | currency: "INR" : "symbol" : "1.2-2" }}
+          </p>
         </div>
       </div>
       <div class="pay-stat-card pay-stat-card--emerald">

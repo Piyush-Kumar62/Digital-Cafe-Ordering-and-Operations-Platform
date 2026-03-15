@@ -52,11 +52,17 @@
       [attr.aria-expanded]="showProfileMenu"
     >
       <img
+        *ngIf="hasProfileImage; else headerAvatarFallback"
         [src]="profileImageSrc"
         alt="User Avatar"
         class="avatar"
-        (error)="onAvatarError($event)"
+        (error)="onAvatarError()"
       />
+      <ng-template #headerAvatarFallback>
+        <span class="avatar avatar--icon material-icons" aria-hidden="true"
+          >person</span
+        >
+      </ng-template>
       <div class="user-meta">
         <p>{{ profileForm.displayName || user?.username || 'Customer' }}</p>
         <small>{{ displayRole }}</small>
@@ -125,11 +131,19 @@
       </div>
       <div class="profile-image-edit">
         <img
+          *ngIf="hasProfileImage; else panelAvatarFallback"
           [src]="profileImageSrc"
           alt="User Avatar"
           class="profile-avatar"
-          (error)="onAvatarError($event)"
+          (error)="onAvatarError()"
         />
+        <ng-template #panelAvatarFallback>
+          <span
+            class="profile-avatar profile-avatar--icon material-icons"
+            aria-hidden="true"
+            >person</span
+          >
+        </ng-template>
         <div class="profile-image-actions">
           <p class="profile-name">
             {{ profileForm.displayName || user?.username || 'Customer' }}

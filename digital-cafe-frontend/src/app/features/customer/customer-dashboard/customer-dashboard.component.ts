@@ -34,8 +34,10 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
   monthlyBookingTrend: any[] = [];
   orderStatusDistribution: any[] = [];
   monthlySpending: any[] = [];
+  currentDateTime = new Date();
 
   private destroy$ = new Subject<void>();
+  private clockTimerId?: ReturnType<typeof setInterval>;
 
   constructor(
     private apiService: ApiService,
@@ -44,12 +46,24 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.authService.currentUser.subscribe((user) => (this.user = user));
+    this.startClock();
     this.loadDashboardData();
   }
 
   ngOnDestroy(): void {
+    if (this.clockTimerId) {
+      clearInterval(this.clockTimerId);
+      this.clockTimerId = undefined;
+    }
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  private startClock(): void {
+    this.currentDateTime = new Date();
+    this.clockTimerId = setInterval(() => {
+      this.currentDateTime = new Date();
+    }, 1000);
   }
 
   private loadDashboardData(): void {
@@ -119,9 +133,9 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
       },
       {
         title: "Total Spent",
-        value: `₹${totalAmountSpent.toFixed(2)}`,
-        icon: "monetization_on",
-        description: "All orders",
+        value: this.formatInrCurrency(totalAmountSpent),
+        icon: "currency_rupee",
+        description: "Across all orders",
         variant: "orange",
       },
       {
@@ -239,26 +253,32 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
   }
 
   get greeting(): string {
-    const h = new Date().getHours();
+    const h = this.currentDateTime.getHours();
     if (h < 12) return "Good Morning";
-    if (h < 17) return "Good Afternoon";
+    if (h < 18) return "Good Afternoon";
     return "Good Evening";
   }
 
   get greetingIcon(): string {
-    const h = new Date().getHours();
+    const h = this.currentDateTime.getHours();
     if (h < 12) return "wb_sunny";
-    if (h < 17) return "light_mode";
+    if (h < 18) return "light_mode";
     return "nights_stay";
   }
 
-  get todayFormatted(): string {
-    return new Date().toLocaleDateString("en-IN", {
+  get dateTimeFormatted(): string {
+    const date = this.currentDateTime.toLocaleDateString("en-IN", {
       weekday: "long",
       year: "numeric",
       month: "long",
       day: "numeric",
     });
+    const time = this.currentDateTime.toLocaleTimeString("en-IN", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+    return `${date} | ${time}`;
   }
 
   get displayName(): string {
@@ -269,5 +289,14 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
     return this.apiService.resolveImageUrl(
       this.user?.profileImageUrl ?? this.user?.avatarUrl,
     );
+  }
+
+  formatInrCurrency(amount: number | string | null | undefined): string {
+    const normalized = Number(amount || 0);
+    const safeAmount = Number.isFinite(normalized) ? normalized : 0;
+    return `₹${new Intl.NumberFormat("en-IN", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(safeAmount)}`;
   }
 }

@@ -1,7 +1,7 @@
 import { Component, OnInit } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
-import { Router, RouterModule } from "@angular/router";
+import { ActivatedRoute, Router, RouterModule } from "@angular/router";
 import { AuthService } from "../../../core/auth/auth.service";
 import { AlertService } from "@core/services/alert.service";
 import { NavbarComponent } from "../../../shared/components/navbar/navbar.component";
@@ -88,13 +88,13 @@ export class RegisterComponent implements OnInit {
 
   genderOptions = ["MALE", "FEMALE", "OTHER", "PREFER_NOT_TO_SAY"];
   maritalStatusOptions = ["SINGLE", "MARRIED", "DIVORCED", "WIDOWED"];
-  roleOptions = ["CUSTOMER", "CAFE_OWNER"];
   currentYear = new Date().getFullYear();
 
   // ── Café Owner Registration ────────────────────────────────────────────────
   // Only active when role === 'CAFE_OWNER'.  The 5-step customer form is hidden.
 
   isCafeOwnerMode = false;
+  isPanelImageLoaded = false;
 
   ownerInfo = {
     firstName: "",
@@ -130,12 +130,20 @@ export class RegisterComponent implements OnInit {
     private authService: AuthService,
     private router: Router,
     private alertService: AlertService,
+    private route: ActivatedRoute,
   ) {}
 
   ngOnInit() {
-    this.role = "CUSTOMER";
     this.preloadImage(this.customerPanelImage);
     this.preloadImage(this.cafeOwnerPanelImage);
+    this.route.data.subscribe((data) => {
+      const role = String(data?.["role"] || "").toUpperCase();
+      if (role !== "CUSTOMER" && role !== "CAFE_OWNER") {
+        this.router.navigate(["/auth/register"]);
+        return;
+      }
+      this.applyRole(role as "CUSTOMER" | "CAFE_OWNER");
+    });
   }
 
   get registerPanelImageSrc(): string {
@@ -150,9 +158,11 @@ export class RegisterComponent implements OnInit {
       : "Coffee cups on table for customer registration";
   }
 
-  /** Called whenever the role dropdown changes value */
-  onRoleChange() {
-    this.isCafeOwnerMode = this.role === "CAFE_OWNER";
+  private applyRole(role: "CUSTOMER" | "CAFE_OWNER") {
+    this.role = role;
+    this.isCafeOwnerMode = role === "CAFE_OWNER";
+    this.isPanelImageLoaded = false;
+    this.currentStep = 1;
     this.cafeCurrentStep = 1;
     this.errorMessage = "";
     this.successMessage = "";
@@ -673,5 +683,13 @@ export class RegisterComponent implements OnInit {
     const img = new Image();
     img.decoding = "async";
     img.src = src;
+  }
+
+  onPanelImageLoad() {
+    this.isPanelImageLoaded = true;
+  }
+
+  onPanelImageError() {
+    this.isPanelImageLoaded = true;
   }
 }

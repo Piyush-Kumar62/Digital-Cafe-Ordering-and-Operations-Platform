@@ -14,6 +14,7 @@
   --ot-indigo-light: #e0e7ff;
   --ot-radius: 14px;
   --ot-shadow: 0 2px 12px rgba(0, 0, 0, 0.07);
+  --ot-content-max: 1080px;
   display: block;
 }
 
@@ -32,7 +33,11 @@
 .ot-wrap {
   background: var(--ot-bg);
   min-height: 100vh;
-  padding: 24px 16px 60px;
+  padding: 24px 22px 60px;
+
+  @media (max-width: 640px) {
+    padding: 16px 10px 40px;
+  }
 }
 
 // ── Skeleton loading ────────────────────────────────────────────────────────
@@ -57,7 +62,7 @@
 }
 
 .ot-skeleton {
-  max-width: 760px;
+  max-width: var(--ot-content-max);
   margin: 0 auto;
 
   &__hero {
@@ -126,7 +131,8 @@
 
 // ── Hero header card ────────────────────────────────────────────────────────
 .ot-hero {
-  max-width: 760px;
+  max-width: var(--ot-content-max);
+  width: 100%;
   margin: 0 auto 16px;
   background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%);
   border-radius: var(--ot-radius);
@@ -234,16 +240,14 @@
 
 // ── Meta info strip ─────────────────────────────────────────────────────────
 .ot-meta-strip {
-  max-width: 760px;
+  max-width: var(--ot-content-max);
+  width: 100%;
   margin: 0 auto 16px;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
   gap: 12px;
 
-  @media (max-width: 640px) {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  @media (max-width: 380px) {
+  @media (max-width: 520px) {
     grid-template-columns: 1fr;
   }
 }
@@ -257,6 +261,12 @@
   gap: 10px;
   align-items: flex-start;
   box-shadow: var(--ot-shadow);
+  min-height: 84px;
+
+  &__content {
+    flex: 1;
+    min-width: 0;
+  }
 
   .material-icons {
     font-size: 20px;
@@ -275,23 +285,32 @@
   }
 
   .value {
-    font-size: 0.84rem;
+    font-size: 0.95rem;
     font-weight: 700;
     color: var(--ot-text);
     margin: 0;
-    word-break: break-all;
+    line-height: 1.35;
+    word-break: break-word;
+    overflow-wrap: anywhere;
   }
 
   .sub {
-    font-size: 0.7rem;
+    font-size: 0.76rem;
     color: var(--ot-text-muted);
     margin: 2px 0 0;
+    line-height: 1.35;
+
+    &.sub--mono {
+      font-family: "Roboto Mono", monospace, sans-serif;
+      letter-spacing: 0.01em;
+    }
   }
 }
 
 // ── Status timeline ──────────────────────────────────────────────────────────
 .ot-timeline-card {
-  max-width: 760px;
+  max-width: var(--ot-content-max);
+  width: 100%;
   margin: 0 auto 16px;
   background: var(--ot-card-bg);
   border: 1px solid var(--ot-card-border);
@@ -414,7 +433,8 @@
 
 // ── Cancelled banner ─────────────────────────────────────────────────────────
 .ot-cancelled-banner {
-  max-width: 760px;
+  max-width: var(--ot-content-max);
+  width: 100%;
   margin: 0 auto 16px;
   background: #fff1f2;
   border: 1px solid #fecdd3;
@@ -452,7 +472,8 @@
 
 // ── Order summary card ───────────────────────────────────────────────────────
 .ot-summary-card {
-  max-width: 760px;
+  max-width: var(--ot-content-max);
+  width: 100%;
   margin: 0 auto 16px;
   background: var(--ot-card-bg);
   border: 1px solid var(--ot-card-border);
@@ -558,7 +579,8 @@
 
 // ── Footer actions ────────────────────────────────────────────────────────────
 .ot-actions {
-  max-width: 760px;
+  max-width: var(--ot-content-max);
+  width: 100%;
   margin: 0 auto 0;
   display: flex;
   gap: 12px;
@@ -608,11 +630,18 @@
       color: var(--ot-indigo);
     }
   }
+
+  &--receipt {
+    background: #dbeafe;
+    color: #1d4ed8;
+    border: 1px solid #bfdbfe;
+  }
 }
 
 // ── Recent orders list ────────────────────────────────────────────────────────
 .ot-recent-list {
-  max-width: 760px;
+  max-width: var(--ot-content-max);
+  width: 100%;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
@@ -659,6 +688,29 @@
     font-size: 20px;
     color: var(--ot-text-muted);
     flex-shrink: 0;
+  }
+
+  &__receipt {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    border: 0;
+    background: #dbeafe;
+    color: #2563eb;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: transform 0.12s ease;
+
+    .material-icons {
+      font-size: 20px;
+    }
+
+    &:hover {
+      transform: translateY(-1px);
+    }
   }
 }
 

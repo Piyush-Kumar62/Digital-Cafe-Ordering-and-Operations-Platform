@@ -45,31 +45,31 @@
     <div class="ot-meta-strip">
       <div class="ot-meta-card">
         <span class="material-icons">store</span>
-        <div>
+        <div class="ot-meta-card__content">
           <p class="label">Cafe</p>
           <p class="value">{{ o.cafeName || "Cafe #" + o.cafeId }}</p>
         </div>
       </div>
       <div class="ot-meta-card">
         <span class="material-icons">event_seat</span>
-        <div>
+        <div class="ot-meta-card__content">
           <p class="label">Booking</p>
           <p class="value">{{ o.bookingNumber || "#" + o.bookingId }}</p>
         </div>
       </div>
       <div class="ot-meta-card">
         <span class="material-icons">payments</span>
-        <div>
+        <div class="ot-meta-card__content">
           <p class="label">Payment</p>
           <p class="value">{{ o.payment?.status || "-" }}</p>
-          <p class="sub" *ngIf="o.payment?.transactionId">
+          <p class="sub sub--mono" *ngIf="o.payment?.transactionId">
             {{ o.payment?.transactionId }}
           </p>
         </div>
       </div>
       <div class="ot-meta-card">
         <span class="material-icons">schedule</span>
-        <div>
+        <div class="ot-meta-card__content">
           <p class="label">Placed</p>
           <p class="value">{{ fmtDate(o.placedAt || o.createdAt) }}</p>
         </div>
@@ -142,6 +142,15 @@
 
     <!-- Footer actions -->
     <div class="ot-actions">
+      <button
+        *ngIf="canDownloadReceipt(o)"
+        type="button"
+        class="ot-btn ot-btn--receipt"
+        (click)="downloadReceipt(o, $event)"
+      >
+        <span class="material-icons">download</span>
+        Download payment receipt
+      </button>
       <a routerLink="/customer/browse-cafes" class="ot-btn ot-btn--primary">
         <span class="material-icons">add_shopping_cart</span>
         Place another order
@@ -177,6 +186,16 @@
         <span class="ot-status-badge" [ngClass]="getStatusClass(item.status)">
           {{ formatStatus(item.status) }}
         </span>
+        <button
+          *ngIf="canDownloadReceipt(item)"
+          type="button"
+          class="ot-recent-card__receipt"
+          title="Download payment receipt"
+          aria-label="Download payment receipt"
+          (click)="downloadReceipt(item, $event)"
+        >
+          <span class="material-icons">download</span>
+        </button>
         <span class="material-icons ot-recent-card__arrow">chevron_right</span>
       </a>
     </div>

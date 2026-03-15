@@ -28,7 +28,6 @@ type HeaderNotification = {
   styleUrls: ["./customer-header.scss"],
 })
 export class CustomerHeaderComponent implements OnInit {
-  readonly defaultAvatar = "assets/branding/brand-logo.png";
   readonly backendBaseUrl = environment.apiUrl.replace("/api", "");
   user: User | null = null;
   lastLogin: Date | null = null;
@@ -41,6 +40,7 @@ export class CustomerHeaderComponent implements OnInit {
   uploadingImage = false;
   imageVersion = Date.now();
   isDarkMode = false;
+  private avatarLoadFailed = false;
   profileForm = {
     firstName: "",
     lastName: "",
@@ -118,21 +118,28 @@ export class CustomerHeaderComponent implements OnInit {
     this.closePopovers();
   }
 
-  onAvatarError(event: Event): void {
-    const imageElement = event.target as HTMLImageElement;
-    imageElement.src = this.defaultAvatar;
+  onAvatarError(): void {
+    this.avatarLoadFailed = true;
   }
 
   get profileImageSrc(): string {
+    if (this.avatarLoadFailed) {
+      return "";
+    }
+
     const rawUrl = this.user?.profileImageUrl;
     if (!rawUrl) {
-      return this.defaultAvatar;
+      return "";
     }
 
     const normalized = rawUrl.startsWith("http")
       ? rawUrl
       : `${this.backendBaseUrl}${rawUrl}`;
     return `${normalized}${normalized.includes("?") ? "&" : "?"}v=${this.imageVersion}`;
+  }
+
+  get hasProfileImage(): boolean {
+    return !!this.profileImageSrc;
   }
 
   markAllRead(): void {
@@ -152,6 +159,7 @@ export class CustomerHeaderComponent implements OnInit {
     this.uploadingImage = true;
     this.apiService.uploadCustomerProfileImage(file).subscribe({
       next: (res) => {
+        this.avatarLoadFailed = false;
         if (this.user) {
           const uploadedImageUrl =
             res?.profileImageUrl || this.user.profileImageUrl;
@@ -231,6 +239,7 @@ export class CustomerHeaderComponent implements OnInit {
             ? new Date(profile.lastLogin)
             : this.lastLogin;
           this.imageVersion = Date.now();
+          this.avatarLoadFailed = false;
         }
       },
     });

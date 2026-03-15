@@ -4,13 +4,18 @@ import com.digitalcafe.entity.Order;
 import com.digitalcafe.entity.Payment;
 import com.digitalcafe.entity.PaymentWebhookEvent;
 import com.digitalcafe.exception.BusinessException;
+import com.digitalcafe.dto.response.PaymentWebhookAckResponse;
 import com.digitalcafe.repository.PaymentRepository;
 import com.digitalcafe.repository.PaymentWebhookEventRepository;
+import com.digitalcafe.service.EmailService;
+import com.digitalcafe.service.OrderService;
 import com.razorpay.RazorpayClient;
 import com.razorpay.RazorpayException;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationContext;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +25,7 @@ import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.LocalDateTime;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -42,13 +48,26 @@ public class PaymentService {
     @Value("${razorpay.webhook.secret:}")
     private String razorpayWebhookSecret;
 
+    @Value("${app.webhook.async.enabled:true}")
+    private boolean webhookAsyncEnabled;
+
     private final PaymentRepository paymentRepository;
     private final PaymentWebhookEventRepository webhookEventRepository;
+    private final OrderService orderService;
+    private final EmailService emailService;
+    private final ApplicationContext applicationContext;
     private RazorpayClient razorpayClient;
 
-    public PaymentService(PaymentRepository paymentRepository, PaymentWebhookEventRepository webhookEventRepository) {
+    public PaymentService(PaymentRepository paymentRepository,
+                          PaymentWebhookEventRepository webhookEventRepository,
+                          OrderService orderService,
+                          EmailService emailService,
+                          ApplicationContext applicationContext) {
         this.paymentRepository = paymentRepository;
         this.webhookEventRepository = webhookEventRepository;
+        this.orderService = orderService;
+        this.emailService = emailService;
+        this.applicationContext = applicationContext;
     }
 
     private boolean isGateway(String expected) {
@@ -82,9 +101,14 @@ public class PaymentService {
         var existingOpt = paymentRepository.findByOrderId(order.getId());
         if (existingOpt.isPresent()) {
             Payment existing = existingOpt.get();
-            if (existing.getStatus() == Payment.PaymentStatus.COMPLETED
-                    || existing.getStatus() == Payment.PaymentStatus.PENDING
-                    || existing.getStatus() == Payment.PaymentStatus.PROCESSING) {
+            if (EnumSet.of(
+                    Payment.PaymentStatus.CAPTURED,
+                    Payment.PaymentStatus.COMPLETED,
+                    Payment.PaymentStatus.AUTHORIZED,
+                    Payment.PaymentStatus.CREATED,
+                    Payment.PaymentStatus.PENDING,
+                    Payment.PaymentStatus.PROCESSING
+            ).contains(existing.getStatus())) {
                 if (normalizedMethod != null && existing.getPaymentMethod() != normalizedMethod) {
                     existing.setPaymentMethod(normalizedMethod);
                     return paymentRepository.save(existing);
@@ -92,7 +116,7 @@ public class PaymentService {
                 return existing;
             }
             // FAILED/CANCELLED/REFUNDED -> reset and reuse same row (order_id is one-to-one unique).
-            existing.setStatus(Payment.PaymentStatus.PENDING);
+            existing.setStatus(Payment.PaymentStatus.CREATED);
             existing.setFailureReason(null);
             existing.setFailedAt(null);
             existing.setCompletedAt(null);
@@ -126,7 +150,7 @@ public class PaymentService {
                 .order(order)
                 .amount(order.getTotalAmount())
                 .currency("INR")
-                .status(Payment.PaymentStatus.PENDING)
+                .status(Payment.PaymentStatus.CREATED)
                 .paymentMethod(normalizedMethod)
                 .paymentGateway(paymentGateway)
                 .initiatedAt(LocalDateTime.now())
@@ -185,7 +209,8 @@ public class PaymentService {
         Payment payment = paymentRepository.findById(paymentId)
                 .orElseThrow(() -> new BusinessException("Payment not found"));
 
-        if (payment.getStatus() == Payment.PaymentStatus.COMPLETED) {
+        if (payment.getStatus() == Payment.PaymentStatus.COMPLETED
+                || payment.getStatus() == Payment.PaymentStatus.CAPTURED) {
             throw new BusinessException("Payment already completed");
         }
 
@@ -206,8 +231,8 @@ public class PaymentService {
             }
         }
 
-        // Mark payment as completed
-        payment.markAsCompleted(paymentGatewayPaymentId);
+        // Mark payment as captured (final success)
+        payment.markAsCaptured(paymentGatewayPaymentId);
         payment.setWebhookSignature(signature);
 
         return paymentRepository.save(payment);
@@ -282,7 +307,7 @@ public class PaymentService {
     }
 
     @Transactional
-    public WebhookProcessingResult processRazorpayWebhook(String rawPayload, String webhookSignature, String webhookEventId) {
+    public PaymentWebhookAckResponse enqueueRazorpayWebhook(String rawPayload, String webhookSignature, String webhookEventId) {
         if (!isGateway("RAZORPAY")) {
             throw new BusinessException("Razorpay webhook is disabled because payment gateway is not RAZORPAY");
         }
@@ -290,19 +315,48 @@ public class PaymentService {
             throw new BusinessException("Webhook payload is empty");
         }
 
+        WebhookReceiveResult receiveResult = receiveRazorpayWebhook(rawPayload, webhookSignature, webhookEventId);
+        if (receiveResult.alreadyProcessed()) {
+            return PaymentWebhookAckResponse.alreadyProcessed(receiveResult.eventId(), receiveResult.eventType());
+        }
+
+        if (webhookAsyncEnabled) {
+            applicationContext.getBean(PaymentService.class)
+                    .processRazorpayWebhookAsync(rawPayload, webhookSignature, receiveResult.eventId());
+            return PaymentWebhookAckResponse.accepted(receiveResult.eventId(), receiveResult.eventType());
+        }
+
+        WebhookProcessingResult result = processRazorpayWebhookInternal(
+                rawPayload, webhookSignature, receiveResult.eventId());
+        return PaymentWebhookAckResponse.processed(receiveResult.eventId(), receiveResult.eventType());
+    }
+
+    @Async("webhookTaskExecutor")
+    @Transactional
+    public void processRazorpayWebhookAsync(String rawPayload, String webhookSignature, String webhookEventId) {
+        try {
+            processRazorpayWebhookInternal(rawPayload, webhookSignature, webhookEventId);
+        } catch (Exception ex) {
+            log.error("razorpay_webhook_async_failed event_id={} error={}",
+                    safeString(webhookEventId), ex.getMessage(), ex);
+        }
+    }
+
+    @Transactional
+    public WebhookProcessingResult processRazorpayWebhookSync(String rawPayload, String webhookSignature, String webhookEventId) {
+        return processRazorpayWebhookInternal(rawPayload, webhookSignature, webhookEventId);
+    }
+
+    private WebhookProcessingResult processRazorpayWebhookInternal(String rawPayload,
+                                                                   String webhookSignature,
+                                                                   String webhookEventId) {
         JSONObject root = new JSONObject(rawPayload);
         String event = root.optString("event", "");
-        JSONObject paymentEntity = root
-                .optJSONObject("payload")
-                .optJSONObject("payment")
-                .optJSONObject("entity");
 
-        PaymentWebhookEvent webhookEvent = upsertWebhookEvent(
-                webhookEventId,
-                event,
-                hashSha256(safeString(webhookSignature)),
-                rawPayload
-        );
+        PaymentWebhookEvent webhookEvent = loadWebhookEventOrThrow(webhookEventId);
+        if (isFinalWebhookStatus(webhookEvent.getStatus())) {
+            return new WebhookProcessingResult(null, false, false, false, event);
+        }
 
         try {
             verifyWebhookSignature(rawPayload, webhookSignature);
@@ -318,96 +372,105 @@ public class PaymentService {
             throw signatureEx;
         }
 
-        if (paymentEntity == null) {
+        WebhookPayload payload = extractWebhookPayload(root);
+        if (payload == null) {
             markWebhookEvent(
                     webhookEvent,
                     PaymentWebhookEvent.ProcessingStatus.FAILED,
                     null,
                     null,
                     null,
-                    "Invalid webhook payload: missing payload.payment.entity"
+                    "Invalid webhook payload: missing payment/refund/order entity"
             );
-            throw new BusinessException("Invalid webhook payload: missing payload.payment.entity");
+            throw new BusinessException("Invalid webhook payload: missing payment/refund/order entity");
         }
 
-        String gatewayOrderId = paymentEntity.optString("order_id", null);
-        String gatewayPaymentId = paymentEntity.optString("id", null);
-        if (gatewayOrderId == null || gatewayOrderId.isBlank()) {
-            markWebhookEvent(
-                    webhookEvent,
-                    PaymentWebhookEvent.ProcessingStatus.FAILED,
-                    null,
-                    null,
-                    gatewayPaymentId,
-                    "Invalid webhook payload: missing Razorpay order ID"
-            );
-            throw new BusinessException("Invalid webhook payload: missing Razorpay order ID");
-        }
+        webhookEvent.setEventType(event);
+        webhookEvent.setSignatureHash(hashSha256(safeString(webhookSignature)));
+        webhookEvent.setPayload(rawPayload);
 
-        Payment payment = paymentRepository.findByGatewayOrderIdWithOrderAndCustomer(gatewayOrderId)
-                .orElse(null);
+        Payment payment = resolvePaymentForWebhook(payload);
         if (payment == null) {
             markWebhookEvent(
                     webhookEvent,
                     PaymentWebhookEvent.ProcessingStatus.FAILED,
                     null,
-                    gatewayOrderId,
-                    gatewayPaymentId,
-                    "Payment not found for gateway order ID: " + gatewayOrderId
+                    payload.gatewayOrderId(),
+                    payload.gatewayPaymentId(),
+                    "Payment not found for gateway identifiers"
             );
-            throw new BusinessException("Payment not found for gateway order ID: " + gatewayOrderId);
+            throw new BusinessException("Payment not found for gateway identifiers");
         }
 
         payment.setWebhookSignature(webhookSignature);
         payment.setGatewayResponse(rawPayload);
 
-        boolean completedNow = false;
+        boolean capturedNow = false;
+        boolean refundedNow = false;
         boolean failedNow = false;
 
-        if ("payment.captured".equalsIgnoreCase(event)) {
-            OptionalDuplicate duplicate = checkDuplicateGatewayPaymentId(gatewayPaymentId, payment.getId());
+        if ("payment.authorized".equalsIgnoreCase(event)) {
+            if (!payment.isCapturedOrCompleted() && payment.getStatus() != Payment.PaymentStatus.AUTHORIZED) {
+                payment.markAsAuthorized(payload.gatewayPaymentId());
+            }
+            applyMethodFromPayload(payment, payload);
+            paymentRepository.save(payment);
+            markWebhookEvent(webhookEvent, PaymentWebhookEvent.ProcessingStatus.PROCESSED, payment,
+                    payload.gatewayOrderId(), payload.gatewayPaymentId(), null);
+            logWebhookProcessed(event, webhookEventId, payment);
+            return new WebhookProcessingResult(payment, capturedNow, failedNow, refundedNow, event);
+        }
+
+        if ("payment.captured".equalsIgnoreCase(event) || "order.paid".equalsIgnoreCase(event)) {
+            OptionalDuplicate duplicate = checkDuplicateGatewayPaymentId(payload.gatewayPaymentId(), payment.getId());
             if (duplicate.isDuplicate()) {
                 markWebhookEvent(
                         webhookEvent,
                         PaymentWebhookEvent.ProcessingStatus.IGNORED,
                         payment,
-                        gatewayOrderId,
-                        gatewayPaymentId,
+                        payload.gatewayOrderId(),
+                        payload.gatewayPaymentId(),
                         "Duplicate gateway payment ID delivery"
                 );
-                return new WebhookProcessingResult(payment, false, false, event);
+                logWebhookProcessed(event, webhookEventId, payment);
+                return new WebhookProcessingResult(payment, false, false, false, event);
             }
 
-            if (payment.getStatus() != Payment.PaymentStatus.COMPLETED) {
-                payment.markAsCompleted(gatewayPaymentId);
-                completedNow = true;
-            } else if (gatewayPaymentId != null && !gatewayPaymentId.isBlank()) {
-                payment.setPaymentGatewayPaymentId(gatewayPaymentId);
+            if (!payment.isCapturedOrCompleted()) {
+                payment.markAsCaptured(payload.gatewayPaymentId());
+                capturedNow = true;
+            } else if (payload.gatewayPaymentId() != null && !payload.gatewayPaymentId().isBlank()) {
+                payment.setPaymentGatewayPaymentId(payload.gatewayPaymentId());
             }
 
-            Payment.PaymentMethod webhookMethod = normalizePaymentMethod(paymentEntity.optString("method", null));
-            if (webhookMethod != null) {
-                payment.setPaymentMethod(webhookMethod);
-            }
-
+            applyMethodFromPayload(payment, payload);
             payment.setFailureReason(null);
             payment.setFailedAt(null);
             paymentRepository.save(payment);
+
             markWebhookEvent(
                     webhookEvent,
                     PaymentWebhookEvent.ProcessingStatus.PROCESSED,
                     payment,
-                    gatewayOrderId,
-                    gatewayPaymentId,
+                    payload.gatewayOrderId(),
+                    payload.gatewayPaymentId(),
                     null
             );
-            return new WebhookProcessingResult(payment, completedNow, false, event);
+
+            if (capturedNow) {
+                orderService.activateOrderAfterPayment(payment.getOrder().getId());
+                sendPaymentReceiptEmail(payment);
+            }
+
+            logWebhookProcessed(event, webhookEventId, payment);
+            return new WebhookProcessingResult(payment, capturedNow, false, false, event);
         }
 
         if ("payment.failed".equalsIgnoreCase(event)) {
-            if (payment.getStatus() != Payment.PaymentStatus.COMPLETED
-                    && payment.getStatus() != Payment.PaymentStatus.REFUNDED) {
-                String reason = paymentEntity.optString("error_description", "Payment failed on Razorpay");
+            if (!payment.isCapturedOrCompleted() && payment.getStatus() != Payment.PaymentStatus.REFUNDED) {
+                String reason = payload.errorDescription() != null
+                        ? payload.errorDescription()
+                        : "Payment failed on Razorpay";
                 payment.markAsFailed(reason);
                 paymentRepository.save(payment);
                 failedNow = true;
@@ -418,11 +481,32 @@ public class PaymentService {
                     webhookEvent,
                     PaymentWebhookEvent.ProcessingStatus.PROCESSED,
                     payment,
-                    gatewayOrderId,
-                    gatewayPaymentId,
+                    payload.gatewayOrderId(),
+                    payload.gatewayPaymentId(),
                     null
             );
-            return new WebhookProcessingResult(payment, false, failedNow, event);
+            logWebhookProcessed(event, webhookEventId, payment);
+            return new WebhookProcessingResult(payment, false, failedNow, false, event);
+        }
+
+        if ("refund.created".equalsIgnoreCase(event) || "refund.processed".equalsIgnoreCase(event)) {
+            if (payment.getStatus() != Payment.PaymentStatus.REFUNDED) {
+                payment.markAsRefunded("Refund " + event.replace("refund.", "") + " on Razorpay");
+                paymentRepository.save(payment);
+                refundedNow = true;
+            } else {
+                paymentRepository.save(payment);
+            }
+            markWebhookEvent(
+                    webhookEvent,
+                    PaymentWebhookEvent.ProcessingStatus.PROCESSED,
+                    payment,
+                    payload.gatewayOrderId(),
+                    payload.gatewayPaymentId(),
+                    null
+            );
+            logWebhookProcessed(event, webhookEventId, payment);
+            return new WebhookProcessingResult(payment, false, false, refundedNow, event);
         }
 
         paymentRepository.save(payment);
@@ -430,11 +514,194 @@ public class PaymentService {
                 webhookEvent,
                 PaymentWebhookEvent.ProcessingStatus.IGNORED,
                 payment,
-                gatewayOrderId,
-                gatewayPaymentId,
+                payload.gatewayOrderId(),
+                payload.gatewayPaymentId(),
                 "Unsupported webhook event: " + event
         );
-        return new WebhookProcessingResult(payment, false, false, event);
+        logWebhookProcessed(event, webhookEventId, payment);
+        return new WebhookProcessingResult(payment, false, false, false, event);
+    }
+
+    private WebhookReceiveResult receiveRazorpayWebhook(String rawPayload, String webhookSignature, String webhookEventId) {
+        JSONObject root = new JSONObject(rawPayload);
+        String eventType = root.optString("event", "");
+        String normalizedEventId = normalizeEventId(webhookEventId);
+
+        Optional<PaymentWebhookEvent> existingOpt =
+                webhookEventRepository.findByProviderAndEventId(PaymentWebhookEvent.Provider.RAZORPAY, normalizedEventId);
+        if (existingOpt.isPresent() && isFinalWebhookStatus(existingOpt.get().getStatus())) {
+            return WebhookReceiveResult.alreadyProcessed(normalizedEventId,
+                    existingOpt.get().getEventType() != null ? existingOpt.get().getEventType() : eventType);
+        }
+
+        PaymentWebhookEvent event = existingOpt.orElseGet(() -> PaymentWebhookEvent.builder()
+                .provider(PaymentWebhookEvent.Provider.RAZORPAY)
+                .eventId(normalizedEventId)
+                .attemptCount(0)
+                .build());
+
+        event.setEventType(eventType);
+        event.setSignatureHash(hashSha256(safeString(webhookSignature)));
+        event.setPayload(rawPayload);
+        event.setStatus(PaymentWebhookEvent.ProcessingStatus.RECEIVED);
+        event.setLastError(null);
+        event.setAttemptCount((event.getAttemptCount() == null ? 0 : event.getAttemptCount()) + 1);
+        event.setProcessedAt(null);
+
+        webhookEventRepository.save(event);
+        log.info("razorpay_webhook_received event_id={} event_type={}", normalizedEventId, eventType);
+        return WebhookReceiveResult.received(normalizedEventId, eventType);
+    }
+
+    private String normalizeEventId(String webhookEventId) {
+        return (webhookEventId == null || webhookEventId.isBlank())
+                ? "AUTO-" + UUID.randomUUID()
+                : webhookEventId.trim();
+    }
+
+    private PaymentWebhookEvent loadWebhookEventOrThrow(String eventId) {
+        return webhookEventRepository.findByProviderAndEventId(PaymentWebhookEvent.Provider.RAZORPAY, eventId)
+                .orElseThrow(() -> new BusinessException("Webhook event not found for id: " + eventId));
+    }
+
+    private boolean isFinalWebhookStatus(PaymentWebhookEvent.ProcessingStatus status) {
+        return status == PaymentWebhookEvent.ProcessingStatus.PROCESSED
+                || status == PaymentWebhookEvent.ProcessingStatus.IGNORED
+                || status == PaymentWebhookEvent.ProcessingStatus.SIGNATURE_INVALID;
+    }
+
+    private WebhookPayload extractWebhookPayload(JSONObject root) {
+        JSONObject payload = root.optJSONObject("payload");
+        if (payload == null) {
+            return null;
+        }
+
+        JSONObject paymentEntity = payload.optJSONObject("payment") != null
+                ? payload.optJSONObject("payment").optJSONObject("entity")
+                : null;
+        JSONObject refundEntity = payload.optJSONObject("refund") != null
+                ? payload.optJSONObject("refund").optJSONObject("entity")
+                : null;
+        JSONObject orderEntity = payload.optJSONObject("order") != null
+                ? payload.optJSONObject("order").optJSONObject("entity")
+                : null;
+
+        String gatewayOrderId = null;
+        String gatewayPaymentId = null;
+        String method = null;
+        String errorDescription = null;
+
+        if (paymentEntity != null) {
+            gatewayOrderId = paymentEntity.optString("order_id", null);
+            gatewayPaymentId = paymentEntity.optString("id", null);
+            method = paymentEntity.optString("method", null);
+            errorDescription = paymentEntity.optString("error_description", null);
+        }
+        if (orderEntity != null && (gatewayOrderId == null || gatewayOrderId.isBlank())) {
+            gatewayOrderId = orderEntity.optString("id", null);
+        }
+        if (refundEntity != null) {
+            if (gatewayPaymentId == null || gatewayPaymentId.isBlank()) {
+                gatewayPaymentId = refundEntity.optString("payment_id", null);
+            }
+            if (gatewayOrderId == null || gatewayOrderId.isBlank()) {
+                gatewayOrderId = refundEntity.optString("order_id", null);
+            }
+        }
+
+        if ((gatewayOrderId == null || gatewayOrderId.isBlank())
+                && (gatewayPaymentId == null || gatewayPaymentId.isBlank())) {
+            return null;
+        }
+        return new WebhookPayload(gatewayOrderId, gatewayPaymentId, method, errorDescription);
+    }
+
+    private Payment resolvePaymentForWebhook(WebhookPayload payload) {
+        if (payload.gatewayOrderId() != null && !payload.gatewayOrderId().isBlank()) {
+            return paymentRepository.findByGatewayOrderIdWithOrderAndCustomer(payload.gatewayOrderId())
+                    .orElse(null);
+        }
+        if (payload.gatewayPaymentId() != null && !payload.gatewayPaymentId().isBlank()) {
+            return paymentRepository.findByPaymentGatewayPaymentId(payload.gatewayPaymentId())
+                    .orElse(null);
+        }
+        return null;
+    }
+
+    private void applyMethodFromPayload(Payment payment, WebhookPayload payload) {
+        if (payload.method() == null || payload.method().isBlank()) {
+            return;
+        }
+        Payment.PaymentMethod webhookMethod = normalizePaymentMethod(payload.method());
+        if (webhookMethod != null) {
+            payment.setPaymentMethod(webhookMethod);
+        }
+    }
+
+    private void logWebhookProcessed(String event, String eventId, Payment payment) {
+        Long orderId = payment != null && payment.getOrder() != null ? payment.getOrder().getId() : null;
+        log.info("razorpay_webhook_processed event_id={} event={} payment_id={} order_id={}",
+                safeString(eventId), safeString(event),
+                payment != null ? payment.getId() : null,
+                orderId);
+    }
+
+    private void sendPaymentReceiptEmail(Payment payment) {
+        if (payment == null || payment.getOrder() == null || payment.getOrder().getCustomer() == null) {
+            return;
+        }
+        String customerEmail = payment.getOrder().getCustomer().getEmail();
+        if (customerEmail == null || customerEmail.isBlank()) {
+            return;
+        }
+        Order order = payment.getOrder();
+        var orderResponse = orderService.getOrderById(order.getId());
+        String customerName = orderResponse.getCustomerName() != null && !orderResponse.getCustomerName().isBlank()
+                ? orderResponse.getCustomerName()
+                : "Customer";
+        String receiptNumber = payment.getTransactionId() != null && !payment.getTransactionId().isBlank()
+                ? payment.getTransactionId()
+                : "RCPT-" + payment.getId();
+        String details = buildPaymentDetails(payment, orderResponse, resolveGatewayLabel(payment));
+        emailService.sendPaymentReceipt(customerEmail, customerName, receiptNumber, details);
+    }
+
+    private String resolveGatewayLabel(Payment payment) {
+        if (payment.getPaymentGateway() == null || payment.getPaymentGateway().isBlank()) {
+            return "-";
+        }
+        return payment.getPaymentGateway().trim().toUpperCase();
+    }
+
+    private String buildPaymentDetails(Payment payment, com.digitalcafe.dto.response.OrderResponse order, String gatewayLabel) {
+        String completedAt = order.getPlacedAt() != null
+                ? order.getPlacedAt().toString()
+                : LocalDateTime.now().toString();
+        String method = payment.getPaymentMethod() != null ? payment.getPaymentMethod().name().replace('_', ' ') : "-";
+
+        String itemLines = "-";
+        if (order.getItems() != null && !order.getItems().isEmpty()) {
+            itemLines = order.getItems().stream()
+                    .map(i -> String.format("%s x%s (INR %s)", safeString(i.getMenuItemName()), i.getQuantity(), i.getTotalPrice()))
+                    .reduce((a, b) -> a + "; " + b)
+                    .orElse("-");
+        }
+
+        return String.format(
+                "Order: %s%nCafe: %s%nAmount Paid: %s %s%nStatus: %s%nMethod: %s%nGateway: %s%nGateway Order ID: %s%nGateway Payment ID: %s%nPayment Time: %s%nBooking: %s%nItems: %s",
+                safeString(order.getOrderNumber()),
+                safeString(order.getCafeName()),
+                safeString(payment.getCurrency()),
+                payment.getAmount() != null ? payment.getAmount().toPlainString() : "0.00",
+                safeString(payment.getStatus() != null ? payment.getStatus().name() : null),
+                method,
+                safeString(gatewayLabel),
+                safeString(payment.getPaymentGatewayOrderId()),
+                safeString(payment.getPaymentGatewayPaymentId()),
+                safeString(completedAt),
+                safeString(order.getBookingNumber()),
+                itemLines
+        );
     }
 
     private void verifyWebhookSignature(String payload, String signature) {
@@ -476,35 +743,6 @@ public class PaymentService {
         return sb.toString();
     }
 
-    private PaymentWebhookEvent upsertWebhookEvent(
-            String webhookEventId,
-            String eventType,
-            String signatureHash,
-            String payload
-    ) {
-        String normalizedEventId = (webhookEventId == null || webhookEventId.isBlank())
-                ? "AUTO-" + UUID.randomUUID()
-                : webhookEventId.trim();
-
-        Optional<PaymentWebhookEvent> existingOpt =
-                webhookEventRepository.findByProviderAndEventId(PaymentWebhookEvent.Provider.RAZORPAY, normalizedEventId);
-
-        PaymentWebhookEvent event = existingOpt.orElseGet(() -> PaymentWebhookEvent.builder()
-                .provider(PaymentWebhookEvent.Provider.RAZORPAY)
-                .eventId(normalizedEventId)
-                .attemptCount(0)
-                .build());
-
-        event.setEventType(eventType);
-        event.setSignatureHash(signatureHash);
-        event.setPayload(payload);
-        event.setStatus(PaymentWebhookEvent.ProcessingStatus.RECEIVED);
-        event.setLastError(null);
-        event.setAttemptCount((event.getAttemptCount() == null ? 0 : event.getAttemptCount()) + 1);
-        event.setProcessedAt(null);
-
-        return webhookEventRepository.save(event);
-    }
 
     private void markWebhookEvent(
             PaymentWebhookEvent event,
@@ -547,7 +785,26 @@ public class PaymentService {
                 .orElseGet(OptionalDuplicate::noDuplicate);
     }
 
-    public record WebhookProcessingResult(Payment payment, boolean completedNow, boolean failedNow, String event) {
+    public record WebhookProcessingResult(
+            Payment payment,
+            boolean capturedNow,
+            boolean failedNow,
+            boolean refundedNow,
+            String event
+    ) {
+    }
+
+    private record WebhookReceiveResult(String eventId, String eventType, boolean alreadyProcessed) {
+        static WebhookReceiveResult received(String eventId, String eventType) {
+            return new WebhookReceiveResult(eventId, eventType, false);
+        }
+
+        static WebhookReceiveResult alreadyProcessed(String eventId, String eventType) {
+            return new WebhookReceiveResult(eventId, eventType, true);
+        }
+    }
+
+    private record WebhookPayload(String gatewayOrderId, String gatewayPaymentId, String method, String errorDescription) {
     }
 
     private record OptionalDuplicate(boolean isDuplicate) {

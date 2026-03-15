@@ -36,6 +36,9 @@ public class CustomerSelfProfileServiceImpl implements CustomerSelfProfileServic
         user.setFirstName(request.getFirstName().trim());
         user.setLastName(request.getLastName().trim());
         user.setDisplayName(request.getDisplayName().trim());
+        // Customer self profile update is the required completion checkpoint.
+        user.setIsProfileComplete(true);
+        user.setProfileCompletionPercentage(100);
         User saved = userRepository.save(user);
         return toResponse(saved);
     }

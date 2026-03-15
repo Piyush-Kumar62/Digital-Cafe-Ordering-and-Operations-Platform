@@ -3,6 +3,7 @@ package com.digitalcafe.security;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -10,6 +11,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -19,7 +21,7 @@ import java.util.stream.Collectors;
 @Component
 public class JwtUtil {
 
-    @Value("${jwt.secret:mySecretKeyForJWTAuthenticationAndAuthorizationSystemDigitalCafeProject2024SecureKey}")
+    @Value("${jwt.secret}")
     private String secret;
 
     @Value("${jwt.expiration:86400000}") // 24 hours
@@ -28,8 +30,18 @@ public class JwtUtil {
     @Value("${jwt.refresh-expiration:604800000}") // 7 days
     private Long refreshExpiration;
 
+    @PostConstruct
+    void validateSecret() {
+        if (secret == null || secret.trim().isEmpty()) {
+            throw new IllegalStateException("Missing required configuration: jwt.secret");
+        }
+        if (secret.getBytes(StandardCharsets.UTF_8).length < 32) {
+            throw new IllegalStateException("jwt.secret must be at least 32 bytes");
+        }
+    }
+
     private SecretKey getSigningKey() {
-        return Keys.hmacShaKeyFor(secret.getBytes());
+        return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
     public String generateToken(Authentication authentication) {

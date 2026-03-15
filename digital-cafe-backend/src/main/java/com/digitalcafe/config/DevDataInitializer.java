@@ -44,7 +44,7 @@ import java.util.UUID;
 @Slf4j
 @Component
 @org.springframework.core.annotation.Order(2)
-@Profile("dev")
+@Profile({"dev", "e2e"})
 @ConditionalOnProperty(name = "app.dev.seed.enabled", havingValue = "true")
 @RequiredArgsConstructor
 public class DevDataInitializer implements CommandLineRunner {

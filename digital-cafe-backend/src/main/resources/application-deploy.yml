@@ -28,7 +28,7 @@ spring:
   # ─── JPA / Hibernate ───────────────────────────────────────────────────────────
   jpa:
     hibernate:
-      ddl-auto: none # CRITICAL: Never use update/create in deploymenttion. Manage schema changes manually or via a migration tool.
+      ddl-auto: update # Keep schema managed by JPA for current deployment mode.
     show-sql: false
     open-in-view: false
     properties:
@@ -45,7 +45,8 @@ spring:
     host: smtp.gmail.com
     port: 587
     username: ${MAIL_USERNAME}
-    password: ${MAIL_APP_PASSWORD}
+    # Support both legacy MAIL_PASSWORD and the newer MAIL_APP_PASSWORD name.
+    password: ${MAIL_PASSWORD:${MAIL_APP_PASSWORD:}}
     properties:
       mail:
         smtp:
@@ -74,11 +75,11 @@ jwt:
 
 # ─── Payment Gateway ─────────────────────────────────────────────────────────────
 payment:
-  gateway: ${PAYMENT_GATEWAY:RAZORPAY}
+  gateway: ${PAYMENT_GATEWAY:TEST}
 razorpay:
   key:
-    id: ${RAZORPAY_KEY_ID}
-    secret: ${RAZORPAY_KEY_SECRET}
+    id: ${RAZORPAY_KEY_ID:}
+    secret: ${RAZORPAY_KEY_SECRET:}
 
 # ─── Application ─────────────────────────────────────────────────────────────────
 app:

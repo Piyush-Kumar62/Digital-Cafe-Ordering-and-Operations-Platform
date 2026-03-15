@@ -108,6 +108,8 @@ public class NotificationServiceImpl implements NotificationService {
     private String buildTitle(String notificationType) {
         return switch (notificationType) {
             case "ORDER_PLACED"    -> "New Order Received";
+            case "ORDER_CONFIRMED" -> "Order Confirmed";
+            case "PAYMENT_CAPTURED" -> "Payment Captured";
             case "ORDER_PREPARING" -> "Order Being Prepared";
             case "ORDER_READY"     -> "Order Ready for Pickup";
             case "ORDER_SERVED"    -> "Order Served";
@@ -119,6 +121,8 @@ public class NotificationServiceImpl implements NotificationService {
     private OrderNotification.NotificationType resolveNotificationType(String notificationType) {
         return switch (notificationType) {
             case "ORDER_PLACED"    -> OrderNotification.NotificationType.NEW_ORDER;
+            case "ORDER_CONFIRMED" -> OrderNotification.NotificationType.NEW_ORDER;
+            case "PAYMENT_CAPTURED" -> OrderNotification.NotificationType.NEW_ORDER;
             case "ORDER_PREPARING" -> OrderNotification.NotificationType.PREPARING;
             case "ORDER_READY"     -> OrderNotification.NotificationType.READY;
             case "ORDER_SERVED"    -> OrderNotification.NotificationType.SERVED;

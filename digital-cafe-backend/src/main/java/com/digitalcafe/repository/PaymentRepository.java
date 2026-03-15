@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -45,12 +46,18 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
     Optional<Long> findCustomerIdByPaymentId(Long paymentId);
 
     List<Payment> findByStatus(Payment.PaymentStatus status);
+    List<Payment> findByStatusIn(Collection<Payment.PaymentStatus> statuses);
     
     // Dashboard queries
     List<Payment> findByStatusAndCreatedAtAfter(Payment.PaymentStatus status, java.time.LocalDateTime date);
     List<Payment> findByStatusAndCreatedAtBetween(Payment.PaymentStatus status, java.time.LocalDateTime start, java.time.LocalDateTime end);
+    List<Payment> findByStatusInAndCreatedAtAfter(Collection<Payment.PaymentStatus> statuses, java.time.LocalDateTime date);
+    List<Payment> findByStatusInAndCreatedAtBetween(Collection<Payment.PaymentStatus> statuses, java.time.LocalDateTime start, java.time.LocalDateTime end);
     Page<Payment> findAllByOrderByCreatedAtDesc(Pageable pageable);
 
     @Query("SELECT COALESCE(SUM(p.amount), 0) FROM Payment p WHERE p.order.cafe.id = :cafeId AND p.status = :status")
     BigDecimal sumAmountByCafeAndStatus(@Param("cafeId") Long cafeId, @Param("status") Payment.PaymentStatus status);
+
+    @Query("SELECT COALESCE(SUM(p.amount), 0) FROM Payment p WHERE p.order.cafe.id = :cafeId AND p.status IN :statuses")
+    BigDecimal sumAmountByCafeAndStatusIn(@Param("cafeId") Long cafeId, @Param("statuses") Collection<Payment.PaymentStatus> statuses);
 }

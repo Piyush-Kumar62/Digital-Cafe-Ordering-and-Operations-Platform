@@ -259,6 +259,8 @@ public class OrderServiceImpl implements OrderService {
         notificationService.pushOrderEvent(order, "ORDER_PLACED", "/topic/chef/" + order.getCafe().getId());
         // Also notify the customer that their order is confirmed
         notificationService.pushOrderEvent(order, "ORDER_CONFIRMED", "/topic/customer/" + order.getCustomer().getId());
+        // Payment captured notification (explicit requirement)
+        notificationService.pushOrderEvent(order, "PAYMENT_CAPTURED", "/topic/customer/" + order.getCustomer().getId());
         // Send order confirmation email to customer
         emailService.sendOrderConfirmation(
                 order.getCustomer().getEmail(),

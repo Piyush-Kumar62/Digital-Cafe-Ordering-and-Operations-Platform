@@ -79,11 +79,14 @@ public class Payment extends BaseEntity {
     private String gatewayResponse; // Store full response for debugging
 
     public enum PaymentStatus {
-        PENDING,     // Payment initiated but not completed
-        PROCESSING,  // Payment is being processed
-        COMPLETED,   // Payment successful
+        CREATED,     // Payment created locally (before gateway confirmation)
+        AUTHORIZED,  // Payment authorized at gateway
+        CAPTURED,    // Payment captured at gateway (final success)
         FAILED,      // Payment failed
         REFUNDED,    // Payment refunded
+        PENDING,     // Legacy: Payment initiated but not completed
+        PROCESSING,  // Legacy: Payment is being processed
+        COMPLETED,   // Legacy: Payment successful
         CANCELLED    // Payment cancelled
     }
 
@@ -100,9 +103,7 @@ public class Payment extends BaseEntity {
      * Marks payment as completed.
      */
     public void markAsCompleted(String paymentId) {
-        this.status = PaymentStatus.COMPLETED;
-        this.paymentGatewayPaymentId = paymentId;
-        this.completedAt = LocalDateTime.now();
+        markAsCaptured(paymentId);
     }
 
     /**
@@ -115,9 +116,43 @@ public class Payment extends BaseEntity {
     }
 
     /**
+     * Marks payment as authorized.
+     */
+    public void markAsAuthorized(String paymentId) {
+        this.status = PaymentStatus.AUTHORIZED;
+        if (paymentId != null && !paymentId.isBlank()) {
+            this.paymentGatewayPaymentId = paymentId;
+        }
+    }
+
+    /**
+     * Marks payment as captured (final success).
+     */
+    public void markAsCaptured(String paymentId) {
+        this.status = PaymentStatus.CAPTURED;
+        if (paymentId != null && !paymentId.isBlank()) {
+            this.paymentGatewayPaymentId = paymentId;
+        }
+        this.completedAt = LocalDateTime.now();
+    }
+
+    /**
+     * Marks payment as refunded.
+     */
+    public void markAsRefunded(String reason) {
+        this.status = PaymentStatus.REFUNDED;
+        this.failureReason = reason;
+        this.failedAt = LocalDateTime.now();
+    }
+
+    /**
      * Checks if payment is successful.
      */
     public boolean isSuccessful() {
-        return status == PaymentStatus.COMPLETED;
+        return status == PaymentStatus.CAPTURED || status == PaymentStatus.COMPLETED;
+    }
+
+    public boolean isCapturedOrCompleted() {
+        return status == PaymentStatus.CAPTURED || status == PaymentStatus.COMPLETED;
     }
 }

@@ -47,19 +47,19 @@ public class EmailServiceImpl implements EmailService {
     private String smtpPassword;
 
     /** The address that appears in the email "From:" header. Must be a real email address. */
-    @Value("${app.email.from-email:noreply@digitalcafe.com}")
+    @Value("${MAIL_FROM_EMAIL:noreply@digitalcafe.com}")
     private String fromEmail;
 
-    @Value("${app.email.enabled:true}")
+    @Value("${MAIL_ENABLED:true}")
     private boolean emailEnabled;
 
-    @Value("${app.email.from-name:Digital Cafe Team}")
+    @Value("${EMAIL_FROM_NAME:Digital Cafe Team}")
     private String fromName;
 
-    @Value("${app.frontend.url:http://localhost:4200}")
+    @Value("${FRONTEND_URL:http://localhost:4200}")
     private String frontendUrl;
 
-    @Value("${app.email.support-url:http://localhost:4200/contact}")
+    @Value("${EMAIL_SUPPORT_URL:http://localhost:4200/contact}")
     private String supportUrl;
 
     @Value("${spring.mail.host:smtp.gmail.com}")
@@ -73,6 +73,10 @@ public class EmailServiceImpl implements EmailService {
         if (!emailEnabled) {
             log.warn("[Email] ⚠️  Service is DISABLED (MAIL_ENABLED=false). No emails will be sent.");
             return;
+        }
+        if ((fromEmail == null || fromEmail.isBlank()) && smtpUsername != null && !smtpUsername.isBlank()) {
+            fromEmail = smtpUsername;
+            log.warn("[Email] MAIL_FROM_EMAIL is empty; defaulting from-email to spring.mail.username={}", smtpUsername);
         }
         if (smtpUsername == null || smtpUsername.isBlank() || smtpPassword == null || smtpPassword.isBlank()) {
             log.warn("[Email] ⚠️  SMTP credentials NOT configured! Set MAIL_USERNAME + MAIL_PASSWORD in .env. ALL emails will be skipped.");

@@ -57,7 +57,8 @@ public class PaymentController {
 
         // In TEST mode, auto-complete and activate order immediately so local/demo checkout works end-to-end.
         if ("TEST".equalsIgnoreCase(payment.getPaymentGateway())) {
-            if (payment.getStatus() != Payment.PaymentStatus.COMPLETED) {
+            if (payment.getStatus() != Payment.PaymentStatus.COMPLETED
+                    && payment.getStatus() != Payment.PaymentStatus.CAPTURED) {
                 payment = paymentService.verifyAndCompletePayment(
                         payment.getId(),
                         "SIM-" + payment.getId() + "-" + System.currentTimeMillis(),
@@ -137,15 +138,7 @@ public class PaymentController {
             @RequestHeader(value = "X-Razorpay-Signature", required = false) String signature,
             @RequestHeader(value = "X-Razorpay-Event-Id", required = false) String eventId,
             @RequestBody String rawPayload) {
-        PaymentService.WebhookProcessingResult result =
-                paymentService.processRazorpayWebhook(rawPayload, signature, eventId);
-
-        if (result.completedNow()) {
-            Payment payment = result.payment();
-            orderService.activateOrderAfterPayment(payment.getOrder().getId());
-            sendPaymentReceiptEmail(payment, resolveCustomerEmail(payment), resolveGatewayLabel(payment));
-        }
-
+        paymentService.enqueueRazorpayWebhook(rawPayload, signature, eventId);
         return ResponseEntity.ok("OK");
     }
 
@@ -159,7 +152,8 @@ public class PaymentController {
 
         Payment existingPayment = paymentService.findById(paymentId);
         validateCustomerPaymentAccess(existingPayment);
-        if (existingPayment.getStatus() == Payment.PaymentStatus.COMPLETED) {
+        if (existingPayment.getStatus() == Payment.PaymentStatus.COMPLETED
+                || existingPayment.getStatus() == Payment.PaymentStatus.CAPTURED) {
             PaymentResponse alreadyCompleted = paymentMapper.toResponse(paymentService.findByIdWithOrder(paymentId));
             return ResponseEntity.ok(ApiResponse.success("Payment already verified", alreadyCompleted));
         }
@@ -195,7 +189,8 @@ public class PaymentController {
         Payment payment = paymentService.findByIdWithOrder(paymentId);
         validateCustomerPaymentAccess(payment);
 
-        if (payment.getStatus() != Payment.PaymentStatus.COMPLETED) {
+        if (payment.getStatus() != Payment.PaymentStatus.COMPLETED
+                && payment.getStatus() != Payment.PaymentStatus.CAPTURED) {
             throw new IllegalArgumentException("Receipt email can only be sent for completed payments");
         }
 

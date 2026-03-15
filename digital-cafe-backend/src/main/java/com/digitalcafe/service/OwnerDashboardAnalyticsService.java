@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -28,7 +29,10 @@ public class OwnerDashboardAnalyticsService {
     public OwnerDashboardAnalyticsResponse getOwnerDashboard(Long cafeId) {
         long totalBookings = bookingRepository.countByCafeId(cafeId);
         long totalOrders = orderRepository.countByCafeId(cafeId);
-        BigDecimal revenue = paymentRepository.sumAmountByCafeAndStatus(cafeId, Payment.PaymentStatus.COMPLETED);
+        BigDecimal revenue = paymentRepository.sumAmountByCafeAndStatusIn(
+                cafeId,
+                EnumSet.of(Payment.PaymentStatus.CAPTURED, Payment.PaymentStatus.COMPLETED)
+        );
         Long activeTables = cafeTableRepository.countByCafeIdAndIsAvailable(cafeId, true);
 
         Map<String, Long> ordersByStatus = new LinkedHashMap<>();

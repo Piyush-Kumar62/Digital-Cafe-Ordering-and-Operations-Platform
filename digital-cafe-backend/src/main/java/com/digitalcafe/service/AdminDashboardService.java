@@ -333,7 +333,7 @@ public class AdminDashboardService {
     }
 
     private Double calculateTotalRevenue() {
-        List<Payment> completedPayments = paymentRepository.findByStatus(Payment.PaymentStatus.COMPLETED);
+        List<Payment> completedPayments = paymentRepository.findByStatusIn(revenueStatuses());
         return completedPayments.stream()
                 .map(Payment::getAmount)
                 .mapToDouble(BigDecimal::doubleValue)
@@ -341,8 +341,7 @@ public class AdminDashboardService {
     }
 
     private Double calculateRevenueAfter(LocalDateTime after) {
-        List<Payment> payments = paymentRepository.findByStatusAndCreatedAtAfter(
-                Payment.PaymentStatus.COMPLETED, after);
+        List<Payment> payments = paymentRepository.findByStatusInAndCreatedAtAfter(revenueStatuses(), after);
         return payments.stream()
                 .map(Payment::getAmount)
                 .mapToDouble(BigDecimal::doubleValue)
@@ -350,11 +349,14 @@ public class AdminDashboardService {
     }
 
     private Double calculateRevenueBetween(LocalDateTime start, LocalDateTime end) {
-        List<Payment> payments = paymentRepository.findByStatusAndCreatedAtBetween(
-                Payment.PaymentStatus.COMPLETED, start, end);
+        List<Payment> payments = paymentRepository.findByStatusInAndCreatedAtBetween(revenueStatuses(), start, end);
         return payments.stream()
                 .map(Payment::getAmount)
                 .mapToDouble(BigDecimal::doubleValue)
                 .sum();
+    }
+
+    private Collection<Payment.PaymentStatus> revenueStatuses() {
+        return EnumSet.of(Payment.PaymentStatus.CAPTURED, Payment.PaymentStatus.COMPLETED);
     }
 }

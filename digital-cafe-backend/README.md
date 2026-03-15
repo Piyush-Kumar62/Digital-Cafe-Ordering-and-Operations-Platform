@@ -80,7 +80,7 @@ A comprehensive, enterprise-grade multi-café ordering and operations management
 - **Spring WebSocket**: Real-time notifications
 - **Hibernate**: ORM
 - **MySQL**: Relational database
-- **Flyway**: Database migration
+- **Hibernate DDL**: Schema management in deployment mode
 - **MapStruct**: DTO-Entity mapping
 - **Lombok**: Boilerplate reduction
 - **Razorpay SDK**: Payment gateway
@@ -104,33 +104,28 @@ A comprehensive, enterprise-grade multi-café ordering and operations management
 CREATE DATABASE digital_cafe_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
 
-### 2. Application Configuration
+### 2. Application Configuration (Recommended: .env)
 
-Update `src/main/resources/application.properties`:
+This project uses `spring-dotenv` to load environment variables from a `.env` file.
 
-```properties
-# Database Configuration
-spring.datasource.url=jdbc:mysql://localhost:3306/digital_cafe_db?createDatabaseIfNotExist=true
-spring.datasource.username=your_mysql_username
-spring.datasource.password=your_mysql_password
+1. Copy the example file and fill in your values:
 
-# JWT Configuration (Generate your own secret key)
-jwt.secret=your_jwt_secret_key_here
-jwt.expiration=86400000
-jwt.refresh-expiration=604800000
-
-# Email Configuration (Gmail SMTP)
-spring.mail.username=your-email@gmail.com
-spring.mail.password=your-app-specific-password
-
-# Frontend URL
-app.frontend.url=http://localhost:4200
-
-# Payment Gateway (Development)
-payment.gateway=TEST
-razorpay.key.id=your_razorpay_key_id
-razorpay.key.secret=your_razorpay_key_secret
+```bash
+cd digital-cafe-backend
+copy .env.example .env
 ```
+
+2. Ensure at least these values are set in `.env`:
+
+- `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`
+- `JWT_SECRET` (minimum 32 bytes, do not leave empty)
+- `MAIL_USERNAME`, `MAIL_PASSWORD` (for email features)
+- `FRONTEND_URL`
+- Optional: `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET` (payments)
+
+3. Run the backend from the `digital-cafe-backend` folder so the `.env` is detected.
+
+If you must override values without editing `.env`, set environment variables in your IDE run configuration.
 
 ### 3. Gmail App Password
 
@@ -154,9 +149,9 @@ razorpay.key.secret=your_razorpay_key_secret
 mvn clean install
 ```
 
-### 2. Run Database Migrations
+### 2. Initialize Database Schema
 
-Flyway will automatically run migrations on startup. The initial schema includes:
+Hibernate will initialize/update schema on startup. The initial schema includes:
 
 - All required tables
 - Foreign key relationships
@@ -177,6 +172,8 @@ java -jar target/digital-cafe-backend-0.0.1-SNAPSHOT.jar
 ```
 
 The application will start on `http://localhost:8080`
+
+**IDE note (IntelliJ / VS Code / STS):** set the working directory to `digital-cafe-backend` so `.env` is loaded.
 
 ## 📖 API Documentation
 
@@ -655,7 +652,6 @@ GET /actuator/health
 - [Spring Security JWT](https://spring.io/guides/topicals/spring-security-architecture)
 - [MapStruct Documentation](https://mapstruct.org/)
 - [Razorpay API Docs](https://razorpay.com/docs/api/)
-- [Flyway Migrations](https://flywaydb.org/documentation/)
 
 ## 🤝 Contributing
 

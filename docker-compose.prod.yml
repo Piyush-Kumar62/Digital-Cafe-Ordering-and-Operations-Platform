@@ -1,0 +1,40 @@
+services:
+  backend:
+    image: ${BACKEND_IMAGE:-ghcr.io/your-org/digital-cafe-backend:latest}
+    container_name: digital-cafe-backend
+    restart: unless-stopped
+    env_file:
+      - ./digital-cafe-backend/.env
+    environment:
+      PAYMENT_GATEWAY: ${PAYMENT_GATEWAY:-TEST}
+      MAIL_ENABLED: ${MAIL_ENABLED:-false}
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/api/public/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - digital-cafe-net
+
+  frontend:
+    image: ${FRONTEND_IMAGE:-ghcr.io/your-org/digital-cafe-frontend:latest}
+    container_name: digital-cafe-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - digital-cafe-net
+
+networks:
+  digital-cafe-net:
+    driver: bridge

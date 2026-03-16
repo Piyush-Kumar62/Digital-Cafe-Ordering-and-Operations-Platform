@@ -1,9 +1,0 @@
-<div class="card" [ngClass]="{ 'card-hover': hoverable }">
-      <div *ngIf="title" class="card-header">
-        <h3 class="card-title">{{ title }}</h3>
-        <ng-content select="[card-actions]"></ng-content>
-      </div>
-      <div class="card-content">
-        <ng-content></ng-content>
-      </div>
-    </div>

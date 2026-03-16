@@ -22,6 +22,12 @@ import { environment } from "@environments/environment";
 
 declare const Razorpay: any;
 
+type RazorpayLoadFailureReason =
+  | "blocked"
+  | "timeout"
+  | "load-error"
+  | "unknown";
+
 @Component({
   selector: "app-cafe-detail",
   standalone: true,
@@ -619,8 +625,24 @@ export class CafeDetailComponent implements OnInit {
         const rzp = new Razorpay(options);
         rzp.open();
       })
-      .catch(() => {
+      .catch((reason: RazorpayLoadFailureReason) => {
         this.paymentInProgress = false;
+        if (reason === "blocked") {
+          this.alertService.error(
+            "Checkout blocked by browser",
+            "Please allow checkout.razorpay.com in your ad blocker/privacy extension and retry.",
+          );
+          return;
+        }
+
+        if (reason === "timeout") {
+          this.alertService.error(
+            "Checkout timeout",
+            "Payment gateway took too long to load. Please check your network and try again.",
+          );
+          return;
+        }
+
         this.alertService.error("Unable to load Razorpay checkout.");
       });
   }
@@ -630,20 +652,44 @@ export class CafeDetailComponent implements OnInit {
       return Promise.resolve();
     }
     return new Promise((resolve, reject) => {
+      const timeoutId = window.setTimeout(() => {
+        reject("timeout");
+      }, 12000);
+
       const existing = document.getElementById(
         "razorpay-checkout-js",
       ) as HTMLScriptElement | null;
       if (existing) {
-        existing.addEventListener("load", () => resolve(), { once: true });
-        existing.addEventListener("error", () => reject(), { once: true });
+        existing.addEventListener(
+          "load",
+          () => {
+            window.clearTimeout(timeoutId);
+            resolve();
+          },
+          { once: true },
+        );
+        existing.addEventListener(
+          "error",
+          () => {
+            window.clearTimeout(timeoutId);
+            reject("load-error");
+          },
+          { once: true },
+        );
         return;
       }
       const script = document.createElement("script");
       script.id = "razorpay-checkout-js";
       script.src = "https://checkout.razorpay.com/v1/checkout.js";
       script.async = true;
-      script.onload = () => resolve();
-      script.onerror = () => reject();
+      script.onload = () => {
+        window.clearTimeout(timeoutId);
+        resolve();
+      };
+      script.onerror = () => {
+        window.clearTimeout(timeoutId);
+        reject("blocked");
+      };
       document.body.appendChild(script);
     });
   }

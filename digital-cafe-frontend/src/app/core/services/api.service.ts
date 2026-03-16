@@ -46,6 +46,12 @@ export class ApiService {
   resolveImageUrl(src: string | null | undefined): string {
     if (!src) return "";
     if (/^(https?:\/\/|data:)/.test(src)) return src;
+    if (src.startsWith("/assets/")) {
+      return src.replace(/^\/+/, "");
+    }
+    if (src.startsWith("assets/")) {
+      return src;
+    }
     if (src.startsWith("/")) return `${this.backendBase}${src}`;
     // Absolute filesystem path (Windows drive letter or backslash) — discard
     if (/^[A-Za-z]:[/\\]/.test(src) || src.startsWith("\\\\")) return "";

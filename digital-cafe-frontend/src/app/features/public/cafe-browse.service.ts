@@ -40,12 +40,18 @@ export class CafeBrowseService {
     if (!src) return "";
     // Already a full URL (http, https, data:)
     if (/^(https?:\/\/|data:)/.test(src)) return src;
+    // Backend can return frontend-served static paths with a leading slash.
+    if (src.startsWith("/assets/")) {
+      return src.replace(/^\/+/, "");
+    }
+    // Frontend Angular asset paths like "assets/cafe/..." — serve as-is from Angular dev server
+    if (src.startsWith("assets/")) {
+      return src;
+    }
     // Relative path starting with / — prefix with backend origin
     if (src.startsWith("/")) return `${this.backendBase}${src}`;
-    // Frontend Angular asset paths like "assets/cafe/..." — serve as-is from Angular dev server
-    if (src.startsWith("assets/")) return src;
     // Absolute filesystem path (contains \ or Windows drive letter) — discard
-    return "";
+    return src;
   }
 
   getPublicCafes(

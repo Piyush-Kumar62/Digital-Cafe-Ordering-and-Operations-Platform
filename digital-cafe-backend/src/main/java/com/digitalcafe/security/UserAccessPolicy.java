@@ -16,6 +16,6 @@ public class UserAccessPolicy {
     }
 
     public boolean requiresProfileCompletion(User user) {
-        return !isSystemAdmin(user) && user.hasRole(Role.RoleName.CUSTOMER);
+        return !isSystemAdmin(user);
     }
 }

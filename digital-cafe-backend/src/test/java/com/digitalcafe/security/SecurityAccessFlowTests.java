@@ -2,6 +2,7 @@ package com.digitalcafe.security;
 
 import com.digitalcafe.entity.Role;
 import com.digitalcafe.entity.User;
+import com.digitalcafe.dto.response.AdminDashboardStats;
 import com.digitalcafe.repository.UserRepository;
 import com.digitalcafe.service.AdminDashboardService;
 import com.digitalcafe.service.OrderService;
@@ -94,5 +95,50 @@ class SecurityAccessFlowTests {
 
         mockMvc.perform(get("/api/admin/dashboard/stats"))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(username = "owner-incomplete@test.com", roles = "CAFE_OWNER")
+    void shouldBlockOwnerWhenProfileIncomplete() throws Exception {
+        User owner = User.builder()
+                .id(103L)
+                .email("owner-incomplete@test.com")
+                .isEmailVerified(true)
+                .isProfileComplete(false)
+                .roles(Set.of(Role.builder().name(Role.RoleName.CAFE_OWNER).build()))
+                .build();
+
+        when(userRepository.findByEmail("owner-incomplete@test.com")).thenReturn(Optional.of(owner));
+
+        mockMvc.perform(get("/api/orders/cafe/1"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.error").value("PROFILE_INCOMPLETE"));
+    }
+
+    @Test
+    @WithMockUser(username = "chef-unverified@test.com", roles = "CHEF")
+    void shouldBlockChefWhenEmailNotVerified() throws Exception {
+        User chef = User.builder()
+                .id(104L)
+                .email("chef-unverified@test.com")
+                .isEmailVerified(false)
+                .isProfileComplete(true)
+                .roles(Set.of(Role.builder().name(Role.RoleName.CHEF).build()))
+                .build();
+
+        when(userRepository.findByEmail("chef-unverified@test.com")).thenReturn(Optional.of(chef));
+
+        mockMvc.perform(get("/api/orders/cafe/1"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.error").value("EMAIL_NOT_VERIFIED"));
+    }
+
+    @Test
+    @WithMockUser(username = "admin@test.com", roles = "ADMIN")
+    void shouldAllowAdminEvenWhenEmailOrProfileFlagsAreFalse() throws Exception {
+        when(adminDashboardService.getDashboardStats()).thenReturn(AdminDashboardStats.builder().build());
+
+        mockMvc.perform(get("/api/admin/dashboard/stats"))
+                .andExpect(status().isOk());
     }
 }

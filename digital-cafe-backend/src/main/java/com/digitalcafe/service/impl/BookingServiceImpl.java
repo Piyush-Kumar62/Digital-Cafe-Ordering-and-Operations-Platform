@@ -225,6 +225,8 @@ public class BookingServiceImpl implements BookingService {
         if (status == Booking.BookingStatus.CANCELLED) {
             booking.setCancelledAt(LocalDateTime.now());
             emailService.sendBookingCancelledEmail(booking.getCustomer().getEmail(), buildBookingDetails(booking));
+        } else {
+            emailService.sendBookingConfirmation(booking.getCustomer().getEmail(), buildBookingDetails(booking));
         }
         booking = bookingRepository.save(booking);
         log.info("Booking status updated: bookingId={}, bookingNumber={}, newStatus={}",
@@ -337,8 +339,9 @@ public class BookingServiceImpl implements BookingService {
         String tableInfo = booking.getTable() != null ? booking.getTable().getTableNumber() : "-";
         String cafeName = booking.getCafe() != null ? booking.getCafe().getName() : "-";
         return String.format(
-                "Booking Number: %s\nCafe: %s\nTable: %s\nDate: %s\nTime: %s - %s\nGuests: %d",
+            "Booking Number: %s\nStatus: %s\nCafe: %s\nTable: %s\nDate: %s\nTime: %s - %s\nGuests: %d",
                 booking.getBookingNumber(),
+            booking.getStatus(),
                 cafeName,
                 tableInfo,
                 booking.getBookingDate(),

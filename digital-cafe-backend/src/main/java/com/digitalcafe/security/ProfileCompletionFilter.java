@@ -25,9 +25,9 @@ import java.util.Set;
  *
  * Design: enforcing these checks in a single filter (rather than in every controller)
  * eliminates code duplication and ensures no endpoint can be accidentally reached
- * by an unverified or incomplete customer profile.
+ * by an unverified or incomplete non-admin profile.
  *
- * Only applies to CUSTOMER role. Staff and admins bypass this check.
+ * Applies to all authenticated non-admin roles.
  * Paths listed in WHITELIST are always permitted regardless of profile state.
  */
 @Slf4j
@@ -62,7 +62,7 @@ public class ProfileCompletionFilter extends OncePerRequestFilter {
         }
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated() || !isCustomer(auth)) {
+        if (auth == null || !auth.isAuthenticated() || isSystemAdmin(auth)) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -76,14 +76,14 @@ public class ProfileCompletionFilter extends OncePerRequestFilter {
         }
 
         if (!Boolean.TRUE.equals(user.getIsEmailVerified())) {
-            log.warn("Blocked unverified customer: email={}, uri={}", email, request.getRequestURI());
+            log.warn("Blocked unverified non-admin user: email={}, uri={}", email, request.getRequestURI());
             writeError(response, HttpStatus.FORBIDDEN, "EMAIL_NOT_VERIFIED",
                     "Please verify your email before accessing this resource.");
             return;
         }
 
         if (!Boolean.TRUE.equals(user.getIsProfileComplete())) {
-            log.warn("Blocked incomplete-profile customer: email={}, uri={}", email, request.getRequestURI());
+            log.warn("Blocked incomplete-profile non-admin user: email={}, uri={}", email, request.getRequestURI());
             writeError(response, HttpStatus.FORBIDDEN, "PROFILE_INCOMPLETE",
                     "Please complete your profile before accessing this resource.");
             return;
@@ -96,9 +96,9 @@ public class ProfileCompletionFilter extends OncePerRequestFilter {
         return WHITELIST_PREFIXES.stream().anyMatch(uri::startsWith);
     }
 
-    private boolean isCustomer(Authentication auth) {
+    private boolean isSystemAdmin(Authentication auth) {
         return auth.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_CUSTOMER"));
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
     }
 
     private void writeError(HttpServletResponse response, HttpStatus status,

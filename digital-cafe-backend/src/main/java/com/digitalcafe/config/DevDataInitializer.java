@@ -17,8 +17,10 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -115,14 +117,37 @@ public class DevDataInitializer implements CommandLineRunner {
 
     // ── Menu image pool (rotated by cafe+item index for visual variety) ──────
     private static final String[] MENU_IMAGE_POOL = {
-        "appetizer.jpg", "beverage.jpg", "biryani.jpg", "breakfast.jpg",
-        "brownie.jpg", "burger.jpg", "cake.jpg", "coffee.jpg",
-        "dessert.jpg", "fries.jpg", "hotdog.jpg", "ice-cream.jpg",
-        "juice.jpg", "main-course.jpg", "milkshake-lg.jpg", "milkshake.jpg",
-        "noodles.jpg", "other.jpg", "pancake.jpg", "pasta.jpg",
-        "pizza.jpg", "salad.jpg", "sandwich.jpg", "smoothie.jpg",
-        "snacks.jpg", "soup.jpg", "tea.jpg", "waffle.jpg"
+        "appetizer.jpg", "beverage.jpg", "burger.jpg", "cake.jpg",
+        "coffee.jpg", "dessert.jpg", "fries.jpg", "ice-cream.jpg",
+        "juice.jpg", "other.jpg", "pasta.jpg", "pizza.jpg",
+        "salad.jpg", "sandwich.jpg", "smoothie.jpg", "snacks.jpg",
+        "tea.jpg"
     };
+
+    private static final Set<String> VALID_MENU_IMAGE_FILES = Set.of(
+        "appetizer.jpg", "beverage.jpg", "burger.jpg", "cake.jpg",
+        "coffee.jpg", "dessert.jpg", "fries.jpg", "ice-cream.jpg",
+        "juice.jpg", "other.jpg", "pasta.jpg", "pizza.jpg",
+        "salad.jpg", "sandwich.jpg", "smoothie.jpg", "snacks.jpg",
+        "tea.jpg"
+    );
+
+    private static final Map<MenuItem.Category, String> CATEGORY_IMAGE_MAP = Map.ofEntries(
+        Map.entry(MenuItem.Category.COFFEE, "coffee.jpg"),
+        Map.entry(MenuItem.Category.TEA, "tea.jpg"),
+        Map.entry(MenuItem.Category.BEVERAGE, "beverage.jpg"),
+        Map.entry(MenuItem.Category.JUICE, "juice.jpg"),
+        Map.entry(MenuItem.Category.SMOOTHIE, "smoothie.jpg"),
+        Map.entry(MenuItem.Category.BREAKFAST, "breakfast.jpg"),
+        Map.entry(MenuItem.Category.SANDWICH, "sandwich.jpg"),
+        Map.entry(MenuItem.Category.BURGER, "burger.jpg"),
+        Map.entry(MenuItem.Category.PASTA, "pasta.jpg"),
+        Map.entry(MenuItem.Category.PIZZA, "pizza.jpg"),
+        Map.entry(MenuItem.Category.SALAD, "salad.jpg"),
+        Map.entry(MenuItem.Category.SNACKS, "snacks.jpg"),
+        Map.entry(MenuItem.Category.DESSERT, "dessert.jpg"),
+        Map.entry(MenuItem.Category.MAIN_COURSE, "other.jpg")
+    );
 
     // ============================================================
     //  Entry point
@@ -556,15 +581,21 @@ public class DevDataInitializer implements CommandLineRunner {
     private void seedMenuItems(Cafe cafe, int cafeIndex) {
         List<MenuSeed> defs = getMenuItemsForCafe(cafeIndex);
         List<MenuItem> batch = new ArrayList<>(defs.size());
+        Set<String> seenNames = new HashSet<>();
         for (int itemIndex = 0; itemIndex < defs.size(); itemIndex++) {
             MenuSeed m = defs.get(itemIndex);
+            String dedupeKey = m.name().trim().toLowerCase(Locale.ROOT);
+            if (!seenNames.add(dedupeKey)) {
+                log.warn("[DevSeed] Duplicate menu item skipped for cafe={} name={}", cafe.getName(), m.name());
+                continue;
+            }
             MenuItem item = new MenuItem();
             item.setCafe(cafe);
             item.setName(m.name());
             item.setDescription(m.description());
             item.setPrice(BigDecimal.valueOf(m.price()));
             item.setCategory(m.category());
-            item.setImageUrl(ASSETS_MENU + resolveMenuImage(cafeIndex, itemIndex, m.imageFile()));
+            item.setImageUrl(ASSETS_MENU + resolveMenuImage(cafeIndex, itemIndex, m.category(), m.imageFile()));
             item.setIsAvailable(true);
             item.setIsDeleted(false);
             item.setIsVegetarian(m.isVeg());
@@ -575,9 +606,17 @@ public class DevDataInitializer implements CommandLineRunner {
         log.info("[DevSeed] {} menu items seeded for: {}", batch.size(), cafe.getName());
     }
 
-    private String resolveMenuImage(int cafeIndex, int itemIndex, String fallbackImage) {
+    private String resolveMenuImage(int cafeIndex, int itemIndex, MenuItem.Category category, String fallbackImage) {
+        String normalizedFallback = fallbackImage == null ? "" : fallbackImage.trim().toLowerCase(Locale.ROOT);
+        if (VALID_MENU_IMAGE_FILES.contains(normalizedFallback)) {
+            return normalizedFallback;
+        }
+        String mapped = CATEGORY_IMAGE_MAP.get(category);
+        if (mapped != null) {
+            return mapped;
+        }
         if (MENU_IMAGE_POOL.length == 0) {
-            return fallbackImage;
+            return "other.jpg";
         }
         int idx = Math.floorMod(cafeIndex * 7 + itemIndex * 3, MENU_IMAGE_POOL.length);
         return MENU_IMAGE_POOL[idx];
@@ -1283,8 +1322,43 @@ public class DevDataInitializer implements CommandLineRunner {
             }
         }
 
-        log.info("[DevSeed] Metadata repair: cafesUpdated={}, bookingsUpdated={}, ordersUpdated={}, paymentsUpdated={}",
-                cafesUpdated, bookingsUpdated, ordersUpdated, paymentsUpdated);
+        List<MenuItem> menuItems = menuItemRepository.findAll();
+        int menuItemsUpdated = 0;
+        int duplicateMenuItemsMarked = 0;
+        Set<String> seenMenuKeys = new HashSet<>();
+        menuItems.sort(Comparator.comparing(MenuItem::getId));
+        for (MenuItem item : menuItems) {
+            boolean changed = false;
+
+            Long cafeId = item.getCafe() != null ? item.getCafe().getId() : -1L;
+            String name = item.getName() != null ? item.getName().trim().toLowerCase(Locale.ROOT) : "";
+            String dedupeKey = cafeId + "::" + name;
+            if (!name.isBlank() && !seenMenuKeys.add(dedupeKey)) {
+                item.setIsDeleted(true);
+                item.setIsAvailable(false);
+                changed = true;
+                duplicateMenuItemsMarked++;
+            }
+
+            String imageUrl = item.getImageUrl();
+            String filename = imageUrl == null || imageUrl.isBlank()
+                    ? ""
+                    : imageUrl.substring(imageUrl.lastIndexOf('/') + 1).toLowerCase(Locale.ROOT);
+
+            String expected = CATEGORY_IMAGE_MAP.getOrDefault(item.getCategory(), "other.jpg");
+            if (!VALID_MENU_IMAGE_FILES.contains(filename) || !filename.equals(expected)) {
+                item.setImageUrl(ASSETS_MENU + expected);
+                changed = true;
+            }
+
+            if (changed) {
+                menuItemRepository.save(item);
+                menuItemsUpdated++;
+            }
+        }
+
+        log.info("[DevSeed] Metadata repair complete | cafesUpdated={} bookingsUpdated={} ordersUpdated={} paymentsUpdated={} menuItemsUpdated={} duplicateMenuItemsMarked={}",
+                cafesUpdated, bookingsUpdated, ordersUpdated, paymentsUpdated, menuItemsUpdated, duplicateMenuItemsMarked);
     }
 
     /** Derives booking status from the order status for consistent FK state. */

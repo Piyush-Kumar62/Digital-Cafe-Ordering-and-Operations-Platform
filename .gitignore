@@ -17,6 +17,7 @@ ehthumbs.db
 *.swo
 *~
 .properties
+
 # Environment/secrets
 .env
 .env.local
@@ -71,12 +72,10 @@ nul
 test_apis.sh
 test_dashboard.sh
 test_full_flow.sh
-test_full_flow.sh
 test_output.txt
 
 # Sensitive / environment-specific config (local only)
 digital-cafe-backend/.env
-.env
 
 # Dev application config — contains fallback DB password and JWT secret
 digital-cafe-backend/src/main/resources/application.properties
@@ -89,8 +88,15 @@ digital-cafe-backend/src/main/resources/application.properties.example
 /.angular/cache
 digital-cafe-frontend/dist/
 digital-cafe-frontend/node_modules/
+digital-cafe-frontend/.angular/
+digital-cafe-frontend/coverage/
+digital-cafe-frontend/cypress/screenshots/
+digital-cafe-frontend/cypress/videos/
+digital-cafe-backend/target/
+backend-e2e.log
+frontend-e2e.log
+*.pid
 Explain.md
-PROJECT_AGENT_INSTRUCTIONS.md
 JPA_ENTITY_STRUCTURE_BLUEPRINT.md
 file-storage-and-cafe-setup.md
 PRODUCTION_DATABASE_SCHEMA_ANALYSIS.md
@@ -101,7 +107,6 @@ digital-cafe-frontend/nginx.conf
 docs/assets
 docs/images
 docs/diagrams
-docs/sql
 docs/**/*.md
 docs/file-storage-and-cafe-setup.md
 docs/PRODUCTION_DATABASE_SCHEMA_ANALYSIS.md

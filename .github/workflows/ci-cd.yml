@@ -5,6 +5,10 @@ on:
     branches: ["**"]
   pull_request:
 
+concurrency:
+  group: ci-cd-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   lint:
     runs-on: ubuntu-latest
@@ -32,6 +36,10 @@ jobs:
       - name: Frontend install
         working-directory: digital-cafe-frontend
         run: npm ci
+
+      - name: Verify Cypress binary
+        working-directory: digital-cafe-frontend
+        run: npx cypress verify
 
       - name: Frontend build check
         working-directory: digital-cafe-frontend
@@ -129,7 +137,7 @@ jobs:
       - name: Start backend (e2e profile)
         run: |
           cd digital-cafe-backend
-          mvn -B -DskipTests spring-boot:run -Dspring-boot.run.profiles=e2e > ../backend-e2e.log 2>&1 &
+          mvn -B -DskipTests spring-boot:run -Dspring-boot.run.profiles=e2e -Dspring-boot.run.useTestClasspath=true > ../backend-e2e.log 2>&1 &
           echo $! > ../backend.pid
 
       - name: Wait for backend
@@ -164,7 +172,7 @@ jobs:
 
       - name: Run Cypress API role workflows
         working-directory: digital-cafe-frontend
-        run: npm run e2e:api
+        run: xvfb-run -a npm run e2e:api
         env:
           CHROME_BIN: ${{ steps.setup-chrome-e2e.outputs.chrome-path }}
           CYPRESS_apiUrl: http://localhost:8080/api
@@ -239,6 +247,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build-images
     if: github.ref == 'refs/heads/main'
+    timeout-minutes: 20
     steps:
       - name: Deploy over SSH
         uses: appleboy/ssh-action@v1.2.0
@@ -250,13 +259,18 @@ jobs:
             cd /opt/digital-cafe
             chmod +x scripts/deploy.sh scripts/render-env-from-ssm.sh || true
             export SSM_PREFIX=${{ secrets.SSM_PARAMETER_PREFIX }}
+            export BACKEND_HEALTH_URL=${{ secrets.DEPLOY_BACKEND_HEALTH_URL }}
+            export FRONTEND_HEALTH_URL=${{ secrets.DEPLOY_FRONTEND_HEALTH_URL }}
             ./scripts/deploy.sh
             docker image prune -f
 
       - name: Post-deploy API health check
+        env:
+          DEPLOY_PUBLIC_HEALTHCHECK_URL: ${{ secrets.DEPLOY_PUBLIC_HEALTHCHECK_URL }}
         run: |
+          HEALTH_URL="${DEPLOY_PUBLIC_HEALTHCHECK_URL:-https://api.cafehub.tech/api/public/health}"
           for i in {1..30}; do
-            if curl -fsS https://api.cafehub.tech/api/public/health > /dev/null; then
+            if curl -fsS "$HEALTH_URL" > /dev/null; then
               echo "Deployment health check passed"
               exit 0
             fi

@@ -127,12 +127,50 @@
                   type="text"
                   class="form-control"
                   id="username"
-                  [(ngModel)]="username"
-                  name="username"
+                  [formControl]="usernameControl"
+                  (blur)="usernameControl.markAsTouched()"
                   placeholder="Enter username"
                   required
                 />
               </div>
+              <small
+                *ngIf="
+                  usernameControl.touched &&
+                  (usernameControl.hasError('required') ||
+                    usernameControl.hasError('minlength') ||
+                    usernameControl.hasError('maxlength') ||
+                    usernameControl.hasError('pattern'))
+                "
+                class="text-red-300 text-xs mt-1 block"
+              >
+                Username must be 3-30 chars, start with a letter, and only use
+                letters, numbers, dots, or underscores.
+              </small>
+              <small
+                *ngIf="usernameStatus === 'checking'"
+                class="text-slate-300 text-xs mt-1 block"
+              >
+                <span class="register-username-check">
+                  <span class="register-spinner" aria-hidden="true"></span>
+                  Checking availability...
+                </span>
+              </small>
+              <small
+                *ngIf="usernameControl.hasError('taken')"
+                class="text-red-300 text-xs mt-1 block"
+              >
+                Username already taken
+              </small>
+              <small
+                *ngIf="
+                  usernameStatus === 'available' &&
+                  !usernameControl.invalid &&
+                  !usernameControl.hasError('taken')
+                "
+                class="text-emerald-300 text-xs mt-1 block"
+              >
+                Username available
+              </small>
             </div>
             <div>
               <label for="govtIdType" class="form-label"
@@ -146,6 +184,7 @@
                   class="form-control"
                   id="govtIdType"
                   [(ngModel)]="govtIdType"
+                  (ngModelChange)="onGovtIdTypeChange()"
                   name="govtIdType"
                   required
                 >
@@ -157,6 +196,26 @@
               </div>
             </div>
             <div>
+              <label for="govtIdNumber" class="form-label"
+                >Government ID Number *</label
+              >
+              <div class="input-group">
+                <span class="input-group-text"
+                  ><i class="bi bi-hash"></i
+                ></span>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="govtIdNumber"
+                  [(ngModel)]="govtIdNumber"
+                  name="govtIdNumber"
+                  [attr.maxlength]="govtIdNumberMaxLength"
+                  [placeholder]="govtIdNumberPlaceholder"
+                  required
+                />
+              </div>
+            </div>
+            <div class="register-upload-field">
               <label for="govtIdProof" class="form-label">Upload Proof *</label>
               <div class="input-group">
                 <span class="input-group-text"
@@ -168,10 +227,15 @@
                   id="govtIdProof"
                   (change)="onFileSelect($event)"
                   name="govtIdProof"
-                  accept=".doc,.docx,.jpg,.jpeg,.png,.pdf"
+                  accept=".jpg,.jpeg,.png,.pdf"
                   required
                 />
               </div>
+              <small class="text-slate-400 text-xs register-upload-hint">
+                <span>Accepted: JPG, PNG, PDF</span>
+                <span class="register-upload-dot">·</span>
+                <span class="register-upload-max">Max size: 2MB</span>
+              </small>
             </div>
           </div>
         </div>
@@ -474,7 +538,7 @@
                   />
                 </div>
                 <div>
-                  <label class="form-label">% *</label
+                  <label class="form-label">Percentage/CGPA *</label
                   ><input
                     type="number"
                     class="form-control"
@@ -487,6 +551,17 @@
                     required
                   />
                 </div>
+              </div>
+              <div class="mt-3">
+                <label class="register-inline-check">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    [(ngModel)]="academic.currentlyStudying"
+                    [name]="'currentlyStudying_' + i"
+                  />
+                  <span>Currently studying here</span>
+                </label>
               </div>
             </div>
           </div>
@@ -555,7 +630,7 @@
                 </div>
                 <div>
                   <label class="form-label">End Date</label>
-                  <div class="flex items-center space-x-2">
+                  <div class="register-date-with-toggle">
                     <input
                       type="date"
                       class="form-control"
@@ -563,7 +638,7 @@
                       [name]="'endDate_' + i"
                       [disabled]="work.currentlyWorking"
                     />
-                    <div class="form-check register-present-toggle">
+                    <label class="register-inline-check">
                       <input
                         class="form-check-input"
                         type="checkbox"
@@ -572,12 +647,8 @@
                         [name]="'currentlyWorking_' + i"
                         (change)="onCurrentlyWorkingChange(i)"
                       />
-                      <label
-                        class="form-check-label"
-                        [for]="'currentlyWorking_' + i"
-                        >Present</label
-                      >
-                    </div>
+                      <span>Currently working here</span>
+                    </label>
                   </div>
                 </div>
                 <div>
@@ -592,8 +663,7 @@
                       step="0.1"
                     />
                     <select
-                      class="form-select"
-                      style="max-width: 80px"
+                      class="form-select ctc-currency-select"
                       [(ngModel)]="work.ctc!.currency"
                       [name]="'ctcCurrency_' + i"
                     >

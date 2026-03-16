@@ -141,6 +141,16 @@ export class AuthService {
       .pipe(catchError(this.handleError));
   }
 
+  checkUsernameAvailability(
+    username: string,
+  ): Observable<{ available: boolean }> {
+    return this.http
+      .get<{ available: boolean }>(`${this.apiUrl}/username-available`, {
+        params: { username },
+      })
+      .pipe(catchError(this.handleError));
+  }
+
   forgotPassword(email: string): Observable<MessageResponse> {
     return this.http
       .post<MessageResponse>(`${this.apiUrl}/forgot-password`, null, {

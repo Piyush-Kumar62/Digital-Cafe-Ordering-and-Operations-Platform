@@ -1,10 +1,11 @@
 import { Component, OnInit } from "@angular/core";
 import { CommonModule } from "@angular/common";
-import { FormsModule } from "@angular/forms";
+import { FormsModule, ReactiveFormsModule, FormControl, Validators } from "@angular/forms";
 import { ActivatedRoute, Router, RouterModule } from "@angular/router";
 import { AuthService } from "../../../core/auth/auth.service";
 import { AlertService } from "@core/services/alert.service";
 import { NavbarComponent } from "../../../shared/components/navbar/navbar.component";
+import { debounceTime, distinctUntilChanged, switchMap, of, catchError } from "rxjs";
 import {
   PersonalDetails,
   AddressInfo,
@@ -18,11 +19,13 @@ import {
 @Component({
   selector: "app-register",
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, NavbarComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule, NavbarComponent],
   templateUrl: "./register.component.html",
   styleUrl: "./register.component.scss",
 })
 export class RegisterComponent implements OnInit {
+  private static readonly USERNAME_REGEX =
+    /^[A-Za-z][A-Za-z0-9._]{2,29}$/;
   readonly customerPanelImage = "assets/coffee/coffee-table-pexels.jpg";
   readonly cafeOwnerPanelImage = "assets/cafe/cafe-ambience.jpg";
 
@@ -36,8 +39,19 @@ export class RegisterComponent implements OnInit {
   username = "";
   role = "CUSTOMER";
   govtIdType = "";
+  govtIdNumber = "";
   govtIdProof: File | null = null;
   govtIdTypes = ["Aadhaar", "PAN Card", "Driving License", "Passport"];
+  usernameControl = new FormControl("", {
+    nonNullable: true,
+    validators: [
+      Validators.required,
+      Validators.minLength(3),
+      Validators.maxLength(30),
+      Validators.pattern(RegisterComponent.USERNAME_REGEX),
+    ],
+  });
+  usernameStatus: "idle" | "checking" | "available" | "taken" = "idle";
 
   // Step 2: Personal Details
   personalDetails: PersonalDetails = {
@@ -67,6 +81,7 @@ export class RegisterComponent implements OnInit {
       passingYear: new Date().getFullYear(),
       grade: "",
       gradeInPercentage: 0,
+      currentlyStudying: false,
     },
   ];
 
@@ -136,6 +151,43 @@ export class RegisterComponent implements OnInit {
   ngOnInit() {
     this.preloadImage(this.customerPanelImage);
     this.preloadImage(this.cafeOwnerPanelImage);
+    this.usernameControl.valueChanges
+      .pipe(
+        debounceTime(400),
+        distinctUntilChanged(),
+        switchMap((value) => {
+          this.username = value.trim();
+          if (!this.username || this.usernameControl.invalid) {
+            this.usernameStatus = "idle";
+            if (this.usernameControl.hasError("taken")) {
+              const { taken, ...rest } = this.usernameControl.errors || {};
+              this.usernameControl.setErrors(
+                Object.keys(rest).length ? rest : null,
+              );
+            }
+            return of(null);
+          }
+          this.usernameStatus = "checking";
+          return this.authService
+            .checkUsernameAvailability(this.username)
+            .pipe(catchError(() => of(null)));
+        }),
+      )
+      .subscribe((result) => {
+        if (!result) return;
+        this.usernameStatus = result.available ? "available" : "taken";
+        const currentErrors = this.usernameControl.errors || {};
+        if (result.available) {
+          if (currentErrors["taken"]) {
+            const { taken, ...rest } = currentErrors;
+            this.usernameControl.setErrors(
+              Object.keys(rest).length ? rest : null,
+            );
+          }
+        } else {
+          this.usernameControl.setErrors({ ...currentErrors, taken: true });
+        }
+      });
     this.route.data.subscribe((data) => {
       const role = String(data?.["role"] || "").toUpperCase();
       if (role !== "CUSTOMER" && role !== "CAFE_OWNER") {
@@ -386,8 +438,12 @@ export class RegisterComponent implements OnInit {
       const twoMb = 2 * 1024 * 1024;
       if (file.size > twoMb) {
         this.errorMessage = "Government ID file must be 2MB or less";
+        this.govtIdProof = null;
         element.value = "";
         return;
+      }
+      if (this.errorMessage === "Government ID file must be 2MB or less") {
+        this.errorMessage = "";
       }
       this.govtIdProof = file;
     }
@@ -436,8 +492,14 @@ export class RegisterComponent implements OnInit {
   }
 
   validateBasicInfo(): boolean {
-    if (!this.username.trim()) {
+    this.username = this.usernameControl.value.trim();
+    if (this.usernameControl.invalid || !this.username.trim()) {
+      this.usernameControl.markAsTouched();
       this.errorMessage = "Username is required";
+      return false;
+    }
+    if (this.usernameControl.hasError("taken")) {
+      this.errorMessage = "Username already taken";
       return false;
     }
     if (this.role !== "CUSTOMER" && this.role !== "CAFE_OWNER") {
@@ -447,6 +509,10 @@ export class RegisterComponent implements OnInit {
     }
     if (!this.govtIdType) {
       this.errorMessage = "Please select a Government ID type";
+      return false;
+    }
+    if (!this.govtIdNumber.trim()) {
+      this.errorMessage = "Please enter your Government ID number";
       return false;
     }
     if (!this.govtIdProof) {
@@ -568,6 +634,7 @@ export class RegisterComponent implements OnInit {
       passingYear: new Date().getFullYear(),
       grade: "",
       gradeInPercentage: 0,
+      currentlyStudying: false,
     });
   }
 
@@ -626,6 +693,7 @@ export class RegisterComponent implements OnInit {
       username: this.username.trim(),
       role: this.role,
       govtIdType: this.govtIdType,
+      govtIdNumber: this.govtIdNumber.trim(),
       personalDetails: this.personalDetails,
       address: this.address,
       academicInfoList: this.academicInfoList,
@@ -691,5 +759,37 @@ export class RegisterComponent implements OnInit {
 
   onPanelImageError() {
     this.isPanelImageLoaded = true;
+  }
+
+  onGovtIdTypeChange() {
+    if (this.govtIdNumber.trim()) {
+      this.govtIdNumber = this.govtIdNumber.trim();
+    }
+  }
+
+  get govtIdNumberPlaceholder(): string {
+    switch ((this.govtIdType || "").toLowerCase()) {
+      case "aadhaar":
+        return "Enter Aadhaar Number";
+      case "pan card":
+        return "Enter PAN Number";
+      case "passport":
+        return "Enter Passport Number";
+      case "driving license":
+        return "Enter Driving License Number";
+      default:
+        return "Enter Government ID Number";
+    }
+  }
+
+  get govtIdNumberMaxLength(): number | null {
+    switch ((this.govtIdType || "").toLowerCase()) {
+      case "aadhaar":
+        return 12;
+      case "pan card":
+        return 10;
+      default:
+        return null;
+    }
   }
 }

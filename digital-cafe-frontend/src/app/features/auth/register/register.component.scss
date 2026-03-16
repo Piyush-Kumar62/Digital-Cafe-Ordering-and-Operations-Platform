@@ -627,16 +627,82 @@ input[type="date"]:required:invalid::-webkit-datetime-edit {
   }
 }
 
-.register-present-toggle {
+.register-upload-field .input-group {
+  align-items: stretch;
+}
+
+.register-upload-field input[type="file"].form-control {
+  width: 100%;
+  padding-right: 0.75rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.register-upload-hint {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.35rem;
+  line-height: 1.35;
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+
+.register-upload-hint .register-upload-dot {
+  opacity: 0.7;
+}
+
+.register-upload-hint .register-upload-max {
+  white-space: nowrap;
+}
+
+.register-username-check {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
+}
+
+.register-spinner {
+  width: 0.65rem;
+  height: 0.65rem;
+  border: 2px solid rgba(203, 213, 225, 0.35);
+  border-top-color: rgba(148, 163, 184, 0.95);
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+
+.ctc-currency-select {
+  max-width: 110px;
+  min-width: 96px;
+  text-align: center;
+  text-align-last: center;
+  padding-right: 2.25rem;
+}
+
+.register-date-with-toggle {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.register-inline-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
   padding-left: 0;
   margin: 0;
-  line-height: 1;
+  line-height: 1.2;
   color: #dbeafe;
   font-weight: 600;
+  font-size: 0.85rem;
   white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .register-inline-check {
+    white-space: normal;
+  }
 }
 
 .register-panel-image {

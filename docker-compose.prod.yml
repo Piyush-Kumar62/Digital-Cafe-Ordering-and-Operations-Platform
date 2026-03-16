@@ -7,7 +7,7 @@ services:
       - ./digital-cafe-backend/.env
     environment:
       PAYMENT_GATEWAY: ${PAYMENT_GATEWAY:-TEST}
-      MAIL_ENABLED: ${MAIL_ENABLED:-false}
+      MAIL_ENABLED: ${MAIL_ENABLED:-true}
     ports:
       - "8080:8080"
     healthcheck:

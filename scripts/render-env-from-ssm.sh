@@ -19,6 +19,21 @@ get_param() {
     --output text
 }
 
+get_param_optional() {
+  local name="$1"
+  local default_value="$2"
+  if value=$(aws ssm get-parameter \
+    --name "$name" \
+    --with-decryption \
+    --region "$AWS_REGION" \
+    --query 'Parameter.Value' \
+    --output text 2>/dev/null); then
+    echo "$value"
+  else
+    echo "$default_value"
+  fi
+}
+
 echo "Rendering backend env file from SSM prefix: $SSM_PREFIX"
 
 DB_URL="$(get_param "$SSM_PREFIX/DB_URL")"
@@ -42,7 +57,8 @@ RAZORPAY_WEBHOOK_SECRET=$(get_param "$SSM_PREFIX/RAZORPAY_WEBHOOK_SECRET")
 MAIL_USERNAME=$(get_param "$SSM_PREFIX/MAIL_USERNAME")
 MAIL_PASSWORD=$(get_param "$SSM_PREFIX/MAIL_PASSWORD")
 MAIL_FROM_EMAIL=$(get_param "$SSM_PREFIX/MAIL_FROM_EMAIL")
-MAIL_FROM_NAME=$(get_param "$SSM_PREFIX/MAIL_FROM_NAME")
+EMAIL_FROM_NAME=$(get_param_optional "$SSM_PREFIX/MAIL_FROM_NAME" "Digital Cafe Team")
+MAIL_ENABLED=$(get_param_optional "$SSM_PREFIX/MAIL_ENABLED" "true")
 APP_STORAGE_PROVIDER=$(get_param "$SSM_PREFIX/APP_STORAGE_PROVIDER")
 S3_BUCKET=$(get_param "$SSM_PREFIX/S3_BUCKET")
 AWS_REGION=$(get_param "$SSM_PREFIX/AWS_REGION")

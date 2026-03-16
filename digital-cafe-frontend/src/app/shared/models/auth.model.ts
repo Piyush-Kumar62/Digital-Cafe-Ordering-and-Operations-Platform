@@ -94,6 +94,7 @@ export interface AcademicInfo {
   passingYear: number;
   grade: string;
   gradeInPercentage: number;
+  currentlyStudying?: boolean;
 }
 
 export interface CtcInfo {
@@ -115,6 +116,7 @@ export interface RegisterRequest {
   username: string;
   role: string;
   govtIdType?: string;
+  govtIdNumber?: string;
   personalDetails: PersonalDetails;
   address: AddressInfo;
   academicInfoList: AcademicInfo[];

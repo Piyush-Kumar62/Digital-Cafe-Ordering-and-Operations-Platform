@@ -26,6 +26,7 @@ public class ProfileResponse {
     private String phoneNumber;
     private String profilePictureUrl;
     private String govtIdType;
+    private String govtIdNumber;
     private String govtIdFileName;
     private String govtIdContentType;
     private String govtIdDocumentPath;

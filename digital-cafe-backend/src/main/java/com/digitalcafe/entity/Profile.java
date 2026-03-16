@@ -51,6 +51,9 @@ public class Profile extends BaseEntity {
     @Column(name = "govt_id_type", length = 50)
     private String govtIdType;
 
+    @Column(name = "govt_id_number", length = 100)
+    private String govtIdNumber;
+
     @Column(name = "govt_id_file_name", length = 255)
     private String govtIdFileName;
 

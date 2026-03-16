@@ -21,5 +21,6 @@ public interface AuthService {
     void resetPassword(String token, ResetPasswordRequest request);
     void changePassword(String username, String oldPassword, String newPassword);
     AuthResponse refreshToken(String refreshToken);
+    boolean isUsernameAvailable(String username);
 }
 

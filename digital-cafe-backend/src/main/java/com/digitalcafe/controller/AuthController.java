@@ -99,6 +99,12 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/username-available")
+    public ResponseEntity<Map<String, Object>> usernameAvailable(@RequestParam String username) {
+        boolean available = authService.isUsernameAvailable(username);
+        return ResponseEntity.ok(Map.of("available", available));
+    }
+
     @PostMapping("/logout")
     public ResponseEntity<Map<String, String>> logout() {
         SecurityContextHolder.clearContext();

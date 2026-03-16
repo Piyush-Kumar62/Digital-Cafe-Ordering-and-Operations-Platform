@@ -37,6 +37,13 @@ import org.springframework.web.multipart.MultipartFile;
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
+  private static final String USERNAME_REGEX = "^[A-Za-z][A-Za-z0-9._]{2,29}$";
+  private static final java.util.Set<String> RESERVED_USERNAMES = java.util.Set.of(
+      "admin", "administrator", "root", "system", "support", "help", "owner",
+      "staff", "chef", "waiter", "customer", "api", "auth", "login", "signup",
+      "register", "security", "null", "undefined"
+  );
+
   private final UserRepository userRepository;
   private final RoleRepository roleRepository;
   private final CafeRepository cafeRepository;
@@ -55,19 +62,23 @@ public class AuthServiceImpl implements AuthService {
   @Override
   @Transactional
   public AuthResponse register(SimpleRegisterRequest request) {
+    String normalizedUsername = normalizeUsername(request.getUsername());
+    validateUsernameOrThrow(normalizedUsername);
+    if (userRepository.existsByUsernameIgnoreCase(normalizedUsername))
+      throw new BadRequestException("Username already exists");
     if (userRepository.existsByEmail(request.getEmail()))
       throw new BadRequestException("Email already registered");
     Role customerRole = roleRepository.findByName(Role.RoleName.CUSTOMER)
         .orElseThrow(() -> new ResourceNotFoundException("Role", "name", "CUSTOMER"));
     String tempPassword = PasswordGenerator.generateTemporaryPassword();
     User user = new User();
-    user.setEmail(request.getEmail()); user.setUsername(request.getEmail());
+    user.setEmail(request.getEmail()); user.setUsername(normalizedUsername);
     user.setDisplayName(request.getUsername());
     user.setPassword(passwordEncoder.encode(tempPassword));
     user.setIsActive(true); user.setIsEmailVerified(false); user.setIsProfileComplete(false);
     user.setMustResetPassword(true); user.setIsTempPassword(true);
     user.getRoles().add(customerRole);
-    user = userRepository.save(user);
+    user = saveUserOrThrow(user);
     String verificationTokenStr = saveVerificationToken(user);
     emailService.sendVerificationEmail(user.getEmail(), verificationTokenStr, tempPassword);
     notifyAdmins("USER_REGISTERED", "New Customer Signup", "A new customer registered: " + user.getEmail(), "info", user.getId());
@@ -95,12 +106,11 @@ public class AuthServiceImpl implements AuthService {
     Role cafeOwnerRole = roleRepository.findByName(Role.RoleName.CAFE_OWNER)
         .orElseThrow(() -> new ResourceNotFoundException("Role", "name", "CAFE_OWNER"));
     String tempPassword = PasswordGenerator.generateTemporaryPassword();
-    User user = userRepository.save(buildOwnerUser(request, tempPassword, cafeOwnerRole));
+    User user = saveUserOrThrow(buildOwnerUser(request, tempPassword, cafeOwnerRole));
     String logoUrl = (logo != null && !logo.isEmpty()) ? fileStorageService.storeMenuItemImage(logo) : null;
     cafeRepository.save(buildCafe(request, user, logoUrl));
     String verificationTokenStr = saveVerificationToken(user);
     emailService.sendVerificationEmail(user.getEmail(), verificationTokenStr, tempPassword);
-    emailService.sendWelcomeEmail(user.getEmail(), user.getDisplayName(), tempPassword, "Café Owner", "/owner/dashboard");
     notifyAdmins("CAFE_OWNER_REGISTERED", "New Café Owner Registration",
         "Café owner registered: " + user.getEmail() + "  |  Café: " + request.getCafeName(), "info", user.getId());
     return AuthResponse.builder()
@@ -108,8 +118,10 @@ public class AuthServiceImpl implements AuthService {
         .email(user.getEmail()).build();
   }
   private RegisterResponse comprehensiveRegisterInternal(RegisterRequest request, MultipartFile govtIdProof) {
+    String normalizedUsername = normalizeUsername(request.getUsername());
+    validateUsernameOrThrow(normalizedUsername);
     if (userRepository.existsByEmail(request.getPersonalDetails().getEmail())
-        || userRepository.existsByUsername(request.getUsername()))
+        || userRepository.existsByUsernameIgnoreCase(normalizedUsername))
       throw new BadRequestException("Username or email already exists");
     Role.RoleName roleName;
     try {
@@ -122,7 +134,7 @@ public class AuthServiceImpl implements AuthService {
     Role role = roleRepository.findByName(roleName)
         .orElseThrow(() -> new ResourceNotFoundException("Role", "name", request.getRole()));
     String tempPassword = UUID.randomUUID().toString().replace("-", "").substring(0, 12) + "Aa1!";
-    User user = userRepository.save(buildUserForComprehensiveReg(request, role, tempPassword));
+    User user = saveUserOrThrow(buildUserForComprehensiveReg(request, role, tempPassword, normalizedUsername));
     Profile profile = buildProfile(request, user);
     profile.setAddress(buildAddress(request, profile));
     addAcademicInfo(request, profile);
@@ -366,9 +378,9 @@ public class AuthServiceImpl implements AuthService {
     return cafe;
   }
 
-  private User buildUserForComprehensiveReg(RegisterRequest request, Role role, String tempPassword) {
+  private User buildUserForComprehensiveReg(RegisterRequest request, Role role, String tempPassword, String normalizedUsername) {
     User user = new User();
-    user.setUsername(request.getUsername()); user.setEmail(request.getPersonalDetails().getEmail());
+    user.setUsername(normalizedUsername); user.setEmail(request.getPersonalDetails().getEmail());
     user.setFirstName(request.getPersonalDetails().getFirstName());
     user.setLastName(request.getPersonalDetails().getLastName());
     user.setDisplayName((request.getPersonalDetails().getFirstName() + " " + request.getPersonalDetails().getLastName()).trim());
@@ -389,9 +401,25 @@ public class AuthServiceImpl implements AuthService {
     profile.setPhoneNumber(request.getPersonalDetails().getPhone());
     profile.setGender(Profile.Gender.valueOf(request.getPersonalDetails().getGender()));
     profile.setGovtIdType(request.getGovtIdType());
+    profile.setGovtIdNumber(request.getGovtIdNumber());
     if (request.getPersonalDetails().getMaritalStatus() != null)
       profile.setMaritalStatus(Profile.MaritalStatus.valueOf(request.getPersonalDetails().getMaritalStatus()));
     return profile;
+  }
+
+  @Override
+  public boolean isUsernameAvailable(String username) {
+    String normalized = normalizeUsername(username);
+    if (normalized.isBlank()) {
+      return false;
+    }
+    if (!normalized.matches(USERNAME_REGEX)) {
+      return false;
+    }
+    if (RESERVED_USERNAMES.contains(normalized)) {
+      return false;
+    }
+    return !userRepository.existsByUsernameIgnoreCase(normalized);
   }
 
   private Address buildAddress(RegisterRequest request, Profile profile) {
@@ -442,15 +470,34 @@ public class AuthServiceImpl implements AuthService {
 
   private void sendComprehensiveRegistrationEmails(User user, String tempPassword) {
     String verificationTokenStr = saveVerificationToken(user);
-    PasswordResetToken passwordResetToken = new PasswordResetToken();
-    passwordResetToken.setToken(UUID.randomUUID().toString()); passwordResetToken.setUser(user);
-    passwordResetToken.setExpiresAt(LocalDateTime.now().plusHours(24));
-    passwordResetTokenRepository.save(passwordResetToken);
     emailService.sendVerificationEmail(user.getEmail(), verificationTokenStr, tempPassword);
-    emailService.sendWelcomeEmail(user.getEmail(), user.getUsername(), tempPassword, "Customer", "/cafes");
-    emailService.sendPasswordResetEmail(user.getEmail(), passwordResetToken.getToken());
     notifyAdmins("REGISTRATION_PENDING", "Registration Pending Approval",
         "New customer application pending: " + user.getEmail(), "warning", user.getId());
+  }
+
+  private String normalizeUsername(String username) {
+    return username == null ? "" : username.trim().toLowerCase();
+  }
+
+  private void validateUsernameOrThrow(String username) {
+    if (username.isBlank()) {
+      throw new BadRequestException("Username is required");
+    }
+    if (!username.matches(USERNAME_REGEX)) {
+      throw new BadRequestException(
+          "Username must start with a letter and contain only letters, numbers, dots, and underscores");
+    }
+    if (RESERVED_USERNAMES.contains(username)) {
+      throw new BadRequestException("Username is not allowed");
+    }
+  }
+
+  private User saveUserOrThrow(User user) {
+    try {
+      return userRepository.save(user);
+    } catch (org.springframework.dao.DataIntegrityViolationException ex) {
+      throw new BadRequestException("Username or email already exists");
+    }
   }
 
   private Long resolveCafeId(User user) {

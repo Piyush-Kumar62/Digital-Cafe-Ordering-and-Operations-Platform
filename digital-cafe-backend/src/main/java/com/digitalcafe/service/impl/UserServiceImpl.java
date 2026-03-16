@@ -60,7 +60,8 @@ public class UserServiceImpl implements UserService {
         if (roleName != Role.RoleName.CHEF && roleName != Role.RoleName.WAITER)
             throw new BadRequestException("Only CHEF or WAITER can be created");
 
-        if (userRepository.existsByEmail(request.getEmail()) || userRepository.existsByUsername(request.getUsername()))
+        if (userRepository.existsByEmail(request.getEmail())
+                || userRepository.existsByUsernameIgnoreCase(request.getUsername().trim()))
             throw new BadRequestException("Username or Email already exists");
 
         Cafe cafe = resolveAndValidateCafe(currentOwner, request.getCafeId());
@@ -213,8 +214,6 @@ public class UserServiceImpl implements UserService {
                 .map(r -> r.getName().name())
                 .orElse("USER");
         emailService.sendApprovalConfirmationEmail(user.getEmail(), displayName, role);
-        // Also send the "you're all set" email so the user knows they can now log in fully
-        emailService.sendComprehensiveRegistrationSuccess(user.getEmail(), displayName);
     }
 
     @Override
@@ -286,6 +285,7 @@ public class UserServiceImpl implements UserService {
         user.setPassword(passwordEncoder.encode(tempPassword));
         user.setCreatedByUser(owner); user.setCafe(cafe);
         user.setIsActive(true); user.setIsEmailVerified(true);
+        user.setIsProfileComplete(true); user.setProfileCompletionPercentage(100);
         user.setMustResetPassword(true); user.setIsTempPassword(true);
         user.setRegistrationStatus(User.RegistrationStatus.APPROVED);
         user.getRoles().add(role);

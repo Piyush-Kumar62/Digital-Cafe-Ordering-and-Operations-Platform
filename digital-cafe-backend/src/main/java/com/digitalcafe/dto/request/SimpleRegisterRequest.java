@@ -18,7 +18,11 @@ import lombok.NoArgsConstructor;
 public class SimpleRegisterRequest {
 
     @NotBlank(message = "Username is required")
-    @Size(min = 3, max = 50, message = "Username must be between 3 and 50 characters")
+    @Size(min = 3, max = 30, message = "Username must be between 3 and 30 characters")
+    @jakarta.validation.constraints.Pattern(
+            regexp = "^[A-Za-z][A-Za-z0-9._]{2,29}$",
+            message = "Username must start with a letter and contain only letters, numbers, dots, and underscores"
+    )
     private String username;
 
     @NotBlank(message = "Email is required")

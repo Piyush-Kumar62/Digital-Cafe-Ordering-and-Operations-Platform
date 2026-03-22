@@ -4,6 +4,8 @@ export interface Profile {
   phoneNumber?: string;
   dateOfBirth?: string;
   gender?: string;
+  govtIdType?: string;
+  govtIdNumber?: string;
   bio?: string;
   address?: Address;
   academicInfo?: AcademicInfo[];
@@ -21,6 +23,7 @@ export interface Address {
 
 export interface AcademicInfo {
   id: number;
+  institutionId?: number;
   institutionName: string;
   degree: string;
   fieldOfStudy: string;

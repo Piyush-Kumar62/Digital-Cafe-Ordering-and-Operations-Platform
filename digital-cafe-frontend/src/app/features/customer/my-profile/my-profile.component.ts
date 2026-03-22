@@ -1,5 +1,5 @@
 import { CommonModule } from "@angular/common";
-import { Component, OnInit } from "@angular/core";
+import { Component, OnDestroy, OnInit } from "@angular/core";
 import {
   AbstractControl,
   FormArray,
@@ -12,11 +12,24 @@ import { RouterModule } from "@angular/router";
 import { ApiService } from "@core/services/api.service";
 import { AlertService } from "@core/services/alert.service";
 import { AuthService } from "@core/auth/auth.service";
-import { finalize, forkJoin, of } from "rxjs";
-import { catchError } from "rxjs/operators";
+import { finalize, forkJoin, of, Subject } from "rxjs";
+import {
+  catchError,
+  debounceTime,
+  distinctUntilChanged,
+  switchMap,
+  takeUntil,
+} from "rxjs/operators";
 import { User } from "@shared/models/auth.model";
+import { AddressFormComponent } from "@shared/components/address-form/address-form.component";
+import { buildAddressControls } from "@shared/forms/address-form.factory";
+import { EducationDataService } from "@shared/services/education-data.service";
+import { Institution } from "@shared/models/education.model";
+import { MatAutocompleteModule } from "@angular/material/autocomplete";
+import { MatInputModule } from "@angular/material/input";
 
 type AcademicFormValue = {
+  institutionId?: number | null;
   institutionName: string;
   degree: string;
   fieldOfStudy: string;
@@ -41,11 +54,18 @@ type WorkFormValue = {
 @Component({
   selector: "app-my-profile",
   standalone: true,
-  imports: [CommonModule, RouterModule, ReactiveFormsModule],
+  imports: [
+    CommonModule,
+    RouterModule,
+    ReactiveFormsModule,
+    AddressFormComponent,
+    MatAutocompleteModule,
+    MatInputModule,
+  ],
   templateUrl: "./my-profile.component.html",
   styleUrls: ["./my-profile.component.scss"],
 })
-export class MyProfileComponent implements OnInit {
+export class MyProfileComponent implements OnInit, OnDestroy {
   form: FormGroup;
   user: User | null = null;
   loading = true;
@@ -56,13 +76,26 @@ export class MyProfileComponent implements OnInit {
   profileCompletion = 0;
   activeSection: "basic" | "address" | "academic" | "work" = "basic";
   imageVersion = Date.now();
+  govtIdVisible = false;
+  govtIdTypes = ["Aadhaar", "PAN Card", "Driving License", "Passport"];
+  addressFormSubmitted = false;
+  degreeOptions: string[] = [];
+  academicBranchOptions: string[][] = [];
+  academicBranchLoading: boolean[] = [];
+  academicBranchNoticeDegree: string[] = [];
+  academicInstitutionOptions: Institution[][] = [];
+  academicInstitutionLoading: boolean[] = [];
+  academicInstitutionNoResults: boolean[] = [];
   private avatarLoadFailed = false;
+  private suppressCompletionWatch = false;
+  private readonly destroy$ = new Subject<void>();
 
   constructor(
     private fb: FormBuilder,
     private apiService: ApiService,
     private authService: AuthService,
     private alertService: AlertService,
+    private educationData: EducationDataService,
   ) {
     this.form = this.fb.group({
       firstName: ["", [Validators.required, Validators.maxLength(50)]],
@@ -72,14 +105,19 @@ export class MyProfileComponent implements OnInit {
       gender: ["", Validators.required],
       phoneNumber: [
         "",
-        [Validators.required, Validators.pattern(/^[0-9]{10,20}$/)],
+        [
+          Validators.required,
+          Validators.pattern(/^[0-9]{10}$/),
+          Validators.maxLength(10),
+        ],
       ],
-      street: ["", [Validators.required, Validators.maxLength(200)]],
-      plotNumber: ["", [Validators.required, Validators.maxLength(50)]],
-      city: ["", [Validators.required, Validators.maxLength(100)]],
-      state: ["", [Validators.maxLength(100)]],
-      country: ["India", [Validators.maxLength(100)]],
-      pincode: ["", [Validators.required, Validators.maxLength(10)]],
+      govtIdType: ["", [Validators.required, Validators.maxLength(50)]],
+      govtIdNumber: ["", [Validators.required, Validators.maxLength(100)]],
+      ...buildAddressControls({
+        includeCountry: true,
+        requireState: true,
+        pincodePattern: /^[0-9]{6}$/,
+      }),
       profilePictureUrl: [""],
       academicInformation: this.fb.array([this.createAcademicGroup()]),
       workExperiences: this.fb.array([]),
@@ -88,7 +126,36 @@ export class MyProfileComponent implements OnInit {
 
   ngOnInit(): void {
     this.user = this.authService.currentUserValue;
+    this.educationData
+      .getDegreeOptions()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((options) => {
+        this.degreeOptions = options;
+      });
+    if (this.academicInformation.length) {
+      this.initializeAcademicGroup(this.academicInformation.at(0) as FormGroup);
+    }
     this.loadProfile();
+    this.form.valueChanges
+      .pipe(debounceTime(150), takeUntil(this.destroy$))
+      .subscribe(() => {
+      if (this.suppressCompletionWatch) return;
+      this.profileCompletion = this.calculateCompletionFromForm();
+      if (this.user) {
+        const updatedUser = {
+          ...this.user,
+          profileCompletionPercentage: this.profileCompletion,
+          isProfileComplete: this.profileCompletion >= 100,
+        };
+        this.user = updatedUser;
+        this.authService.updateUserData(updatedUser);
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   get academicInformation(): FormArray<FormGroup> {
@@ -126,8 +193,47 @@ export class MyProfileComponent implements OnInit {
     this.avatarLoadFailed = true;
   }
 
+  toggleGovtIdVisibility(): void {
+    this.govtIdVisible = !this.govtIdVisible;
+  }
+
+  onGovtIdTypeChange(): void {
+    const currentValue = this.form.get("govtIdNumber")?.value as string;
+    if (currentValue) {
+      this.form.get("govtIdNumber")?.setValue(currentValue.trim());
+    }
+  }
+
+  get govtIdNumberPlaceholder(): string {
+    switch ((this.form.get("govtIdType")?.value || "").toLowerCase()) {
+      case "aadhaar":
+        return "Enter Aadhaar Number";
+      case "pan card":
+        return "Enter PAN Number";
+      case "passport":
+        return "Enter Passport Number";
+      case "driving license":
+        return "Enter Driving License Number";
+      default:
+        return "Enter Government ID Number";
+    }
+  }
+
+  get govtIdNumberMaxLength(): number | null {
+    switch ((this.form.get("govtIdType")?.value || "").toLowerCase()) {
+      case "aadhaar":
+        return 12;
+      case "pan card":
+        return 10;
+      default:
+        return null;
+    }
+  }
+
   addAcademicRecord(): void {
-    this.academicInformation.push(this.createAcademicGroup());
+    const group = this.createAcademicGroup();
+    this.academicInformation.push(group);
+    this.initializeAcademicGroup(group);
   }
 
   removeAcademicRecord(index: number): void {
@@ -135,6 +241,11 @@ export class MyProfileComponent implements OnInit {
       return;
     }
     this.academicInformation.removeAt(index);
+    this.academicBranchOptions.splice(index, 1);
+    this.academicInstitutionOptions.splice(index, 1);
+    this.academicInstitutionLoading.splice(index, 1);
+    this.academicInstitutionNoResults.splice(index, 1);
+    this.academicBranchNoticeDegree.splice(index, 1);
   }
 
   addWorkExperience(): void {
@@ -218,6 +329,7 @@ export class MyProfileComponent implements OnInit {
 
   saveProfile(): void {
     if (this.form.invalid) {
+      this.addressFormSubmitted = true;
       this.form.markAllAsTouched();
       this.alertService.error(
         "Missing details",
@@ -237,6 +349,8 @@ export class MyProfileComponent implements OnInit {
       dateOfBirth: v.dateOfBirth,
       gender: v.gender,
       phoneNumber: v.phoneNumber,
+      govtIdType: v.govtIdType || null,
+      govtIdNumber: v.govtIdNumber || null,
       profilePictureUrl:
         v.profilePictureUrl || this.user?.profileImageUrl || null,
       address: {
@@ -248,6 +362,7 @@ export class MyProfileComponent implements OnInit {
         pincode: v.pincode,
       },
       academicInformation: (v.academicInformation || []).map((a: any) => ({
+        institutionId: a.institutionId ?? null,
         institutionName: a.institutionName,
         degree: a.degree,
         fieldOfStudy: a.fieldOfStudy || null,
@@ -338,9 +453,146 @@ export class MyProfileComponent implements OnInit {
     return `Invalid ${label.toLowerCase()}`;
   }
 
+  getInstitutionOptions(index: number): Institution[] {
+    return this.academicInstitutionOptions[index] || [];
+  }
+
+  isInstitutionLoading(index: number): boolean {
+    return !!this.academicInstitutionLoading[index];
+  }
+
+  isInstitutionNoResults(index: number): boolean {
+    return !!this.academicInstitutionNoResults[index];
+  }
+
+  getBranchOptions(index: number): string[] {
+    return this.academicBranchOptions[index] || [];
+  }
+
+  isBranchLoading(index: number): boolean {
+    return !!this.academicBranchLoading[index];
+  }
+
+  displayInstitution(value: Institution | string): string {
+    if (!value) return "";
+    return typeof value === "string" ? value : value.name;
+  }
+
+  onInstitutionSelected(index: number, inst: Institution): void {
+    const group = this.academicInformation.at(index);
+    if (!group) return;
+    group.get("institutionName")?.setValue(inst.name, { emitEvent: false });
+    group.get("institutionId")?.setValue(inst.id ?? null, { emitEvent: false });
+  }
+
+  useTypedInstitution(index: number): void {
+    const group = this.academicInformation.at(index);
+    if (!group) return;
+    const raw = group.get("institutionName")?.value;
+    const value = String(typeof raw === "string" ? raw : raw?.name || "").trim();
+    group.get("institutionName")?.setValue(value, { emitEvent: false });
+    group.get("institutionId")?.setValue(null, { emitEvent: false });
+    this.academicInstitutionNoResults[index] = false;
+    this.academicInstitutionOptions[index] = [];
+  }
+
+  private initializeAcademicGroup(group: FormGroup): void {
+    const index = this.getAcademicIndex(group);
+    if (index < 0) return;
+    this.academicInstitutionOptions[index] = [];
+    this.academicInstitutionLoading[index] = false;
+    this.academicInstitutionNoResults[index] = false;
+    this.academicBranchOptions[index] = [];
+    this.academicBranchLoading[index] = false;
+    this.academicBranchNoticeDegree[index] = "";
+    this.loadBranchesForIndex(index, String(group.get("degree")?.value || ""));
+
+    group
+      .get("degree")
+      ?.valueChanges.pipe(takeUntil(this.destroy$))
+      .subscribe((value) => {
+        const idx = this.getAcademicIndex(group);
+        if (idx < 0) return;
+        this.academicBranchOptions[idx] = [];
+        this.loadBranchesForIndex(idx, String(value || ""));
+        group.get("fieldOfStudy")?.setValue("", { emitEvent: false });
+      });
+
+    group
+      .get("institutionName")
+      ?.valueChanges.pipe(
+        debounceTime(300),
+        distinctUntilChanged(),
+        switchMap((value) => {
+          const idx = this.getAcademicIndex(group);
+          if (idx >= 0) {
+            const query =
+              typeof value === "string" ? value : value?.name || "";
+            const normalized = String(query || "").trim();
+            this.academicInstitutionLoading[idx] = normalized.length >= 2;
+            this.academicInstitutionNoResults[idx] = false;
+            this.academicInstitutionOptions[idx] = [];
+            group.get("institutionId")?.setValue(null, { emitEvent: false });
+            if (normalized.length < 2) {
+              this.academicInstitutionLoading[idx] = false;
+              return of([]);
+            }
+            return this.educationData.searchInstitutions(normalized).pipe(
+              catchError(() => of([])),
+            );
+          }
+          return of([]);
+        }),
+        takeUntil(this.destroy$),
+      )
+      .subscribe((results) => {
+        const idx = this.getAcademicIndex(group);
+        if (idx < 0) return;
+        this.academicInstitutionLoading[idx] = false;
+        this.academicInstitutionOptions[idx] = results || [];
+        const raw = group.get("institutionName")?.value;
+        const term = String(
+          typeof raw === "string" ? raw : raw?.name || "",
+        ).trim();
+        this.academicInstitutionNoResults[idx] =
+          term.length >= 2 && (results || []).length === 0;
+      });
+  }
+
+  private loadBranchesForIndex(index: number, degree: string): void {
+    const key = String(degree || "").trim();
+    if (!key) {
+      this.academicBranchOptions[index] = [];
+      this.academicBranchLoading[index] = false;
+      return;
+    }
+    this.academicBranchLoading[index] = true;
+    this.educationData
+      .getBranchOptions(key)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((options) => {
+        this.academicBranchOptions[index] = options || [];
+        this.academicBranchLoading[index] = false;
+        if (!this.academicBranchOptions[index].length) {
+          if (this.academicBranchNoticeDegree[index] !== key) {
+            this.academicBranchNoticeDegree[index] = key;
+            this.alertService.info(
+              "Branch list unavailable",
+              "No branches found for this degree yet. You can type your branch manually.",
+            );
+          }
+        }
+      });
+  }
+
+  private getAcademicIndex(group: FormGroup): number {
+    return this.academicInformation.controls.indexOf(group);
+  }
+
   private loadProfile(): void {
     this.loading = true;
     this.loadError = "";
+    this.suppressCompletionWatch = true;
 
     forkJoin({
       basic: this.apiService
@@ -353,6 +605,7 @@ export class MyProfileComponent implements OnInit {
         next: ({ basic, full }) => {
           if (!basic && !full) {
             this.loadError = "Unable to load profile details right now.";
+            this.suppressCompletionWatch = false;
             return;
           }
 
@@ -379,6 +632,8 @@ export class MyProfileComponent implements OnInit {
             dateOfBirth: full?.dateOfBirth || "",
             gender: full?.gender || "",
             phoneNumber: full?.phoneNumber || "",
+            govtIdType: full?.govtIdType || "",
+            govtIdNumber: full?.govtIdNumber || "",
             street: full?.address?.street || "",
             plotNumber: full?.address?.plotNumber || "",
             city: full?.address?.city || "",
@@ -409,6 +664,14 @@ export class MyProfileComponent implements OnInit {
 
           this.imageVersion = Date.now();
           this.avatarLoadFailed = false;
+          this.profileCompletion =
+            full?.completionPercentage ??
+            this.calculateCompletionFromForm() ??
+            this.profileCompletion;
+          this.suppressCompletionWatch = false;
+        },
+        error: () => {
+          this.suppressCompletionWatch = false;
         },
       });
   }
@@ -416,23 +679,26 @@ export class MyProfileComponent implements OnInit {
   private replaceAcademicArray(items: AcademicFormValue[]): void {
     this.academicInformation.clear();
     if (!items.length) {
-      this.academicInformation.push(this.createAcademicGroup());
+      const group = this.createAcademicGroup();
+      this.academicInformation.push(group);
+      this.initializeAcademicGroup(group);
       return;
     }
 
     items.forEach((item) => {
-      this.academicInformation.push(
-        this.createAcademicGroup({
-          institutionName: item?.institutionName || "",
-          degree: item?.degree || "",
-          fieldOfStudy: item?.fieldOfStudy || "",
-          startDate: item?.startDate || "",
-          endDate: item?.endDate || "",
-          grade: item?.grade || "",
-          isCurrent: !!item?.isCurrent,
-          description: item?.description || "",
-        }),
-      );
+      const group = this.createAcademicGroup({
+        institutionId: item?.institutionId ?? null,
+        institutionName: item?.institutionName || "",
+        degree: item?.degree || "",
+        fieldOfStudy: item?.fieldOfStudy || "",
+        startDate: item?.startDate || "",
+        endDate: item?.endDate || "",
+        grade: item?.grade || "",
+        isCurrent: !!item?.isCurrent,
+        description: item?.description || "",
+      });
+      this.academicInformation.push(group);
+      this.initializeAcademicGroup(group);
     });
   }
 
@@ -456,6 +722,7 @@ export class MyProfileComponent implements OnInit {
 
   private createAcademicGroup(initial?: Partial<AcademicFormValue>): FormGroup {
     return this.fb.group({
+      institutionId: [initial?.institutionId || null],
       institutionName: [
         initial?.institutionName || "",
         [Validators.required, Validators.maxLength(200)],
@@ -464,7 +731,10 @@ export class MyProfileComponent implements OnInit {
         initial?.degree || "",
         [Validators.required, Validators.maxLength(100)],
       ],
-      fieldOfStudy: [initial?.fieldOfStudy || "", [Validators.maxLength(100)]],
+      fieldOfStudy: [
+        initial?.fieldOfStudy || "",
+        [Validators.required, Validators.maxLength(100)],
+      ],
       startDate: [initial?.startDate || ""],
       endDate: [initial?.endDate || ""],
       grade: [initial?.grade || "", [Validators.maxLength(20)]],
@@ -490,5 +760,36 @@ export class MyProfileComponent implements OnInit {
       description: [initial?.description || ""],
       responsibilities: [initial?.responsibilities || ""],
     });
+  }
+
+  private calculateCompletionFromForm(): number {
+    const v = this.form.value;
+    let filled = 0;
+    const total = 9;
+
+    if ((v.firstName || "").trim()) filled++;
+    if ((v.lastName || "").trim()) filled++;
+    if (v.dateOfBirth) filled++;
+    if (v.gender) filled++;
+    if ((v.phoneNumber || "").trim()) filled++;
+    if ((v.govtIdType || "").trim()) filled++;
+    if ((v.govtIdNumber || "").trim()) filled++;
+
+    const addressComplete =
+      (v.street || "").trim() &&
+      (v.plotNumber || "").trim() &&
+      (v.city || "").trim() &&
+      (v.state || "").trim() &&
+      (v.pincode || "").trim();
+    if (addressComplete) filled++;
+
+    const academics = (v.academicInformation || []) as AcademicFormValue[];
+    const hasAcademic =
+      academics.length > 0 &&
+      (academics[0]?.institutionName || "").trim() &&
+      (academics[0]?.degree || "").trim();
+    if (hasAcademic) filled++;
+
+    return Math.round((filled * 100) / total);
   }
 }

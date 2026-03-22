@@ -61,6 +61,118 @@ select {
   padding: 0.65rem 0.75rem;
 }
 
+input.invalid,
+select.invalid {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.25);
+}
+
+::ng-deep .academic-autocomplete-panel {
+  max-height: 280px;
+  background: #0f172a;
+  color: #e2e8f0;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.45);
+}
+
+::ng-deep .academic-autocomplete-panel .mat-mdc-option {
+  height: auto;
+  line-height: 1.2;
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+::ng-deep .academic-autocomplete-panel .academic-option__title {
+  font-weight: 600;
+  color: #f8fafc;
+}
+
+::ng-deep .academic-autocomplete-panel .academic-option__meta {
+  font-size: 0.75rem;
+  color: rgba(148, 163, 184, 0.9);
+}
+
+::ng-deep .academic-autocomplete-panel .academic-option {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.hint {
+  display: block;
+  font-size: 0.75rem;
+  color: rgba(148, 163, 184, 0.9);
+  margin-top: 4px;
+}
+
+.error {
+  display: block;
+  font-size: 0.75rem;
+  color: #fca5a5;
+  margin-top: 4px;
+}
+
+.link-btn {
+  margin-top: 6px;
+  align-self: flex-start;
+  border: none;
+  background: none;
+  color: #93c5fd;
+  font-size: 0.75rem;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  margin-left: 8px;
+  border-radius: 999px;
+  background: rgba(239, 68, 68, 0.15);
+  color: #fecaca;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.phone-input {
+  display: flex;
+  align-items: center;
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.phone-input:focus-within {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.phone-input.invalid {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.25);
+}
+
+.phone-prefix {
+  padding: 0.65rem 0.75rem;
+  color: #cbd5e1;
+  background: rgba(15, 23, 42, 0.65);
+  border-right: 1px solid #334155;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.phone-input input {
+  border: none;
+  border-radius: 0;
+  padding: 0.65rem 0.75rem;
+  background: transparent;
+  color: #f8fafc;
+  width: 100%;
+}
+
 input:focus,
 select:focus {
   outline: none;

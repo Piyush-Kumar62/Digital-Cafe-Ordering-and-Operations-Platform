@@ -249,15 +249,69 @@
               <label class="pp-lbl"
                 >Phone Number <span class="req">*</span></label
               >
-              <input
-                class="pp-inp"
-                type="tel"
-                formControlName="phoneNumber"
-                placeholder="+91 98765 43210"
-                maxlength="20"
-              />
+              <div class="pp-inp-prefix">
+                <span class="pp-prefix">+91</span>
+                <input
+                  class="pp-inp pp-inp--prefix"
+                  type="tel"
+                  formControlName="phoneNumber"
+                  placeholder="98765 43210"
+                  maxlength="10"
+                  inputmode="numeric"
+                />
+              </div>
               <span class="pp-err">{{
                 fieldError(form.get("phoneNumber"), "Phone Number")
+              }}</span>
+            </div>
+          </div>
+
+          <div class="pp-g pp-g2">
+            <div class="pp-f">
+              <label class="pp-lbl"
+                >Government ID Type <span class="req">*</span></label
+              >
+              <select
+                class="pp-inp"
+                formControlName="govtIdType"
+                (change)="onGovtIdTypeChange()"
+              >
+                <option value="">Select ID Type</option>
+                <option *ngFor="let type of govtIdTypes" [value]="type">
+                  {{ type }}
+                </option>
+              </select>
+              <span class="pp-err">{{
+                fieldError(form.get("govtIdType"), "Government ID Type")
+              }}</span>
+            </div>
+            <div class="pp-f">
+              <label class="pp-lbl"
+                >Government ID Number <span class="req">*</span></label
+              >
+              <div class="pp-inp-wrap">
+                <input
+                  class="pp-inp"
+                  [type]="govtIdVisible ? 'text' : 'password'"
+                  formControlName="govtIdNumber"
+                  [placeholder]="govtIdNumberPlaceholder"
+                  [attr.maxlength]="govtIdNumberMaxLength || null"
+                />
+                <button
+                  type="button"
+                  class="pp-icon-btn"
+                  (click)="toggleGovtIdVisibility()"
+                  [attr.aria-label]="
+                    govtIdVisible ? 'Hide government ID' : 'Show government ID'
+                  "
+                >
+                  <span class="material-icons">{{
+                    govtIdVisible ? "visibility_off" : "visibility"
+                  }}</span>
+                </button>
+              </div>
+              <span class="pp-err">{{
+                fieldError(form.get("govtIdNumber"), "Government ID Number")
               }}</span>
             </div>
           </div>
@@ -274,58 +328,13 @@
               <p class="pp-card__sub">Used for deliveries and billing</p>
             </div>
           </div>
+          <app-address-form
+            [form]="form"
+            variant="profile"
+            [formSubmitted]="addressFormSubmitted"
+          ></app-address-form>
 
-          <div class="pp-g pp-g2">
-            <div class="pp-f">
-              <label class="pp-lbl">Street <span class="req">*</span></label>
-              <input
-                class="pp-inp"
-                type="text"
-                formControlName="street"
-                placeholder="Street name"
-              />
-              <span class="pp-err">{{
-                fieldError(form.get("street"), "Street")
-              }}</span>
-            </div>
-            <div class="pp-f">
-              <label class="pp-lbl"
-                >Plot / Flat Number <span class="req">*</span></label
-              >
-              <input
-                class="pp-inp"
-                type="text"
-                formControlName="plotNumber"
-                placeholder="Flat or plot no."
-              />
-              <span class="pp-err">{{
-                fieldError(form.get("plotNumber"), "Plot Number")
-              }}</span>
-            </div>
-          </div>
-
-          <div class="pp-g pp-g4">
-            <div class="pp-f">
-              <label class="pp-lbl">City <span class="req">*</span></label>
-              <input
-                class="pp-inp"
-                type="text"
-                formControlName="city"
-                placeholder="City"
-              />
-              <span class="pp-err">{{
-                fieldError(form.get("city"), "City")
-              }}</span>
-            </div>
-            <div class="pp-f">
-              <label class="pp-lbl">State</label>
-              <input
-                class="pp-inp"
-                type="text"
-                formControlName="state"
-                placeholder="State"
-              />
-            </div>
+          <div class="pp-g pp-g2 mt-4">
             <div class="pp-f">
               <label class="pp-lbl">Country</label>
               <input
@@ -334,18 +343,6 @@
                 formControlName="country"
                 placeholder="Country"
               />
-            </div>
-            <div class="pp-f">
-              <label class="pp-lbl">Pincode <span class="req">*</span></label>
-              <input
-                class="pp-inp"
-                type="text"
-                formControlName="pincode"
-                placeholder="Pincode"
-              />
-              <span class="pp-err">{{
-                fieldError(form.get("pincode"), "Pincode")
-              }}</span>
             </div>
           </div>
         </div>
@@ -405,20 +402,54 @@
                 class="pp-inp"
                 type="text"
                 formControlName="institutionName"
-                placeholder="e.g. IIT Delhi"
+                placeholder="Search institution"
+                [matAutocomplete]="institutionAuto"
+                matInput
               />
+              <mat-autocomplete
+                #institutionAuto="matAutocomplete"
+                [displayWith]="displayInstitution"
+                (optionSelected)="onInstitutionSelected(i, $event.option.value)"
+                panelClass="academic-autocomplete-panel"
+              >
+                <mat-option
+                  *ngFor="let inst of getInstitutionOptions(i)"
+                  [value]="inst"
+                >
+                  <div class="academic-option">
+                    <span class="academic-option__title">{{ inst.name }}</span>
+                    <span class="academic-option__meta">
+                      {{ inst.city || "India" }}{{ inst.state ? ", " + inst.state : "" }}
+                    </span>
+                  </div>
+                </mat-option>
+              </mat-autocomplete>
+              <span class="pp-err" *ngIf="isInstitutionLoading(i)">
+                Searching institutions…
+              </span>
+              <span class="pp-err" *ngIf="isInstitutionNoResults(i)">
+                No results found. Keep typing to use manual entry.
+              </span>
+              <button
+                type="button"
+                class="pp-link"
+                *ngIf="isInstitutionNoResults(i)"
+                (click)="useTypedInstitution(i)"
+              >
+                Use typed institution
+              </button>
               <span class="pp-err">{{
                 fieldError(academic.get("institutionName"), "Institution Name")
               }}</span>
             </div>
             <div class="pp-f">
               <label class="pp-lbl">Degree <span class="req">*</span></label>
-              <input
-                class="pp-inp"
-                type="text"
-                formControlName="degree"
-                placeholder="e.g. B.Tech"
-              />
+              <select class="pp-inp" formControlName="degree">
+                <option value="">Select degree</option>
+                <option *ngFor="let degree of degreeOptions" [value]="degree">
+                  {{ degree }}
+                </option>
+              </select>
               <span class="pp-err">{{
                 fieldError(academic.get("degree"), "Degree")
               }}</span>
@@ -427,13 +458,49 @@
 
           <div class="pp-g pp-g4">
             <div class="pp-f">
-              <label class="pp-lbl">Field of Study</label>
-              <input
-                class="pp-inp"
-                type="text"
-                formControlName="fieldOfStudy"
-                placeholder="e.g. Computer Science"
-              />
+              <label class="pp-lbl"
+                >Branch / Stream <span class="req">*</span>
+                <span
+                  class="pp-badge"
+                  *ngIf="!isBranchLoading(i) && getBranchOptions(i).length === 0 && academic.get('degree')?.value"
+                >
+                  No branches yet
+                </span>
+              </label
+              >
+              <ng-container
+                *ngIf="getBranchOptions(i).length > 0; else branchInput"
+              >
+                <select class="pp-inp" formControlName="fieldOfStudy">
+                  <option value="">Select branch</option>
+                  <option
+                    *ngFor="let branch of getBranchOptions(i)"
+                    [value]="branch"
+                  >
+                    {{ branch }}
+                  </option>
+                </select>
+              </ng-container>
+              <ng-template #branchInput>
+                <input
+                  class="pp-inp"
+                  type="text"
+                  formControlName="fieldOfStudy"
+                  placeholder="Enter branch / stream"
+                />
+              </ng-template>
+              <span class="pp-err" *ngIf="isBranchLoading(i)">
+                Loading branches…
+              </span>
+              <span
+                class="pp-hint"
+                *ngIf="!isBranchLoading(i) && getBranchOptions(i).length === 0 && academic.get('degree')?.value"
+              >
+                No branches listed yet. You can type your branch manually.
+              </span>
+              <span class="pp-err">{{
+                fieldError(academic.get("fieldOfStudy"), "Branch / Stream")
+              }}</span>
             </div>
             <div class="pp-f">
               <label class="pp-lbl">Start Date</label>

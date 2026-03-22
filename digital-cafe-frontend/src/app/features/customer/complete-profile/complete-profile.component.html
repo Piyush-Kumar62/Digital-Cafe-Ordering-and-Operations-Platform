@@ -7,64 +7,59 @@
       <div class="grid two">
         <label>
           First Name
-          <input type="text" formControlName="firstName" />
+          <input type="text" formControlName="firstName" [class.invalid]="isInvalid('firstName')" />
+          <small class="error" *ngIf="isInvalid('firstName')">First name is required.</small>
         </label>
         <label>
           Last Name
-          <input type="text" formControlName="lastName" />
+          <input type="text" formControlName="lastName" [class.invalid]="isInvalid('lastName')" />
+          <small class="error" *ngIf="isInvalid('lastName')">Last name is required.</small>
         </label>
       </div>
 
       <div class="grid three">
         <label>
           Date of Birth
-          <input type="date" formControlName="dateOfBirth" />
+          <input type="date" formControlName="dateOfBirth" [class.invalid]="isInvalid('dateOfBirth')" />
+          <small class="error" *ngIf="isInvalid('dateOfBirth')">Date of birth is required.</small>
         </label>
         <label>
           Gender
-          <select formControlName="gender">
+          <select formControlName="gender" [class.invalid]="isInvalid('gender')">
             <option value="">Select</option>
             <option value="MALE">Male</option>
             <option value="FEMALE">Female</option>
             <option value="OTHER">Other</option>
           </select>
+          <small class="error" *ngIf="isInvalid('gender')">Gender is required.</small>
         </label>
         <label>
           Phone Number
-          <input type="tel" formControlName="phoneNumber" />
+          <div class="phone-input" [class.invalid]="isInvalid('phoneNumber')">
+            <span class="phone-prefix">+91</span>
+            <input
+              type="tel"
+              formControlName="phoneNumber"
+              placeholder="10-digit mobile number"
+              maxlength="10"
+              inputmode="numeric"
+            />
+          </div>
+          <small class="error" *ngIf="isInvalid('phoneNumber')">Enter a valid 10-digit number.</small>
         </label>
       </div>
 
-      <div class="grid two">
-        <label>
-          Street
-          <input type="text" formControlName="street" />
-        </label>
-        <label>
-          Plot Number
-          <input type="text" formControlName="plotNumber" />
-        </label>
-      </div>
+      <app-address-form
+        [form]="form"
+        variant="profile"
+        [formSubmitted]="addressFormSubmitted"
+      ></app-address-form>
 
-      <div class="grid two">
-        <label>
-          City
-          <input type="text" formControlName="city" />
-        </label>
-        <label>
-          State
-          <input type="text" formControlName="state" />
-        </label>
-      </div>
-
-      <div class="grid two">
+      <div class="grid two mt-4">
         <label>
           Country
-          <input type="text" formControlName="country" />
-        </label>
-        <label>
-          Pincode
-          <input type="text" formControlName="pincode" />
+          <input type="text" formControlName="country" [class.invalid]="isInvalid('country')" />
+          <small class="error" *ngIf="isInvalid('country')">Country is required.</small>
         </label>
       </div>
 
@@ -73,18 +68,80 @@
       <div class="grid two">
         <label>
           Institution Name
-          <input type="text" formControlName="institutionName" />
+          <input
+            type="text"
+            formControlName="institutionName"
+            [matAutocomplete]="institutionAuto"
+            matInput
+            placeholder="Search institution"
+            [class.invalid]="isInvalid('institutionName')"
+          />
+          <mat-autocomplete
+            #institutionAuto="matAutocomplete"
+            [displayWith]="displayInstitution"
+            (optionSelected)="onInstitutionSelected($event.option.value)"
+            panelClass="academic-autocomplete-panel"
+          >
+            <mat-option *ngFor="let inst of institutionOptions" [value]="inst">
+              <div class="academic-option">
+                <span class="academic-option__title">{{ inst.name }}</span>
+                <span class="academic-option__meta">
+                  {{ inst.city || "India" }}{{ inst.state ? ", " + inst.state : "" }}
+                </span>
+              </div>
+            </mat-option>
+          </mat-autocomplete>
+          <small class="hint" *ngIf="institutionLoading">Searching institutions…</small>
+          <small class="hint" *ngIf="institutionNoResults">No results. Keep typing to use manual entry.</small>
+          <button
+            type="button"
+            class="link-btn"
+            *ngIf="institutionNoResults"
+            (click)="useTypedInstitution()"
+          >
+            Use typed institution
+          </button>
+          <small class="error" *ngIf="isInvalid('institutionName')">Institution is required.</small>
         </label>
         <label>
           Degree
-          <input type="text" formControlName="degree" />
+          <select formControlName="degree" [class.invalid]="isInvalid('degree')">
+            <option value="">Select degree</option>
+            <option *ngFor="let degree of degreeOptions" [value]="degree">
+              {{ degree }}
+            </option>
+          </select>
+          <small class="error" *ngIf="isInvalid('degree')">Degree is required.</small>
         </label>
       </div>
 
       <div class="grid three">
         <label>
-          Field of Study
-          <input type="text" formControlName="fieldOfStudy" />
+          Branch / Stream
+          <span
+            class="badge"
+            *ngIf="!branchLoading && branchOptions.length === 0 && form.get('degree')?.value"
+          >
+            No branches yet
+          </span>
+          <ng-container *ngIf="branchOptions.length > 0; else branchInput">
+            <select formControlName="fieldOfStudy" [class.invalid]="isInvalid('fieldOfStudy')">
+              <option value="">Select branch</option>
+              <option *ngFor="let branch of branchOptions" [value]="branch">
+                {{ branch }}
+              </option>
+            </select>
+          </ng-container>
+          <ng-template #branchInput>
+            <input
+              type="text"
+              formControlName="fieldOfStudy"
+              placeholder="Enter branch / stream"
+              [class.invalid]="isInvalid('fieldOfStudy')"
+            />
+          </ng-template>
+          <small class="hint" *ngIf="branchLoading">Loading branches…</small>
+          <small class="error" *ngIf="isInvalid('fieldOfStudy')">Branch / stream is required.</small>
         </label>
         <label>
           Start Date

@@ -89,8 +89,10 @@ export interface AddressInfo {
 }
 
 export interface AcademicInfo {
+  institutionId?: number;
   institutionName: string;
   degree: string;
+  branch?: string;
   passingYear: number;
   grade: string;
   gradeInPercentage: number;

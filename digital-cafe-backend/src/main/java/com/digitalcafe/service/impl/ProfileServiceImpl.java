@@ -52,6 +52,8 @@ public class ProfileServiceImpl implements ProfileService {
 
         profile.setPhoneNumber(request.getPhoneNumber());
         profile.setProfilePictureUrl(request.getProfilePictureUrl());
+        profile.setGovtIdType(normalize(request.getGovtIdType()));
+        profile.setGovtIdNumber(normalize(request.getGovtIdNumber()));
 
 
         if (request.getAddress() != null) {
@@ -158,5 +160,13 @@ public class ProfileServiceImpl implements ProfileService {
         user.setProfileCompletionPercentage(completionPercentage);
         user.setIsProfileComplete(profile.isComplete());
         userRepository.save(user);
+    }
+
+    private String normalize(String value) {
+        if (value == null) {
+            return null;
+        }
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
 }

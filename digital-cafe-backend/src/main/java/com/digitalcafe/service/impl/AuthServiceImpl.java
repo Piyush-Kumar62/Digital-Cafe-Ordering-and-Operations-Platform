@@ -438,8 +438,12 @@ public class AuthServiceImpl implements AuthService {
     for (var acadReq : request.getAcademicInfoList()) {
       AcademicInfo acad = new AcademicInfo();
       acad.setProfile(profile); acad.setInstitutionName(acadReq.getInstitutionName());
+      acad.setInstitutionId(acadReq.getInstitutionId());
       acad.setDegree(acadReq.getDegree()); acad.setGrade(acadReq.getGrade());
       acad.setGradePercentage(acadReq.getGradeInPercentage());
+      if (acadReq.getBranch() != null && !acadReq.getBranch().isBlank()) {
+        acad.setFieldOfStudy(acadReq.getBranch());
+      }
       acad.setEndDate(LocalDate.of(acadReq.getPassingYear(), 12, 31));
       profile.getAcademicInformation().add(acad);
     }

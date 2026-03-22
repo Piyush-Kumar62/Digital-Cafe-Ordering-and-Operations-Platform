@@ -38,6 +38,7 @@ public class ProfileCompletionFilter extends OncePerRequestFilter {
     private static final Set<String> WHITELIST_PREFIXES = Set.of(
             "/api/auth",
             "/api/profile",
+            "/api/profiles",
             "/api/users/me",
             "/api/users/profile",
             "/api/public",

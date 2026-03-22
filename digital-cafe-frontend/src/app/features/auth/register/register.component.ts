@@ -1,11 +1,30 @@
-import { Component, OnInit } from "@angular/core";
+import { Component, OnDestroy, OnInit } from "@angular/core";
 import { CommonModule } from "@angular/common";
-import { FormsModule, ReactiveFormsModule, FormControl, Validators } from "@angular/forms";
+import {
+  FormsModule,
+  ReactiveFormsModule,
+  FormControl,
+  Validators,
+  FormBuilder,
+  FormGroup,
+  FormArray,
+} from "@angular/forms";
 import { ActivatedRoute, Router, RouterModule } from "@angular/router";
 import { AuthService } from "../../../core/auth/auth.service";
 import { AlertService } from "@core/services/alert.service";
 import { NavbarComponent } from "../../../shared/components/navbar/navbar.component";
-import { debounceTime, distinctUntilChanged, switchMap, of, catchError } from "rxjs";
+import { AddressFormComponent } from "../../../shared/components/address-form/address-form.component";
+import { MatAutocompleteModule } from "@angular/material/autocomplete";
+import { MatInputModule } from "@angular/material/input";
+import {
+  debounceTime,
+  distinctUntilChanged,
+  switchMap,
+  of,
+  catchError,
+  Subject,
+} from "rxjs";
+import { filter, takeUntil, tap } from "rxjs/operators";
 import {
   PersonalDetails,
   AddressInfo,
@@ -15,15 +34,28 @@ import {
   RegisterRequest,
   CafeOwnerRegisterRequest,
 } from "../../../shared/models/auth.model";
+import { buildAddressControls } from "../../../shared/forms/address-form.factory";
+import { PostalPincodeService } from "../../../shared/services/postal-pincode.service";
+import { EducationDataService } from "@shared/services/education-data.service";
+import { Institution } from "@shared/models/education.model";
 
 @Component({
   selector: "app-register",
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule, NavbarComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
+    RouterModule,
+    NavbarComponent,
+    AddressFormComponent,
+    MatAutocompleteModule,
+    MatInputModule,
+  ],
   templateUrl: "./register.component.html",
   styleUrl: "./register.component.scss",
 })
-export class RegisterComponent implements OnInit {
+export class RegisterComponent implements OnInit, OnDestroy {
   private static readonly USERNAME_REGEX =
     /^[A-Za-z][A-Za-z0-9._]{2,29}$/;
   readonly customerPanelImage = "assets/coffee/coffee-table-pexels.jpg";
@@ -72,18 +104,21 @@ export class RegisterComponent implements OnInit {
     state: "",
     pincode: "",
   };
+  addressForm!: FormGroup;
+  addressFormSubmitted = false;
 
   // Step 4: Academic Information
-  academicInfoList: AcademicInfo[] = [
-    {
-      institutionName: "",
-      degree: "",
-      passingYear: new Date().getFullYear(),
-      grade: "",
-      gradeInPercentage: 0,
-      currentlyStudying: false,
-    },
-  ];
+  academicForm!: FormGroup;
+  academicSubmitted = false;
+  gradingTypes = ["CGPA", "PERCENTAGE", "GRADE"] as const;
+  degreeOptions: string[] = [];
+  academicBranchOptions: string[][] = [];
+  academicBranchLoading: boolean[] = [];
+  academicBranchNoticeDegree: string[] = [];
+  academicInstitutionOptions: Institution[][] = [];
+  academicInstitutionLoading: boolean[] = [];
+  academicInstitutionNoResults: boolean[] = [];
+  academicYearOptions: number[] = [];
 
   // Step 5: Work Experience (Optional)
   workExperienceList: WorkExperience[] = [
@@ -132,6 +167,13 @@ export class RegisterComponent implements OnInit {
     gstNumber: "",
     msmeNumber: "",
   };
+  cafeCityOptions: string[] = [];
+  cafeStateOptions: string[] = [];
+  cafePincodeLoading = false;
+  cafePincodeNotFound = false;
+  cafePincodeError = false;
+  private readonly cafePincode$ = new Subject<string>();
+  private readonly destroy$ = new Subject<void>();
 
   cafeLogoFile: File | null = null;
   cafeLogoPreview: string | null = null;
@@ -146,9 +188,27 @@ export class RegisterComponent implements OnInit {
     private router: Router,
     private alertService: AlertService,
     private route: ActivatedRoute,
+    private fb: FormBuilder,
+    private postalService: PostalPincodeService,
+    private educationData: EducationDataService,
   ) {}
 
   ngOnInit() {
+    this.addressForm = this.fb.group(buildAddressControls());
+    this.addressForm.patchValue(this.address);
+    this.academicForm = this.fb.group({
+      items: this.fb.array([this.createAcademicGroup()]),
+    });
+    this.educationData
+      .getDegreeOptions()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((options) => {
+        this.degreeOptions = options;
+      });
+    if (this.academicItems.length) {
+      this.initializeAcademicGroup(this.academicItems.at(0) as FormGroup);
+    }
+    this.academicYearOptions = this.buildYearOptions(1950);
     this.preloadImage(this.customerPanelImage);
     this.preloadImage(this.cafeOwnerPanelImage);
     this.usernameControl.valueChanges
@@ -196,6 +256,61 @@ export class RegisterComponent implements OnInit {
       }
       this.applyRole(role as "CUSTOMER" | "CAFE_OWNER");
     });
+
+    this.cafePincode$
+      .pipe(
+        debounceTime(350),
+        distinctUntilChanged(),
+        tap((value) => {
+          const pin = String(value ?? "").trim();
+          if (pin.length < 6) {
+            this.cafePincodeLoading = false;
+            this.cafePincodeNotFound = false;
+            this.cafePincodeError = false;
+            this.cafeCityOptions = [];
+            this.cafeStateOptions = [];
+          }
+        }),
+        filter((value) => /^[0-9]{6}$/.test(String(value ?? "").trim())),
+        tap(() => {
+          this.cafePincodeLoading = true;
+          this.cafePincodeNotFound = false;
+          this.cafePincodeError = false;
+        }),
+        switchMap((pin) =>
+          this.postalService.lookupPincode(String(pin ?? "").trim()),
+        ),
+        takeUntil(this.destroy$),
+      )
+      .subscribe((result) => {
+        this.cafePincodeLoading = false;
+        if (result.status === "success") {
+          this.cafeCityOptions = result.data.cities;
+          this.cafeStateOptions = result.data.states;
+
+          if (!this.cafeDetails.city && result.data.cities.length === 1) {
+            this.cafeDetails.city = result.data.cities[0];
+          }
+          if (!this.cafeDetails.state && result.data.states.length === 1) {
+            this.cafeDetails.state = result.data.states[0];
+          }
+          return;
+        }
+
+        this.cafePincodeNotFound = result.status === "not_found";
+        this.cafePincodeError = result.status === "error";
+        this.cafeCityOptions = [];
+        this.cafeStateOptions = [];
+      });
+  }
+
+  get academicItems(): FormArray<FormGroup> {
+    return this.academicForm.get("items") as FormArray<FormGroup>;
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   get registerPanelImageSrc(): string {
@@ -274,7 +389,7 @@ export class RegisterComponent implements OnInit {
     // ownerPhoneNumber is optional; validate format if provided
     if (
       this.ownerInfo.ownerPhoneNumber.trim() &&
-      !/^[6-9][0-9]{9}$/.test(this.ownerInfo.ownerPhoneNumber.trim())
+      !/^[0-9]{10}$/.test(this.ownerInfo.ownerPhoneNumber.trim())
     ) {
       this.errorMessage = "Please enter a valid 10-digit Indian mobile number";
       return false;
@@ -289,7 +404,7 @@ export class RegisterComponent implements OnInit {
     }
     if (
       !this.cafeDetails.phoneNumber.trim() ||
-      !/^[6-9][0-9]{9}$/.test(this.cafeDetails.phoneNumber)
+      !/^[0-9]{10}$/.test(this.cafeDetails.phoneNumber)
     ) {
       this.errorMessage = "Please enter a valid 10-digit Indian mobile number";
       return false;
@@ -366,7 +481,7 @@ export class RegisterComponent implements OnInit {
     }
     if (
       !this.cafeDetails.phoneNumber.trim() ||
-      !/^[6-9][0-9]{9}$/.test(this.cafeDetails.phoneNumber)
+      !/^[0-9]{10}$/.test(this.cafeDetails.phoneNumber)
     ) {
       this.errorMessage = "Please enter a valid 10-digit Indian mobile number";
       return false;
@@ -447,6 +562,10 @@ export class RegisterComponent implements OnInit {
       }
       this.govtIdProof = file;
     }
+  }
+
+  onCafePincodeInput(value: string) {
+    this.cafePincode$.next(value);
   }
 
   // Navigation methods
@@ -537,6 +656,10 @@ export class RegisterComponent implements OnInit {
       this.errorMessage = "Phone number is required";
       return false;
     }
+    if (!/^[0-9]{10}$/.test(pd.phone.trim())) {
+      this.errorMessage = "Please enter a valid 10-digit phone number";
+      return false;
+    }
     if (!pd.dateOfBirth) {
       this.errorMessage = "Date of birth is required";
       return false;
@@ -549,54 +672,83 @@ export class RegisterComponent implements OnInit {
   }
 
   validateAddress(): boolean {
-    const addr = this.address;
-    if (!addr.street.trim()) {
-      this.errorMessage = "Street address is required";
+    this.addressFormSubmitted = true;
+    if (this.addressForm.invalid) {
+      this.addressForm.markAllAsTouched();
+      this.errorMessage = "Please complete your address details";
       return false;
     }
-    if (!addr.plotNumber.trim()) {
-      this.errorMessage = "Plot number is required";
-      return false;
-    }
-    if (!addr.city.trim()) {
-      this.errorMessage = "City is required";
-      return false;
-    }
-    if (!addr.state.trim()) {
-      this.errorMessage = "State is required";
-      return false;
-    }
-    if (!addr.pincode.trim()) {
-      this.errorMessage = "Pincode is required";
-      return false;
-    }
+    this.syncAddressFromForm();
     return true;
   }
 
   validateAcademicInfo(): boolean {
-    if (this.academicInfoList.length === 0) {
+    this.academicSubmitted = true;
+    if (this.academicItems.length === 0) {
       this.errorMessage = "At least one academic qualification is required";
       return false;
     }
-    for (let i = 0; i < this.academicInfoList.length; i++) {
-      const academic = this.academicInfoList[i];
-      if (!academic.institutionName.trim()) {
+
+    this.academicItems.markAllAsTouched();
+
+    for (let i = 0; i < this.academicItems.length; i++) {
+      const group = this.academicItems.at(i);
+      const institutionValue = group.get("institutionName")?.value;
+      const institution = String(
+        typeof institutionValue === "string"
+          ? institutionValue
+          : institutionValue?.name || "",
+      ).trim();
+      const degree = String(group.get("degree")?.value || "").trim();
+      const branch = String(group.get("branch")?.value || "").trim();
+      const gradingType = String(group.get("gradingType")?.value || "").trim();
+      const score = group.get("score")?.value;
+      const passingYear = Number(group.get("passingYear")?.value || 0);
+      const currentlyStudying = !!group.get("currentlyStudying")?.value;
+
+      if (!institution) {
         this.errorMessage = `Institution name is required for qualification ${i + 1}`;
         return false;
       }
-      if (!academic.degree.trim()) {
+      if (!degree) {
         this.errorMessage = `Degree is required for qualification ${i + 1}`;
         return false;
       }
-      if (!academic.grade.trim()) {
-        this.errorMessage = `Grade is required for qualification ${i + 1}`;
+      if (!branch) {
+        this.errorMessage = `Branch/stream is required for qualification ${i + 1}`;
         return false;
       }
-      if (academic.gradeInPercentage <= 0 || academic.gradeInPercentage > 100) {
-        this.errorMessage = `Please enter a valid percentage for qualification ${i + 1}`;
+      if (!gradingType) {
+        this.errorMessage = `Select grading system for qualification ${i + 1}`;
         return false;
+      }
+      if (!currentlyStudying) {
+        if (passingYear < 1950 || passingYear > this.currentYear) {
+          this.errorMessage = `Please select a valid completion year for qualification ${i + 1}`;
+          return false;
+        }
+      }
+
+      if (gradingType === "GRADE") {
+        if (!String(score || "").trim()) {
+          this.errorMessage = `Enter grade for qualification ${i + 1}`;
+          return false;
+        }
+      } else if (gradingType === "CGPA") {
+        const numericScore = Number(score);
+        if (!numericScore || numericScore <= 0 || numericScore > 10) {
+          this.errorMessage = `Enter a valid CGPA (0-10) for qualification ${i + 1}`;
+          return false;
+        }
+      } else if (gradingType === "PERCENTAGE") {
+        const numericScore = Number(score);
+        if (!numericScore || numericScore <= 0 || numericScore > 100) {
+          this.errorMessage = `Enter a valid percentage (0-100) for qualification ${i + 1}`;
+          return false;
+        }
       }
     }
+
     return true;
   }
 
@@ -628,20 +780,21 @@ export class RegisterComponent implements OnInit {
 
   // Academic Info management
   addAcademic() {
-    this.academicInfoList.push({
-      institutionName: "",
-      degree: "",
-      passingYear: new Date().getFullYear(),
-      grade: "",
-      gradeInPercentage: 0,
-      currentlyStudying: false,
-    });
+    const group = this.createAcademicGroup();
+    this.academicItems.push(group);
+    this.initializeAcademicGroup(group);
   }
 
   removeAcademic(index: number) {
-    if (this.academicInfoList.length > 1) {
-      this.academicInfoList.splice(index, 1);
-    }
+    if (this.academicItems.length <= 1) return;
+    const ok = confirm("Remove this qualification?");
+    if (!ok) return;
+    this.academicItems.removeAt(index);
+    this.academicBranchOptions.splice(index, 1);
+    this.academicInstitutionOptions.splice(index, 1);
+    this.academicInstitutionLoading.splice(index, 1);
+    this.academicInstitutionNoResults.splice(index, 1);
+    this.academicBranchNoticeDegree.splice(index, 1);
   }
 
   // Work Experience management
@@ -671,6 +824,19 @@ export class RegisterComponent implements OnInit {
     }
   }
 
+  onAcademicCurrentlyStudyingChange(index: number) {
+    const group = this.academicItems.at(index);
+    const isCurrent = !!group.get("currentlyStudying")?.value;
+    const yearControl = group.get("passingYear");
+    if (!yearControl) return;
+    if (isCurrent) {
+      yearControl.disable();
+      yearControl.setValue(this.currentYear);
+    } else {
+      yearControl.enable();
+    }
+  }
+
   // Submit registration
   onSubmit() {
     if (!this.validateCurrentStep()) {
@@ -684,6 +850,8 @@ export class RegisterComponent implements OnInit {
     this.errorMessage = "";
     this.alertService.loading("Creating your account. Please wait.");
 
+    this.syncAddressFromForm();
+
     // Filter out empty work experiences
     const filteredWorkExperience = this.workExperienceList.filter(
       (work) => work.companyName.trim() && work.designation.trim(),
@@ -696,7 +864,7 @@ export class RegisterComponent implements OnInit {
       govtIdNumber: this.govtIdNumber.trim(),
       personalDetails: this.personalDetails,
       address: this.address,
-      academicInfoList: this.academicInfoList,
+      academicInfoList: this.buildAcademicPayload(),
       workExperienceList:
         filteredWorkExperience.length > 0 ? filteredWorkExperience : undefined,
     };
@@ -791,5 +959,263 @@ export class RegisterComponent implements OnInit {
       default:
         return null;
     }
+  }
+
+  isAcademicInvalid(index: number, field: string): boolean {
+    const group = this.academicItems.at(index);
+    const control = group?.get(field);
+    return !!(
+      control &&
+      control.invalid &&
+      (control.touched || this.academicSubmitted)
+    );
+  }
+
+  academicScoreError(index: number): string {
+    const group = this.academicItems.at(index);
+    if (!group) return "";
+    const scoreCtrl = group.get("score");
+    const gradingType = String(group.get("gradingType")?.value || "").trim();
+    const show = !!(scoreCtrl?.touched || this.academicSubmitted);
+    if (!show) return "";
+
+    const raw = scoreCtrl?.value;
+    if (gradingType === "GRADE") {
+      return String(raw || "").trim() ? "" : "Grade is required.";
+    }
+
+    const numeric = Number(raw);
+    if (!raw || Number.isNaN(numeric)) {
+      return gradingType === "PERCENTAGE"
+        ? "Percentage is required."
+        : "CGPA is required.";
+    }
+
+    if (gradingType === "CGPA") {
+      return numeric > 0 && numeric <= 10
+        ? ""
+        : "Enter a CGPA between 0 and 10.";
+    }
+
+    if (gradingType === "PERCENTAGE") {
+      return numeric > 0 && numeric <= 100
+        ? ""
+        : "Enter a percentage between 0 and 100.";
+    }
+
+    return "";
+  }
+
+  getInstitutionOptions(index: number): Institution[] {
+    return this.academicInstitutionOptions[index] || [];
+  }
+
+  isInstitutionLoading(index: number): boolean {
+    return !!this.academicInstitutionLoading[index];
+  }
+
+  isInstitutionNoResults(index: number): boolean {
+    return !!this.academicInstitutionNoResults[index];
+  }
+
+  getBranchOptions(index: number): string[] {
+    return this.academicBranchOptions[index] || [];
+  }
+
+  isBranchLoading(index: number): boolean {
+    return !!this.academicBranchLoading[index];
+  }
+
+  displayInstitution(value: Institution | string): string {
+    if (!value) return "";
+    return typeof value === "string" ? value : value.name;
+  }
+
+  onInstitutionSelected(index: number, inst: Institution): void {
+    const group = this.academicItems.at(index);
+    if (!group) return;
+    group.get("institutionName")?.setValue(inst.name, { emitEvent: false });
+    group.get("institutionId")?.setValue(inst.id ?? null, { emitEvent: false });
+  }
+
+  useTypedInstitution(index: number): void {
+    const group = this.academicItems.at(index);
+    if (!group) return;
+    const raw = group.get("institutionName")?.value;
+    const value = String(typeof raw === "string" ? raw : raw?.name || "").trim();
+    group.get("institutionName")?.setValue(value, { emitEvent: false });
+    group.get("institutionId")?.setValue(null, { emitEvent: false });
+    this.academicInstitutionNoResults[index] = false;
+    this.academicInstitutionOptions[index] = [];
+  }
+
+  private initializeAcademicGroup(group: FormGroup): void {
+    const index = this.getAcademicIndex(group);
+    if (index < 0) return;
+    this.academicInstitutionOptions[index] = [];
+    this.academicInstitutionLoading[index] = false;
+    this.academicInstitutionNoResults[index] = false;
+    this.academicBranchOptions[index] = [];
+    this.academicBranchLoading[index] = false;
+    this.academicBranchNoticeDegree[index] = "";
+    this.loadBranchesForIndex(index, String(group.get("degree")?.value || ""));
+
+    group
+      .get("degree")
+      ?.valueChanges.pipe(takeUntil(this.destroy$))
+      .subscribe((value) => {
+        const idx = this.getAcademicIndex(group);
+        if (idx < 0) return;
+        this.academicBranchOptions[idx] = [];
+        this.loadBranchesForIndex(idx, String(value || ""));
+        group.get("branch")?.setValue("", { emitEvent: false });
+      });
+
+    group
+      .get("institutionName")
+      ?.valueChanges.pipe(
+        debounceTime(300),
+        distinctUntilChanged(),
+        tap((value) => {
+          const idx = this.getAcademicIndex(group);
+          if (idx < 0) return;
+          const query =
+            typeof value === "string" ? value : value?.name || "";
+          const normalized = String(query || "").trim();
+          this.academicInstitutionLoading[idx] = normalized.length >= 2;
+          this.academicInstitutionNoResults[idx] = false;
+          this.academicInstitutionOptions[idx] = [];
+          group.get("institutionId")?.setValue(null, { emitEvent: false });
+        }),
+        switchMap((value) => {
+          const query =
+            typeof value === "string" ? value : value?.name || "";
+          const normalized = String(query || "").trim();
+          if (normalized.length < 2) {
+            const idx = this.getAcademicIndex(group);
+            if (idx >= 0) {
+              this.academicInstitutionLoading[idx] = false;
+              this.academicInstitutionNoResults[idx] = false;
+            }
+            return of([]);
+          }
+          return this.educationData.searchInstitutions(normalized).pipe(
+            catchError(() => of([])),
+          );
+        }),
+        takeUntil(this.destroy$),
+      )
+      .subscribe((results) => {
+        const idx = this.getAcademicIndex(group);
+        if (idx < 0) return;
+        this.academicInstitutionLoading[idx] = false;
+        this.academicInstitutionOptions[idx] = results || [];
+        const raw = group.get("institutionName")?.value;
+        const query = String(
+          typeof raw === "string" ? raw : raw?.name || "",
+        ).trim();
+        this.academicInstitutionNoResults[idx] =
+          query.length >= 2 && (results || []).length === 0;
+      });
+  }
+
+  private loadBranchesForIndex(index: number, degree: string): void {
+    const key = String(degree || "").trim();
+    if (!key) {
+      this.academicBranchOptions[index] = [];
+      this.academicBranchLoading[index] = false;
+      return;
+    }
+    this.academicBranchLoading[index] = true;
+    this.educationData
+      .getBranchOptions(key)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((options) => {
+        this.academicBranchOptions[index] = options || [];
+        this.academicBranchLoading[index] = false;
+        if (!this.academicBranchOptions[index].length) {
+          if (this.academicBranchNoticeDegree[index] !== key) {
+            this.academicBranchNoticeDegree[index] = key;
+            this.alertService.info(
+              "Branch list unavailable",
+              "No branches found for this degree yet. You can type your branch manually.",
+            );
+          }
+        }
+      });
+  }
+
+  private getAcademicIndex(group: FormGroup): number {
+    return this.academicItems.controls.indexOf(group);
+  }
+
+  private createAcademicGroup(): FormGroup {
+    return this.fb.group({
+      institutionId: [null],
+      institutionName: ["", [Validators.required, Validators.maxLength(200)]],
+      degree: ["", Validators.required],
+      branch: ["", Validators.required],
+      passingYear: ["", Validators.required],
+      gradingType: ["CGPA", Validators.required],
+      score: [null],
+      currentlyStudying: [false],
+    });
+  }
+
+  private buildAcademicPayload(): AcademicInfo[] {
+    return this.academicItems.getRawValue().map((item: any) => {
+      const gradingType = String(item.gradingType || "").trim();
+      const score = item.score;
+      let grade = "";
+      let gradeInPercentage = 0;
+
+      if (gradingType === "GRADE") {
+        grade = String(score || "").trim();
+        gradeInPercentage = 0;
+      } else if (gradingType === "CGPA") {
+        grade = "CGPA";
+        gradeInPercentage = Number(score || 0);
+      } else {
+        grade = "PERCENTAGE";
+        gradeInPercentage = Number(score || 0);
+      }
+
+      const institutionValue = item.institutionName;
+      const institutionName = String(
+        typeof institutionValue === "string"
+          ? institutionValue
+          : institutionValue?.name || "",
+      ).trim();
+
+      return {
+        institutionId: item.institutionId ?? undefined,
+        institutionName,
+        degree: String(item.degree || "").trim(),
+        branch: String(item.branch || "").trim() || undefined,
+        passingYear: Number(item.passingYear || this.currentYear),
+        grade,
+        gradeInPercentage,
+        currentlyStudying: !!item.currentlyStudying,
+      } as AcademicInfo;
+    });
+  }
+
+  private buildYearOptions(minYear: number): number[] {
+    const years: number[] = [];
+    for (let y = this.currentYear; y >= minYear; y--) {
+      years.push(y);
+    }
+    return years;
+  }
+
+  private syncAddressFromForm(): void {
+    const raw = this.addressForm.getRawValue();
+    this.address = {
+      street: String(raw.street || "").trim(),
+      plotNumber: String(raw.plotNumber || "").trim(),
+      city: String(raw.city || "").trim(),
+      state: String(raw.state || "").trim(),
+      pincode: String(raw.pincode || "").trim(),
+    };
   }
 }

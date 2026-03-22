@@ -57,6 +57,7 @@ public class ProfileResponse {
     @AllArgsConstructor
     public static class AcademicInfoResponse {
         private Long id;
+        private Long institutionId;
         private String institutionName;
         private String degree;
         private String fieldOfStudy;

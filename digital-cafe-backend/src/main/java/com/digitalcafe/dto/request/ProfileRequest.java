@@ -40,6 +40,12 @@ public class ProfileRequest {
 
     private String profilePictureUrl;
 
+    @Size(max = 50, message = "Government ID type is too long")
+    private String govtIdType;
+
+    @Size(max = 100, message = "Government ID number is too long")
+    private String govtIdNumber;
+
     @NotNull(message = "Address is required")
     @Valid
     private AddressRequest address;
@@ -85,6 +91,8 @@ public class ProfileRequest {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class AcademicInfoRequest {
+
+        private Long institutionId;
 
         @NotBlank(message = "Institution name is required")
         @Size(max = 200)

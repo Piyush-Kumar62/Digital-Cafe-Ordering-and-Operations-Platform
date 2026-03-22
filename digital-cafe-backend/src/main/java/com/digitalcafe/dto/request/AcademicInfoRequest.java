@@ -11,11 +11,15 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class AcademicInfoRequest {
 
+    private Long institutionId;
+
     @NotBlank(message = "Institution name is required")
     private String institutionName;
 
     @NotBlank(message = "Degree is required")
     private String degree;
+
+    private String branch;
 
     @NotNull(message = "Passing year is required")
     private Integer passingYear;

@@ -12,6 +12,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 public class AcademicInfoDTO {
     private Long id;
+    private Long institutionId;
     @NotBlank(message = "Institution name is required")
     private String institutionName;
     private String degree;

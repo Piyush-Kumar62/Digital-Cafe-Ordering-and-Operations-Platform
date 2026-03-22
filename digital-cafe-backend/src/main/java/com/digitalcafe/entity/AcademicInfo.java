@@ -30,6 +30,9 @@ public class AcademicInfo extends BaseEntity {
     @Column(name = "institution_name", nullable = false, length = 200)
     private String institutionName;
 
+    @Column(name = "institution_id")
+    private Long institutionId;
+
     @Column(name = "degree", nullable = false, length = 100)
     private String degree;
 

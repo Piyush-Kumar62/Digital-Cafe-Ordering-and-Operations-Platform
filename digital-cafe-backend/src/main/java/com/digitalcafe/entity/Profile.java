@@ -99,7 +99,7 @@ public class Profile extends BaseEntity {
      * Calculates profile completion percentage based on filled fields.
      */
     public int calculateCompletionPercentage() {
-        int totalFields = 7; // firstName, lastName, dob, gender, phone, address, academic (at least 1)
+        int totalFields = 9; // firstName, lastName, dob, gender, phone, address, academic, govtIdType, govtIdNumber
         int filledFields = 0;
 
         if (firstName != null && !firstName.isBlank()) filledFields++;
@@ -109,6 +109,8 @@ public class Profile extends BaseEntity {
         if (phoneNumber != null && !phoneNumber.isBlank()) filledFields++;
         if (address != null && address.isComplete()) filledFields++;
         if (academicInformation != null && !academicInformation.isEmpty()) filledFields++;
+        if (govtIdType != null && !govtIdType.isBlank()) filledFields++;
+        if (govtIdNumber != null && !govtIdNumber.isBlank()) filledFields++;
 
         return (filledFields * 100) / totalFields;
     }

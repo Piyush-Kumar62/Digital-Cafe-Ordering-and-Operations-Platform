@@ -155,6 +155,7 @@ public class DevDataInitializer implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) {
+        log.info("[DevSeed] DevDataInitializer active (profile=dev/e2e, app.dev.seed.enabled=true)");
         // ── 1. Roles — always idempotent ────────────────────────────────────────
         ensureRole(Role.RoleName.ADMIN, "System Administrator");
         Role ownerRole    = ensureRole(Role.RoleName.CAFE_OWNER, "Cafe Owner");
@@ -171,6 +172,7 @@ public class DevDataInitializer implements CommandLineRunner {
             log.info("[DevSeed] Cafes already present ({}) — skipping demo seed.", cafeRepository.count());
             repairExistingMetadata(owner1);
             logAllCredentials();
+            log.info("[DevSeed] DevDataInitializer completed (skipped demo seed).");
             return;
         }
 
@@ -217,6 +219,7 @@ public class DevDataInitializer implements CommandLineRunner {
         log.info("[DevSeed]   Customers  → {} | Orders → {}", customers.size(), totalOrders);
         log.info("[DevSeed] =====================================================");
         logAllCredentials();
+        log.info("[DevSeed] DevDataInitializer completed.");
     }
 
     // ============================================================

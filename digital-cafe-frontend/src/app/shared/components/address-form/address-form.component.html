@@ -1,0 +1,238 @@
+<div
+  class="address-form"
+  [ngClass]="[
+    variant === 'profile'
+      ? 'address-form--profile'
+      : variant === 'cafe'
+        ? 'address-form--cafe'
+        : 'address-form--register'
+  ]"
+  [formGroup]="form"
+>
+  <div class="address-row address-row--single">
+    <div class="address-field">
+      <label
+        [class]="isRegisterVariant ? 'form-label' : 'address-label'"
+        for="pincode"
+      >
+        Pincode *
+      </label>
+      <div
+        class="address-input-wrap"
+        [class.address-input-wrap--icon]="isRegisterVariant"
+      >
+        @if (isRegisterVariant) {
+          <span class="input-group-text">
+            <i class="bi bi-mailbox"></i>
+          </span>
+        }
+        <input
+          id="pincode"
+          type="text"
+          [class]="isRegisterVariant ? 'form-control' : 'address-input'"
+          [class.address-input--icon]="isRegisterVariant"
+          [formControlName]="controlName('pincode')"
+          placeholder="Enter 6-digit pincode"
+          maxlength="6"
+          inputmode="numeric"
+          autocomplete="postal-code"
+        />
+        @if (pincodeLoading) {
+          <span
+            class="address-pin-loader"
+            aria-label="Looking up pincode"
+          ></span>
+        }
+      </div>
+      <div class="address-msg">
+        @if (lookupStatus === 'idle') {
+          <small class="address-hint">
+            Enter pincode first to unlock city and state.
+          </small>
+        }
+        @if (lookupStatus === 'loading') {
+          <small class="address-hint">
+            Fetching city/state for this pincode…
+          </small>
+        }
+        @if (lookupStatus === 'not_found') {
+          <small class="address-error">
+            No city/state found for this pincode. You can enter them manually.
+          </small>
+        }
+        @if (lookupStatus === 'error') {
+          <small class="address-error">
+            Unable to fetch pincode details right now. Please enter manually.
+          </small>
+        }
+        @if (showError('pincode') && lookupStatus !== 'loading') {
+          <small class="address-error">
+            Enter a valid 6-digit pincode.
+          </small>
+        }
+      </div>
+    </div>
+  </div>
+
+  <div class="address-row">
+    <div class="address-field">
+      <label
+        [class]="isRegisterVariant ? 'form-label' : 'address-label'"
+        for="city"
+      >
+        City *
+      </label>
+      <div
+        class="address-input-wrap"
+        [class.address-input-wrap--icon]="isRegisterVariant"
+      >
+        @if (isRegisterVariant) {
+          <span class="input-group-text">
+            <i class="bi bi-building"></i>
+          </span>
+        }
+        <input
+          id="city"
+          type="text"
+          [class]="isRegisterVariant ? 'form-control' : 'address-input'"
+          [class.address-input--icon]="isRegisterVariant"
+          [formControlName]="controlName('city')"
+          [matAutocomplete]="cityAuto"
+          matInput
+          placeholder="Select city"
+          [disabled]="cityStateDisabled"
+          [readonly]="cityReadonly"
+          autocomplete="address-level2"
+        />
+      </div>
+      <mat-autocomplete #cityAuto="matAutocomplete" autoActiveFirstOption>
+        @for (city of cityOptions; track city) {
+          <mat-option [value]="city">
+            {{ city }}
+          </mat-option>
+        }
+      </mat-autocomplete>
+      <div class="address-msg">
+        @if (showError('city')) {
+          <small class="address-error">
+            City is required.
+          </small>
+        }
+      </div>
+    </div>
+
+    <div class="address-field">
+      <label
+        [class]="isRegisterVariant ? 'form-label' : 'address-label'"
+        for="state"
+      >
+        State *
+      </label>
+      <div
+        class="address-input-wrap"
+        [class.address-input-wrap--icon]="isRegisterVariant"
+      >
+        @if (isRegisterVariant) {
+          <span class="input-group-text">
+            <i class="bi bi-geo"></i>
+          </span>
+        }
+        <input
+          id="state"
+          type="text"
+          [class]="isRegisterVariant ? 'form-control' : 'address-input'"
+          [class.address-input--icon]="isRegisterVariant"
+          [formControlName]="controlName('state')"
+          [matAutocomplete]="stateAuto"
+          matInput
+          placeholder="Select state"
+          [disabled]="cityStateDisabled"
+          [readonly]="stateReadonly"
+          autocomplete="address-level1"
+        />
+      </div>
+      <mat-autocomplete #stateAuto="matAutocomplete" autoActiveFirstOption>
+        @for (state of stateOptions; track state) {
+          <mat-option [value]="state">
+            {{ state }}
+          </mat-option>
+        }
+      </mat-autocomplete>
+      <div class="address-msg">
+        @if (showError('state')) {
+          <small class="address-error">
+            State is required.
+          </small>
+        }
+      </div>
+    </div>
+  </div>
+
+  <div class="address-row">
+    <div class="address-field">
+      <label
+        [class]="isRegisterVariant ? 'form-label' : 'address-label'"
+        for="street"
+      >
+        {{ streetLabel }} *
+      </label>
+      <div
+        class="address-input-wrap"
+        [class.address-input-wrap--icon]="isRegisterVariant"
+      >
+        @if (isRegisterVariant) {
+          <span class="input-group-text">
+            <i class="bi bi-house"></i>
+          </span>
+        }
+        <input
+          id="street"
+          type="text"
+          [class]="isRegisterVariant ? 'form-control' : 'address-input'"
+          [class.address-input--icon]="isRegisterVariant"
+          [formControlName]="controlName('street')"
+          placeholder="Street, building, landmark"
+          autocomplete="address-line1"
+        />
+      </div>
+      <div class="address-msg">
+        @if (showError('street')) {
+          <small class="address-error">
+            Street address is required.
+          </small>
+        }
+      </div>
+    </div>
+
+    @if (showPlotNumber) {
+      <div class="address-field">
+      <label
+        [class]="isRegisterVariant ? 'form-label' : 'address-label'"
+        for="plotNumber"
+      >
+        {{ plotLabel }}
+        <span class="address-optional">(optional)</span>
+      </label>
+      <div
+        class="address-input-wrap"
+        [class.address-input-wrap--icon]="isRegisterVariant"
+      >
+        @if (isRegisterVariant) {
+          <span class="input-group-text">
+            <i class="bi bi-geo-alt"></i>
+          </span>
+        }
+        <input
+          id="plotNumber"
+          type="text"
+          [class]="isRegisterVariant ? 'form-control' : 'address-input'"
+          [class.address-input--icon]="isRegisterVariant"
+          [formControlName]="controlName('plotNumber')"
+          placeholder="House / plot number"
+          autocomplete="address-line2"
+        />
+      </div>
+    </div>
+    }
+  </div>
+</div>

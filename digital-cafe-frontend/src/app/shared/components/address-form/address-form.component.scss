@@ -1,0 +1,226 @@
+:host {
+  display: block;
+}
+
+.address-form {
+  display: grid;
+  gap: 1.1rem;
+}
+
+.address-row {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.address-row--single {
+  grid-template-columns: 1fr;
+}
+
+.address-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.address-label {
+  font-weight: 600;
+  color: #cbd5e1;
+  font-size: 0.85rem;
+}
+
+.address-optional {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  font-weight: 500;
+  margin-left: 0.25rem;
+}
+
+.address-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.address-input {
+  width: 100%;
+  border: 1px solid #334155;
+  background: #0f172a;
+  color: #f8fafc;
+  border-radius: 12px;
+  padding: 0.7rem 0.85rem;
+  font-size: 0.95rem;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.address-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.address-input:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.address-input--icon {
+  padding-left: 2.9rem;
+}
+
+.address-hint {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.address-error {
+  font-size: 0.75rem;
+  color: #fca5a5;
+}
+
+.address-msg {
+  min-height: 1rem;
+}
+
+.address-msg small {
+  display: block;
+}
+
+.address-pin-loader {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  width: 16px;
+  height: 16px;
+  margin-top: -8px;
+  border-radius: 50%;
+  border: 2px solid rgba(148, 163, 184, 0.4);
+  border-top-color: #93c5fd;
+  animation: addressSpin 0.8s linear infinite;
+}
+
+.address-form--register {
+  .form-label {
+    display: block;
+    margin-bottom: 0.1rem;
+    font-weight: 600;
+    color: #cbd5e1;
+    font-size: 0.85rem;
+  }
+
+  .address-input-wrap {
+    border-radius: 0.5rem;
+    overflow: hidden;
+  }
+
+  .input-group-text {
+    background: linear-gradient(180deg, #2f3f57 0%, #25354b 100%);
+    border: 1px solid #51657f;
+    border-right: none;
+    padding: 0.75rem;
+    color: #cbd5e1;
+    border-radius: 0.5rem 0 0 0.5rem;
+    display: flex;
+    align-items: center;
+  }
+
+  .form-control {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    border-radius: 0 0.5rem 0.5rem 0;
+    font-size: 1rem;
+    background: rgba(255, 255, 255, 0.06);
+    color: #f8fafc;
+    font-weight: 500;
+    min-height: 44px;
+    transition:
+      border-color 0.3s ease,
+      box-shadow 0.3s ease,
+      background-color 0.3s ease;
+  }
+
+  .form-control:focus {
+    outline: none;
+    border-color: #60a5fa;
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.16);
+  }
+
+  .form-control.ng-invalid.ng-touched {
+    border-color: #f87171;
+  }
+}
+
+.address-form--profile {
+  .address-input {
+    border-radius: 9px;
+    background: var(--pp-bg, #0f172a);
+    border: 1.5px solid var(--pp-border, #334155);
+    color: var(--pp-text, #f8fafc);
+    min-height: 44px;
+    padding: 10px 12px;
+    font-size: 0.9rem;
+  }
+
+  .address-label {
+    color: var(--pp-sub, #cbd5e1);
+    font-size: 0.78rem;
+    letter-spacing: 0.02em;
+  }
+
+  .address-input:focus {
+    border-color: var(--pp-accent, #4f46e5);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+  }
+}
+
+.address-form--cafe {
+  .address-input {
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: #ffffff;
+    padding: 12px 14px;
+    font-size: 0.9rem;
+  }
+
+  .address-label {
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 0.85rem;
+  }
+
+  .address-input:focus {
+    border-color: #38bdf8;
+    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.35);
+  }
+}
+
+:host ::ng-deep .mat-mdc-autocomplete-panel {
+  background: #0f172a;
+  color: #e2e8f0;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+:host ::ng-deep .mat-mdc-option {
+  color: #e2e8f0;
+}
+
+:host ::ng-deep .mat-mdc-option.mdc-list-item--selected,
+:host ::ng-deep .mat-mdc-option:hover {
+  background: rgba(59, 130, 246, 0.18);
+}
+
+@keyframes addressSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 768px) {
+  .address-row {
+    grid-template-columns: 1fr;
+  }
+}

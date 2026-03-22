@@ -1,0 +1,327 @@
+<div class="management-container">
+  <div class="filter-card">
+    <div class="filter-item search">
+      <label>Search Institutions</label>
+      <input
+        type="text"
+        [value]="search"
+        (input)="onSearch($any($event.target).value)"
+        placeholder="Search by name, city, or state"
+      />
+    </div>
+    <div class="filter-item">
+      <label>Total</label>
+      <div class="stat-pill">{{ totalElements }}</div>
+    </div>
+  </div>
+
+  <div class="content-card education-card">
+    <div class="education-header">
+      <div>
+        <h3>Education Dataset Import</h3>
+        <p>Upload AISHE/UGC CSVs to keep institutions, degrees, and branches current.</p>
+      </div>
+      <button class="btn ghost" (click)="syncInstitutionsFromDataGov()" [disabled]="syncLoading">
+        {{ syncLoading ? "Syncing..." : "Sync from data.gov.in" }}
+      </button>
+    </div>
+
+    <div class="local-import">
+      <label>Import from server file (uploads/)</label>
+      <div class="local-import__row">
+        <input
+          type="text"
+          [(ngModel)]="localFilename"
+          placeholder="list_all_colleges_2011_2012.csv"
+        />
+        <button class="btn primary" (click)="importLocalFile()" [disabled]="localImportLoading">
+          {{ localImportLoading ? "Queuing..." : "Import Local CSV" }}
+        </button>
+      </div>
+      <small class="local-import__hint">
+        File must exist in backend uploads directory.
+      </small>
+      <small class="local-import__msg" *ngIf="localImportMessage">
+        {{ localImportMessage }}
+      </small>
+    </div>
+
+    <div class="education-import-grid">
+      <div class="import-block">
+        <div class="import-block__title">
+          <h4>Institutions CSV</h4>
+          <button class="btn ghost" (click)="downloadInstitutionTemplate()">
+            Download Template
+          </button>
+        </div>
+        <input type="file" accept=".csv" (change)="onInstitutionFileChange($event)" />
+        <div class="csv-preview" *ngIf="institutionPreview.length">
+          <div class="csv-preview__title">Preview</div>
+          <div class="csv-preview__table">
+            <div class="csv-row" *ngFor="let row of institutionPreview; let i = index">
+              <span *ngFor="let cell of row; let j = index" class="csv-cell">
+                {{ cell }}
+              </span>
+            </div>
+          </div>
+        </div>
+        <div class="progress" *ngIf="importingInstitutions">
+          <div class="progress__bar" [style.width.%]="institutionUploadProgress"></div>
+          <span class="progress__label">{{ importProgressLabel }}</span>
+        </div>
+        <button
+          class="btn primary"
+          [disabled]="!institutionFile || importingInstitutions"
+          (click)="importInstitutions()"
+        >
+          {{ importingInstitutions ? "Importing..." : "Import Institutions" }}
+        </button>
+      </div>
+
+      <div class="import-block">
+        <div class="import-block__title">
+          <h4>Degrees CSV</h4>
+          <button class="btn ghost" (click)="downloadDegreeTemplate()">
+            Download Template
+          </button>
+        </div>
+        <input type="file" accept=".csv" (change)="onDegreeFileChange($event)" />
+        <div class="csv-preview" *ngIf="degreePreview.length">
+          <div class="csv-preview__title">Preview</div>
+          <div class="csv-preview__table">
+            <div class="csv-row" *ngFor="let row of degreePreview; let i = index">
+              <span *ngFor="let cell of row; let j = index" class="csv-cell">
+                {{ cell }}
+              </span>
+            </div>
+          </div>
+        </div>
+        <div class="progress" *ngIf="importingDegrees">
+          <div class="progress__bar" [style.width.%]="degreeUploadProgress"></div>
+          <span class="progress__label">{{ importProgressLabel }}</span>
+        </div>
+        <button
+          class="btn primary"
+          [disabled]="!degreeFile || importingDegrees"
+          (click)="importDegrees()"
+        >
+          {{ importingDegrees ? "Importing..." : "Import Degrees" }}
+        </button>
+      </div>
+
+      <div class="import-block">
+        <div class="import-block__title">
+          <h4>Branches CSV</h4>
+          <button class="btn ghost" (click)="downloadBranchTemplate()">
+            Download Template
+          </button>
+        </div>
+        <input type="file" accept=".csv" (change)="onBranchFileChange($event)" />
+        <div class="csv-preview" *ngIf="branchPreview.length">
+          <div class="csv-preview__title">Preview</div>
+          <div class="csv-preview__table">
+            <div class="csv-row" *ngFor="let row of branchPreview; let i = index">
+              <span *ngFor="let cell of row; let j = index" class="csv-cell">
+                {{ cell }}
+              </span>
+            </div>
+          </div>
+        </div>
+        <div class="progress" *ngIf="importingBranches">
+          <div class="progress__bar" [style.width.%]="branchUploadProgress"></div>
+          <span class="progress__label">{{ importProgressLabel }}</span>
+        </div>
+        <button
+          class="btn primary"
+          [disabled]="!branchFile || importingBranches"
+          (click)="importBranches()"
+        >
+          {{ importingBranches ? "Importing..." : "Import Branches" }}
+        </button>
+      </div>
+    </div>
+
+    <div class="import-result" *ngIf="importMessage || importStatus">
+      <div class="import-message" *ngIf="importMessage">{{ importMessage }}</div>
+      <div class="import-status" *ngIf="importStatus">{{ importStatus }}</div>
+      <ul *ngIf="importErrors.length">
+        <li *ngFor="let err of importErrors">{{ err }}</li>
+      </ul>
+    </div>
+    <div class="import-result" *ngIf="syncMessage">
+      <div class="import-message">{{ syncMessage }}</div>
+    </div>
+
+    <div class="import-history" *ngIf="jobHistory.length">
+      <h4>Recent Imports</h4>
+      <div class="history-row" *ngFor="let job of jobHistory">
+        <span class="history-tag">{{ job.importType }}</span>
+        <span class="history-name">{{ job.fileName || "CSV Upload" }}</span>
+        <span class="history-status">{{ job.status }}</span>
+        <span class="history-counts" *ngIf="job.insertedRows !== undefined">
+          +{{ job.insertedRows }} / {{ job.skippedRows ?? 0 }} skipped
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <div class="content-card health-card">
+    <div class="education-header">
+      <div>
+        <h3>Education Data Health</h3>
+        <p>Quick snapshot of institutions, degrees, and missing branch mappings.</p>
+      </div>
+      <button class="btn ghost" (click)="loadEducationHealth()">
+        Refresh
+      </button>
+    </div>
+
+    <div class="health-body" *ngIf="!healthLoading; else healthLoadingTpl">
+      <div class="health-grid" *ngIf="health; else healthEmptyTpl">
+        <div class="health-stat">
+          <span class="health-label">Institutions</span>
+          <span class="health-value">{{ health.institutionCount }}</span>
+        </div>
+        <div class="health-stat">
+          <span class="health-label">Degrees</span>
+          <span class="health-value">{{ health.degreeCount }}</span>
+        </div>
+        <div class="health-stat">
+          <span class="health-label">Branches</span>
+          <span class="health-value">{{ health.branchCount }}</span>
+        </div>
+        <div class="health-stat health-stat--warn">
+          <span class="health-label">Degrees Missing Branches</span>
+          <span class="health-value">{{ health.degreesMissingBranches }}</span>
+        </div>
+      </div>
+
+      <div class="health-list" *ngIf="health && health.degreeNamesMissingBranches?.length">
+        <h4>Degrees With No Branch Mapping</h4>
+        <div class="health-tags">
+          <span *ngFor="let degree of health.degreeNamesMissingBranches" class="health-tag">
+            {{ degree }}
+          </span>
+        </div>
+      </div>
+
+      <div class="health-empty" *ngIf="health && !health.degreeNamesMissingBranches?.length">
+        All degrees have at least one branch mapping.
+      </div>
+
+      <div class="health-error" *ngIf="healthError">{{ healthError }}</div>
+    </div>
+
+    <ng-template #healthLoadingTpl>
+      <div class="health-loading">Loading health stats…</div>
+    </ng-template>
+    <ng-template #healthEmptyTpl>
+      <div class="health-empty">No health data yet.</div>
+    </ng-template>
+  </div>
+
+  <div class="content-card health-card">
+    <div class="education-header">
+      <div>
+        <h3>Duplicate Check</h3>
+        <p>Verify there are no duplicate institutions, degrees, or branches.</p>
+      </div>
+      <button class="btn ghost" (click)="runDuplicateCheck()" [disabled]="duplicateLoading">
+        {{ duplicateLoading ? "Checking..." : "Run Duplicate Check" }}
+      </button>
+    </div>
+
+    <div class="health-body" *ngIf="duplicateReport">
+      <div class="health-grid">
+        <div class="health-stat">
+          <span class="health-label">Institution Duplicates</span>
+          <span class="health-value">{{ duplicateReport.institutionDuplicateGroups }}</span>
+        </div>
+        <div class="health-stat">
+          <span class="health-label">Degree Duplicates</span>
+          <span class="health-value">{{ duplicateReport.degreeDuplicateGroups }}</span>
+        </div>
+        <div class="health-stat">
+          <span class="health-label">Branch Duplicates</span>
+          <span class="health-value">{{ duplicateReport.branchDuplicateGroups }}</span>
+        </div>
+      </div>
+
+      <div class="health-list" *ngIf="duplicateReport.institutionSamples.length">
+        <h4>Institution Duplicates (sample)</h4>
+        <div class="health-tags">
+          <span *ngFor="let item of duplicateReport.institutionSamples" class="health-tag">
+            {{ item.label }} (x{{ item.count }})
+          </span>
+        </div>
+      </div>
+
+      <div class="health-list" *ngIf="duplicateReport.degreeSamples.length">
+        <h4>Degree Duplicates (sample)</h4>
+        <div class="health-tags">
+          <span *ngFor="let item of duplicateReport.degreeSamples" class="health-tag">
+            {{ item.label }} (x{{ item.count }})
+          </span>
+        </div>
+      </div>
+
+      <div class="health-list" *ngIf="duplicateReport.branchSamples.length">
+        <h4>Branch Duplicates (sample)</h4>
+        <div class="health-tags">
+          <span *ngFor="let item of duplicateReport.branchSamples" class="health-tag">
+            {{ item.label }} (x{{ item.count }})
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="health-error" *ngIf="duplicateMessage">{{ duplicateMessage }}</div>
+  </div>
+
+  <div class="content-card">
+    <div class="education-table-header">
+      <h3>Institutions</h3>
+      <div class="pagination">
+        <button class="btn ghost" (click)="prevPage()" [disabled]="page === 0">
+          Prev
+        </button>
+        <span>Page {{ page + 1 }} of {{ totalPages || 1 }}</span>
+        <button
+          class="btn ghost"
+          (click)="nextPage()"
+          [disabled]="page + 1 >= totalPages"
+        >
+          Next
+        </button>
+      </div>
+    </div>
+
+    <div class="table-wrapper" *ngIf="institutions.length > 0; else emptyState">
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>City</th>
+            <th>State</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let inst of institutions">
+            <td>{{ inst.name }}</td>
+            <td>{{ inst.city || "—" }}</td>
+            <td>{{ inst.state || "—" }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <ng-template #emptyState>
+      <div class="empty-state">
+        <span class="material-icons">school</span>
+        <p *ngIf="loading">Loading institutions...</p>
+        <p *ngIf="!loading && !error">No institutions found.</p>
+        <p *ngIf="error">{{ error }}</p>
+      </div>
+    </ng-template>
+  </div>
+</div>

@@ -154,6 +154,13 @@ export const routes: Routes = [
           ),
       },
       {
+        path: "education",
+        loadComponent: () =>
+          import("./features/admin/education/education-management.component").then(
+            (m) => m.EducationManagementComponent,
+          ),
+      },
+      {
         path: "profile",
         loadComponent: () =>
           import("./features/admin/profile/admin-profile.component").then(

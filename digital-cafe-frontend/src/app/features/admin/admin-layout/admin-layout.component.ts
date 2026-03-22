@@ -113,6 +113,11 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
       route: "/admin/reports",
     },
     {
+      label: "Education Data",
+      icon: "mortarboard",
+      route: "/admin/education",
+    },
+    {
       label: "Settings",
       icon: "sliders",
       route: "/admin/settings",
@@ -133,6 +138,7 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
     "graph-up-arrow": "bi bi-graph-up-arrow w-6 h-6 text-lg",
     "file-earmark-bar-graph":
       "bi bi-file-earmark-bar-graph-fill w-6 h-6 text-lg",
+    mortarboard: "bi bi-mortarboard-fill w-6 h-6 text-lg",
     sliders: "bi bi-sliders w-6 h-6 text-lg",
     "journal-code": "bi bi-journal-code w-6 h-6 text-lg",
     // legacy keys kept for safety

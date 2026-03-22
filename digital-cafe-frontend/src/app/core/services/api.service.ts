@@ -1,5 +1,5 @@
 import { Injectable } from "@angular/core";
-import { HttpClient, HttpParams } from "@angular/common/http";
+import { HttpClient, HttpEvent, HttpParams } from "@angular/common/http";
 import { Observable } from "rxjs";
 import { map } from "rxjs/operators";
 import { environment } from "@environments/environment";
@@ -26,6 +26,7 @@ import {
   WaiterDashboard,
 } from "@shared/models/dashboard.model";
 import { MessageResponse, User } from "@shared/models/auth.model";
+import { Institution } from "@shared/models/education.model";
 
 @Injectable({
   providedIn: "root",
@@ -74,6 +75,221 @@ export class ApiService {
 
   getCafesByCity(city: string): Observable<Cafe[]> {
     return this.http.get<Cafe[]>(`${this.baseUrl}/cafes/city/${city}`);
+  }
+
+  searchInstitutions(search: string): Observable<Institution[]> {
+    const params = new HttpParams().set("search", search);
+    return this.http
+      .get<any>(`${this.baseUrl}/institutions`, { params })
+      .pipe(map((res) => res?.data || res || []));
+  }
+
+  getDegrees(): Observable<{ id?: number; name: string }[]> {
+    return this.http
+      .get<any>(`${this.baseUrl}/degrees`)
+      .pipe(map((res) => res?.data || res || []));
+  }
+
+  getBranches(
+    degreeId?: number,
+    degree?: string,
+  ): Observable<{ id?: number; name: string; degreeId?: number; degreeName?: string }[]> {
+    let params = new HttpParams();
+    if (degreeId) params = params.set("degreeId", String(degreeId));
+    if (degree) params = params.set("degree", degree);
+    return this.http
+      .get<any>(`${this.baseUrl}/branches`, { params })
+      .pipe(map((res) => res?.data || res || []));
+  }
+
+  getAdminInstitutions(
+    search: string,
+    page: number,
+    size: number,
+  ): Observable<{
+    content: Institution[];
+    pageNumber: number;
+    pageSize: number;
+    totalElements: number;
+    totalPages: number;
+    isFirst?: boolean;
+    isLast?: boolean;
+  }> {
+    let params = new HttpParams().set("page", String(page)).set("size", String(size));
+    if (search) params = params.set("search", search);
+    return this.http
+      .get<any>(`${this.baseUrl}/admin/education/institutions`, { params })
+      .pipe(map((res) => res?.data || res || {}));
+  }
+
+  importInstitutionsAdmin(file: File): Observable<{
+    totalRows?: number;
+    inserted?: number;
+    skipped?: number;
+    errors?: string[];
+  }> {
+    const formData = new FormData();
+    formData.append("file", file);
+    return this.http
+      .post<any>(`${this.baseUrl}/admin/education/institutions/import`, formData)
+      .pipe(map((res) => res?.data || res || {}));
+  }
+
+  importInstitutionsAdminProgress(
+    file: File,
+  ): Observable<HttpEvent<any>> {
+    const formData = new FormData();
+    formData.append("file", file);
+    return this.http.post<any>(
+      `${this.baseUrl}/admin/education/institutions/import`,
+      formData,
+      { observe: "events", reportProgress: true },
+    );
+  }
+
+  importDegreesAdmin(file: File): Observable<{
+    totalRows?: number;
+    inserted?: number;
+    skipped?: number;
+    errors?: string[];
+  }> {
+    const formData = new FormData();
+    formData.append("file", file);
+    return this.http
+      .post<any>(`${this.baseUrl}/admin/education/degrees/import`, formData)
+      .pipe(map((res) => res?.data || res || {}));
+  }
+
+  importDegreesAdminProgress(
+    file: File,
+  ): Observable<HttpEvent<any>> {
+    const formData = new FormData();
+    formData.append("file", file);
+    return this.http.post<any>(
+      `${this.baseUrl}/admin/education/degrees/import`,
+      formData,
+      { observe: "events", reportProgress: true },
+    );
+  }
+
+  importBranchesAdmin(file: File): Observable<{
+    totalRows?: number;
+    inserted?: number;
+    skipped?: number;
+    errors?: string[];
+  }> {
+    const formData = new FormData();
+    formData.append("file", file);
+    return this.http
+      .post<any>(`${this.baseUrl}/admin/education/branches/import`, formData)
+      .pipe(map((res) => res?.data || res || {}));
+  }
+
+  importBranchesAdminProgress(
+    file: File,
+  ): Observable<HttpEvent<any>> {
+    const formData = new FormData();
+    formData.append("file", file);
+    return this.http.post<any>(
+      `${this.baseUrl}/admin/education/branches/import`,
+      formData,
+      { observe: "events", reportProgress: true },
+    );
+  }
+
+  getImportJobStatus(
+    id: number,
+  ): Observable<{
+    id: number;
+    importType: string;
+    status: string;
+    fileName?: string;
+    totalRows?: number;
+    insertedRows?: number;
+    skippedRows?: number;
+    errorMessage?: string;
+    errors?: string[];
+    startedAt?: string;
+    finishedAt?: string;
+  }> {
+    return this.http
+      .get<any>(`${this.baseUrl}/admin/education/imports/${id}`)
+      .pipe(map((res) => res?.data || res || {}));
+  }
+
+  getEducationHealth(): Observable<{
+    institutionCount: number;
+    degreeCount: number;
+    branchCount: number;
+    degreesMissingBranches: number;
+    degreeNamesMissingBranches: string[];
+  }> {
+    return this.http
+      .get<any>(`${this.baseUrl}/admin/education/health`)
+      .pipe(
+        map((res) => res?.data || res || {
+          institutionCount: 0,
+          degreeCount: 0,
+          branchCount: 0,
+          degreesMissingBranches: 0,
+          degreeNamesMissingBranches: [],
+        }),
+      );
+  }
+
+  syncEducationInstitutions(): Observable<{
+    totalFetched: number;
+    inserted: number;
+    skipped: number;
+    pages: number;
+  }> {
+    return this.http
+      .post<any>(`${this.baseUrl}/admin/education/sync`, {})
+      .pipe(
+        map((res) => res?.data || res || {
+          totalFetched: 0,
+          inserted: 0,
+          skipped: 0,
+          pages: 0,
+        }),
+      );
+  }
+
+  importLocalEducationFile(
+    filename: string,
+    type: "INSTITUTIONS" | "DEGREES" | "BRANCHES" = "INSTITUTIONS",
+  ): Observable<{
+    id?: number;
+    importType?: string;
+    status?: string;
+    fileName?: string;
+  }> {
+    const params = new HttpParams().set("filename", filename).set("type", type);
+    return this.http
+      .post<any>(`${this.baseUrl}/admin/education/imports/local`, null, { params })
+      .pipe(map((res) => res?.data || res || {}));
+  }
+
+  getEducationDuplicateReport(): Observable<{
+    institutionDuplicateGroups: number;
+    degreeDuplicateGroups: number;
+    branchDuplicateGroups: number;
+    institutionSamples: Array<{ label: string; count: number }>;
+    degreeSamples: Array<{ label: string; count: number }>;
+    branchSamples: Array<{ label: string; count: number }>;
+  }> {
+    return this.http
+      .get<any>(`${this.baseUrl}/admin/education/duplicates`)
+      .pipe(
+        map((res) => res?.data || res || {
+          institutionDuplicateGroups: 0,
+          degreeDuplicateGroups: 0,
+          branchDuplicateGroups: 0,
+          institutionSamples: [],
+          degreeSamples: [],
+          branchSamples: [],
+        }),
+      );
   }
 
   createCafe(request: CreateCafeRequest): Observable<Cafe> {

@@ -369,6 +369,41 @@
   transition: all 0.2s ease;
 }
 
+.phone-input {
+  display: flex;
+  align-items: center;
+}
+
+.phone-prefix {
+  display: inline-flex;
+  align-items: center;
+  padding: 11px 12px;
+  border: 1px solid #cbd5e1;
+  border-right: none;
+  border-radius: 10px 0 0 10px;
+  background: #f8fafc;
+  color: #64748b;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+}
+
+.phone-field {
+  border-left: none;
+  border-radius: 0 10px 10px 0;
+  width: 100%;
+}
+
+.phone-input:focus-within .phone-prefix {
+  border-color: #0ea5e9;
+}
+
+.phone-input:focus-within .phone-field {
+  border-color: #0ea5e9;
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15);
+  outline: none;
+}
+
 /* Focus Effect */
 
 .form-group input:focus,
@@ -534,5 +569,17 @@
   }
   .modal-footer {
     border-top-color: #334155;
+  }
+
+  .phone-prefix {
+    background: #0f172a;
+    border-color: #334155;
+    color: #94a3b8;
+  }
+
+  .phone-field {
+    background: #0f172a;
+    border-color: #334155;
+    color: #e2e8f0;
   }
 }

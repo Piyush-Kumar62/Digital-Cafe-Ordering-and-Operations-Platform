@@ -19,7 +19,7 @@ import { NavbarComponent } from "@shared/components/navbar/navbar.component";
   styleUrls: ["./login.component.scss"],
 })
 export class LoginComponent implements OnInit {
-  private readonly loginHeroImage = "assets/coffee/coffee-scene-nathan-03.jpg";
+  readonly loginHeroImage = "/assets/coffee/coffee-scene-nathan-03.jpg";
   loginForm!: FormGroup;
   loading = false;
   showPassword = false;

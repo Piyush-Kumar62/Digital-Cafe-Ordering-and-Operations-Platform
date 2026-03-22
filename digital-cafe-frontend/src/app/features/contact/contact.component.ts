@@ -30,6 +30,16 @@ export class ContactComponent {
       );
       return;
     }
+    if (
+      this.formData.phone &&
+      !/^[0-9]{10}$/.test(String(this.formData.phone).trim())
+    ) {
+      this.alertService.error(
+        "Validation Error",
+        "Please enter a valid 10-digit phone number.",
+      );
+      return;
+    }
 
     this.isSubmitting = true;
 

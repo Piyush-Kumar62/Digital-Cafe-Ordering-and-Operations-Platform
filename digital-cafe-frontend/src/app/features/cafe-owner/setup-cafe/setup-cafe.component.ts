@@ -6,11 +6,12 @@ import { ReactiveFormsModule } from "@angular/forms";
 import { Router, ActivatedRoute } from "@angular/router";
 import { AlertService } from "@core/services/alert.service";
 import { environment } from "@environments/environment";
+import { AddressFormComponent } from "@shared/components/address-form/address-form.component";
 
 @Component({
   selector: "app-setup-cafe",
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, AddressFormComponent],
   templateUrl: "./setup-cafe.component.html",
   styleUrls: ["./setup-cafe.component.scss"],
 })
@@ -25,6 +26,7 @@ export class SetupCafeComponent implements OnInit {
 
   loading = false;
   successMessage = "";
+  addressFormSubmitted = false;
 
   constructor(
     private fb: FormBuilder,
@@ -44,9 +46,20 @@ export class SetupCafeComponent implements OnInit {
       landmark: [""],
       phoneNumber: [
         "",
-        [Validators.required, Validators.pattern(/^[0-9+\-\s()]{10,20}$/)],
+        [
+          Validators.required,
+          Validators.pattern(/^[0-9]{10}$/),
+          Validators.maxLength(10),
+        ],
       ],
-      pincode: ["", [Validators.required, Validators.maxLength(10)]],
+      pincode: [
+        "",
+        [
+          Validators.required,
+          Validators.maxLength(6),
+          Validators.pattern(/^[0-9]{6}$/),
+        ],
+      ],
       openingTime: [""],
       closingTime: [""],
       fssaiNumber: [""],
@@ -131,6 +144,7 @@ export class SetupCafeComponent implements OnInit {
 
   submit(): void {
     if (this.cafeForm.invalid) {
+      this.addressFormSubmitted = true;
       this.cafeForm.markAllAsTouched();
       this.alertService.error("Please fill all required fields correctly.");
       return;
@@ -142,8 +156,8 @@ export class SetupCafeComponent implements OnInit {
     const phoneNumber = this.normalizeDigits(raw.phoneNumber);
     const pincode = String(raw.pincode || "").trim();
 
-    if (phoneNumber.length < 10 || phoneNumber.length > 20) {
-      this.alertService.error("Phone number must be between 10 and 20 digits.");
+    if (phoneNumber.length !== 10) {
+      this.alertService.error("Phone number must be exactly 10 digits.");
       return;
     }
 

@@ -401,7 +401,7 @@
   min-height: 540px;
   background:
     linear-gradient(rgba(11, 18, 32, 0.25), rgba(11, 18, 32, 0.25)),
-    url("/assets/coffee/coffee-scene-nathan-03.jpg") center / cover no-repeat;
+    linear-gradient(160deg, rgba(10, 16, 32, 0.95), rgba(6, 12, 26, 0.98));
 
   @media (min-width: 768px) {
     display: block;

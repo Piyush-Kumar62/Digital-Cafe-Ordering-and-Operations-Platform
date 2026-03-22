@@ -825,6 +825,46 @@ $radius: 16px;
   max-width: 360px;
 }
 
+.phone-input-wrap {
+  display: flex;
+  align-items: center;
+}
+
+.phone-prefix {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.6rem 0.85rem;
+  border: 1.5px solid $border;
+  border-right: none;
+  border-radius: 10px 0 0 10px;
+  background: #f8fafc;
+  color: $muted;
+  font-weight: 700;
+  font-size: 0.85rem;
+  white-space: nowrap;
+
+  i {
+    color: $primary;
+    font-size: 0.85rem;
+  }
+}
+
+.phone-input-wrap input {
+  border-left: none;
+  border-radius: 0 10px 10px 0;
+  width: 100%;
+}
+
+.phone-input-wrap:focus-within .phone-prefix {
+  border-color: $primary;
+}
+
+.phone-input-wrap:focus-within input {
+  border-color: $primary;
+  box-shadow: 0 0 0 3px rgba(109, 40, 217, 0.1);
+}
+
 .hours-row-label {
   font-size: 0.83rem;
   font-weight: 600;
@@ -1360,6 +1400,16 @@ $radius: 16px;
     }
     .input-icon-wrap > i {
       color: #64748b;
+    }
+  }
+
+  .phone-prefix {
+    background: #0f172a;
+    border-color: #334155;
+    color: #cbd5e1;
+
+    i {
+      color: #a78bfa;
     }
   }
 

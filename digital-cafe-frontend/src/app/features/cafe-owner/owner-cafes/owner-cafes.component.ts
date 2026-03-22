@@ -81,7 +81,11 @@ export class OwnerCafesComponent implements OnInit {
       landmark: [""],
       phoneNumber: [
         "",
-        [Validators.required, Validators.pattern(/^[0-9+\-\s()]{10,20}$/)],
+        [
+          Validators.required,
+          Validators.pattern(/^[0-9]{10}$/),
+          Validators.maxLength(10),
+        ],
       ],
       pincode: ["", [Validators.required, Validators.maxLength(10)]],
       openingTime: [""],
@@ -230,6 +234,11 @@ export class OwnerCafesComponent implements OnInit {
       gstNumber: raw.gstNumber?.trim() || "",
       msmeNumber: raw.msmeNumber?.trim() || "",
     };
+
+    if (String(data["phoneNumber"] || "").length !== 10) {
+      this.alertService.error("Phone number must be exactly 10 digits.");
+      return;
+    }
 
     fd.append(
       "data",

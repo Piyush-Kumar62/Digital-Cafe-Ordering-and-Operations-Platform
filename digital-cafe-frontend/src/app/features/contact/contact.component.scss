@@ -551,6 +551,38 @@
   &::placeholder { color: var(--input-ph); }
 }
 
+.phone-input {
+  display: flex;
+  align-items: stretch;
+}
+
+.phone-prefix {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.85rem 1rem;
+  border: 1.5px solid var(--input-border);
+  border-right: none;
+  border-radius: 10px 0 0 10px;
+  background: var(--input-bg);
+  color: var(--text-muted);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.phone-input__field {
+  border-left: none;
+  border-radius: 0 10px 10px 0;
+}
+
+.phone-input:focus-within .phone-prefix {
+  border-color: var(--accent);
+}
+
+.phone-input:focus-within .phone-input__field {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.16);
+}
+
 textarea.form-input {
   resize: vertical;
   min-height: 140px;

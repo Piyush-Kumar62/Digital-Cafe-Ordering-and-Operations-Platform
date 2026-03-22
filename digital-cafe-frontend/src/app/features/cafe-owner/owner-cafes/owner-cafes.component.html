@@ -419,12 +419,16 @@
         <div class="contact-hours-layout">
           <div class="form-group phone-group">
             <label>Phone Number <span class="req">*</span></label>
-            <div class="input-icon-wrap">
-              <i class="bi bi-telephone-fill"></i>
+            <div class="phone-input-wrap">
+              <span class="phone-prefix"
+                ><i class="bi bi-telephone-fill"></i> +91</span
+              >
               <input
                 type="text"
                 formControlName="phoneNumber"
                 placeholder="10-digit number"
+                maxlength="10"
+                inputmode="numeric"
               />
             </div>
             <span

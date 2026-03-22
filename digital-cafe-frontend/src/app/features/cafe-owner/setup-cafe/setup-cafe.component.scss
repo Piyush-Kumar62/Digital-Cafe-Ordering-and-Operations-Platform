@@ -104,6 +104,37 @@ textarea:focus {
   box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.35);
 }
 
+.phone-input {
+  display: flex;
+  align-items: center;
+}
+
+.phone-prefix {
+  padding: 12px 14px;
+  border-radius: 10px 0 0 10px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-right: none;
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.phone-input input {
+  border-left: none;
+  border-radius: 0 10px 10px 0;
+  width: 100%;
+}
+
+.phone-input:focus-within .phone-prefix {
+  border-color: #38bdf8;
+}
+
+.phone-input:focus-within input {
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.35);
+}
+
 .optional {
   font-size: 0.78rem;
   font-weight: 400;

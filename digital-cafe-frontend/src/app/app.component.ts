@@ -25,6 +25,7 @@ export class AppComponent implements OnInit {
   ngOnInit(): void {
     try {
       this.initializeTheme();
+      this.preloadCriticalImages();
 
       // Clear stale auth state on landing page when the JWT token is gone
       const currentUrl = this.router.url;
@@ -70,5 +71,21 @@ export class AppComponent implements OnInit {
 
   private initializeTheme(): void {
     this.themeService.initTheme();
+  }
+
+  private preloadCriticalImages(): void {
+    const urls = [
+      "/assets/coffee/coffee-scene-nathan-03.jpg",
+      "/assets/coffee/coffee-table-pexels.jpg",
+      "/assets/cafe/cafe-ambience.jpg",
+    ];
+
+    urls.forEach((src) => {
+      const img = new Image();
+      img.decoding = "async";
+      img.loading = "eager";
+      img.setAttribute("fetchpriority", "high");
+      img.src = src;
+    });
   }
 }

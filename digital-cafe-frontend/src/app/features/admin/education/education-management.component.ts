@@ -54,9 +54,12 @@ type DuplicateReport = {
   styleUrls: ["./education-management.component.scss"],
 })
 export class EducationManagementComponent implements OnInit, OnDestroy {
+  private static readonly IMPORT_POLL_MS = 4000;
+  private static readonly IMPORT_MAX_POLLS = 180;
+
   search = "";
   page = 0;
-  size = 20;
+  size = 50;
   totalPages = 0;
   totalElements = 0;
   loading = false;
@@ -67,12 +70,8 @@ export class EducationManagementComponent implements OnInit, OnDestroy {
   healthError = "";
 
   institutionFile: File | null = null;
-  degreeFile: File | null = null;
-  branchFile: File | null = null;
 
   importingInstitutions = false;
-  importingDegrees = false;
-  importingBranches = false;
 
   importMessage = "";
   importErrors: string[] = [];
@@ -89,10 +88,6 @@ export class EducationManagementComponent implements OnInit, OnDestroy {
   }> = [];
 
   institutionUploadProgress = 0;
-  degreeUploadProgress = 0;
-  branchUploadProgress = 0;
-  syncLoading = false;
-  syncMessage = "";
   localFilename = "";
   localImportLoading = false;
   localImportMessage = "";
@@ -100,8 +95,12 @@ export class EducationManagementComponent implements OnInit, OnDestroy {
   duplicateReport: DuplicateReport | null = null;
   duplicateMessage = "";
   institutionPreview: string[][] = [];
-  degreePreview: string[][] = [];
-  branchPreview: string[][] = [];
+  copyMessage = "";
+  latestImportStatus = "";
+  latestImportMeta = "";
+  private importPollHandle: ReturnType<typeof setTimeout> | null = null;
+  private importPollCount = 0;
+  private pollingJobId: number | null = null;
 
   private readonly search$ = new Subject<string>();
   private readonly destroy$ = new Subject<void>();
@@ -119,9 +118,11 @@ export class EducationManagementComponent implements OnInit, OnDestroy {
 
     this.loadInstitutions();
     this.loadEducationHealth();
+    this.loadLatestImportStatus();
   }
 
   ngOnDestroy(): void {
+    this.clearImportPolling();
     this.destroy$.next();
     this.destroy$.complete();
   }
@@ -165,19 +166,25 @@ export class EducationManagementComponent implements OnInit, OnDestroy {
     });
   }
 
-  syncInstitutionsFromDataGov(): void {
-    this.syncLoading = true;
-    this.syncMessage = "";
-    this.api.syncEducationInstitutions().subscribe({
-      next: (res) => {
-        this.syncLoading = false;
-        this.syncMessage = `Sync complete. Fetched ${res.totalFetched}, inserted ${res.inserted}, skipped ${res.skipped}.`;
-        this.loadEducationHealth();
-        this.loadInstitutions();
+  loadLatestImportStatus(): void {
+    this.api.getLatestEducationImport("INSTITUTIONS").subscribe({
+      next: (job) => {
+        const status = String(job.status || "").toUpperCase();
+        const fileLabel = job.fileName ? `File: ${job.fileName}` : "Manual import";
+        if (status) {
+          this.latestImportStatus = `Latest import: ${status}`;
+        }
+        if (status === "COMPLETED") {
+          this.latestImportMeta = `${fileLabel} • Inserted ${job.insertedRows ?? 0}, skipped ${job.skippedRows ?? 0}.`;
+        } else if (status === "FAILED") {
+          this.latestImportMeta = job.errorMessage || `${fileLabel} failed.`;
+        } else {
+          this.latestImportMeta = `${fileLabel} • Started ${job.startedAt || "recently"}.`;
+        }
       },
-      error: (err) => {
-        this.syncLoading = false;
-        this.syncMessage = err?.error?.message || "Sync failed. Check API key/resource id.";
+      error: () => {
+        this.latestImportStatus = "";
+        this.latestImportMeta = "";
       },
     });
   }
@@ -228,30 +235,17 @@ export class EducationManagementComponent implements OnInit, OnDestroy {
     this.loadInstitutions();
   }
 
+  getRowNumber(index: number): number {
+    return this.page * this.size + index + 1;
+  }
+
+
   onInstitutionFileChange(event: Event): void {
     const file = (event.target as HTMLInputElement)?.files?.[0] || null;
     this.institutionFile = file;
     if (file) {
-      this.validateCsvPreview(file, "institution");
-      this.loadCsvPreview(file, "institution");
-    }
-  }
-
-  onDegreeFileChange(event: Event): void {
-    const file = (event.target as HTMLInputElement)?.files?.[0] || null;
-    this.degreeFile = file;
-    if (file) {
-      this.validateCsvPreview(file, "degree");
-      this.loadCsvPreview(file, "degree");
-    }
-  }
-
-  onBranchFileChange(event: Event): void {
-    const file = (event.target as HTMLInputElement)?.files?.[0] || null;
-    this.branchFile = file;
-    if (file) {
-      this.validateCsvPreview(file, "branch");
-      this.loadCsvPreview(file, "branch");
+      this.validateCsvPreview(file);
+      this.loadCsvPreview(file);
     }
   }
 
@@ -290,72 +284,25 @@ export class EducationManagementComponent implements OnInit, OnDestroy {
     });
   }
 
-  importDegrees(): void {
-    if (!this.degreeFile) return;
-    this.importingDegrees = true;
-    this.importMessage = "";
-    this.importErrors = [];
-    this.importStatus = "Uploading degrees CSV...";
-    this.degreeUploadProgress = 0;
-
-    this.api.importDegreesAdminProgress(this.degreeFile).subscribe({
-      next: (event) => {
-        if (event.type === HttpEventType.UploadProgress) {
-          const total = event.total || 1;
-          this.degreeUploadProgress = Math.round(
-            (event.loaded / total) * 100,
-          );
-          this.importProgressLabel = `${this.degreeUploadProgress}% uploaded`;
-        }
-        if (event instanceof HttpResponse) {
-          const job = event.body?.data || event.body || {};
-          this.importingDegrees = false;
-          this.importJobId = Number(job.id || 0) || null;
-          this.importStatus = "Import queued. Processing in background...";
-          if (this.importJobId) {
-            this.pollImportJob(this.importJobId, "Degrees");
-          }
-        }
-      },
-      error: (err) => {
-        this.importingDegrees = false;
-        this.importMessage = err?.error?.message || "Degree import failed.";
-      },
-    });
-  }
-
-  importBranches(): void {
-    if (!this.branchFile) return;
-    this.importingBranches = true;
-    this.importMessage = "";
-    this.importErrors = [];
-    this.importStatus = "Uploading branches CSV...";
-    this.branchUploadProgress = 0;
-
-    this.api.importBranchesAdminProgress(this.branchFile).subscribe({
-      next: (event) => {
-        if (event.type === HttpEventType.UploadProgress) {
-          const total = event.total || 1;
-          this.branchUploadProgress = Math.round(
-            (event.loaded / total) * 100,
-          );
-          this.importProgressLabel = `${this.branchUploadProgress}% uploaded`;
-        }
-        if (event instanceof HttpResponse) {
-          const job = event.body?.data || event.body || {};
-          this.importingBranches = false;
-          this.importJobId = Number(job.id || 0) || null;
-          this.importStatus = "Import queued. Processing in background...";
-          if (this.importJobId) {
-            this.pollImportJob(this.importJobId, "Branches");
-          }
-        }
-      },
-      error: (err) => {
-        this.importingBranches = false;
-        this.importMessage = err?.error?.message || "Branch import failed.";
-      },
-    });
+  copyInstitutionName(name: string): void {
+    if (!name) return;
+    const text = name.trim();
+    if (!text) return;
+    if (navigator?.clipboard?.writeText) {
+      navigator.clipboard
+        .writeText(text)
+        .then(() => {
+          this.copyMessage = `Copied: ${text}`;
+          setTimeout(() => (this.copyMessage = ""), 2000);
+        })
+        .catch(() => {
+          this.copyMessage = "Unable to copy. Please copy manually.";
+          setTimeout(() => (this.copyMessage = ""), 2000);
+        });
+    } else {
+      this.copyMessage = "Copy not supported in this browser.";
+      setTimeout(() => (this.copyMessage = ""), 2000);
+    }
   }
 
   private setImportSummary(label: string, res: ImportResponse): void {
@@ -366,6 +313,12 @@ export class EducationManagementComponent implements OnInit, OnDestroy {
   }
 
   private pollImportJob(jobId: number, label: string): void {
+    if (this.pollingJobId !== jobId) {
+      this.clearImportPolling();
+      this.pollingJobId = jobId;
+      this.importPollCount = 0;
+    }
+
     this.api.getImportJobStatus(jobId).subscribe({
       next: (job) => {
         const status = String(job.status || "").toUpperCase();
@@ -377,10 +330,12 @@ export class EducationManagementComponent implements OnInit, OnDestroy {
           }, skipped ${job.skippedRows ?? 0}.`;
           this.importErrors = job.errors || [];
           this.pushJobHistory(job);
+          this.loadLatestImportStatus();
           this.loadEducationHealth();
           if (label === "Institutions") {
             this.loadInstitutions();
           }
+          this.clearImportPolling();
           return;
         }
         if (status === "FAILED") {
@@ -390,32 +345,39 @@ export class EducationManagementComponent implements OnInit, OnDestroy {
             job.errorMessage || `${label} import failed.`;
           this.importErrors = job.errors || [];
           this.pushJobHistory(job);
+          this.loadLatestImportStatus();
+          this.clearImportPolling();
           return;
         }
 
         this.importStatus = `${label} import running...`;
         this.importProgressLabel = "";
-        setTimeout(() => this.pollImportJob(jobId, label), 2000);
+        this.importPollCount += 1;
+        if (this.importPollCount >= EducationManagementComponent.IMPORT_MAX_POLLS) {
+          this.importStatus = `${label} import is still running. Please click Refresh status.`;
+          this.clearImportPolling(false);
+          return;
+        }
+        this.importPollHandle = setTimeout(
+          () => this.pollImportJob(jobId, label),
+          EducationManagementComponent.IMPORT_POLL_MS,
+        );
       },
       error: () => {
         this.importStatus = `${label} import status unavailable.`;
+        this.clearImportPolling(false);
       },
     });
+  }
+
+  refreshImportStatus(): void {
+    if (!this.importJobId) return;
+    this.pollImportJob(this.importJobId, "Institutions");
   }
 
   downloadInstitutionTemplate(): void {
     const content = "name,city,state\n";
     this.downloadCsv("institutions-template.csv", content);
-  }
-
-  downloadDegreeTemplate(): void {
-    const content = "degree\nB.Tech\nMBA\n";
-    this.downloadCsv("degrees-template.csv", content);
-  }
-
-  downloadBranchTemplate(): void {
-    const content = "degree,branch\nB.Tech,Computer Science and Engineering\nMBA,Finance\n";
-    this.downloadCsv("branches-template.csv", content);
   }
 
   private downloadCsv(filename: string, content: string): void {
@@ -454,21 +416,14 @@ export class EducationManagementComponent implements OnInit, OnDestroy {
     ].slice(0, 10);
   }
 
-  private validateCsvPreview(file: File, type: "institution" | "degree" | "branch"): void {
+  private validateCsvPreview(file: File): void {
     const reader = new FileReader();
     reader.onload = () => {
       const text = String(reader.result || "");
       const firstLine = text.split(/\r?\n/).find((line) => line.trim().length > 0);
       if (!firstLine) return;
       const lower = firstLine.toLowerCase();
-      let valid = false;
-      if (type === "institution") {
-        valid = lower.includes("name") && lower.includes("city");
-      } else if (type === "degree") {
-        valid = lower.includes("degree");
-      } else {
-        valid = lower.includes("degree") && lower.includes("branch");
-      }
+      const valid = lower.includes("name") && lower.includes("city");
       if (!valid) {
         this.importMessage =
           "CSV header doesn't look correct. Please use the template format.";
@@ -477,15 +432,13 @@ export class EducationManagementComponent implements OnInit, OnDestroy {
     reader.readAsText(file);
   }
 
-  private loadCsvPreview(file: File, type: "institution" | "degree" | "branch"): void {
+  private loadCsvPreview(file: File): void {
     const reader = new FileReader();
     reader.onload = () => {
       const text = String(reader.result || "");
       const lines = text.split(/\r?\n/).filter((line) => line.trim().length > 0).slice(0, 6);
       const rows = lines.map((line) => this.parseCsvLine(line));
-      if (type === "institution") this.institutionPreview = rows;
-      if (type === "degree") this.degreePreview = rows;
-      if (type === "branch") this.branchPreview = rows;
+      this.institutionPreview = rows;
     };
     reader.readAsText(file);
   }
@@ -512,5 +465,16 @@ export class EducationManagementComponent implements OnInit, OnDestroy {
     }
     result.push(current);
     return result;
+  }
+
+  private clearImportPolling(resetJob: boolean = true): void {
+    if (this.importPollHandle) {
+      clearTimeout(this.importPollHandle);
+      this.importPollHandle = null;
+    }
+    this.importPollCount = 0;
+    if (resetJob) {
+      this.pollingJobId = null;
+    }
   }
 }

@@ -420,7 +420,7 @@
                 </button>
               </div>
 
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <div>
                   <label class="form-label">Institution *</label>
                   <input
@@ -428,6 +428,7 @@
                     class="form-control"
                     formControlName="institutionName"
                     placeholder="Search institution"
+                    [title]="displayInstitution(academic.get('institutionName')?.value)"
                     [matAutocomplete]="institutionAuto"
                     matInput
                   />
@@ -478,12 +479,20 @@
                 </div>
                 <div>
                   <label class="form-label">Degree *</label>
-                  <select class="form-control" formControlName="degree">
-                    <option value="" disabled>Select degree</option>
-                    <option *ngFor="let degree of degreeOptions" [value]="degree">
-                      {{ degree }}
-                    </option>
-                  </select>
+                  <mat-form-field class="w-full" appearance="fill">
+                    <mat-select
+                      formControlName="degree"
+                      panelClass="academic-select-panel"
+                      placeholder="Select degree"
+                    >
+                      <mat-option
+                        *ngFor="let degree of degreeOptions"
+                        [value]="degree"
+                      >
+                        {{ degree }}
+                      </mat-option>
+                    </mat-select>
+                  </mat-form-field>
                   <small
                     *ngIf="isAcademicInvalid(i, 'degree')"
                     class="text-red-300 text-xs mt-1 block"
@@ -494,23 +503,22 @@
                 <div>
                   <label class="form-label">
                     Branch / Stream *
-                    <span
-                      class="register-badge"
-                      *ngIf="!isBranchLoading(i) && getBranchOptions(i).length === 0 && academic.get('degree')?.value"
-                    >
-                      No branches yet
-                    </span>
                   </label>
                   <ng-container *ngIf="getBranchOptions(i).length > 0; else branchInput">
-                    <select class="form-control" formControlName="branch">
-                      <option value="" disabled>Select branch</option>
-                      <option
-                        *ngFor="let branch of getBranchOptions(i)"
-                        [value]="branch"
+                    <mat-form-field class="w-full" appearance="fill">
+                      <mat-select
+                        formControlName="branch"
+                        panelClass="academic-branch-panel"
+                        placeholder="Select branch"
                       >
-                        {{ branch }}
-                      </option>
-                    </select>
+                        <mat-option
+                          *ngFor="let branch of getBranchOptions(i)"
+                          [value]="branch"
+                        >
+                          {{ branch }}
+                        </mat-option>
+                      </mat-select>
+                    </mat-form-field>
                   </ng-container>
                   <ng-template #branchInput>
                     <input
@@ -527,33 +535,29 @@
                     Loading branches…
                   </small>
                   <small
-                    *ngIf="!isBranchLoading(i) && getBranchOptions(i).length === 0 && academic.get('degree')?.value"
-                    class="text-slate-300 text-xs mt-1 block register-info-hint"
-                  >
-                    No branches listed yet. You can type your branch manually.
-                  </small>
-                  <small
                     *ngIf="isAcademicInvalid(i, 'branch')"
                     class="text-red-300 text-xs mt-1 block"
                   >
                     Branch is required.
                   </small>
                 </div>
-              </div>
-
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
                 <div>
                   <label class="form-label">Year of Completion *</label>
-                  <select
-                    class="form-control"
-                    formControlName="passingYear"
-                    [disabled]="academic.get('currentlyStudying')?.value"
-                  >
-                    <option value="" disabled>Select year</option>
-                    <option *ngFor="let year of academicYearOptions" [value]="year">
-                      {{ year }}
-                    </option>
-                  </select>
+                  <mat-form-field class="w-full" appearance="fill">
+                    <mat-select
+                      formControlName="passingYear"
+                      [disabled]="academic.get('currentlyStudying')?.value"
+                      panelClass="academic-select-panel"
+                      placeholder="Select year"
+                    >
+                      <mat-option
+                        *ngFor="let year of academicYearOptions"
+                        [value]="year"
+                      >
+                        {{ year }}
+                      </mat-option>
+                    </mat-select>
+                  </mat-form-field>
                   <small
                     *ngIf="isAcademicInvalid(i, 'passingYear')"
                     class="text-red-300 text-xs mt-1 block"
@@ -563,12 +567,17 @@
                 </div>
                 <div>
                   <label class="form-label">Grading System *</label>
-                  <select class="form-control" formControlName="gradingType">
-                    <option value="" disabled>Select grading</option>
-                    <option *ngFor="let g of gradingTypes" [value]="g">
-                      {{ g }}
-                    </option>
-                  </select>
+                  <mat-form-field class="w-full" appearance="fill">
+                    <mat-select
+                      formControlName="gradingType"
+                      panelClass="academic-select-panel"
+                      placeholder="Select grading"
+                    >
+                      <mat-option *ngFor="let g of gradingTypes" [value]="g">
+                        {{ g }}
+                      </mat-option>
+                    </mat-select>
+                  </mat-form-field>
                   <small
                     *ngIf="isAcademicInvalid(i, 'gradingType')"
                     class="text-red-300 text-xs mt-1 block"

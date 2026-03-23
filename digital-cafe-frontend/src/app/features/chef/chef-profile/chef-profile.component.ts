@@ -28,10 +28,26 @@ export class ChefProfileComponent implements OnInit {
     profileImageUrl: "",
     profileCompletionPercentage: 0,
     lastLogin: "",
+    phoneNumber: "",
+    govtIdType: "",
+    govtIdNumber: "",
+    joiningDate: "",
+    experienceYears: 0,
+    shift: "",
   };
 
   editMode = false;
-  editForm = { firstName: "", lastName: "", displayName: "" };
+  editForm = {
+    firstName: "",
+    lastName: "",
+    displayName: "",
+    phoneNumber: "",
+    govtIdType: "",
+    govtIdNumber: "",
+    joiningDate: "",
+    experienceYears: 0,
+    shift: "",
+  };
 
   showPasswordForm = false;
   passwordForm = { oldPassword: "", newPassword: "", confirmPassword: "" };
@@ -71,9 +87,15 @@ export class ChefProfileComponent implements OnInit {
           displayName: data?.displayName || "",
           email: data?.email || this.currentUser?.email || "",
           role: data?.role || "",
-          profileImageUrl: data?.profileImageUrl || "",
+          profileImageUrl: this.apiService.resolveImageUrl(data?.profileImageUrl || ""),
           profileCompletionPercentage: data?.profileCompletionPercentage || 0,
           lastLogin: data?.lastLogin || "",
+          phoneNumber: data?.phoneNumber || "",
+          govtIdType: data?.govtIdType || this.currentUser?.govtIdType || "",
+          govtIdNumber: data?.govtIdNumber || this.currentUser?.govtIdNumber || "",
+          joiningDate: data?.joiningDate || this.currentUser?.joiningDate || "",
+          experienceYears: data?.experienceYears ?? this.currentUser?.experienceYears ?? 0,
+          shift: data?.shift || this.currentUser?.shift || "",
         };
         this.loading = false;
       },
@@ -81,6 +103,11 @@ export class ChefProfileComponent implements OnInit {
         this.profileData.firstName = this.currentUser?.firstName || "";
         this.profileData.lastName = this.currentUser?.lastName || "";
         this.profileData.email = this.currentUser?.email || "";
+        this.profileData.govtIdType = this.currentUser?.govtIdType || "";
+        this.profileData.govtIdNumber = this.currentUser?.govtIdNumber || "";
+        this.profileData.joiningDate = this.currentUser?.joiningDate || "";
+        this.profileData.experienceYears = this.currentUser?.experienceYears || 0;
+        this.profileData.shift = this.currentUser?.shift || "";
         this.loading = false;
       },
     });
@@ -131,7 +158,7 @@ export class ChefProfileComponent implements OnInit {
   }
 
   getShift(): string {
-    return this.currentUser?.shift || "—";
+    return this.profileData.shift || this.currentUser?.shift || "—";
   }
 
   getSpecialization(): string {
@@ -139,13 +166,13 @@ export class ChefProfileComponent implements OnInit {
   }
 
   getExperience(): string {
-    const exp = this.currentUser?.experienceYears;
+    const exp = this.profileData.experienceYears ?? this.currentUser?.experienceYears;
     if (exp == null) return "—";
     return `${exp} ${exp === 1 ? "year" : "years"}`;
   }
 
   getJoinDate(): string {
-    const date = this.currentUser?.joiningDate || this.currentUser?.createdAt;
+    const date = this.profileData.joiningDate || this.currentUser?.joiningDate || this.currentUser?.createdAt;
     if (!date) return "—";
     return new Date(date).toLocaleDateString("en-IN", {
       year: "numeric",
@@ -178,6 +205,12 @@ export class ChefProfileComponent implements OnInit {
       displayName:
         this.profileData.displayName ||
         `${this.profileData.firstName} ${this.profileData.lastName}`.trim(),
+      phoneNumber: this.profileData.phoneNumber || "",
+      govtIdType: this.profileData.govtIdType || "",
+      govtIdNumber: this.profileData.govtIdNumber || "",
+      joiningDate: this.profileData.joiningDate || "",
+      experienceYears: this.profileData.experienceYears || 0,
+      shift: this.profileData.shift || "",
     };
     this.editMode = true;
   }
@@ -202,8 +235,33 @@ export class ChefProfileComponent implements OnInit {
         this.profileData.lastName = data?.lastName || this.editForm.lastName;
         this.profileData.displayName =
           data?.displayName || this.editForm.displayName;
+        this.profileData.phoneNumber =
+          data?.phoneNumber || this.editForm.phoneNumber || "";
+        this.profileData.govtIdType =
+          data?.govtIdType || this.editForm.govtIdType || "";
+        this.profileData.govtIdNumber =
+          data?.govtIdNumber || this.editForm.govtIdNumber || "";
+        this.profileData.joiningDate =
+          data?.joiningDate || this.editForm.joiningDate || "";
+        this.profileData.experienceYears =
+          data?.experienceYears ?? this.editForm.experienceYears ?? 0;
+        this.profileData.shift = data?.shift || this.editForm.shift || "";
         if (data?.profileImageUrl)
-          this.profileData.profileImageUrl = data.profileImageUrl;
+          this.profileData.profileImageUrl = this.apiService.resolveImageUrl(data.profileImageUrl);
+
+        if (this.currentUser) {
+          this.currentUser = {
+            ...this.currentUser,
+            firstName: this.profileData.firstName,
+            lastName: this.profileData.lastName,
+            govtIdType: this.profileData.govtIdType,
+            govtIdNumber: this.profileData.govtIdNumber,
+            joiningDate: this.profileData.joiningDate,
+            experienceYears: this.profileData.experienceYears,
+            shift: this.profileData.shift,
+          };
+          this.authService.updateUserData(this.currentUser);
+        }
         this.saving = false;
         this.editMode = false;
         this.alertService.success("Saved", "Profile updated successfully.");
@@ -244,7 +302,9 @@ export class ChefProfileComponent implements OnInit {
     this.uploadingImage = true;
     this.apiService.uploadCustomerProfileImage(file).subscribe({
       next: (res: any) => {
-        const url = res?.profileImageUrl || res?.imageUrl || res?.url || "";
+        const url = this.apiService.resolveImageUrl(
+          res?.profileImageUrl || res?.imageUrl || res?.url || "",
+        );
         this.profileData.profileImageUrl = url;
         this.uploadingImage = false;
         this.alertService.success("Uploaded", "Profile picture updated.");

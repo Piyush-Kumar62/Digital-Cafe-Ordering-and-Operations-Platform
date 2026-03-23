@@ -1,5 +1,5 @@
 import { Injectable } from "@angular/core";
-import { HttpClient } from "@angular/common/http";
+import { HttpClient, HttpHeaders } from "@angular/common/http";
 import { map, Observable } from "rxjs";
 import { environment } from "@environments/environment";
 import { PublicCafeCard, PublicCafeDetail } from "@shared/models/cafe.model";
@@ -138,7 +138,9 @@ export class CafeBrowseService {
         ApiResponse<
           Array<{ id: number; tableNumber: string; capacity: number }>
         >
-      >(`${this.apiUrl}/tables/available?${query}`)
+      >(`${this.apiUrl}/tables/available?${query}`, {
+        headers: new HttpHeaders({ "x-silent-loading": "true" }),
+      })
       .pipe(map((res) => res?.data || []));
   }
 
@@ -148,6 +150,7 @@ export class CafeBrowseService {
     date: string;
     timeSlot: string;
     numberOfGuests: number;
+    specialRequests?: string;
   }): Observable<Booking> {
     const body = {
       cafeId: payload.cafeId,
@@ -155,6 +158,7 @@ export class CafeBrowseService {
       bookingDate: payload.date,
       bookingTime: payload.timeSlot,
       numberOfGuests: payload.numberOfGuests,
+      specialRequests: payload.specialRequests,
     };
     return this.http
       .post<ApiResponse<Booking>>(`${this.apiUrl}/bookings`, body)

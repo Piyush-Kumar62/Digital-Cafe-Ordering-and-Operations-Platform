@@ -189,6 +189,39 @@ export class MyProfileComponent implements OnInit, OnDestroy {
     return !!this.profileImageSrc;
   }
 
+  get heroPhone(): string {
+    const raw = String(this.form.get("phoneNumber")?.value || "").trim();
+    if (!raw) return "—";
+    return raw.length === 10 ? `+91 ${raw}` : raw;
+  }
+
+  get heroDob(): string {
+    const dob = this.form.get("dateOfBirth")?.value;
+    if (!dob) return "—";
+    const parsed = new Date(dob);
+    if (Number.isNaN(parsed.getTime())) return String(dob);
+    return parsed.toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  }
+
+  get heroGender(): string {
+    const gender = String(this.form.get("gender")?.value || "").trim();
+    return gender || "—";
+  }
+
+  get heroGovtId(): string {
+    const type = String(this.form.get("govtIdType")?.value || "").trim();
+    const number = String(this.form.get("govtIdNumber")?.value || "").trim();
+    if (!type && !number) return "—";
+    if (!number) return type;
+    const masked =
+      number.length > 4 ? `${"*".repeat(Math.max(0, number.length - 4))}${number.slice(-4)}` : number;
+    return type ? `${type} · ${masked}` : masked;
+  }
+
   onAvatarError(): void {
     this.avatarLoadFailed = true;
   }

@@ -154,6 +154,26 @@ $s-input-border: #cbd5e1;
   }
 }
 
+.field-row-input {
+  grid-template-columns: 160px 1fr;
+}
+
+.field-row-input input {
+  width: 100%;
+  padding: 0.55rem 0.7rem;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  color: #0f172a;
+  font-size: 0.9rem;
+}
+
+.field-row-actions {
+  grid-template-columns: 1fr;
+  border-bottom: none;
+  padding-top: 0.85rem;
+}
+
 .field-label {
   font-size: 0.82rem;
   color: #64748b;
@@ -491,6 +511,12 @@ $s-input-border: #cbd5e1;
   }
   .field-value {
     color: #e2e8f0;
+  }
+
+  .field-row-input input {
+    background: rgba(15, 23, 42, 0.6);
+    border-color: rgba(148, 163, 184, 0.25);
+    color: #f1f5f9;
   }
 
   .field-value.verified {

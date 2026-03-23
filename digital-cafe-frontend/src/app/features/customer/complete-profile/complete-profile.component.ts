@@ -11,6 +11,7 @@ import { HttpClient } from "@angular/common/http";
 import { environment } from "@environments/environment";
 import { AuthService } from "@core/auth/auth.service";
 import { AlertService } from "@core/services/alert.service";
+import { ApiService } from "@core/services/api.service";
 import { AddressFormComponent } from "@shared/components/address-form/address-form.component";
 import { buildAddressControls } from "@shared/forms/address-form.factory";
 import { MatAutocompleteModule } from "@angular/material/autocomplete";
@@ -18,7 +19,7 @@ import { MatInputModule } from "@angular/material/input";
 import { EducationDataService } from "@shared/services/education-data.service";
 import { Institution } from "@shared/models/education.model";
 import { debounceTime, distinctUntilChanged, switchMap } from "rxjs/operators";
-import { of } from "rxjs";
+import { forkJoin, of } from "rxjs";
 
 @Component({
   selector: "app-complete-profile",
@@ -52,6 +53,7 @@ export class CompleteProfileComponent {
     private authService: AuthService,
     private alertService: AlertService,
     private router: Router,
+    private apiService: ApiService,
     private educationData: EducationDataService,
   ) {
     this.form = this.fb.group({
@@ -142,6 +144,8 @@ export class CompleteProfileComponent {
         const query = String(typeof raw === "string" ? raw : raw?.name || "").trim();
         this.institutionNoResults = query.length >= 2 && (results || []).length === 0;
       });
+
+    this.prefillFromExistingProfile();
   }
 
   displayInstitution(value: Institution | string): string {
@@ -239,6 +243,47 @@ export class CompleteProfileComponent {
           this.loading = false;
         },
       });
+  }
+
+  private prefillFromExistingProfile(): void {
+    forkJoin({
+      basic: this.apiService.getCustomerProfile(),
+      full: this.apiService.getMyFullProfile(),
+    }).subscribe({
+      next: ({ basic, full }) => {
+        const academic = Array.isArray(full?.academicInformation)
+          ? full.academicInformation[0]
+          : null;
+        const address = full?.address || basic?.address || {};
+
+        this.form.patchValue({
+          firstName:
+            full?.firstName || basic?.firstName || this.authService.currentUserValue?.firstName || "",
+          lastName:
+            full?.lastName || basic?.lastName || this.authService.currentUserValue?.lastName || "",
+          dateOfBirth: full?.dateOfBirth || basic?.dateOfBirth || "",
+          gender: full?.gender || basic?.gender || "",
+          phoneNumber: full?.phoneNumber || basic?.phoneNumber || "",
+          street: address?.street || "",
+          plotNumber: address?.plotNumber || "",
+          city: address?.city || "",
+          state: address?.state || "",
+          country: address?.country || "India",
+          pincode: address?.pincode || "",
+          institutionId: academic?.institutionId ?? null,
+          institutionName: academic?.institutionName || "",
+          degree: academic?.degree || "",
+          fieldOfStudy: academic?.fieldOfStudy || "",
+          academicStartDate: academic?.startDate || "",
+          academicEndDate: academic?.endDate || "",
+          grade: academic?.grade || "",
+          isCurrent: !!academic?.isCurrent,
+        });
+      },
+      error: () => {
+        // Keep empty state if profile fetch fails; user can still complete manually.
+      },
+    });
   }
 }
 

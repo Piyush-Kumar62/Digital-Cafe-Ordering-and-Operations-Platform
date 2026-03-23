@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from "@angular/core";
+import { Component, OnDestroy, OnInit, inject } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import {
   FormsModule,
@@ -16,6 +16,8 @@ import { NavbarComponent } from "../../../shared/components/navbar/navbar.compon
 import { AddressFormComponent } from "../../../shared/components/address-form/address-form.component";
 import { MatAutocompleteModule } from "@angular/material/autocomplete";
 import { MatInputModule } from "@angular/material/input";
+import { MatSelectModule } from "@angular/material/select";
+import { MatFormFieldModule } from "@angular/material/form-field";
 import {
   debounceTime,
   distinctUntilChanged,
@@ -30,7 +32,6 @@ import {
   AddressInfo,
   AcademicInfo,
   WorkExperience,
-  CtcInfo,
   RegisterRequest,
   CafeOwnerRegisterRequest,
 } from "../../../shared/models/auth.model";
@@ -51,6 +52,8 @@ import { Institution } from "@shared/models/education.model";
     AddressFormComponent,
     MatAutocompleteModule,
     MatInputModule,
+    MatSelectModule,
+    MatFormFieldModule,
   ],
   templateUrl: "./register.component.html",
   styleUrl: "./register.component.scss",
@@ -119,6 +122,13 @@ export class RegisterComponent implements OnInit, OnDestroy {
   academicInstitutionLoading: boolean[] = [];
   academicInstitutionNoResults: boolean[] = [];
   academicYearOptions: number[] = [];
+  private readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
+  private readonly alertService = inject(AlertService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly fb = inject(FormBuilder);
+  private readonly postalService = inject(PostalPincodeService);
+  private readonly educationData = inject(EducationDataService);
 
   // Step 5: Work Experience (Optional)
   workExperienceList: WorkExperience[] = [
@@ -183,16 +193,6 @@ export class RegisterComponent implements OnInit, OnDestroy {
   cafeCurrentStep = 1;
   cafeTotalSteps = 3;
 
-  constructor(
-    private authService: AuthService,
-    private router: Router,
-    private alertService: AlertService,
-    private route: ActivatedRoute,
-    private fb: FormBuilder,
-    private postalService: PostalPincodeService,
-    private educationData: EducationDataService,
-  ) {}
-
   ngOnInit() {
     this.addressForm = this.fb.group(buildAddressControls());
     this.addressForm.patchValue(this.address);
@@ -220,7 +220,8 @@ export class RegisterComponent implements OnInit, OnDestroy {
           if (!this.username || this.usernameControl.invalid) {
             this.usernameStatus = "idle";
             if (this.usernameControl.hasError("taken")) {
-              const { taken, ...rest } = this.usernameControl.errors || {};
+              const rest = { ...(this.usernameControl.errors || {}) };
+              delete rest["taken"];
               this.usernameControl.setErrors(
                 Object.keys(rest).length ? rest : null,
               );
@@ -239,7 +240,8 @@ export class RegisterComponent implements OnInit, OnDestroy {
         const currentErrors = this.usernameControl.errors || {};
         if (result.available) {
           if (currentErrors["taken"]) {
-            const { taken, ...rest } = currentErrors;
+            const rest = { ...currentErrors };
+            delete rest["taken"];
             this.usernameControl.setErrors(
               Object.keys(rest).length ? rest : null,
             );
@@ -547,7 +549,7 @@ export class RegisterComponent implements OnInit, OnDestroy {
 
   onFileSelect(event: Event) {
     const element = event.currentTarget as HTMLInputElement;
-    let fileList: FileList | null = element.files;
+    const fileList: FileList | null = element.files;
     if (fileList) {
       const file = fileList[0];
       const twoMb = 2 * 1024 * 1024;
@@ -1163,7 +1165,20 @@ export class RegisterComponent implements OnInit, OnDestroy {
   }
 
   private buildAcademicPayload(): AcademicInfo[] {
-    return this.academicItems.getRawValue().map((item: any) => {
+    interface AcademicFormValue {
+      institutionId?: number | null;
+      institutionName: string | Institution;
+      degree: string;
+      branch: string;
+      passingYear: number;
+      gradingType: string;
+      score: string | number | null;
+      currentlyStudying: boolean;
+    }
+
+    const items = this.academicItems.getRawValue() as AcademicFormValue[];
+
+    return items.map((item) => {
       const gradingType = String(item.gradingType || "").trim();
       const score = item.score;
       let grade = "";

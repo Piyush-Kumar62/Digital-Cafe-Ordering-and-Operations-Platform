@@ -147,56 +147,6 @@ export class ApiService {
     );
   }
 
-  importDegreesAdmin(file: File): Observable<{
-    totalRows?: number;
-    inserted?: number;
-    skipped?: number;
-    errors?: string[];
-  }> {
-    const formData = new FormData();
-    formData.append("file", file);
-    return this.http
-      .post<any>(`${this.baseUrl}/admin/education/degrees/import`, formData)
-      .pipe(map((res) => res?.data || res || {}));
-  }
-
-  importDegreesAdminProgress(
-    file: File,
-  ): Observable<HttpEvent<any>> {
-    const formData = new FormData();
-    formData.append("file", file);
-    return this.http.post<any>(
-      `${this.baseUrl}/admin/education/degrees/import`,
-      formData,
-      { observe: "events", reportProgress: true },
-    );
-  }
-
-  importBranchesAdmin(file: File): Observable<{
-    totalRows?: number;
-    inserted?: number;
-    skipped?: number;
-    errors?: string[];
-  }> {
-    const formData = new FormData();
-    formData.append("file", file);
-    return this.http
-      .post<any>(`${this.baseUrl}/admin/education/branches/import`, formData)
-      .pipe(map((res) => res?.data || res || {}));
-  }
-
-  importBranchesAdminProgress(
-    file: File,
-  ): Observable<HttpEvent<any>> {
-    const formData = new FormData();
-    formData.append("file", file);
-    return this.http.post<any>(
-      `${this.baseUrl}/admin/education/branches/import`,
-      formData,
-      { observe: "events", reportProgress: true },
-    );
-  }
-
   getImportJobStatus(
     id: number,
   ): Observable<{
@@ -217,6 +167,27 @@ export class ApiService {
       .pipe(map((res) => res?.data || res || {}));
   }
 
+  getLatestEducationImport(
+    type: "INSTITUTIONS" | "DEGREES" | "BRANCHES" = "INSTITUTIONS",
+  ): Observable<{
+    id: number;
+    importType: string;
+    status: string;
+    fileName?: string;
+    totalRows?: number;
+    insertedRows?: number;
+    skippedRows?: number;
+    errorMessage?: string;
+    errors?: string[];
+    startedAt?: string;
+    finishedAt?: string;
+  }> {
+    const params = new HttpParams().set("type", type);
+    return this.http
+      .get<any>(`${this.baseUrl}/admin/education/imports/latest`, { params })
+      .pipe(map((res) => res?.data || res || {}));
+  }
+
   getEducationHealth(): Observable<{
     institutionCount: number;
     degreeCount: number;
@@ -233,24 +204,6 @@ export class ApiService {
           branchCount: 0,
           degreesMissingBranches: 0,
           degreeNamesMissingBranches: [],
-        }),
-      );
-  }
-
-  syncEducationInstitutions(): Observable<{
-    totalFetched: number;
-    inserted: number;
-    skipped: number;
-    pages: number;
-  }> {
-    return this.http
-      .post<any>(`${this.baseUrl}/admin/education/sync`, {})
-      .pipe(
-        map((res) => res?.data || res || {
-          totalFetched: 0,
-          inserted: 0,
-          skipped: 0,
-          pages: 0,
         }),
       );
   }
@@ -731,13 +684,45 @@ export class ApiService {
   }
 
   updateCustomerProfile(request: {
-    firstName: string;
-    lastName: string;
-    displayName: string;
+    firstName?: string;
+    lastName?: string;
+    displayName?: string;
+    phoneNumber?: string;
+    dateOfBirth?: string;
+    gender?: string;
+    govtIdType?: string;
+    govtIdNumber?: string;
+    joiningDate?: string;
+    experienceYears?: number;
+    shift?: string;
+    address?: {
+      street?: string;
+      plotNumber?: string;
+      city?: string;
+      state?: string;
+      country?: string;
+      pincode?: string;
+    };
   }): Observable<{
     firstName?: string;
     lastName?: string;
     displayName?: string;
+    phoneNumber?: string;
+    dateOfBirth?: string;
+    gender?: string;
+    govtIdType?: string;
+    govtIdNumber?: string;
+    joiningDate?: string;
+    experienceYears?: number;
+    shift?: string;
+    address?: {
+      street?: string;
+      plotNumber?: string;
+      city?: string;
+      state?: string;
+      country?: string;
+      pincode?: string;
+    };
     profileImageUrl?: string;
     profileCompletionPercentage?: number;
     lastLogin?: string;
@@ -750,6 +735,22 @@ export class ApiService {
             firstName: "",
             lastName: "",
             displayName: "",
+            phoneNumber: "",
+            dateOfBirth: "",
+            gender: "",
+            govtIdType: "",
+            govtIdNumber: "",
+            joiningDate: "",
+            experienceYears: 0,
+            shift: "",
+            address: {
+              street: "",
+              plotNumber: "",
+              city: "",
+              state: "",
+              country: "",
+              pincode: "",
+            },
           }),
         ),
       );
@@ -759,6 +760,22 @@ export class ApiService {
     firstName?: string;
     lastName?: string;
     displayName?: string;
+    phoneNumber?: string;
+    dateOfBirth?: string;
+    gender?: string;
+    govtIdType?: string;
+    govtIdNumber?: string;
+    joiningDate?: string;
+    experienceYears?: number;
+    shift?: string;
+    address?: {
+      street?: string;
+      plotNumber?: string;
+      city?: string;
+      state?: string;
+      country?: string;
+      pincode?: string;
+    };
     profileImageUrl?: string;
     profileCompletionPercentage?: number;
     lastLogin?: string;
@@ -769,6 +786,22 @@ export class ApiService {
           firstName: "",
           lastName: "",
           displayName: "",
+          phoneNumber: "",
+          dateOfBirth: "",
+          gender: "",
+          govtIdType: "",
+          govtIdNumber: "",
+          joiningDate: "",
+          experienceYears: 0,
+          shift: "",
+          address: {
+            street: "",
+            plotNumber: "",
+            city: "",
+            state: "",
+            country: "",
+            pincode: "",
+          },
         }),
       ),
     );

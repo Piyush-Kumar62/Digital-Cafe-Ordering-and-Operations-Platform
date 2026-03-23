@@ -38,6 +38,7 @@
   color: #e2e8f0;
   border: 1px solid rgba(148, 163, 184, 0.35);
   box-shadow: 0 12px 30px rgba(15, 23, 42, 0.45);
+  min-width: 320px;
 }
 
 ::ng-deep .academic-autocomplete-panel .mat-mdc-option {
@@ -47,14 +48,22 @@
   padding-bottom: 8px;
 }
 
+::ng-deep .academic-autocomplete-panel .mat-mdc-option .mdc-list-item__primary-text {
+  white-space: normal;
+  line-height: 1.25;
+}
+
 ::ng-deep .academic-autocomplete-panel .academic-option__title {
   font-weight: 600;
   color: #f8fafc;
+  white-space: normal;
+  word-break: break-word;
 }
 
 ::ng-deep .academic-autocomplete-panel .academic-option__meta {
   font-size: 0.75rem;
   color: rgba(148, 163, 184, 0.9);
+  white-space: normal;
 }
 
 ::ng-deep .academic-autocomplete-panel .academic-option {
@@ -406,6 +415,34 @@
   gap: 10px;
   margin-bottom: 16px;
   flex-wrap: wrap;
+}
+
+.pp-hero__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 12px;
+}
+
+.pp-meta-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 0.74rem;
+  line-height: 1.2;
+
+  .material-icons {
+    font-size: 14px;
+  }
+
+  &--wide {
+    max-width: 100%;
+  }
 }
 
 .pp-bar-track {
@@ -1118,6 +1155,9 @@ select.pp-inp:required:invalid {
     justify-content: center;
   }
   .pp-hero__progress {
+    justify-content: center;
+  }
+  .pp-hero__meta {
     justify-content: center;
   }
   .pp-hero__btns {

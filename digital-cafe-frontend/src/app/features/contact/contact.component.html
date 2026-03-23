@@ -315,18 +315,96 @@
       </div>
       <div class="map-visual">
         <img
-          src="assets/cafe/cafe-scene-jon-tyson.jpg"
+          src="assets/downloads/cafes/Beluga - Outdoors 2.webp"
           alt="Café location"
           class="map-img"
         />
-        <div class="map-visual-overlay">
-          <div class="map-pin-card">
+      </div>
+
+      <div class="map-live-module">
+        <div class="map-live-head">
+          <div class="map-live-title">
             <i class="bi bi-geo-alt-fill"></i>
             <div>
-              <strong>Digital Café HQ</strong>
-              <span>123 Digital Street, Tech City</span>
+              <strong>{{ hqName }}</strong>
+              <span>{{ hqAddress }}</span>
             </div>
           </div>
+          <span
+            class="map-live-pill"
+            [class.is-live]="isLiveTracking"
+            [class.is-blocked]="isPermissionBlocked"
+          >
+            <i
+              class="bi"
+              [class.bi-broadcast-pin]="isLiveTracking"
+              [class.bi-slash-circle]="isPermissionBlocked"
+              [class.bi-geo]="!isLiveTracking && !isPermissionBlocked"
+            ></i>
+            {{ locationPillLabel }}
+          </span>
+        </div>
+
+        <div
+          class="map-status-panel"
+          [class.tone-success]="locationStatusTone === 'success'"
+          [class.tone-warning]="locationStatusTone === 'warning'"
+        >
+          <i
+            class="bi"
+            [class.bi-check-circle]="locationStatusTone === 'success'"
+            [class.bi-exclamation-triangle]="locationStatusTone === 'warning'"
+            [class.bi-info-circle]="locationStatusTone === 'neutral'"
+          ></i>
+          <span>{{ locationStatusText }}</span>
+        </div>
+
+        <small
+          class="map-permission-hint"
+          *ngIf="permissionHint && isPermissionBlocked"
+        >
+          <i class="bi bi-info-circle"></i>{{ permissionHint }}
+        </small>
+
+        <div class="map-meta">
+          <small class="map-coords" *ngIf="currentCoordinates">
+            <i class="bi bi-crosshair"></i>
+            You:
+            {{ formatCoords(currentCoordinates.lat, currentCoordinates.lng) }}
+          </small>
+
+          <small class="map-coords hq-coords">
+            <i class="bi bi-compass"></i>
+            HQ: {{ formatCoords(hqCoordinates.lat, hqCoordinates.lng) }}
+          </small>
+        </div>
+
+        <div class="map-actions">
+          <button
+            class="map-action-btn"
+            type="button"
+            (click)="startLocationTracking()"
+            [disabled]="isLocating"
+          >
+            <i class="bi bi-broadcast-pin"></i>
+            {{ getLocationButtonText() }}
+          </button>
+          <button
+            *ngIf="isLiveTracking"
+            class="map-action-btn ghost"
+            type="button"
+            (click)="stopLocationTracking()"
+          >
+            <i class="bi bi-pause-circle"></i> Pause
+          </button>
+          <a
+            class="map-action-btn ghost"
+            [href]="getDirectionsUrl()"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <i class="bi bi-map"></i> Open Map
+          </a>
         </div>
       </div>
     </div>

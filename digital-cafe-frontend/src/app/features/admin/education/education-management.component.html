@@ -1,55 +1,41 @@
 <div class="management-container">
-  <div class="filter-card">
-    <div class="filter-item search">
-      <label>Search Institutions</label>
-      <input
-        type="text"
-        [value]="search"
-        (input)="onSearch($any($event.target).value)"
-        placeholder="Search by name, city, or state"
-      />
-    </div>
-    <div class="filter-item">
-      <label>Total</label>
-      <div class="stat-pill">{{ totalElements }}</div>
+  <div class="page-header">
+    <div>
+      <h2>Education Directory</h2>
+      <p>Institutions are sourced only from CSV imports.</p>
     </div>
   </div>
 
   <div class="content-card education-card">
-    <div class="education-header">
-      <div>
-        <h3>Education Dataset Import</h3>
-        <p>Upload AISHE/UGC CSVs to keep institutions, degrees, and branches current.</p>
-      </div>
-      <button class="btn ghost" (click)="syncInstitutionsFromDataGov()" [disabled]="syncLoading">
-        {{ syncLoading ? "Syncing..." : "Sync from data.gov.in" }}
-      </button>
+    <div class="section-title">
+      <span>Import Institutions CSV</span>
+      <span class="section-subtitle">Upload or import from server</span>
     </div>
 
-    <div class="local-import">
-      <label>Import from server file (uploads/)</label>
-      <div class="local-import__row">
-        <input
-          type="text"
-          [(ngModel)]="localFilename"
-          placeholder="list_all_colleges_2011_2012.csv"
-        />
-        <button class="btn primary" (click)="importLocalFile()" [disabled]="localImportLoading">
-          {{ localImportLoading ? "Queuing..." : "Import Local CSV" }}
-        </button>
+    <div class="import-grid">
+      <div class="local-import">
+        <label>Import from server file (uploads/)</label>
+        <div class="local-import__row">
+          <input
+            type="text"
+            [(ngModel)]="localFilename"
+            placeholder="list_all_colleges_2011_2012.csv"
+          />
+          <button class="btn primary" (click)="importLocalFile()" [disabled]="localImportLoading">
+            {{ localImportLoading ? "Queuing..." : "Import Local CSV" }}
+          </button>
+        </div>
+        <small class="local-import__hint">
+          File must exist in backend uploads directory.
+        </small>
+        <small class="local-import__msg" *ngIf="localImportMessage">
+          {{ localImportMessage }}
+        </small>
       </div>
-      <small class="local-import__hint">
-        File must exist in backend uploads directory.
-      </small>
-      <small class="local-import__msg" *ngIf="localImportMessage">
-        {{ localImportMessage }}
-      </small>
-    </div>
 
-    <div class="education-import-grid">
       <div class="import-block">
         <div class="import-block__title">
-          <h4>Institutions CSV</h4>
+          <h4>Upload Institutions CSV</h4>
           <button class="btn ghost" (click)="downloadInstitutionTemplate()">
             Download Template
           </button>
@@ -77,81 +63,24 @@
           {{ importingInstitutions ? "Importing..." : "Import Institutions" }}
         </button>
       </div>
-
-      <div class="import-block">
-        <div class="import-block__title">
-          <h4>Degrees CSV</h4>
-          <button class="btn ghost" (click)="downloadDegreeTemplate()">
-            Download Template
-          </button>
-        </div>
-        <input type="file" accept=".csv" (change)="onDegreeFileChange($event)" />
-        <div class="csv-preview" *ngIf="degreePreview.length">
-          <div class="csv-preview__title">Preview</div>
-          <div class="csv-preview__table">
-            <div class="csv-row" *ngFor="let row of degreePreview; let i = index">
-              <span *ngFor="let cell of row; let j = index" class="csv-cell">
-                {{ cell }}
-              </span>
-            </div>
-          </div>
-        </div>
-        <div class="progress" *ngIf="importingDegrees">
-          <div class="progress__bar" [style.width.%]="degreeUploadProgress"></div>
-          <span class="progress__label">{{ importProgressLabel }}</span>
-        </div>
-        <button
-          class="btn primary"
-          [disabled]="!degreeFile || importingDegrees"
-          (click)="importDegrees()"
-        >
-          {{ importingDegrees ? "Importing..." : "Import Degrees" }}
-        </button>
-      </div>
-
-      <div class="import-block">
-        <div class="import-block__title">
-          <h4>Branches CSV</h4>
-          <button class="btn ghost" (click)="downloadBranchTemplate()">
-            Download Template
-          </button>
-        </div>
-        <input type="file" accept=".csv" (change)="onBranchFileChange($event)" />
-        <div class="csv-preview" *ngIf="branchPreview.length">
-          <div class="csv-preview__title">Preview</div>
-          <div class="csv-preview__table">
-            <div class="csv-row" *ngFor="let row of branchPreview; let i = index">
-              <span *ngFor="let cell of row; let j = index" class="csv-cell">
-                {{ cell }}
-              </span>
-            </div>
-          </div>
-        </div>
-        <div class="progress" *ngIf="importingBranches">
-          <div class="progress__bar" [style.width.%]="branchUploadProgress"></div>
-          <span class="progress__label">{{ importProgressLabel }}</span>
-        </div>
-        <button
-          class="btn primary"
-          [disabled]="!branchFile || importingBranches"
-          (click)="importBranches()"
-        >
-          {{ importingBranches ? "Importing..." : "Import Branches" }}
-        </button>
-      </div>
     </div>
 
     <div class="import-result" *ngIf="importMessage || importStatus">
       <div class="import-message" *ngIf="importMessage">{{ importMessage }}</div>
-      <div class="import-status" *ngIf="importStatus">{{ importStatus }}</div>
+      <div class="import-status" *ngIf="importStatus">
+        {{ importStatus }}
+        <button
+          *ngIf="importJobId && importStatus.toLowerCase().includes('running')"
+          class="btn ghost small import-refresh-btn"
+          (click)="refreshImportStatus()"
+        >
+          Refresh status
+        </button>
+      </div>
       <ul *ngIf="importErrors.length">
         <li *ngFor="let err of importErrors">{{ err }}</li>
       </ul>
     </div>
-    <div class="import-result" *ngIf="syncMessage">
-      <div class="import-message">{{ syncMessage }}</div>
-    </div>
-
     <div class="import-history" *ngIf="jobHistory.length">
       <h4>Recent Imports</h4>
       <div class="history-row" *ngFor="let job of jobHistory">
@@ -166,6 +95,10 @@
   </div>
 
   <div class="content-card health-card">
+    <div class="section-title">
+      <span>Data Health</span>
+      <span class="section-subtitle">Quick snapshot of counts</span>
+    </div>
     <div class="education-header">
       <div>
         <h3>Education Data Health</h3>
@@ -221,6 +154,10 @@
   </div>
 
   <div class="content-card health-card">
+    <div class="section-title">
+      <span>Duplicate Check</span>
+      <span class="section-subtitle">Verify no duplicates</span>
+    </div>
     <div class="education-header">
       <div>
         <h3>Duplicate Check</h3>
@@ -279,13 +216,61 @@
   </div>
 
   <div class="content-card">
-    <div class="education-table-header">
-      <h3>Institutions</h3>
+    <div class="search-bar search-bar--table">
+      <div class="search-bar__left">
+        <input
+          type="text"
+          [value]="search"
+          (input)="onSearch($any($event.target).value)"
+          placeholder="Search by college, district, or state"
+        />
+      </div>
+      <div class="search-bar__right">
+        <div class="stat-pill">Total {{ totalElements }}</div>
+        <div class="import-pill" *ngIf="latestImportStatus">
+          {{ latestImportStatus }}
+        </div>
+      </div>
+    </div>
+
+    <div class="table-wrapper" *ngIf="institutions.length > 0; else emptyState">
+      <table>
+        <thead>
+          <tr>
+            <th class="sn-col">S. No.</th>
+            <th>College Name</th>
+            <th>District Name</th>
+            <th>State Name</th>
+            <th class="actions-col">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <ng-container *ngFor="let inst of institutions; let i = index">
+            <tr>
+              <td class="sn-col">{{ getRowNumber(i) }}</td>
+              <td>{{ inst.name }}</td>
+              <td>{{ inst.city || "—" }}</td>
+              <td>{{ inst.state || "—" }}</td>
+              <td class="actions-col">
+                <button
+                  class="btn ghost small"
+                  (click)="$event.stopPropagation(); copyInstitutionName(inst.name)"
+                >
+                  Copy name
+                </button>
+              </td>
+            </tr>
+          </ng-container>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="table-footer">
       <div class="pagination">
         <button class="btn ghost" (click)="prevPage()" [disabled]="page === 0">
           Prev
         </button>
-        <span>Page {{ page + 1 }} of {{ totalPages || 1 }}</span>
+        <span class="page-indicator">Page {{ page + 1 }} of {{ totalPages || 1 }}</span>
         <button
           class="btn ghost"
           (click)="nextPage()"
@@ -294,25 +279,11 @@
           Next
         </button>
       </div>
-    </div>
-
-    <div class="table-wrapper" *ngIf="institutions.length > 0; else emptyState">
-      <table>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>City</th>
-            <th>State</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let inst of institutions">
-            <td>{{ inst.name }}</td>
-            <td>{{ inst.city || "—" }}</td>
-            <td>{{ inst.state || "—" }}</td>
-          </tr>
-        </tbody>
-      </table>
+      <div class="table-footer__left">
+        <div class="table-note" *ngIf="copyMessage">{{ copyMessage }}</div>
+        <div class="table-count">Showing {{ institutions.length }} of {{ totalElements }}</div>
+        <div class="page-size">Rows per page: {{ size }}</div>
+      </div>
     </div>
 
     <ng-template #emptyState>

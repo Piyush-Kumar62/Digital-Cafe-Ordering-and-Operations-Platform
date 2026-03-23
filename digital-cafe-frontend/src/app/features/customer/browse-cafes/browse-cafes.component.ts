@@ -102,12 +102,16 @@ export class BrowseCafesComponent implements OnInit, OnDestroy {
 
   viewMenu(cafeId: number, event?: Event): void {
     event?.stopPropagation();
-    this.router.navigate(["/customer/browse-cafes", cafeId]);
+    this.router.navigate(["/customer/browse-cafes", cafeId], {
+      fragment: "menu",
+    });
   }
 
   bookTable(cafeId: number, event?: Event): void {
     event?.stopPropagation();
-    this.router.navigate(["/customer/booking"], { queryParams: { cafeId } });
+    this.router.navigate(["/customer/browse-cafes", cafeId], {
+      fragment: "booking",
+    });
   }
 
   retry(): void {

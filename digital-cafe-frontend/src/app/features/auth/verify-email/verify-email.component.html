@@ -1,37 +1,128 @@
-<div class="verify-container">
-      <div class="verify-card">
-        <div *ngIf="!verifying && !verified" class="verify-pending">
-          <div class="icon">📧</div>
-          <h1>Verify Your Email</h1>
-          <p>We've sent a verification link to your email address.</p>
-          <p>Please check your inbox and click the link to verify your account.</p>
-
-          <div class="resend-section">
-            <p>Didn't receive the email?</p>
-            <button class="btn-resend" (click)="resendVerification()" [disabled]="resending">
-              {{ resending ? 'Sending...' : 'Resend Verification Email' }}
-            </button>
-          </div>
+<div class="verify-page">
+  <div class="verify-shell">
+    <aside class="verify-visual">
+      <img
+        src="assets/cafe/cafe-interior-01.jpg"
+        alt="Cafe interior"
+        class="verify-visual-image"
+        loading="eager"
+      />
+      <div class="verify-visual-overlay">
+        <div class="verify-brand">
+          <i class="bi bi-cup-hot-fill"></i>
+          <span>Digital Caf&eacute;</span>
         </div>
-
-        <div *ngIf="verifying" class="verify-loading">
-          <div class="spinner"></div>
-          <h2>Verifying your email...</h2>
-          <p>Please wait a moment.</p>
-        </div>
-
-        <div *ngIf="verified" class="verify-success">
-          <div class="icon success">✓</div>
-          <h1>Email Verified!</h1>
-          <p>Your email has been successfully verified.</p>
-          <button class="btn-primary" routerLink="/auth/login">Continue to Login</button>
-        </div>
-
-        <div *ngIf="error" class="verify-error">
-          <div class="icon error">✕</div>
-          <h1>Verification Failed</h1>
-          <p>{{ errorMessage }}</p>
-          <button class="btn-primary" routerLink="/auth/login">Back to Login</button>
+        <h2>Welcome Back to Your Cafe Journey</h2>
+        <p>
+          Verify your email once and unlock a smoother experience across orders,
+          profile, and dashboard access.
+        </p>
+        <div class="verify-points">
+          <span><i class="bi bi-shield-check"></i> Secure account activation</span>
+          <span><i class="bi bi-lightning-charge"></i> One-click onboarding</span>
+          <span><i class="bi bi-check2-circle"></i> Safe password recovery</span>
         </div>
       </div>
-    </div>
+    </aside>
+
+    <section class="verify-card">
+      <div *ngIf="verifying" class="verify-state verify-loading">
+        <div class="spinner"></div>
+        <h1 class="verify-title">
+          <span class="verify-title-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <rect x="3" y="6" width="13" height="10" rx="2" />
+              <path d="M3 8.3l6.1 4.4c.7.5 1.1.5 1.8 0L17 8.8" />
+              <circle cx="19" cy="10" r="2.3" />
+              <path d="M19 8.3v1.7h1.4" />
+            </svg>
+          </span>
+          <span>Verifying your email...</span>
+        </h1>
+        <p>Please wait while we confirm your account.</p>
+      </div>
+
+      <div *ngIf="!verifying && verified" class="verify-state verify-success">
+        <div class="state-icon success"><i class="bi bi-check2-circle"></i></div>
+        <h1 class="verify-title">
+          <span class="verify-title-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="12" cy="12" r="8" />
+              <path d="M8.5 12.3l2.2 2.2 4.8-4.8" />
+            </svg>
+          </span>
+          <span>{{ alreadyVerified ? "Email Already Verified" : "Email Verified" }}</span>
+        </h1>
+        <p *ngIf="!alreadyVerified">Your email has been verified successfully.</p>
+        <p *ngIf="alreadyVerified">
+          This link was already used earlier and your email is already verified.
+        </p>
+        <button class="btn-primary" type="button" (click)="goToLogin()">Continue to Login</button>
+      </div>
+
+      <div *ngIf="!verifying && error" class="verify-state verify-error">
+        <div class="state-icon error"><i class="bi bi-exclamation-triangle"></i></div>
+        <h1 class="verify-title">
+          <span class="verify-title-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <rect x="3" y="6" width="13" height="10" rx="2" />
+              <path d="M3 8.3l6.1 4.4c.7.5 1.1.5 1.8 0L17 8.8" />
+              <path d="M18 16l4-4m0 4l-4-4" />
+            </svg>
+          </span>
+          <span>{{ linkExpired ? "Link Expired" : "Verification Failed" }}</span>
+        </h1>
+        <p>{{ errorMessage }}</p>
+
+        <div class="resend-section" *ngIf="linkExpired">
+          <label for="resendEmail" class="form-label">Email Address</label>
+          <input
+            id="resendEmail"
+            type="email"
+            class="form-input"
+            placeholder="Enter your email"
+            [(ngModel)]="resendEmail"
+          />
+          <button class="btn-primary" type="button" (click)="resendVerification()" [disabled]="resending">
+            {{ resending ? "Sending..." : "Resend Verification Email" }}
+          </button>
+        </div>
+
+        <button class="btn-ghost" type="button" (click)="goToLogin()">Back to Login</button>
+      </div>
+
+      <div *ngIf="!verifying && !verified && !error" class="verify-state verify-pending">
+        <div class="state-icon pending"><i class="bi bi-envelope-check"></i></div>
+        <h1 class="verify-title">
+          <span class="verify-title-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <rect x="3" y="6" width="14" height="10" rx="2" />
+              <path d="M3 8.3l6.4 4.5c.7.5 1.1.5 1.8 0L17 8.8" />
+              <path d="M18.5 14.2l1.5 1.5 2.5-2.7" />
+            </svg>
+          </span>
+          <span>Verify Your Email</span>
+        </h1>
+        <p>We sent a verification link to your email address.</p>
+        <p>Open that link to activate your account.</p>
+
+        <div class="resend-section">
+          <p class="resend-title">Didn't receive the email?</p>
+          <label for="pendingResendEmail" class="form-label">Email Address</label>
+          <input
+            id="pendingResendEmail"
+            type="email"
+            class="form-input"
+            placeholder="Enter your email"
+            [(ngModel)]="resendEmail"
+          />
+          <button class="btn-primary" type="button" (click)="resendVerification()" [disabled]="resending">
+            {{ resending ? "Sending..." : "Resend Verification Email" }}
+          </button>
+        </div>
+
+        <button class="btn-ghost" type="button" (click)="goToLogin()">Back to Login</button>
+      </div>
+    </section>
+  </div>
+</div>

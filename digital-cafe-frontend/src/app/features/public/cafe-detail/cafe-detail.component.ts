@@ -1,5 +1,5 @@
 import { AsyncPipe, CommonModule } from "@angular/common";
-import { Component, OnInit } from "@angular/core";
+import { Component, HostListener, OnInit } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { ActivatedRoute, Router } from "@angular/router";
 import { AuthService } from "@core/auth/auth.service";
@@ -50,16 +50,31 @@ export class CafeDetailComponent implements OnInit {
   }> = [];
   selectedTableId: number | null = null;
   tablesLoading = false;
+  hasLoadedTables = false;
   bookingId: number | null = null;
   orderId: number | null = null;
   orderAmount = 0;
   selectedDate = "";
   selectedTime = "";
   guests = 2;
+  selectedMealPeriod = "AFTERNOON";
+  specialRequests = "";
+  showSpecialRequests = false;
+  dateOptions: Array<{ value: string; label: string }> = [];
+  readonly guestOptions = Array.from({ length: 10 }, (_, idx) => idx + 1);
+  readonly mealPeriods: Array<{ value: string; label: string }> = [
+    { value: "MORNING", label: "Morning" },
+    { value: "AFTERNOON", label: "Afternoon" },
+    { value: "EVENING", label: "Evening" },
+    { value: "NIGHT", label: "Night" },
+  ];
+  slotOptions: Array<{ value: string; label: string }> = [];
+  activeDropdown: "date" | "guests" | "period" | null = null;
   paymentMethod: PaymentMethod = PaymentMethod.UPI;
   quantityMap: Record<number, number> = {};
   cartItems$: Observable<Array<{ item: MenuItem; quantity: number }>>;
   cartTotal$: Observable<number>;
+  private pendingFragment: string | null = null;
 
   constructor(
     private route: ActivatedRoute,
@@ -77,7 +92,13 @@ export class CafeDetailComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.buildDateOptions();
     this.bootstrapDateTimeDefaults();
+    this.route.fragment.subscribe((fragment) => {
+      if (!fragment) return;
+      this.pendingFragment = fragment;
+      this.tryScrollToFragment();
+    });
     const cafeId = Number(this.route.snapshot.paramMap.get("id"));
     if (!Number.isFinite(cafeId) || cafeId <= 0) {
       this.router.navigate(["/cafes"]);
@@ -90,6 +111,7 @@ export class CafeDetailComponent implements OnInit {
         this.cartService.ensureCafeScope(res.cafeDetails.id);
         this.loading = false;
         this.loadAvailability();
+        this.tryScrollToFragment();
       },
       error: () => {
         this.loading = false;
@@ -140,7 +162,76 @@ export class CafeDetailComponent implements OnInit {
 
   onSlotChange(): void {
     this.selectedTableId = null;
-    this.loadAvailability();
+    const nextTime = this.refreshSlotOptions();
+    if (!nextTime) return;
+    this.loadAvailability(true);
+  }
+
+  onSlotTimeSelect(slot: string): void {
+    if (!slot || this.bookingId) return;
+    this.selectedTime = slot;
+    this.selectedTableId = null;
+    this.loadAvailability(true);
+  }
+
+  toggleDropdown(
+    name: "date" | "guests" | "period",
+    event: MouseEvent,
+  ): void {
+    event.stopPropagation();
+    if (this.bookingId) return;
+    this.activeDropdown = this.activeDropdown === name ? null : name;
+  }
+
+  closeDropdowns(): void {
+    this.activeDropdown = null;
+  }
+
+  selectDate(value: string, event?: MouseEvent): void {
+    event?.stopPropagation();
+    if (this.bookingId) return;
+    this.selectedDate = value;
+    this.closeDropdowns();
+    this.onSlotChange();
+  }
+
+  selectGuests(value: number, event?: MouseEvent): void {
+    event?.stopPropagation();
+    if (this.bookingId) return;
+    this.guests = value;
+    this.closeDropdowns();
+    this.onSlotChange();
+  }
+
+  selectMealPeriod(value: string, event?: MouseEvent): void {
+    event?.stopPropagation();
+    if (this.bookingId) return;
+    this.selectedMealPeriod = value;
+    this.closeDropdowns();
+    this.onSlotChange();
+  }
+
+  getSelectedDateLabel(): string {
+    return (
+      this.dateOptions.find((option) => option.value === this.selectedDate)
+        ?.label || "Select date"
+    );
+  }
+
+  getSelectedGuestsLabel(): string {
+    return `${this.guests} ${this.guests === 1 ? "guest" : "guests"}`;
+  }
+
+  getSelectedPeriodLabel(): string {
+    return (
+      this.mealPeriods.find((option) => option.value === this.selectedMealPeriod)
+        ?.label || "Select period"
+    );
+  }
+
+  @HostListener("document:click")
+  onDocumentClick(): void {
+    this.closeDropdowns();
   }
 
   selectTable(tableId: number): void {
@@ -180,6 +271,7 @@ export class CafeDetailComponent implements OnInit {
         date: this.selectedDate,
         timeSlot,
         numberOfGuests: this.guests,
+        specialRequests: this.specialRequests?.trim() || undefined,
       })
       .subscribe({
         next: (booking) => {
@@ -401,13 +493,17 @@ export class CafeDetailComponent implements OnInit {
     this.cartService.addItem(item);
   }
 
-  private loadAvailability(): void {
+  private loadAvailability(silent = false): void {
     if (!this.cafe) return;
     const timeSlot = this.selectedTime
       ? this.selectedTime.split(":").slice(0, 2).join(":")
       : "";
     if (!this.selectedDate || !timeSlot) return;
-    this.tablesLoading = true;
+    if (!silent && !this.hasLoadedTables) {
+      this.tablesLoading = true;
+    } else if (silent) {
+      this.tablesLoading = false;
+    }
     this.cafeBrowseService
       .getTableAvailability(
         this.cafe.cafeDetails.id,
@@ -420,23 +516,124 @@ export class CafeDetailComponent implements OnInit {
           this.availableTablesList = tables || [];
           this.availableTables = this.availableTablesList.length;
           this.tablesLoading = false;
+          this.hasLoadedTables = true;
         },
         error: () => {
           this.availableTablesList = [];
           this.availableTables = 0;
           this.tablesLoading = false;
+          this.hasLoadedTables = true;
         },
       });
   }
 
+  private tryScrollToFragment(): void {
+    if (this.loading || !this.pendingFragment) return;
+    const fragment = this.pendingFragment;
+    window.setTimeout(() => {
+      const el = document.getElementById(fragment);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }, 0);
+  }
+
   private bootstrapDateTimeDefaults(): void {
     const now = new Date();
-    const date = now.toISOString().split("T")[0];
-    const time = new Date(now.getTime() + 60 * 60 * 1000);
-    const hh = String(time.getHours()).padStart(2, "0");
-    const mm = String(Math.floor(time.getMinutes() / 30) * 30).padStart(2, "0");
-    this.selectedDate = date;
-    this.selectedTime = `${hh}:${mm}`;
+    this.selectedDate = this.dateOptions[0]?.value || this.toIsoDate(now);
+    this.selectedMealPeriod = this.inferMealPeriodByHour(now.getHours());
+    this.refreshSlotOptions();
+  }
+
+  private buildDateOptions(): void {
+    const today = new Date();
+    const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    const days =
+      Math.max(
+        0,
+        Math.floor(
+          (endOfMonth.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
+        ),
+      ) + 1;
+    const formatter = new Intl.DateTimeFormat("en-GB", {
+      weekday: "short",
+      day: "2-digit",
+      month: "short",
+    });
+
+    this.dateOptions = Array.from({ length: days }, (_, idx) => {
+      const next = new Date(today);
+      next.setDate(today.getDate() + idx);
+      const value = this.toIsoDate(next);
+      const label =
+        idx === 0 ? "Today" : idx === 1 ? "Tomorrow" : formatter.format(next);
+      return { value, label };
+    });
+  }
+
+  private toIsoDate(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+
+  private refreshSlotOptions(): string {
+    const allSlots = this.getSlotsForPeriod(this.selectedMealPeriod);
+    const now = new Date();
+    const isToday = this.selectedDate === this.toIsoDate(now);
+
+    this.slotOptions = allSlots.filter((slot) => {
+      if (!isToday) return true;
+      const [hours, minutes] = slot.value.split(":").map(Number);
+      const slotDate = new Date(now);
+      slotDate.setHours(hours, minutes, 0, 0);
+      return slotDate.getTime() >= now.getTime();
+    });
+
+    const currentStillValid = this.slotOptions.some(
+      (slot) => slot.value === this.selectedTime,
+    );
+    const nextSelected = currentStillValid
+      ? this.selectedTime
+      : this.slotOptions[0]?.value || "";
+    this.selectedTime = nextSelected;
+    return nextSelected;
+  }
+
+  private getSlotsForPeriod(
+    period: string,
+  ): Array<{ value: string; label: string }> {
+    const map: Record<string, Array<{ value: string; label: string }>> = {
+      MORNING: [
+        { value: "08:00", label: "8:00 AM" },
+        { value: "09:30", label: "9:30 AM" },
+        { value: "11:00", label: "11:00 AM" },
+      ],
+      AFTERNOON: [
+        { value: "12:00", label: "12:00 PM" },
+        { value: "14:00", label: "2:00 PM" },
+        { value: "16:00", label: "4:00 PM" },
+      ],
+      EVENING: [
+        { value: "17:30", label: "5:30 PM" },
+        { value: "19:00", label: "7:00 PM" },
+        { value: "20:30", label: "8:30 PM" },
+      ],
+      NIGHT: [
+        { value: "21:00", label: "9:00 PM" },
+        { value: "22:00", label: "10:00 PM" },
+        { value: "23:00", label: "11:00 PM" },
+      ],
+    };
+    return map[period] || map["AFTERNOON"];
+  }
+
+  private inferMealPeriodByHour(hour: number): string {
+    if (hour < 12) return "MORNING";
+    if (hour < 17) return "AFTERNOON";
+    if (hour < 21) return "EVENING";
+    return "NIGHT";
   }
 
   fmt12h(val: string | null | undefined): string {

@@ -4,6 +4,7 @@ import { FormsModule } from "@angular/forms";
 import { Router, RouterModule } from "@angular/router";
 
 import { AuthService } from "@core/auth/auth.service";
+import { ApiService } from "@core/services/api.service";
 import { AlertService } from "@core/services/alert.service";
 import { User, ChangePasswordRequest } from "@shared/models/auth.model";
 
@@ -17,6 +18,17 @@ import { User, ChangePasswordRequest } from "@shared/models/auth.model";
 export class OwnerSettingsComponent implements OnInit {
   user: User | null = null;
   profileImageUrl = "";
+  loadingProfile = false;
+  savingProfile = false;
+
+  profileForm = {
+    firstName: "",
+    lastName: "",
+    displayName: "",
+    phoneNumber: "",
+    govtIdType: "",
+    govtIdNumber: "",
+  };
 
   passwordForm: ChangePasswordRequest = {
     oldPassword: "",
@@ -31,18 +43,19 @@ export class OwnerSettingsComponent implements OnInit {
 
   constructor(
     private authService: AuthService,
+    private apiService: ApiService,
     private alertService: AlertService,
     private router: Router,
   ) {}
 
   ngOnInit(): void {
     this.user = this.authService.currentUserValue;
-    this.profileImageUrl = localStorage.getItem("owner_profile_image") || "";
+    this.loadProfile();
   }
 
   get userDisplayName(): string {
     if (!this.user) return "";
-    const parts = [this.user.firstName, this.user.lastName].filter(Boolean);
+    const parts = [this.profileForm.firstName, this.profileForm.lastName].filter(Boolean);
     return parts.length ? parts.join(" ") : this.user.username;
   }
 
@@ -62,6 +75,54 @@ export class OwnerSettingsComponent implements OnInit {
       .split("_")
       .map((w) => w[0] + w.slice(1).toLowerCase())
       .join(" ");
+  }
+
+  saveProfile(): void {
+    const firstName = this.profileForm.firstName.trim();
+    const lastName = this.profileForm.lastName.trim();
+    const displayName =
+      this.profileForm.displayName.trim() || `${firstName} ${lastName}`.trim();
+
+    if (!firstName || !lastName || !displayName) {
+      this.alertService.error("Please enter first name, last name, and display name.");
+      return;
+    }
+
+    this.savingProfile = true;
+    this.apiService
+      .updateCustomerProfile({
+        firstName,
+        lastName,
+        displayName,
+        phoneNumber: this.profileForm.phoneNumber?.trim() || undefined,
+        govtIdType: this.profileForm.govtIdType?.trim() || undefined,
+        govtIdNumber: this.profileForm.govtIdNumber?.trim() || undefined,
+      })
+      .subscribe({
+        next: (res) => {
+          if (this.user) {
+            this.user = {
+              ...this.user,
+              firstName: res.firstName || firstName,
+              lastName: res.lastName || lastName,
+              govtIdType: res.govtIdType || this.profileForm.govtIdType,
+              govtIdNumber: res.govtIdNumber || this.profileForm.govtIdNumber,
+              profileCompletionPercentage:
+                res.profileCompletionPercentage ?? this.user.profileCompletionPercentage,
+              isProfileComplete:
+                (res.profileCompletionPercentage ?? this.user.profileCompletionPercentage) >= 100,
+            };
+            this.authService.updateUserData(this.user);
+          }
+          this.alertService.success("Profile updated successfully.");
+          this.savingProfile = false;
+        },
+        error: (err: any) => {
+          const msg = err?.error?.message || "Failed to update profile.";
+          this.alertService.error(msg);
+          this.savingProfile = false;
+        },
+      });
   }
 
   changePassword(): void {
@@ -116,12 +177,68 @@ export class OwnerSettingsComponent implements OnInit {
       input.value = "";
       return;
     }
-    const reader = new FileReader();
-    reader.onload = () => {
-      this.profileImageUrl = reader.result as string;
-      localStorage.setItem("owner_profile_image", this.profileImageUrl);
-      this.alertService.success("Profile photo updated!");
-    };
-    reader.readAsDataURL(file);
+    this.apiService.uploadCustomerProfileImage(file).subscribe({
+      next: (res) => {
+        this.profileImageUrl = this.apiService.resolveImageUrl(
+          res?.profileImageUrl || "",
+        );
+        if (this.user) {
+          this.user = {
+            ...this.user,
+            profileImageUrl: res?.profileImageUrl || this.user.profileImageUrl,
+          };
+          this.authService.updateUserData(this.user);
+        }
+        this.alertService.success("Profile photo updated!");
+      },
+      error: () => {
+        this.alertService.error("Failed to upload profile photo.");
+      },
+    });
+    input.value = "";
+  }
+
+  private loadProfile(): void {
+    this.loadingProfile = true;
+    this.apiService.getCustomerProfile().subscribe({
+      next: (profile) => {
+        this.profileForm.firstName =
+          profile?.firstName || this.user?.firstName || "";
+        this.profileForm.lastName =
+          profile?.lastName || this.user?.lastName || "";
+        this.profileForm.displayName =
+          profile?.displayName ||
+          `${this.profileForm.firstName} ${this.profileForm.lastName}`.trim();
+        this.profileForm.phoneNumber = profile?.phoneNumber || "";
+        this.profileForm.govtIdType = profile?.govtIdType || "";
+        this.profileForm.govtIdNumber = profile?.govtIdNumber || "";
+        this.profileImageUrl = this.apiService.resolveImageUrl(
+          profile?.profileImageUrl || this.user?.profileImageUrl || "",
+        );
+
+        if (this.user) {
+          this.user = {
+            ...this.user,
+            firstName: this.profileForm.firstName || this.user.firstName,
+            lastName: this.profileForm.lastName || this.user.lastName,
+            govtIdType: profile?.govtIdType || this.user.govtIdType,
+            govtIdNumber: profile?.govtIdNumber || this.user.govtIdNumber,
+            profileCompletionPercentage:
+              profile?.profileCompletionPercentage ?? this.user.profileCompletionPercentage,
+          };
+          this.authService.updateUserData(this.user);
+        }
+        this.loadingProfile = false;
+      },
+      error: () => {
+        this.profileForm.firstName = this.user?.firstName || "";
+        this.profileForm.lastName = this.user?.lastName || "";
+        this.profileForm.displayName = `${this.profileForm.firstName} ${this.profileForm.lastName}`.trim();
+        this.profileImageUrl = this.apiService.resolveImageUrl(
+          this.user?.profileImageUrl || "",
+        );
+        this.loadingProfile = false;
+      },
+    });
   }
 }

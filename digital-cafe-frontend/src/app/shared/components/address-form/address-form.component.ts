@@ -55,6 +55,7 @@ export class AddressFormComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     if (!this.form) return;
     this.setupPincodeLookup();
+    this.syncCityStateDisabled();
   }
 
   ngOnDestroy(): void {
@@ -109,6 +110,7 @@ export class AddressFormComponent implements OnInit, OnDestroy {
         tap(() => {
           this.lookupStatus = "loading";
           this.clearCityState();
+          this.syncCityStateDisabled();
         }),
         switchMap((pin) =>
           this.postalService.lookupPincode(String(pin ?? "").trim()),
@@ -141,6 +143,7 @@ export class AddressFormComponent implements OnInit, OnDestroy {
           ) {
             stateControl.setValue(result.data.states[0]);
           }
+          this.syncCityStateDisabled();
           return;
         }
 
@@ -150,6 +153,7 @@ export class AddressFormComponent implements OnInit, OnDestroy {
           this.stateOptions = [];
           this.cityReadonly = false;
           this.stateReadonly = false;
+          this.syncCityStateDisabled();
           return;
         }
 
@@ -158,6 +162,7 @@ export class AddressFormComponent implements OnInit, OnDestroy {
         this.stateOptions = [];
         this.cityReadonly = false;
         this.stateReadonly = false;
+        this.syncCityStateDisabled();
       });
   }
 
@@ -168,6 +173,7 @@ export class AddressFormComponent implements OnInit, OnDestroy {
     this.cityReadonly = false;
     this.stateReadonly = false;
     this.clearCityState();
+    this.syncCityStateDisabled();
   }
 
   private clearCityState(): void {
@@ -175,5 +181,22 @@ export class AddressFormComponent implements OnInit, OnDestroy {
     const stateControl = this.form.get(this.controlName("state"));
     if (cityControl) cityControl.setValue("");
     if (stateControl) stateControl.setValue("");
+  }
+
+  private syncCityStateDisabled(): void {
+    const cityControl = this.form.get(this.controlName("city"));
+    const stateControl = this.form.get(this.controlName("state"));
+    const shouldDisable = this.cityStateDisabled;
+
+    if (cityControl) {
+      shouldDisable
+        ? cityControl.disable({ emitEvent: false })
+        : cityControl.enable({ emitEvent: false });
+    }
+    if (stateControl) {
+      shouldDisable
+        ? stateControl.disable({ emitEvent: false })
+        : stateControl.enable({ emitEvent: false });
+    }
   }
 }

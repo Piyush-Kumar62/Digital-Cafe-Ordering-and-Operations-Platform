@@ -168,6 +168,63 @@
                 maxlength="150"
               />
             </div>
+            <div class="cp-form-group">
+              <label>Phone Number</label>
+              <input
+                type="text"
+                [(ngModel)]="editForm.phoneNumber"
+                placeholder="10-digit mobile number"
+                class="cp-input"
+                maxlength="15"
+              />
+            </div>
+            <div class="cp-form-group">
+              <label>Govt ID Type</label>
+              <input
+                type="text"
+                [(ngModel)]="editForm.govtIdType"
+                placeholder="Aadhaar / PAN / Passport"
+                class="cp-input"
+                maxlength="50"
+              />
+            </div>
+            <div class="cp-form-group cp-form-group--full">
+              <label>Govt ID Number</label>
+              <input
+                type="text"
+                [(ngModel)]="editForm.govtIdNumber"
+                placeholder="Enter ID number"
+                class="cp-input"
+                maxlength="100"
+              />
+            </div>
+            <div class="cp-form-group">
+              <label>Joining Date</label>
+              <input
+                type="date"
+                [(ngModel)]="editForm.joiningDate"
+                class="cp-input"
+              />
+            </div>
+            <div class="cp-form-group">
+              <label>Experience (Years)</label>
+              <input
+                type="number"
+                min="0"
+                [(ngModel)]="editForm.experienceYears"
+                class="cp-input"
+              />
+            </div>
+            <div class="cp-form-group cp-form-group--full">
+              <label>Shift</label>
+              <input
+                type="text"
+                [(ngModel)]="editForm.shift"
+                placeholder="MORNING / EVENING / FULL_DAY"
+                class="cp-input"
+                maxlength="30"
+              />
+            </div>
           </div>
           <div class="cp-form-actions">
             <button class="cp-btn-cancel" (click)="cancelEdit()">Cancel</button>
@@ -337,6 +394,26 @@
               <div class="cp-detail-body">
                 <span class="cp-detail-lbl">Last Login</span>
                 <span class="cp-detail-val">{{ getLastLogin() }}</span>
+              </div>
+            </div>
+            <div class="cp-detail-row">
+              <div class="cp-detail-icon">
+                <span class="material-icons">phone</span>
+              </div>
+              <div class="cp-detail-body">
+                <span class="cp-detail-lbl">Phone Number</span>
+                <span class="cp-detail-val">{{ profileData.phoneNumber || "—" }}</span>
+              </div>
+            </div>
+            <div class="cp-detail-row">
+              <div class="cp-detail-icon">
+                <span class="material-icons">badge</span>
+              </div>
+              <div class="cp-detail-body">
+                <span class="cp-detail-lbl">Govt ID</span>
+                <span class="cp-detail-val">
+                  {{ profileData.govtIdType || "—" }}{{ profileData.govtIdNumber ? " • " + profileData.govtIdNumber : "" }}
+                </span>
               </div>
             </div>
             <div class="cp-detail-row">

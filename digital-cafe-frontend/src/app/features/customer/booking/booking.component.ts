@@ -42,24 +42,11 @@ export class BookingComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     const requestedCafeId = Number(this.route.snapshot.queryParamMap.get('cafeId'));
-    const savedCafeId = this.customerJourneyService.getSelectedCafeId();
-    const cafeId = Number.isFinite(requestedCafeId) && requestedCafeId > 0
-      ? requestedCafeId
-      : (savedCafeId || 1);
-
-    this.bookingForm = this.fb.group({
-      cafeId: [cafeId, Validators.required],
-      tableId: ['', Validators.required],
-      bookingDate: ['', Validators.required],
-      bookingTime: ['', Validators.required],
-      numberOfGuests: ['', [Validators.required, Validators.min(1)]],
-      specialRequests: ['']
-    });
-
-    this.loadCafes();
-    this.bindTableRefresh();
-    this.startAvailabilityAutoRefresh();
-    this.bindRealtimeAvailabilityRefresh();
+    if (Number.isFinite(requestedCafeId) && requestedCafeId > 0) {
+      this.router.navigate(['/customer/browse-cafes', requestedCafeId]);
+      return;
+    }
+    this.router.navigate(['/customer/browse-cafes']);
   }
 
   ngOnDestroy(): void {

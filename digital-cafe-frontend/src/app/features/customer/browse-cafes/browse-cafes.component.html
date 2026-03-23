@@ -35,6 +35,41 @@
     Live · updates every 30s
   </div>
 
+  <!-- Feature spotlight card -->
+  <div class="spotlight-card" *ngIf="!loading && !error">
+    <div class="spotlight-main">
+      <div class="spotlight-icon">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 7h16" />
+          <path d="M6 7v11a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7" />
+          <path d="M9 7V5a3 3 0 0 1 6 0v2" />
+          <path d="M8 12h8" />
+          <path d="M8 15h5" />
+        </svg>
+      </div>
+      <div>
+        <h2>Plan, Sip, Repeat</h2>
+        <p>
+          View menus, pick your time slot, and reserve in seconds. The best tables
+          go fast — lock yours in early.
+        </p>
+        <div class="spotlight-tags">
+          <span>Live tables</span>
+          <span>Fast booking</span>
+          <span>Curated menus</span>
+        </div>
+      </div>
+    </div>
+    <div class="spotlight-actions">
+      <a class="spotlight-btn spotlight-btn--primary" href="#cafes">
+        Explore Featured
+      </a>
+      <a class="spotlight-btn spotlight-btn--ghost" href="#cafes">
+        Top Rated Cafés
+      </a>
+    </div>
+  </div>
+
   <!-- Loading skeleton -->
   <div class="skeleton-grid" *ngIf="loading">
     <div class="skeleton-card" *ngFor="let _ of [1, 2, 3, 4, 5, 6]">
@@ -69,7 +104,7 @@
   </div>
 
   <!-- Cafe Grid -->
-  <div class="cafe-grid" *ngIf="!loading && !error && filteredCafes.length > 0">
+  <div class="cafe-grid" id="cafes" *ngIf="!loading && !error && filteredCafes.length > 0">
     <article
       class="cafe-card"
       *ngFor="let cafe of pagedCafes; let i = index"

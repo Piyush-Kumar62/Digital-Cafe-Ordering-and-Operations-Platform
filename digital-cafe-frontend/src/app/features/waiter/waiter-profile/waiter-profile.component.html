@@ -157,6 +157,63 @@
                 maxlength="150"
               />
             </div>
+            <div class="form-group">
+              <label>Phone Number</label>
+              <input
+                type="text"
+                [(ngModel)]="editForm.phoneNumber"
+                placeholder="10-digit mobile number"
+                class="form-input"
+                maxlength="15"
+              />
+            </div>
+            <div class="form-group">
+              <label>Govt ID Type</label>
+              <input
+                type="text"
+                [(ngModel)]="editForm.govtIdType"
+                placeholder="Aadhaar / PAN / Passport"
+                class="form-input"
+                maxlength="50"
+              />
+            </div>
+            <div class="form-group full-width">
+              <label>Govt ID Number</label>
+              <input
+                type="text"
+                [(ngModel)]="editForm.govtIdNumber"
+                placeholder="Enter ID number"
+                class="form-input"
+                maxlength="100"
+              />
+            </div>
+            <div class="form-group">
+              <label>Joining Date</label>
+              <input
+                type="date"
+                [(ngModel)]="editForm.joiningDate"
+                class="form-input"
+              />
+            </div>
+            <div class="form-group">
+              <label>Experience (Years)</label>
+              <input
+                type="number"
+                min="0"
+                [(ngModel)]="editForm.experienceYears"
+                class="form-input"
+              />
+            </div>
+            <div class="form-group full-width">
+              <label>Shift</label>
+              <input
+                type="text"
+                [(ngModel)]="editForm.shift"
+                placeholder="MORNING / EVENING / FULL_DAY"
+                class="form-input"
+                maxlength="30"
+              />
+            </div>
           </div>
 
           <div class="form-actions">
@@ -330,6 +387,26 @@
               <div class="detail-content">
                 <span class="detail-lbl">Last Login</span>
                 <span class="detail-val">{{ getLastLogin() }}</span>
+              </div>
+            </div>
+            <div class="detail-row">
+              <span class="detail-icon"
+                ><span class="material-icons">phone</span></span
+              >
+              <div class="detail-content">
+                <span class="detail-lbl">Phone Number</span>
+                <span class="detail-val">{{ profileData.phoneNumber || "—" }}</span>
+              </div>
+            </div>
+            <div class="detail-row">
+              <span class="detail-icon"
+                ><span class="material-icons">badge</span></span
+              >
+              <div class="detail-content">
+                <span class="detail-lbl">Govt ID</span>
+                <span class="detail-val">
+                  {{ profileData.govtIdType || "—" }}{{ profileData.govtIdNumber ? " • " + profileData.govtIdNumber : "" }}
+                </span>
               </div>
             </div>
             <div class="detail-row">

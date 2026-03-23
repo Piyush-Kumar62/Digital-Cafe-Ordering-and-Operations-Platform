@@ -8,7 +8,10 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
   const loadingService = inject(LoadingService);
 
-  loadingService.show();
+  const skipLoading = req.headers.has("x-silent-loading");
+  if (!skipLoading) {
+    loadingService.show();
+  }
   const token = authService.getToken();
 
   // These endpoints are unauthenticated — skip JWT injection to avoid CORS preflight rejection
@@ -38,7 +41,9 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(authReq).pipe(
     finalize(() => {
-      loadingService.hide();
+      if (!skipLoading) {
+        loadingService.hide();
+      }
     }),
   );
 };

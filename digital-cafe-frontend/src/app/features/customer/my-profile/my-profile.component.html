@@ -89,6 +89,24 @@
             <span class="material-icons">mail_outline</span>
             {{ user?.email || "—" }}
           </p>
+          <div class="pp-hero__meta">
+            <span class="pp-meta-chip">
+              <span class="material-icons">phone</span>
+              {{ heroPhone }}
+            </span>
+            <span class="pp-meta-chip">
+              <span class="material-icons">event</span>
+              {{ heroDob }}
+            </span>
+            <span class="pp-meta-chip">
+              <span class="material-icons">wc</span>
+              {{ heroGender }}
+            </span>
+            <span class="pp-meta-chip pp-meta-chip--wide">
+              <span class="material-icons">badge</span>
+              {{ heroGovtId }}
+            </span>
+          </div>
           <div class="pp-hero__progress">
             <div class="pp-bar-track">
               <div
@@ -405,6 +423,7 @@
                 placeholder="Search institution"
                 [matAutocomplete]="institutionAuto"
                 matInput
+                [attr.title]="academic.get('institutionName')?.value || ''"
               />
               <mat-autocomplete
                 #institutionAuto="matAutocomplete"

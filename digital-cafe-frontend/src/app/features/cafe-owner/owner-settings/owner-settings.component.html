@@ -57,6 +57,18 @@
             <span class="field-label">Full Name</span>
             <span class="field-value">{{ userDisplayName }}</span>
           </div>
+          <div class="field-row field-row-input">
+            <label class="field-label" for="ownerFirstName">First Name</label>
+            <input id="ownerFirstName" type="text" [(ngModel)]="profileForm.firstName" name="ownerFirstName" />
+          </div>
+          <div class="field-row field-row-input">
+            <label class="field-label" for="ownerLastName">Last Name</label>
+            <input id="ownerLastName" type="text" [(ngModel)]="profileForm.lastName" name="ownerLastName" />
+          </div>
+          <div class="field-row field-row-input">
+            <label class="field-label" for="ownerDisplayName">Display Name</label>
+            <input id="ownerDisplayName" type="text" [(ngModel)]="profileForm.displayName" name="ownerDisplayName" />
+          </div>
           <div class="field-row">
             <span class="field-label">Username</span>
             <span class="field-value">@{{ user.username }}</span>
@@ -89,6 +101,23 @@
             <span class="field-value"
               >{{ user.profileCompletionPercentage }}%</span
             >
+          </div>
+          <div class="field-row field-row-input">
+            <label class="field-label" for="ownerPhoneNumber">Phone Number</label>
+            <input id="ownerPhoneNumber" type="text" [(ngModel)]="profileForm.phoneNumber" name="ownerPhoneNumber" />
+          </div>
+          <div class="field-row field-row-input">
+            <label class="field-label" for="ownerGovtIdType">Govt ID Type</label>
+            <input id="ownerGovtIdType" type="text" [(ngModel)]="profileForm.govtIdType" name="ownerGovtIdType" />
+          </div>
+          <div class="field-row field-row-input">
+            <label class="field-label" for="ownerGovtIdNumber">Govt ID Number</label>
+            <input id="ownerGovtIdNumber" type="text" [(ngModel)]="profileForm.govtIdNumber" name="ownerGovtIdNumber" />
+          </div>
+          <div class="field-row field-row-actions">
+            <button class="btn-primary" type="button" [disabled]="savingProfile" (click)="saveProfile()">
+              {{ savingProfile ? "Saving..." : "Save Profile Details" }}
+            </button>
           </div>
         </div>
       </div>

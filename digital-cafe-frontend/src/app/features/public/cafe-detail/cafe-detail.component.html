@@ -18,7 +18,7 @@
     </div>
   </header>
 
-  <section class="controls">
+  <section class="controls" id="booking">
     <div class="booking-header">
       <h2>Reserve Your Table</h2>
       <p class="booking-subtitle">
@@ -60,35 +60,119 @@
 
     <!-- Step 1: Slot inputs -->
     <div class="slot-row">
-      <label class="slot-field">
-        <span class="field-label">Date</span>
-        <input
-          type="date"
-          [(ngModel)]="selectedDate"
-          (change)="onSlotChange()"
+      <div
+        class="slot-select custom-dropdown"
+        [class.slot-select--disabled]="!!bookingId"
+        [class.custom-dropdown--open]="activeDropdown === 'date'"
+        (click)="toggleDropdown('date', $event)"
+      >
+        <span class="slot-icon"><i class="bi bi-calendar-check"></i></span>
+        <span class="slot-value">{{ getSelectedDateLabel() }}</span>
+        <span class="slot-caret"><i class="bi bi-chevron-down"></i></span>
+        <div class="slot-menu" *ngIf="activeDropdown === 'date'">
+          <button
+            type="button"
+            class="slot-option"
+            *ngFor="let date of dateOptions"
+            [class.slot-option--active]="selectedDate === date.value"
+            (click)="selectDate(date.value, $event)"
+          >
+            {{ date.label }}
+          </button>
+        </div>
+      </div>
+
+      <div
+        class="slot-select custom-dropdown"
+        [class.slot-select--disabled]="!!bookingId"
+        [class.custom-dropdown--open]="activeDropdown === 'guests'"
+        (click)="toggleDropdown('guests', $event)"
+      >
+        <span class="slot-icon"><i class="bi bi-people"></i></span>
+        <span class="slot-value">{{ getSelectedGuestsLabel() }}</span>
+        <span class="slot-caret"><i class="bi bi-chevron-down"></i></span>
+        <div class="slot-menu" *ngIf="activeDropdown === 'guests'">
+          <button
+            type="button"
+            class="slot-option"
+            *ngFor="let guest of guestOptions"
+            [class.slot-option--active]="guests === guest"
+            (click)="selectGuests(guest, $event)"
+          >
+            {{ guest }} {{ guest === 1 ? "guest" : "guests" }}
+          </button>
+        </div>
+      </div>
+
+      <div
+        class="slot-select custom-dropdown"
+        [class.slot-select--disabled]="!!bookingId"
+        [class.custom-dropdown--open]="activeDropdown === 'period'"
+        (click)="toggleDropdown('period', $event)"
+      >
+        <span class="slot-icon"><i class="bi bi-clock"></i></span>
+        <span class="slot-value">{{ getSelectedPeriodLabel() }}</span>
+        <span class="slot-caret"><i class="bi bi-chevron-down"></i></span>
+        <div class="slot-menu" *ngIf="activeDropdown === 'period'">
+          <button
+            type="button"
+            class="slot-option"
+            *ngFor="let period of mealPeriods"
+            [class.slot-option--active]="selectedMealPeriod === period.value"
+            (click)="selectMealPeriod(period.value, $event)"
+          >
+            {{ period.label }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="slot-picker" *ngIf="selectedDate">
+      <div class="slot-picker-head">
+        <h3>Select Slot</h3>
+        <span>{{ selectedMealPeriod | titlecase }}</span>
+      </div>
+      <div class="slot-chip-row" *ngIf="slotOptions.length > 0; else noSlotBlock">
+        <button
+          type="button"
+          class="slot-chip"
+          *ngFor="let slot of slotOptions"
+          [class.slot-chip--active]="selectedTime === slot.value"
           [disabled]="!!bookingId"
-        />
-      </label>
-      <label class="slot-field">
-        <span class="field-label">Time</span>
-        <input
-          type="time"
-          [(ngModel)]="selectedTime"
-          (change)="onSlotChange()"
-          [disabled]="!!bookingId"
-        />
-      </label>
-      <label class="slot-field slot-field--guests">
-        <span class="field-label">Guests</span>
-        <input
-          type="number"
-          min="1"
-          max="20"
-          [(ngModel)]="guests"
-          (change)="onSlotChange()"
-          [disabled]="!!bookingId"
-        />
-      </label>
+          (click)="onSlotTimeSelect(slot.value)"
+        >
+          <span class="slot-chip-check" *ngIf="selectedTime === slot.value">
+            <i class="bi bi-check-lg"></i>
+          </span>
+          {{ slot.label }}
+        </button>
+      </div>
+      <ng-template #noSlotBlock>
+        <p class="no-slot-text">
+          No {{ selectedMealPeriod | lowercase }} slots left for today. Choose
+          another date or period.
+        </p>
+      </ng-template>
+    </div>
+
+    <div class="special-requests">
+      <button
+        type="button"
+        class="special-toggle"
+        (click)="showSpecialRequests = !showSpecialRequests"
+      >
+        <span>Special Requests (Optional)</span>
+        <i class="bi" [ngClass]="showSpecialRequests ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+      </button>
+      <div class="special-body" *ngIf="showSpecialRequests">
+        <label for="specialRequests">Add note</label>
+        <textarea
+          id="specialRequests"
+          rows="3"
+          [(ngModel)]="specialRequests"
+          placeholder="Any special requirements?"
+        ></textarea>
+      </div>
     </div>
 
     <!-- Step 2: Table picker -->
@@ -98,14 +182,14 @@
     >
       <div class="table-picker-header">
         <span class="picker-title">Available Tables</span>
-        <span class="availability-badge" *ngIf="!tablesLoading">
+        <span class="availability-badge">
           {{ availableTables }}
           {{ availableTables === 1 ? "table" : "tables" }} available
         </span>
       </div>
 
       <!-- Loading skeleton -->
-      <div class="table-skeleton-row" *ngIf="tablesLoading">
+      <div class="table-skeleton-row" *ngIf="tablesLoading && !hasLoadedTables && availableTablesList.length === 0">
         <div class="table-skeleton" *ngFor="let i of [1, 2, 3, 4]"></div>
       </div>
 
@@ -133,7 +217,7 @@
       <!-- Table cards -->
       <div
         class="table-grid"
-        *ngIf="!tablesLoading && availableTablesList.length > 0"
+        *ngIf="availableTablesList.length > 0"
       >
         <button
           type="button"
@@ -228,16 +312,36 @@
   </section>
 
   <section class="layout">
-    <section class="menu-section">
+    <section class="menu-section" id="menu">
       <!-- Menu header -->
-      <div class="menu-header">
-        <div>
-          <h2 class="menu-title">Menu</h2>
+      <div class="menu-header-card">
+        <div class="menu-header-main">
+          <div class="menu-kicker">Menu</div>
+          <h2 class="menu-title">Fresh Picks for You</h2>
           <p class="menu-count">
             {{ data.menuItems.length }} item{{
               data.menuItems.length !== 1 ? "s" : ""
             }}
           </p>
+        </div>
+        <div class="menu-header-stats">
+          <div class="menu-stat">
+            <span class="menu-stat-label">Chef Specials</span>
+            <strong>{{ data.menuItems.length > 6 ? 6 : data.menuItems.length }}</strong>
+          </div>
+          <div class="menu-stat">
+            <span class="menu-stat-label">Best Rated</span>
+            <strong>{{ (data.cafeDetails.rating || 0) | number: "1.1-1" }}</strong>
+          </div>
+          <div class="menu-stat">
+            <span class="menu-stat-label">Ready In</span>
+            <strong>15-25 min</strong>
+          </div>
+        </div>
+        <div class="menu-header-badges">
+          <span class="menu-badge">Seasonal</span>
+          <span class="menu-badge">Popular</span>
+          <span class="menu-badge">New</span>
         </div>
       </div>
 
@@ -268,75 +372,79 @@
           *ngFor="let item of data.menuItems"
           [class.item-card--unavailable]="!item.available"
         >
-          <div class="item-img-wrap">
-            <img
-              [src]="
-                item.imageUrl ||
-                'assets/downloads/unsplash/cafe-detail-item-default.jpg'
-              "
-              [alt]="item.name"
-              loading="lazy"
-            />
-            <div class="unavailable-overlay" *ngIf="!item.available">
-              <span>Unavailable</span>
+          <div class="item-main">
+            <div class="item-copy">
+              <div class="item-badges">
+                <span class="veg-dot" aria-hidden="true"></span>
+                <span class="love-chip">
+                  <i class="bi bi-heart-fill"></i>
+                  Loved by guests
+                </span>
+              </div>
+
+              <h3>{{ item.name }}</h3>
+              <p>{{ item.description || "No description available." }}</p>
+
+              <div class="item-price-row">
+                <strong class="item-price"
+                  >₹{{ item.price | number: "1.2-2" }}</strong
+                >
+                <small
+                  class="menu-category menu-category--inline"
+                  [ngClass]="getCategoryClass(item.category)"
+                  >{{ item.category }}</small
+                >
+              </div>
             </div>
-            <small
-              class="menu-category"
-              [ngClass]="getCategoryClass(item.category)"
-              >{{ item.category }}</small
-            >
+
+            <div class="item-img-wrap">
+              <img
+                [src]="
+                  item.imageUrl ||
+                  'assets/downloads/unsplash/cafe-detail-item-default.jpg'
+                "
+                [alt]="item.name"
+                loading="lazy"
+              />
+              <div class="unavailable-overlay" *ngIf="!item.available">
+                <span>Unavailable</span>
+              </div>
+            </div>
           </div>
-          <div class="body">
-            <h3>{{ item.name }}</h3>
-            <p>{{ item.description || "No description available." }}</p>
-            <div class="item-footer">
-              <strong class="item-price"
-                >₹{{ item.price | number: "1.2-2" }}</strong
-              >
-              <div class="actions">
-                <div class="qty-control">
-                  <button
-                    type="button"
-                    (click)="decrementQuantity(item.id)"
-                    [disabled]="!item.available"
-                  >
-                    -
-                  </button>
-                  <input
-                    type="number"
-                    min="1"
-                    max="10"
-                    [value]="getQuantity(item.id)"
-                    (input)="setQuantity(item.id, $any($event.target).value)"
-                    [disabled]="!item.available"
-                  />
-                  <button
-                    type="button"
-                    (click)="incrementQuantity(item.id)"
-                    [disabled]="!item.available"
-                  >
-                    +
-                  </button>
-                </div>
+
+          <div class="item-footer">
+            <div class="actions">
+              <div class="qty-control">
                 <button
-                  class="add-btn"
-                  (click)="addToCart(item)"
+                  type="button"
+                  (click)="decrementQuantity(item.id)"
                   [disabled]="!item.available"
                 >
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2.5"
-                  >
-                    <line x1="12" y1="5" x2="12" y2="19" />
-                    <line x1="5" y1="12" x2="19" y2="12" />
-                  </svg>
-                  Add to Cart
+                  -
+                </button>
+                <input
+                  type="number"
+                  min="1"
+                  max="10"
+                  [value]="getQuantity(item.id)"
+                  (input)="setQuantity(item.id, $any($event.target).value)"
+                  [disabled]="!item.available"
+                />
+                <button
+                  type="button"
+                  (click)="incrementQuantity(item.id)"
+                  [disabled]="!item.available"
+                >
+                  +
                 </button>
               </div>
+              <button
+                class="add-btn"
+                (click)="addToCart(item)"
+                [disabled]="!item.available"
+              >
+                <span class="add-main">Add to Cart</span>
+              </button>
             </div>
           </div>
         </article>

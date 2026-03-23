@@ -113,3 +113,4 @@ docs/PRODUCTION_DATABASE_SCHEMA_ANALYSIS.md
 docs/JPA_ENTITY_STRUCTURE_BLUEPRINT.md
 
 .settings
+tmp_load_institutions.sql

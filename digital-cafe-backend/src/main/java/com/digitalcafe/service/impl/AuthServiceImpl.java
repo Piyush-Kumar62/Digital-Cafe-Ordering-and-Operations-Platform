@@ -163,10 +163,9 @@ public class AuthServiceImpl implements AuthService {
     );
     SecurityContextHolder.getContext().setAuthentication(authentication);
     adminProfileService.markLastLoginAndBroadcast(user.getId());
-    String displayName = (user.getDisplayName() != null && !user.getDisplayName().isBlank())
-        ? user.getDisplayName() : user.getUsername();
+    String displayName = resolveDisplayName(user);
     String loginTime = java.time.format.DateTimeFormatter.ofPattern("dd MMM yyyy, hh:mm a")
-        .withZone(java.time.ZoneId.of("UTC")).format(java.time.Instant.now()) + " UTC";
+        .withZone(java.time.ZoneId.systemDefault()).format(java.time.Instant.now());
     emailService.sendLoginNotification(user.getEmail(), displayName, loginTime);
     return buildAuthResponse(user, jwtUtil.generateToken(authentication),
         jwtUtil.generateRefreshToken(authentication), "Login successful");
@@ -198,8 +197,7 @@ public class AuthServiceImpl implements AuthService {
     // they are now fully active. Send them a "you're all set" confirmation.
     if (user.getRegistrationStatus() == null
         || user.getRegistrationStatus() == User.RegistrationStatus.APPROVED) {
-      String displayName = (user.getDisplayName() != null && !user.getDisplayName().isBlank())
-          ? user.getDisplayName() : user.getUsername();
+      String displayName = resolveDisplayName(user);
       emailService.sendComprehensiveRegistrationSuccess(user.getEmail(), displayName);
     }
   }
@@ -405,6 +403,28 @@ public class AuthServiceImpl implements AuthService {
     if (request.getPersonalDetails().getMaritalStatus() != null)
       profile.setMaritalStatus(Profile.MaritalStatus.valueOf(request.getPersonalDetails().getMaritalStatus()));
     return profile;
+  }
+
+  private String resolveDisplayName(User user) {
+    if (user == null) {
+      return "there";
+    }
+    if (user.getDisplayName() != null && !user.getDisplayName().isBlank()) {
+      return user.getDisplayName().trim();
+    }
+    String first = user.getFirstName() == null ? "" : user.getFirstName().trim();
+    String last = user.getLastName() == null ? "" : user.getLastName().trim();
+    String full = (first + " " + last).trim();
+    if (!full.isBlank()) {
+      return full;
+    }
+    if (user.getUsername() != null && !user.getUsername().isBlank()) {
+      return user.getUsername().trim();
+    }
+    if (user.getEmail() != null && !user.getEmail().isBlank()) {
+      return user.getEmail().trim();
+    }
+    return "there";
   }
 
   @Override

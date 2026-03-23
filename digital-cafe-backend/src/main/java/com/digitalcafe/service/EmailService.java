@@ -4,6 +4,12 @@ public interface EmailService {
     void sendVerificationEmail(String to, String token, String tempPassword);
     void sendPasswordResetEmail(String to, String token);
     void sendPasswordChangedNotification(String to);
+    /** Notifies the user that their account has been activated (admin action). */
+    void sendAccountActivated(String to, String username, String role);
+    /** Notifies the user that their account has been deactivated (admin action). */
+    void sendAccountDeactivated(String to, String username, String role);
+    /** Notifies the user that their account has been reactivated (admin action). */
+    void sendAccountReactivated(String to, String username, String role);
     /** @param role   e.g. "CUSTOMER", "CAFE_OWNER", "CHEF", "WAITER" */
     void sendApprovalConfirmationEmail(String to, String username, String role);
     /** Backward-compat overload — role defaults to "USER" */

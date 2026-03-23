@@ -1,6 +1,8 @@
 package com.digitalcafe.service.impl;
 
 import com.digitalcafe.email.EmailTemplateType;
+import com.digitalcafe.entity.User;
+import com.digitalcafe.repository.UserRepository;
 import com.digitalcafe.service.EmailService;
 import com.digitalcafe.util.PaymentReceiptPdfGenerator;
 import jakarta.annotation.PostConstruct;
@@ -20,6 +22,8 @@ import org.thymeleaf.spring6.SpringTemplateEngine;
 
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.time.Year;
 import java.util.HashMap;
 import java.util.List;
@@ -32,12 +36,15 @@ public class EmailServiceImpl implements EmailService {
 
     private final JavaMailSender mailSender;
     private final SpringTemplateEngine templateEngine;
+    private final UserRepository userRepository;
 
     @Autowired
     public EmailServiceImpl(JavaMailSender mailSender,
-                            @Qualifier("emailTemplateEngine") SpringTemplateEngine templateEngine) {
+                            @Qualifier("emailTemplateEngine") SpringTemplateEngine templateEngine,
+                            UserRepository userRepository) {
         this.mailSender = mailSender;
         this.templateEngine = templateEngine;
+        this.userRepository = userRepository;
     }
 
     @Value("${spring.mail.username:}")
@@ -115,6 +122,39 @@ public class EmailServiceImpl implements EmailService {
         Map<String, Object> vars = new HashMap<>();
         vars.put("loginUrl", frontendUrl + "/auth/login");
         internalSend(to, "Your Digital Cafe password was changed", EmailTemplateType.PASSWORD_CHANGED, vars);
+    }
+
+    @Async("emailTaskExecutor")
+    @Override
+    public void sendAccountActivated(String to, String username, String role) {
+        log.info("[Email] Queuing ACCOUNT_ACTIVATED -> {}", to);
+        Map<String, Object> vars = new HashMap<>();
+        vars.put("username", username);
+        vars.put("role", role);
+        vars.put("loginUrl", frontendUrl + "/auth/login");
+        internalSend(to, "Your Digital Cafe account is now active", EmailTemplateType.ACCOUNT_ACTIVATED, vars);
+    }
+
+    @Async("emailTaskExecutor")
+    @Override
+    public void sendAccountDeactivated(String to, String username, String role) {
+        log.info("[Email] Queuing ACCOUNT_DEACTIVATED -> {}", to);
+        Map<String, Object> vars = new HashMap<>();
+        vars.put("username", username);
+        vars.put("role", role);
+        vars.put("supportUrl", supportUrl);
+        internalSend(to, "Your Digital Cafe account has been deactivated", EmailTemplateType.ACCOUNT_DEACTIVATED, vars);
+    }
+
+    @Async("emailTaskExecutor")
+    @Override
+    public void sendAccountReactivated(String to, String username, String role) {
+        log.info("[Email] Queuing ACCOUNT_REACTIVATED -> {}", to);
+        Map<String, Object> vars = new HashMap<>();
+        vars.put("username", username);
+        vars.put("role", role);
+        vars.put("loginUrl", frontendUrl + "/auth/login");
+        internalSend(to, "Your Digital Cafe account has been reactivated", EmailTemplateType.ACCOUNT_REACTIVATED, vars);
     }
 
     @Async("emailTaskExecutor")
@@ -297,6 +337,12 @@ public class EmailServiceImpl implements EmailService {
             variables.put("frontendUrl", frontendUrl);
             variables.put("supportUrl", supportUrl);
             variables.put("brandName", "Digital Cafe");
+            if (!variables.containsKey("username") || isBlank(String.valueOf(variables.get("username")))) {
+                variables.put("username", resolveDisplayName(to));
+            }
+            if (!variables.containsKey("lastLogin")) {
+                variables.put("lastLogin", resolveLastLogin(to));
+            }
 
             String html = processTemplate(templateType, variables);
 
@@ -332,6 +378,51 @@ public class EmailServiceImpl implements EmailService {
                     cause != null ? cause.getClass().getSimpleName() + ": " + cause.getMessage() : "none");
             log.debug("[Email] Full SMTP exception stack:", e);
         }
+    }
+
+    private String resolveDisplayName(String email) {
+        if (email == null || email.isBlank()) {
+            return "there";
+        }
+        return userRepository.findByEmail(email)
+                .map(this::buildDisplayName)
+                .filter(name -> !name.isBlank())
+                .orElse(email);
+    }
+
+    private String buildDisplayName(User user) {
+        if (user == null) return "there";
+        if (user.getDisplayName() != null && !user.getDisplayName().isBlank()) {
+            return user.getDisplayName().trim();
+        }
+        String first = user.getFirstName() == null ? "" : user.getFirstName().trim();
+        String last = user.getLastName() == null ? "" : user.getLastName().trim();
+        String full = (first + " " + last).trim();
+        if (!full.isBlank()) {
+            return full;
+        }
+        if (user.getUsername() != null && !user.getUsername().isBlank()) {
+            return user.getUsername().trim();
+        }
+        if (user.getEmail() != null && !user.getEmail().isBlank()) {
+            return user.getEmail().trim();
+        }
+        return "there";
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.trim().isEmpty();
+    }
+
+    private String resolveLastLogin(String email) {
+        if (email == null || email.isBlank()) {
+            return null;
+        }
+        return userRepository.findByEmail(email)
+                .map(User::getLastLogin)
+                .map(lastLogin -> DateTimeFormatter.ofPattern("dd MMM yyyy, hh:mm a z")
+                        .format(lastLogin.atZone(ZoneId.systemDefault())))
+                .orElse(null);
     }
 
     private String processTemplate(EmailTemplateType templateType, Map<String, Object> variables) {

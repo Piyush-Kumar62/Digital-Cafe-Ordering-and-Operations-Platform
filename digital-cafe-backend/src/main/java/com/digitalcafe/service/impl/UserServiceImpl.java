@@ -105,9 +105,22 @@ public class UserServiceImpl implements UserService {
     public void activateUser(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
+        boolean wasActive = Boolean.TRUE.equals(user.getIsActive());
         user.setIsActive(true);
         userRepository.save(user);
         log.info("User activated: {}", user.getEmail());
+        String role = user.getRoles().stream()
+                .findFirst()
+                .map(r -> r.getName().name())
+                .orElse("USER");
+        String displayName = (user.getDisplayName() != null && !user.getDisplayName().isBlank())
+                ? user.getDisplayName()
+                : user.getUsername();
+        if (!wasActive) {
+            emailService.sendAccountReactivated(user.getEmail(), displayName, role);
+        } else {
+            emailService.sendAccountActivated(user.getEmail(), displayName, role);
+        }
     }
 
     @Override
@@ -115,9 +128,20 @@ public class UserServiceImpl implements UserService {
     public void deactivateUser(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
+        boolean wasActive = Boolean.TRUE.equals(user.getIsActive());
         user.setIsActive(false);
         userRepository.save(user);
         log.info("User deactivated: {}", user.getEmail());
+        String role = user.getRoles().stream()
+                .findFirst()
+                .map(r -> r.getName().name())
+                .orElse("USER");
+        String displayName = (user.getDisplayName() != null && !user.getDisplayName().isBlank())
+                ? user.getDisplayName()
+                : user.getUsername();
+        if (wasActive) {
+            emailService.sendAccountDeactivated(user.getEmail(), displayName, role);
+        }
     }
 
     @Override
@@ -157,9 +181,35 @@ public class UserServiceImpl implements UserService {
     public UserResponse toggleUserStatus(Long id, boolean isActive) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
+        boolean wasActive = Boolean.TRUE.equals(user.getIsActive());
         user.setIsActive(isActive);
         userRepository.save(user);
         log.info("User {} status changed to: {}", user.getEmail(), isActive);
+        if (isActive) {
+            String role = user.getRoles().stream()
+                    .findFirst()
+                    .map(r -> r.getName().name())
+                    .orElse("USER");
+            String displayName = (user.getDisplayName() != null && !user.getDisplayName().isBlank())
+                    ? user.getDisplayName()
+                    : user.getUsername();
+            if (!wasActive) {
+                emailService.sendAccountReactivated(user.getEmail(), displayName, role);
+            } else {
+                emailService.sendAccountActivated(user.getEmail(), displayName, role);
+            }
+        } else {
+            String role = user.getRoles().stream()
+                    .findFirst()
+                    .map(r -> r.getName().name())
+                    .orElse("USER");
+            String displayName = (user.getDisplayName() != null && !user.getDisplayName().isBlank())
+                    ? user.getDisplayName()
+                    : user.getUsername();
+            if (wasActive) {
+                emailService.sendAccountDeactivated(user.getEmail(), displayName, role);
+            }
+        }
         return mapToUserResponse(user);
     }
 
@@ -253,6 +303,9 @@ public class UserServiceImpl implements UserService {
         });
         user.setUsername(request.getUsername());
         user.setEmail(request.getEmail());
+        user.setFirstName(request.getFirstName());
+        user.setLastName(request.getLastName());
+        user.setDisplayName((request.getFirstName() + " " + request.getLastName()).trim());
         Profile profile = user.getProfile();
         if (profile == null) { profile = new Profile(); profile.setUser(user); user.setProfile(profile); }
         profile.setFirstName(request.getFirstName());
@@ -282,6 +335,8 @@ public class UserServiceImpl implements UserService {
     private User buildStaffUser(Cafe cafe, User owner, Role role, CreateStaffRequest req, String tempPassword) {
         User user = new User();
         user.setUsername(req.getUsername()); user.setEmail(req.getEmail());
+        user.setFirstName(req.getFirstName()); user.setLastName(req.getLastName());
+        user.setDisplayName((req.getFirstName() + " " + req.getLastName()).trim());
         user.setPassword(passwordEncoder.encode(tempPassword));
         user.setCreatedByUser(owner); user.setCafe(cafe);
         user.setIsActive(true); user.setIsEmailVerified(true);
@@ -292,6 +347,13 @@ public class UserServiceImpl implements UserService {
         user.setJoiningDate(req.getJoiningDate()); user.setExperienceYears(req.getExperienceYears());
         user.setShift(req.getShift()); user.setGovtIdType(req.getGovtIdType());
         user.setGovtIdNumber(req.getGovtIdNumber());
+        Profile profile = new Profile();
+        profile.setUser(user);
+        profile.setFirstName(req.getFirstName());
+        profile.setLastName(req.getLastName());
+        profile.setGovtIdType(req.getGovtIdType());
+        profile.setGovtIdNumber(req.getGovtIdNumber());
+        user.setProfile(profile);
         return user;
     }
 
@@ -303,10 +365,13 @@ public class UserServiceImpl implements UserService {
     }
 
     private UserResponse mapToUserResponse(User user) {
+        Profile profile = user.getProfile();
         return UserResponse.builder()
                 .id(user.getId())
                 .username(user.getUsername())
                 .email(user.getEmail())
+                .firstName(user.getFirstName() != null ? user.getFirstName() : profile != null ? profile.getFirstName() : null)
+                .lastName(user.getLastName() != null ? user.getLastName() : profile != null ? profile.getLastName() : null)
                 .isActive(user.getIsActive())
                 .isEmailVerified(user.getIsEmailVerified())
                 .isProfileComplete(user.getIsProfileComplete())
@@ -325,6 +390,8 @@ public class UserServiceImpl implements UserService {
                 .experienceYears(user.getExperienceYears())
                 .shift(user.getShift())
                 .joiningDate(user.getJoiningDate())
+                .govtIdType(user.getGovtIdType() != null ? user.getGovtIdType() : profile != null ? profile.getGovtIdType() : null)
+                .govtIdNumber(user.getGovtIdNumber() != null ? user.getGovtIdNumber() : profile != null ? profile.getGovtIdNumber() : null)
                 .build();
     }
 }

@@ -30,6 +30,8 @@ public enum EmailTemplateType {
     // ── Admin decisions ──────────────────────────────────────────────────────
     REGISTRATION_APPROVED("registration-approved"),
     REGISTRATION_REJECTED("registration-rejected"),
+    ACCOUNT_DEACTIVATED("account-deactivated"),
+    ACCOUNT_REACTIVATED("account-reactivated"),
 
     // ── Orders ───────────────────────────────────────────────────────────────
     ORDER_CONFIRMATION("order-confirmation"),

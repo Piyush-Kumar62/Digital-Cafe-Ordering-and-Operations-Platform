@@ -36,4 +36,6 @@ public class UserResponse {
     private java.time.LocalDate joiningDate;
     private String shift;
     private Integer experienceYears;
+    private String govtIdType;
+    private String govtIdNumber;
 }

@@ -2,9 +2,12 @@ package com.digitalcafe.service.impl;
 
 import com.digitalcafe.dto.request.CustomerSelfProfileUpdateDTO;
 import com.digitalcafe.dto.response.CustomerSelfProfileResponseDTO;
+import com.digitalcafe.entity.Address;
+import com.digitalcafe.entity.Profile;
 import com.digitalcafe.entity.User;
 import com.digitalcafe.exception.BadRequestException;
 import com.digitalcafe.exception.ResourceNotFoundException;
+import com.digitalcafe.repository.ProfileRepository;
 import com.digitalcafe.repository.UserRepository;
 import com.digitalcafe.service.CustomerSelfProfileService;
 import com.digitalcafe.service.FileStorageService;
@@ -20,6 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class CustomerSelfProfileServiceImpl implements CustomerSelfProfileService {
 
     private final UserRepository userRepository;
+    private final ProfileRepository profileRepository;
     private final FileStorageService fileStorageService;
 
     @Override
@@ -33,9 +37,81 @@ public class CustomerSelfProfileServiceImpl implements CustomerSelfProfileServic
     @Transactional
     public CustomerSelfProfileResponseDTO updateProfile(Authentication authentication, CustomerSelfProfileUpdateDTO request) {
         User user = getAuthenticatedUser(authentication);
-        user.setFirstName(request.getFirstName().trim());
-        user.setLastName(request.getLastName().trim());
-        user.setDisplayName(request.getDisplayName().trim());
+
+        Profile profile = profileRepository.findByUserId(user.getId())
+                .orElseGet(() -> {
+                    Profile created = new Profile();
+                    created.setUser(user);
+                    return created;
+                });
+
+        if (StringUtils.hasText(request.getFirstName())) {
+            String firstName = request.getFirstName().trim();
+            user.setFirstName(firstName);
+            profile.setFirstName(firstName);
+        }
+        if (StringUtils.hasText(request.getLastName())) {
+            String lastName = request.getLastName().trim();
+            user.setLastName(lastName);
+            profile.setLastName(lastName);
+        }
+
+        if (StringUtils.hasText(request.getDisplayName())) {
+            user.setDisplayName(request.getDisplayName().trim());
+        } else {
+            String fallbackDisplayName = ((user.getFirstName() == null ? "" : user.getFirstName()) + " "
+                    + (user.getLastName() == null ? "" : user.getLastName())).trim();
+            if (StringUtils.hasText(fallbackDisplayName)) {
+                user.setDisplayName(fallbackDisplayName);
+            }
+        }
+
+        if (StringUtils.hasText(request.getPhoneNumber())) {
+            String phone = request.getPhoneNumber().trim();
+            user.setPhoneNumber(phone);
+            profile.setPhoneNumber(phone);
+        }
+        if (request.getDateOfBirth() != null) {
+            profile.setDateOfBirth(request.getDateOfBirth());
+        }
+        if (StringUtils.hasText(request.getGender())) {
+            profile.setGender(Profile.Gender.valueOf(request.getGender().trim().toUpperCase()));
+        }
+        if (StringUtils.hasText(request.getGovtIdType())) {
+            String govtIdType = request.getGovtIdType().trim();
+            user.setGovtIdType(govtIdType);
+            profile.setGovtIdType(govtIdType);
+        }
+        if (StringUtils.hasText(request.getGovtIdNumber())) {
+            String govtIdNumber = request.getGovtIdNumber().trim();
+            user.setGovtIdNumber(govtIdNumber);
+            profile.setGovtIdNumber(govtIdNumber);
+        }
+
+        if (request.getAddress() != null) {
+            Address address = profile.getAddress() != null ? profile.getAddress() : new Address();
+            address.setProfile(profile);
+            if (request.getAddress().getStreet() != null) address.setStreet(request.getAddress().getStreet());
+            if (request.getAddress().getPlotNumber() != null) address.setPlotNumber(request.getAddress().getPlotNumber());
+            if (request.getAddress().getCity() != null) address.setCity(request.getAddress().getCity());
+            if (request.getAddress().getState() != null) address.setState(request.getAddress().getState());
+            if (request.getAddress().getCountry() != null) address.setCountry(request.getAddress().getCountry());
+            if (request.getAddress().getPincode() != null) address.setPincode(request.getAddress().getPincode());
+            profile.setAddress(address);
+        }
+
+        if (request.getJoiningDate() != null) {
+            user.setJoiningDate(request.getJoiningDate());
+        }
+        if (request.getExperienceYears() != null) {
+            user.setExperienceYears(request.getExperienceYears());
+        }
+        if (StringUtils.hasText(request.getShift())) {
+            user.setShift(request.getShift().trim());
+        }
+
+        profileRepository.save(profile);
+        user.setProfile(profile);
         // Customer self profile update is the required completion checkpoint.
         user.setIsProfileComplete(true);
         user.setProfileCompletionPercentage(100);
@@ -75,14 +151,45 @@ public class CustomerSelfProfileServiceImpl implements CustomerSelfProfileServic
                 .findFirst()
                 .map(r -> "ROLE_" + r.getName().name())
                 .orElse("ROLE_CUSTOMER");
+        Profile profile = user.getProfile();
+        Address address = profile != null ? profile.getAddress() : null;
+        String phoneNumber = profile != null && StringUtils.hasText(profile.getPhoneNumber())
+                ? profile.getPhoneNumber()
+                : user.getPhoneNumber();
+        String govtIdType = profile != null && StringUtils.hasText(profile.getGovtIdType())
+                ? profile.getGovtIdType()
+                : user.getGovtIdType();
+        String govtIdNumber = profile != null && StringUtils.hasText(profile.getGovtIdNumber())
+                ? profile.getGovtIdNumber()
+                : user.getGovtIdNumber();
 
         return CustomerSelfProfileResponseDTO.builder()
-                .firstName(user.getFirstName())
-                .lastName(user.getLastName())
+                .firstName(StringUtils.hasText(user.getFirstName())
+                        ? user.getFirstName()
+                        : profile != null ? profile.getFirstName() : null)
+                .lastName(StringUtils.hasText(user.getLastName())
+                        ? user.getLastName()
+                        : profile != null ? profile.getLastName() : null)
                 .displayName(user.getDisplayName())
                 .email(user.getEmail())
                 .role(role)
                 .profileImageUrl(user.getProfileImageUrl())
+                .phoneNumber(phoneNumber)
+                .dateOfBirth(profile != null ? profile.getDateOfBirth() : null)
+                .gender(profile != null && profile.getGender() != null ? profile.getGender().name() : null)
+                .govtIdType(govtIdType)
+                .govtIdNumber(govtIdNumber)
+                .address(address == null ? null : CustomerSelfProfileResponseDTO.ProfileAddressResponse.builder()
+                        .street(address.getStreet())
+                        .plotNumber(address.getPlotNumber())
+                        .city(address.getCity())
+                        .state(address.getState())
+                        .country(address.getCountry())
+                        .pincode(address.getPincode())
+                        .build())
+                .joiningDate(user.getJoiningDate())
+                .experienceYears(user.getExperienceYears())
+                .shift(user.getShift())
                 .accountStatus(user.getAccountStatus())
                 .emailVerified(user.getEmailVerified())
                 .profileCompletionPercentage(user.getProfileCompletionPercentage())

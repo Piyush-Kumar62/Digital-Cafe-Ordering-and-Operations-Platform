@@ -32,4 +32,7 @@ spring.mail.properties.mail.smtp.starttls.required=true
 # Application Configuration
 app.frontend.url=http://localhost:4200
 app.name=Digital Cafe Platform
+app.education.seed.enabled=true
+app.education.import.degrees.enabled=false
+app.education.import.branches.enabled=false
 logging.level.com.digitalcafe=DEBUG

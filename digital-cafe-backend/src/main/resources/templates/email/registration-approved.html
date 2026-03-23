@@ -17,7 +17,7 @@
   <body style="margin:0;padding:0;background-color:#f3f4f6;
                background-image:radial-gradient(ellipse at top,#d1fae5 0%,#f3f4f6 60%);">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
-           style="background-color:#f3f4f6;padding:40px 16px">
+           style="background-color:#f3f4f6;padding:28px 14px">
       <tr><td align="center">
         <table role="presentation" width="100%" style="max-width:600px">
 
@@ -27,15 +27,15 @@
           <tr>
             <td style="background:linear-gradient(135deg,#059669 0%,#10b981 100%);
                        padding:32px 40px 28px;text-align:center;">
-              <div style="font-size:52px;margin-bottom:12px;">&#10003;</div>
+              <div style="font-size:40px;margin-bottom:10px;">&#10003;</div>
               <h2 style="margin:0 0 6px;
                          font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;
-                         font-size:24px;font-weight:700;color:#fff;">Account Approved!</h2>
+                         font-size: 22px;font-weight:700;color:#fff;">Account Approved!</h2>
               <span th:if="${role != null}"
                     style="display:inline-block;background:rgba(255,255,255,0.2);
                            color:#fff;
                            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;
-                           font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;
+                           font-size: 12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;
                            padding:4px 14px;border-radius:20px;margin-top:8px;"
                     th:text="${role}">User</span>
             </td>
@@ -55,13 +55,21 @@
                 <strong>approved</strong> by our admin team.
                 You can now sign in and access your dashboard.
               </p>
+              <p
+                 th:if="${lastLogin}"
+                 style="
+                   margin: 0 0 14px;
+                   font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;
+                   font-size:12px;color:#94a3b8;">
+                ⏰ Last login: <span th:text="${lastLogin}">01 Jan 2026, 10:00 AM</span>
+              </p>
 
               <!-- What's unlocked card -->
               <div style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:12px;
                           padding:20px 24px;margin-bottom:28px;">
                 <p style="margin:0 0 12px;
                            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;
-                           font-size:11px;font-weight:700;color:#059669;
+                           font-size: 12px;font-weight:700;color:#059669;
                            text-transform:uppercase;letter-spacing:1px;">What's now unlocked</p>
                 <table role="presentation" width="100%" cellpadding="6" cellspacing="0">
                   <tr>
@@ -114,3 +122,8 @@
     </table>
   </body>
 </html>
+
+
+
+
+

@@ -1,0 +1,294 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>Account Deactivated — Digital Cafe</title>
+    <style>
+      @media (prefers-color-scheme: dark) {
+        .email-card {
+          background-color: #111827 !important;
+        }
+      }
+      @media only screen and (max-width: 600px) {
+        .body-content {
+          padding: 28px 20px !important;
+        }
+      }
+    </style>
+  </head>
+  <body
+    style="
+      margin: 0;
+      padding: 0;
+      background-color: #f3f4f6;
+      background-image: radial-gradient(
+        ellipse at top,
+        #fee2e2 0%,
+        #f3f4f6 60%
+      );
+    "
+  >
+    <table
+      role="presentation"
+      width="100%"
+      cellpadding="0"
+      cellspacing="0"
+      style="background-color: #f3f4f6; padding: 28px 14px"
+    >
+      <tr>
+        <td align="center">
+          <table role="presentation" width="100%" style="max-width: 600px">
+            <tr>
+              <td><div th:replace="~{fragments/header :: header}"></div></td>
+            </tr>
+
+            <tr>
+              <td
+                style="
+                  background: linear-gradient(
+                    135deg,
+                    #ef4444 0%,
+                    #f97316 60%,
+                    #f59e0b 100%
+                  );
+                  padding: 32px 30px;
+                  text-align: center;
+                "
+              >
+                <div style="font-size: 40px; margin-bottom: 10px">🔒</div>
+                <h1
+                  style="
+                    margin: 0 0 10px;
+                    font-family:
+                      -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;,
+                      Roboto, Arial, sans-serif;
+                    font-size: 22px;
+                    font-weight: 800;
+                    color: #ffffff;
+                    line-height: 1.2;
+                  "
+                >
+                  Account Deactivated
+                </h1>
+                <p
+                  style="
+                    margin: 0 0 12px;
+                    font-family:
+                      -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;,
+                      Roboto, Arial, sans-serif;
+                    font-size: 14px;
+                    color: #fee2e2;
+                    line-height: 1.5;
+                  "
+                >
+                  Access paused for your Digital Cafe account.
+                </p>
+                <div
+                  style="
+                    display: inline-block;
+                    background: rgba(255, 255, 255, 0.2);
+                    border: 1px solid rgba(255, 255, 255, 0.35);
+                    border-radius: 999px;
+                    padding: 6px 16px;
+                  "
+                >
+                  <span
+                    style="
+                      font-family:
+                        -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;,
+                        Roboto, Arial, sans-serif;
+                      font-size: 12px;
+                      font-weight: 700;
+                      color: #ffffff;
+                      letter-spacing: 0.5px;
+                      text-transform: uppercase;
+                    "
+                    th:text="${role}"
+                    >User</span
+                  >
+                </div>
+              </td>
+            </tr>
+
+            <tr>
+              <td
+                class="email-card body-content"
+                style="background: #ffffff; padding: 32px 30px; border-radius: 0"
+              >
+                <p
+                  style="
+                    margin: 0 0 10px;
+                    font-family:
+                      -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;,
+                      Roboto, Arial, sans-serif;
+                    font-size: 15px;
+                    line-height: 1.6;
+                    color: #4b5563;
+                  "
+                >
+                  Hi <strong th:text="${username}">there</strong>,
+                </p>
+                <p
+                  style="
+                    margin: 0 0 18px;
+                    font-family:
+                      -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;,
+                      Roboto, Arial, sans-serif;
+                    font-size: 15px;
+                    line-height: 1.6;
+                    color: #4b5563;
+                  "
+                >
+                  Your Digital Cafe account has been temporarily deactivated by
+                  an administrator. If you believe this is a mistake, please
+                  reach out to support for assistance.
+                </p>
+
+                <div
+                  style="
+                    background: #fff7ed;
+                    border: 1px solid #fed7aa;
+                    border-radius: 12px;
+                    padding: 16px 18px;
+                    margin-bottom: 18px;
+                  "
+                >
+                  <p
+                    style="
+                      margin: 0 0 6px;
+                      font-family:
+                        -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;,
+                        Roboto, Arial, sans-serif;
+                      font-size: 12px;
+                      font-weight: 700;
+                      color: #92400e;
+                      text-transform: uppercase;
+                      letter-spacing: 0.5px;
+                    "
+                  >
+                    Account Status
+                  </p>
+                  <p
+                    style="
+                      margin: 0;
+                      font-family:
+                        -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;,
+                        Roboto, Arial, sans-serif;
+                      font-size: 14px;
+                      color: #7c2d12;
+                      font-weight: 600;
+                    "
+                  >
+                    Deactivated — access to the platform is paused.
+                  </p>
+                </div>
+
+                <div
+                  style="
+                    background: #f8fafc;
+                    border: 1px solid #e2e8f0;
+                    border-radius: 12px;
+                    padding: 16px 18px;
+                    margin-bottom: 18px;
+                  "
+                >
+                  <p
+                    style="
+                      margin: 0 0 6px;
+                      font-family:
+                        -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;,
+                        Roboto, Arial, sans-serif;
+                      font-size: 12px;
+                      font-weight: 700;
+                      color: #475569;
+                      text-transform: uppercase;
+                      letter-spacing: 0.5px;
+                    "
+                  >
+                    Quick Summary
+                  </p>
+                  <p
+                    style="
+                      margin: 0;
+                      font-family:
+                        -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;,
+                        Roboto, Arial, sans-serif;
+                      font-size: 13px;
+                      color: #64748b;
+                      line-height: 1.6;
+                    "
+                  >
+                    Access status: <strong style="color:#ef4444;">Paused</strong><br />
+                    Support: Reach out if you need this reversed.
+                  </p>
+                  <p
+                    th:if="${lastLogin}"
+                    style="
+                      margin: 8px 0 0;
+                      font-family:
+                        -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;,
+                        Roboto, Arial, sans-serif;
+                      font-size: 12px;
+                      color: #94a3b8;
+                    "
+                  >
+                    ⏰ Last login: <span th:text="${lastLogin}">01 Jan 2026, 10:00 AM</span>
+                  </p>
+                </div>
+
+                <div
+                  style="
+                    background: #fef2f2;
+                    border-left: 4px solid #ef4444;
+                    border-radius: 0 12px 12px 0;
+                    padding: 18px 22px;
+                    margin-bottom: 22px;
+                  "
+                >
+                  <p
+                    style="
+                      margin: 0 0 6px;
+                      font-family:
+                        -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;,
+                        Roboto, Arial, sans-serif;
+                      font-size: 13px;
+                      font-weight: 700;
+                      color: #7f1d1d;
+                    "
+                  >
+                    Need help?
+                  </p>
+                  <p
+                    style="
+                      margin: 0;
+                      font-family:
+                        -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;,
+                        Roboto, Arial, sans-serif;
+                      font-size: 13px;
+                      color: #991b1b;
+                      line-height: 1.6;
+                    "
+                  >
+                    Contact our support team and we'll review your account.
+                  </p>
+                </div>
+
+                <div
+                  th:replace="~{fragments/button :: ctaButton(label='Contact Support', url=${supportUrl})}"
+                ></div>
+              </td>
+            </tr>
+
+            <tr>
+              <td><div th:replace="~{fragments/footer :: footer}"></div></td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
+
+
+

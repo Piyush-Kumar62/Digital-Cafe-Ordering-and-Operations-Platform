@@ -6,40 +6,40 @@
      style="background:#f9fafb;
             border-top:1px solid #e5e7eb;
             border-radius:0 0 20px 20px;
-            padding:28px 40px;
+            padding:22px 30px 24px;
             text-align:center;">
   <!-- Navigation links -->
-  <p style="margin:0 0 12px;
+  <p style="margin:0 0 11px;
             font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;
-            font-size:12px;
-            color:#6b7280;">
+            font-size:13px;
+            color:#4b5563;">
     <a th:href="${frontendUrl}" href="#"
-       style="color:#6C4AB6;text-decoration:none;font-weight:500;">Home</a>
+       style="color:#5b3ec8;text-decoration:none;font-weight:600;">Home</a>
     &nbsp;&nbsp;·&nbsp;&nbsp;
     <a th:href="${supportUrl}" href="#"
-       style="color:#6C4AB6;text-decoration:none;font-weight:500;">Support</a>
+       style="color:#5b3ec8;text-decoration:none;font-weight:600;">Support</a>
     &nbsp;&nbsp;·&nbsp;&nbsp;
     <a th:href="|${frontendUrl}/legal/privacy|" href="#"
-       style="color:#6C4AB6;text-decoration:none;font-weight:500;">Privacy Policy</a>
+       style="color:#5b3ec8;text-decoration:none;font-weight:600;">Privacy Policy</a>
   </p>
 
   <!-- Copyright -->
   <p style="margin:0 0 10px;
             font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;
-            font-size:11px;
-            color:#9ca3af;">
+            font-size:12px;
+            color:#6b7280;">
     &copy; <span th:text="${currentYear}">2025</span> Digital Cafe. All rights reserved.
   </p>
 
   <!-- Security note -->
   <p style="margin:0;
             font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;
-            font-size:11px;
-            color:#d1d5db;
-            font-style:italic;">
+            font-size:12px;
+            color:#6b7280;
+            line-height:1.5;">
     This email was sent by Digital Cafe. If you did not expect it, please
     <a th:href="${supportUrl}" href="#"
-       style="color:#9ca3af;text-decoration:underline;">contact support</a>.
+       style="color:#4f46e5;text-decoration:underline;font-weight:500;">contact support</a>.
   </p>
 </div>
 </body>

@@ -42,7 +42,7 @@
       width="100%"
       cellpadding="0"
       cellspacing="0"
-      style="background-color: #f3f4f6; padding: 40px 16px"
+      style="background-color: #f3f4f6; padding: 28px 14px"
     >
       <tr>
         <td align="center">
@@ -62,18 +62,18 @@
                     #4f46e5 50%,
                     #0ea5e9 100%
                   );
-                  padding: 48px 40px;
+                  padding: 32px 30px;
                   text-align: center;
                 "
               >
-                <div style="font-size: 52px; margin-bottom: 16px">🎉</div>
+                <div style="font-size: 40px; margin-bottom: 10px">🎉</div>
                 <h1
                   style="
                     margin: 0 0 12px;
                     font-family:
                       -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;,
                       Roboto, Arial, sans-serif;
-                    font-size: 28px;
+                    font-size: 22px;
                     font-weight: 800;
                     color: #ffffff;
                     line-height: 1.2;
@@ -124,7 +124,7 @@
             <tr>
               <td
                 class="body-content"
-                style="background: #ffffff; padding: 40px"
+                style="background: #ffffff; padding: 32px 30px"
               >
                 <p
                   style="
@@ -139,6 +139,19 @@
                 >
                   Your email is confirmed and everything is ready to go. Here's
                   what you can do right now:
+                </p>
+                <p
+                  th:if="${lastLogin}"
+                  style="
+                    margin: 0 0 20px;
+                    font-family:
+                      -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;,
+                      Roboto, Arial, sans-serif;
+                    font-size: 12px;
+                    color: #94a3b8;
+                  "
+                >
+                  ⏰ Last login: <span th:text="${lastLogin}">01 Jan 2026, 10:00 AM</span>
                 </p>
 
                 <!-- Feature highlights -->
@@ -161,7 +174,7 @@
                         border: 1px solid #ede9fe;
                       "
                     >
-                      <div style="font-size: 28px; margin-bottom: 8px">🍽️</div>
+                      <div style="font-size: 22px; margin-bottom: 8px">🍽️</div>
                       <p
                         style="
                           margin: 0 0 4px;
@@ -181,7 +194,7 @@
                           font-family:
                             -apple-system, BlinkMacSystemFont,
                             &quot;Segoe UI&quot;, Roboto, Arial, sans-serif;
-                          font-size: 11px;
+                          font-size: 12px;
                           color: #7c3aed;
                         "
                       >
@@ -200,7 +213,7 @@
                         border: 1px solid #bbf7d0;
                       "
                     >
-                      <div style="font-size: 28px; margin-bottom: 8px">📅</div>
+                      <div style="font-size: 22px; margin-bottom: 8px">📅</div>
                       <p
                         style="
                           margin: 0 0 4px;
@@ -220,7 +233,7 @@
                           font-family:
                             -apple-system, BlinkMacSystemFont,
                             &quot;Segoe UI&quot;, Roboto, Arial, sans-serif;
-                          font-size: 11px;
+                          font-size: 12px;
                           color: #059669;
                         "
                       >
@@ -239,7 +252,7 @@
                         border: 1px solid #fed7aa;
                       "
                     >
-                      <div style="font-size: 28px; margin-bottom: 8px">⭐</div>
+                      <div style="font-size: 22px; margin-bottom: 8px">⭐</div>
                       <p
                         style="
                           margin: 0 0 4px;
@@ -259,7 +272,7 @@
                           font-family:
                             -apple-system, BlinkMacSystemFont,
                             &quot;Segoe UI&quot;, Roboto, Arial, sans-serif;
-                          font-size: 11px;
+                          font-size: 12px;
                           color: #d97706;
                         "
                       >
@@ -495,8 +508,7 @@
                           padding: 14px 40px;
                           border-radius: 8px;
                           letter-spacing: 0.3px;
-                          width: 100%;
-                          box-sizing: border-box;
+                          min-width: 220px;
                           text-align: center;
                         "
                       >
@@ -531,8 +543,7 @@
                           padding: 13px 40px;
                           border-radius: 8px;
                           border: 2px solid #7c3aed;
-                          width: 100%;
-                          box-sizing: border-box;
+                          min-width: 220px;
                           text-align: center;
                         "
                       >
@@ -554,3 +565,9 @@
     </table>
   </body>
 </html>
+
+
+
+
+
+

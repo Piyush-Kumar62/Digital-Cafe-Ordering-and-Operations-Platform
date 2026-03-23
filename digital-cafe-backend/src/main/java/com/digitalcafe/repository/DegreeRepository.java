@@ -11,6 +11,7 @@ import java.util.Optional;
 @Repository
 public interface DegreeRepository extends JpaRepository<Degree, Long> {
     List<Degree> findAllByOrderByNameAsc();
+    List<Degree> findTop50ByNameContainingIgnoreCaseOrderByNameAsc(String name);
     Optional<Degree> findByNameIgnoreCase(String name);
     boolean existsByNameIgnoreCase(String name);
 

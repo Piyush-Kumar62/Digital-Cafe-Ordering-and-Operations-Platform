@@ -13,6 +13,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -21,7 +23,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Slf4j
 @Service
@@ -29,11 +33,14 @@ import java.util.List;
 public class EducationImportWorker {
 
     private static final int ERROR_LIMIT = 20;
+    private static final int BATCH_SIZE = 500;
 
     private final EducationImportJobRepository jobRepository;
     private final InstitutionRepository institutionRepository;
     private final DegreeRepository degreeRepository;
     private final BranchRepository branchRepository;
+    @PersistenceContext
+    private EntityManager entityManager;
 
     @Async("educationImportTaskExecutor")
     @Transactional
@@ -53,6 +60,7 @@ public class EducationImportWorker {
         job.setStatus(EducationImportJob.Status.RUNNING);
         job.setStartedAt(LocalDateTime.now());
         jobRepository.save(job);
+        log.info("Education import started: jobId={}, type={}, file={}", jobId, type, filePath.getFileName());
 
         int inserted = 0;
         int skipped = 0;
@@ -64,6 +72,20 @@ public class EducationImportWorker {
         int stateIndex = 2;
         int degreeIndex = 0;
         int branchIndex = 1;
+
+        Set<String> seenInstitutions = new HashSet<>();
+        Set<String> seenDegrees = new HashSet<>();
+        Set<String> seenBranches = new HashSet<>();
+        List<Institution> institutionBatch = new ArrayList<>();
+
+        if (type == EducationImportJob.ImportType.INSTITUTIONS) {
+            institutionRepository.findAllKeys().forEach(row -> {
+                String existingKey = normalizeKey(row.getName()) + "|" +
+                        normalizeKey(row.getCity()) + "|" +
+                        normalizeKey(row.getState());
+                seenInstitutions.add(existingKey);
+            });
+        }
 
         try (BufferedReader reader = new BufferedReader(
                 new InputStreamReader(Files.newInputStream(filePath), StandardCharsets.UTF_8))) {
@@ -107,19 +129,27 @@ public class EducationImportWorker {
                             addError(errors, "Missing institution name at row " + total);
                             continue;
                         }
-                        String finalCity = city.isEmpty() ? null : city;
-                        String finalState = state.isEmpty() ? null : state;
-                        if (institutionRepository.existsByNameCityStateIgnoreCase(
-                                name, finalCity, finalState)) {
+                        String institutionKey = normalizeKey(name) + "|" + normalizeKey(city) + "|" + normalizeKey(state);
+                        if (seenInstitutions.contains(institutionKey)) {
                             skipped++;
                             continue;
                         }
-                        institutionRepository.save(Institution.builder()
+                        String finalCity = city.isEmpty() ? null : city;
+                        String finalState = state.isEmpty() ? null : state;
+                        institutionBatch.add(Institution.builder()
                                 .name(name)
                                 .city(finalCity)
                                 .state(finalState)
                                 .build());
+                        seenInstitutions.add(institutionKey);
                         inserted++;
+
+                        if (institutionBatch.size() >= BATCH_SIZE) {
+                            institutionRepository.saveAll(institutionBatch);
+                            institutionRepository.flush();
+                            entityManager.clear();
+                            institutionBatch.clear();
+                        }
                     }
                     case DEGREES -> {
                         String name = normalizeName(safe(cols, degreeIndex));
@@ -128,11 +158,17 @@ public class EducationImportWorker {
                             addError(errors, "Missing degree name at row " + total);
                             continue;
                         }
+                        String degreeKey = normalizeKey(name);
+                        if (seenDegrees.contains(degreeKey)) {
+                            skipped++;
+                            continue;
+                        }
                         if (degreeRepository.existsByNameIgnoreCase(name)) {
                             skipped++;
                             continue;
                         }
                         degreeRepository.save(Degree.builder().name(name).build());
+                        seenDegrees.add(degreeKey);
                         inserted++;
                     }
                     case BRANCHES -> {
@@ -141,6 +177,11 @@ public class EducationImportWorker {
                         if (degreeName.isEmpty() || branchName.isEmpty()) {
                             skipped++;
                             addError(errors, "Missing degree/branch at row " + total);
+                            continue;
+                        }
+                        String branchKey = normalizeKey(degreeName) + "|" + normalizeKey(branchName);
+                        if (seenBranches.contains(branchKey)) {
+                            skipped++;
                             continue;
                         }
                         Degree degree = degreeRepository.findByNameIgnoreCase(degreeName)
@@ -153,9 +194,16 @@ public class EducationImportWorker {
                                 .name(branchName)
                                 .degree(degree)
                                 .build());
+                        seenBranches.add(branchKey);
                         inserted++;
                     }
                 }
+            }
+
+            if (type == EducationImportJob.ImportType.INSTITUTIONS && !institutionBatch.isEmpty()) {
+                institutionRepository.saveAll(institutionBatch);
+                institutionRepository.flush();
+                entityManager.clear();
             }
 
             job.setStatus(EducationImportJob.Status.COMPLETED);
@@ -165,6 +213,10 @@ public class EducationImportWorker {
             job.setErrorDetails(String.join("\n", errors));
             job.setFinishedAt(LocalDateTime.now());
             jobRepository.save(job);
+            log.info(
+                    "Education import completed: jobId={}, type={}, total={}, inserted={}, skipped={}, errors={}",
+                    jobId, type, total, inserted, skipped, errors.size()
+            );
         } catch (Exception ex) {
             log.error("Education import failed for job {}", jobId, ex);
             job.setStatus(EducationImportJob.Status.FAILED);
@@ -226,6 +278,11 @@ public class EducationImportWorker {
     private static String normalizeName(String value) {
         if (value == null) return "";
         return value.replaceAll("\\s+", " ").trim();
+    }
+
+    private static String normalizeKey(String value) {
+        if (value == null) return "";
+        return normalizeName(value).toLowerCase();
     }
 
     private static List<String> parseCsvLine(String line) {

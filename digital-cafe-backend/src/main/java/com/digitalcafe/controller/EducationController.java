@@ -28,18 +28,20 @@ public class EducationController {
     }
 
     @GetMapping("/degrees")
-    public ResponseEntity<ApiResponse<List<EducationResponse.DegreeResponse>>> getDegrees() {
+    public ResponseEntity<ApiResponse<List<EducationResponse.DegreeResponse>>> getDegrees(
+            @RequestParam(value = "search", required = false) String search) {
         return ResponseEntity.ok(
-                ApiResponse.success("Degrees retrieved", educationService.getDegrees())
+                ApiResponse.success("Degrees retrieved", educationService.getDegrees(search))
         );
     }
 
     @GetMapping("/branches")
     public ResponseEntity<ApiResponse<List<EducationResponse.BranchResponse>>> getBranches(
             @RequestParam(value = "degreeId", required = false) Long degreeId,
-            @RequestParam(value = "degree", required = false) String degree) {
+            @RequestParam(value = "degree", required = false) String degree,
+            @RequestParam(value = "search", required = false) String search) {
         return ResponseEntity.ok(
-                ApiResponse.success("Branches retrieved", educationService.getBranches(degreeId, degree))
+                ApiResponse.success("Branches retrieved", educationService.getBranches(degreeId, degree, search))
         );
     }
 }

@@ -5,7 +5,6 @@ import com.digitalcafe.dto.response.EducationHealthResponse;
 import com.digitalcafe.dto.response.EducationDuplicateReportResponse;
 import com.digitalcafe.dto.response.EducationImportJobResponse;
 import com.digitalcafe.dto.response.EducationResponse;
-import com.digitalcafe.dto.response.EducationSyncResponse;
 import com.digitalcafe.dto.response.PageResponse;
 import com.digitalcafe.entity.EducationImportJob;
 import com.digitalcafe.service.EducationAdminService;
@@ -61,16 +60,18 @@ public class AdminEducationController {
         return ResponseEntity.ok(ApiResponse.success("Import status retrieved", result));
     }
 
+    @GetMapping("/imports/latest")
+    public ResponseEntity<ApiResponse<EducationImportJobResponse>> getLatestImportJob(
+            @RequestParam(value = "type", defaultValue = "INSTITUTIONS") String type) {
+        EducationImportJob.ImportType importType = EducationImportJob.ImportType.valueOf(type.toUpperCase());
+        var result = educationAdminService.getLatestImportJob(importType);
+        return ResponseEntity.ok(ApiResponse.success("Latest import status retrieved", result));
+    }
+
     @GetMapping("/health")
     public ResponseEntity<ApiResponse<EducationHealthResponse>> getEducationHealth() {
         var result = educationAdminService.getEducationHealth();
         return ResponseEntity.ok(ApiResponse.success("Education health retrieved", result));
-    }
-
-    @PostMapping("/sync")
-    public ResponseEntity<ApiResponse<EducationSyncResponse>> syncInstitutions() {
-        var result = educationAdminService.syncInstitutionsFromDataGov();
-        return ResponseEntity.ok(ApiResponse.success("Education sync completed", result));
     }
 
     @PostMapping("/imports/local")

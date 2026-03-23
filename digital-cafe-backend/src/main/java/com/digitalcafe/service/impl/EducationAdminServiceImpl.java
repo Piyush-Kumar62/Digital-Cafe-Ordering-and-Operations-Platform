@@ -3,7 +3,6 @@ package com.digitalcafe.service.impl;
 import com.digitalcafe.dto.response.EducationImportJobResponse;
 import com.digitalcafe.dto.response.EducationHealthResponse;
 import com.digitalcafe.dto.response.EducationResponse;
-import com.digitalcafe.dto.response.EducationSyncResponse;
 import com.digitalcafe.dto.response.EducationDuplicateReportResponse;
 import com.digitalcafe.dto.response.PageResponse;
 import com.digitalcafe.entity.EducationImportJob;
@@ -41,10 +40,18 @@ public class EducationAdminServiceImpl implements EducationAdminService {
     private final BranchRepository branchRepository;
     private final EducationImportJobRepository jobRepository;
     private final EducationImportWorker importWorker;
-    private final DataGovInstitutionSyncService dataGovInstitutionSyncService;
 
     @Value("${app.upload.dir:uploads}")
     private String uploadDir;
+
+    @Value("${app.education.import.degrees.enabled:false}")
+    private boolean degreeImportEnabled;
+
+    @Value("${app.education.import.branches.enabled:false}")
+    private boolean branchImportEnabled;
+
+    @Value("${app.education.import.sync:true}")
+    private boolean importSyncEnabled;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -87,12 +94,18 @@ public class EducationAdminServiceImpl implements EducationAdminService {
     @Override
     @Transactional
     public EducationImportJobResponse startDegreeImport(MultipartFile file) {
+        if (!degreeImportEnabled) {
+            throw new BadRequestException("Degree import is disabled");
+        }
         return startImport(file, EducationImportJob.ImportType.DEGREES);
     }
 
     @Override
     @Transactional
     public EducationImportJobResponse startBranchImport(MultipartFile file) {
+        if (!branchImportEnabled) {
+            throw new BadRequestException("Branch import is disabled");
+        }
         return startImport(file, EducationImportJob.ImportType.BRANCHES);
     }
 
@@ -100,6 +113,17 @@ public class EducationAdminServiceImpl implements EducationAdminService {
     @Transactional(readOnly = true)
     public EducationImportJobResponse getImportJob(Long id) {
         EducationImportJob job = jobRepository.findById(id)
+                .orElseThrow(() -> new BadRequestException("Import job not found"));
+        return toJobResponse(job);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public EducationImportJobResponse getLatestImportJob(EducationImportJob.ImportType type) {
+        EducationImportJob.ImportType resolvedType =
+                type == null ? EducationImportJob.ImportType.INSTITUTIONS : type;
+        EducationImportJob job = jobRepository
+                .findTopByImportTypeOrderByIdDesc(resolvedType)
                 .orElseThrow(() -> new BadRequestException("Import job not found"));
         return toJobResponse(job);
     }
@@ -119,13 +143,10 @@ public class EducationAdminServiceImpl implements EducationAdminService {
 
     @Override
     @Transactional
-    public EducationSyncResponse syncInstitutionsFromDataGov() {
-        return dataGovInstitutionSyncService.syncInstitutions();
-    }
-
-    @Override
-    @Transactional
     public EducationImportJobResponse startLocalImport(String filename, EducationImportJob.ImportType type) {
+        if (!isImportEnabled(type)) {
+            throw new BadRequestException(type + " import is disabled");
+        }
         if (filename == null || filename.isBlank()) {
             throw new BadRequestException("Filename is required");
         }
@@ -148,13 +169,20 @@ public class EducationAdminServiceImpl implements EducationAdminService {
         try {
             Path temp = Files.createTempFile("education-local-import-", ".csv");
             Files.copy(requested, temp, StandardCopyOption.REPLACE_EXISTING);
-            importWorker.processImport(job.getId(), temp, type);
+            if (importSyncEnabled) {
+                importWorker.processImportSync(job.getId(), temp, type);
+            } else {
+                importWorker.processImport(job.getId(), temp, type);
+            }
         } catch (Exception ex) {
             job.setStatus(EducationImportJob.Status.FAILED);
             job.setErrorMessage("Unable to queue local import: " + ex.getMessage());
             jobRepository.save(job);
         }
 
+        if (importSyncEnabled) {
+            job = jobRepository.findById(job.getId()).orElse(job);
+        }
         return toJobResponse(job);
     }
 
@@ -235,6 +263,9 @@ public class EducationAdminServiceImpl implements EducationAdminService {
     }
 
     private EducationImportJobResponse startImport(MultipartFile file, EducationImportJob.ImportType type) {
+        if (!isImportEnabled(type)) {
+            throw new BadRequestException(type + " import is disabled");
+        }
         if (file == null || file.isEmpty()) {
             throw new BadRequestException("CSV file is required");
         }
@@ -249,7 +280,11 @@ public class EducationAdminServiceImpl implements EducationAdminService {
         try {
             java.nio.file.Path temp = Files.createTempFile("education-import-", ".csv");
             Files.copy(file.getInputStream(), temp, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-            importWorker.processImport(job.getId(), temp, type);
+            if (importSyncEnabled) {
+                importWorker.processImportSync(job.getId(), temp, type);
+            } else {
+                importWorker.processImport(job.getId(), temp, type);
+            }
         } catch (Exception ex) {
             log.error("Unable to queue import job {}", job.getId(), ex);
             job.setStatus(EducationImportJob.Status.FAILED);
@@ -257,7 +292,18 @@ public class EducationAdminServiceImpl implements EducationAdminService {
             jobRepository.save(job);
         }
 
+        if (importSyncEnabled) {
+            job = jobRepository.findById(job.getId()).orElse(job);
+        }
         return toJobResponse(job);
+    }
+
+    private boolean isImportEnabled(EducationImportJob.ImportType type) {
+        return switch (type) {
+            case INSTITUTIONS -> true;
+            case DEGREES -> degreeImportEnabled;
+            case BRANCHES -> branchImportEnabled;
+        };
     }
 
     private EducationImportJobResponse toJobResponse(EducationImportJob job) {

@@ -6,6 +6,6 @@ import java.util.List;
 
 public interface EducationService {
     List<EducationResponse.InstitutionResponse> searchInstitutions(String query);
-    List<EducationResponse.DegreeResponse> getDegrees();
-    List<EducationResponse.BranchResponse> getBranches(Long degreeId, String degree);
+    List<EducationResponse.DegreeResponse> getDegrees(String search);
+    List<EducationResponse.BranchResponse> getBranches(Long degreeId, String degree, String search);
 }

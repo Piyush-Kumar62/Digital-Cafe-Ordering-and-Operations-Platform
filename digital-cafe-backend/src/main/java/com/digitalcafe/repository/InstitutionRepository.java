@@ -9,12 +9,21 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface InstitutionRepository extends JpaRepository<Institution, Long> {
-    List<Institution> findTop20ByNameContainingIgnoreCaseOrCityContainingIgnoreCaseOrStateContainingIgnoreCaseOrderByNameAsc(
+    interface InstitutionKeyRow {
+        String getName();
+        String getCity();
+        String getState();
+    }
+
+    List<Institution> findTop200ByNameContainingIgnoreCaseOrCityContainingIgnoreCaseOrStateContainingIgnoreCaseOrderByNameAsc(
             String name, String city, String state
     );
+
+    Optional<Institution> findByNameIgnoreCase(String name);
 
     @Query("""
         select count(i) > 0 from Institution i
@@ -29,11 +38,18 @@ public interface InstitutionRepository extends JpaRepository<Institution, Long> 
     );
 
     @Query("""
+        select i.name as name, i.city as city, i.state as state
+        from Institution i
+    """)
+    List<InstitutionKeyRow> findAllKeys();
+
+    @Query("""
         select i from Institution i
         where (:q is null or :q = ''
                or lower(i.name) like lower(concat('%', :q, '%'))
                or lower(i.city) like lower(concat('%', :q, '%'))
                or lower(i.state) like lower(concat('%', :q, '%')))
+        order by i.id asc
     """)
     Page<Institution> search(@Param("q") String query, Pageable pageable);
 }

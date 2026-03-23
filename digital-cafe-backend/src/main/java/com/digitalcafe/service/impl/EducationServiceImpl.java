@@ -25,14 +25,20 @@ public class EducationServiceImpl implements EducationService {
 
     @Override
     public List<EducationResponse.InstitutionResponse> searchInstitutions(String query) {
-        String q = query == null ? "" : query.trim();
+        String q = query == null ? "" : query.trim().replaceAll("\\s+", " ");
         if (q.length() < 2) {
             return Collections.emptyList();
         }
         List<Institution> results =
                 institutionRepository
-                        .findTop20ByNameContainingIgnoreCaseOrCityContainingIgnoreCaseOrStateContainingIgnoreCaseOrderByNameAsc(
+                        .findTop200ByNameContainingIgnoreCaseOrCityContainingIgnoreCaseOrStateContainingIgnoreCaseOrderByNameAsc(
                                 q, q, q);
+        institutionRepository.findByNameIgnoreCase(q).ifPresent(exact -> {
+            boolean exists = results.stream().anyMatch(i -> i.getId().equals(exact.getId()));
+            if (!exists) {
+                results.add(0, exact);
+            }
+        });
         return results.stream()
                 .map(inst -> EducationResponse.InstitutionResponse.builder()
                         .id(inst.getId())
@@ -44,8 +50,12 @@ public class EducationServiceImpl implements EducationService {
     }
 
     @Override
-    public List<EducationResponse.DegreeResponse> getDegrees() {
-        return degreeRepository.findAllByOrderByNameAsc()
+    public List<EducationResponse.DegreeResponse> getDegrees(String search) {
+        String q = search == null ? "" : search.trim();
+        List<Degree> degrees = q.isEmpty()
+                ? degreeRepository.findAllByOrderByNameAsc()
+                : degreeRepository.findTop50ByNameContainingIgnoreCaseOrderByNameAsc(q);
+        return degrees
                 .stream()
                 .map(degree -> EducationResponse.DegreeResponse.builder()
                         .id(degree.getId())
@@ -55,12 +65,20 @@ public class EducationServiceImpl implements EducationService {
     }
 
     @Override
-    public List<EducationResponse.BranchResponse> getBranches(Long degreeId, String degree) {
-        List<Branch> branches;
+    public List<EducationResponse.BranchResponse> getBranches(Long degreeId, String degree, String search) {
+        String q = search == null ? "" : search.trim();
+        List<BranchRepository.BranchRow> branches;
         if (degreeId != null) {
-            branches = branchRepository.findByDegreeIdOrderByNameAsc(degreeId);
+            branches = q.isEmpty()
+                    ? branchRepository.findRowsByDegreeId(degreeId)
+                    : branchRepository.findRowsByDegreeIdAndName(degreeId, q);
         } else if (degree != null && !degree.trim().isEmpty()) {
-            branches = branchRepository.findByDegree_NameIgnoreCaseOrderByNameAsc(degree.trim());
+            String degreeName = degree.trim();
+            branches = q.isEmpty()
+                    ? branchRepository.findRowsByDegreeName(degreeName)
+                    : branchRepository.findRowsByDegreeNameAndName(degreeName, q);
+        } else if (!q.isEmpty() && q.length() >= 2) {
+            branches = branchRepository.findRowsByName(q);
         } else {
             return Collections.emptyList();
         }
@@ -69,8 +87,8 @@ public class EducationServiceImpl implements EducationService {
                 .map(branch -> EducationResponse.BranchResponse.builder()
                         .id(branch.getId())
                         .name(branch.getName())
-                        .degreeId(branch.getDegree() != null ? branch.getDegree().getId() : null)
-                        .degreeName(branch.getDegree() != null ? branch.getDegree().getName() : null)
+                        .degreeId(branch.getDegreeId())
+                        .degreeName(branch.getDegreeName())
                         .build())
                 .collect(Collectors.toList());
     }

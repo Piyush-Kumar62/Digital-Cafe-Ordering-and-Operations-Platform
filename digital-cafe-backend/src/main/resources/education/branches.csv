@@ -1,0 +1,237 @@
+Degree,Branch
+B.Tech,Computer Science and Engineering
+B.Tech,Information Technology
+B.Tech,Electronics and Communication Engineering
+B.Tech,Electrical and Electronics Engineering
+B.Tech,Mechanical Engineering
+B.Tech,Civil Engineering
+B.Tech,Chemical Engineering
+B.Tech,Aerospace Engineering
+B.Tech,Automotive Engineering
+B.Tech,Biomedical Engineering
+B.Tech,Biotechnology
+B.Tech,Environmental Engineering
+B.Tech,Industrial Engineering
+B.Tech,Instrumentation Engineering
+B.Tech,Petroleum Engineering
+B.Tech,Production Engineering
+B.Tech,Metallurgical Engineering
+B.Tech,Mining Engineering
+B.Tech,Robotics and Automation
+B.Tech,Artificial Intelligence and Data Science
+B.Tech,Artificial Intelligence and Machine Learning
+B.Tech,Data Science
+B.Tech,Cyber Security
+B.E.,Computer Science and Engineering
+B.E.,Information Technology
+B.E.,Electronics and Communication Engineering
+B.E.,Electrical and Electronics Engineering
+B.E.,Mechanical Engineering
+B.E.,Civil Engineering
+B.E.,Chemical Engineering
+B.E.,Aerospace Engineering
+B.E.,Automotive Engineering
+B.E.,Biomedical Engineering
+B.E.,Biotechnology
+B.E.,Environmental Engineering
+B.E.,Industrial Engineering
+B.E.,Instrumentation Engineering
+B.E.,Petroleum Engineering
+B.E.,Production Engineering
+B.E.,Metallurgical Engineering
+B.E.,Mining Engineering
+B.E.,Robotics and Automation
+B.E.,Artificial Intelligence and Data Science
+B.E.,Artificial Intelligence and Machine Learning
+B.E.,Data Science
+B.E.,Cyber Security
+B.Sc.,Physics
+B.Sc.,Chemistry
+B.Sc.,Mathematics
+B.Sc.,Biology
+B.Sc.,Computer Science
+B.Sc.,Statistics
+B.Sc.,Microbiology
+B.Sc.,Biotechnology
+B.Sc.,Zoology
+B.Sc.,Botany
+B.Sc.,Geology
+B.Sc.,Environmental Science
+B.A.,English
+B.A.,Economics
+B.A.,History
+B.A.,Political Science
+B.A.,Sociology
+B.A.,Psychology
+B.A.,Philosophy
+B.A.,Geography
+B.A.,Hindi
+B.A.,Journalism and Mass Communication
+B.A.,Public Administration
+B.A.,Education
+B.Com.,Accounting
+B.Com.,Finance
+B.Com.,Banking and Insurance
+B.Com.,Taxation
+B.Com.,Computer Applications
+B.Com.,Marketing
+BBA,Marketing
+BBA,Finance
+BBA,Human Resources
+BBA,International Business
+BBA,Business Analytics
+BBA,Entrepreneurship
+MBA,Marketing
+MBA,Finance
+MBA,Human Resources
+MBA,Operations
+MBA,Information Technology
+MBA,Business Analytics
+MBA,International Business
+MBA,Entrepreneurship
+MBA,Supply Chain Management
+M.Tech,Computer Science and Engineering
+M.Tech,VLSI Design
+M.Tech,Embedded Systems
+M.Tech,Power Systems
+M.Tech,Structural Engineering
+M.Tech,Thermal Engineering
+M.Tech,CAD CAM
+M.Tech,Communication Systems
+M.Tech,Data Science
+M.Tech,AI and ML
+M.Tech,Cyber Security
+M.E.,Computer Science and Engineering
+M.E.,VLSI Design
+M.E.,Embedded Systems
+M.E.,Power Systems
+M.E.,Structural Engineering
+M.E.,Thermal Engineering
+M.E.,CAD CAM
+M.E.,Communication Systems
+M.E.,Data Science
+M.E.,AI and ML
+M.E.,Cyber Security
+M.Sc.,Physics
+M.Sc.,Chemistry
+M.Sc.,Mathematics
+M.Sc.,Biology
+M.Sc.,Computer Science
+M.Sc.,Statistics
+M.Sc.,Microbiology
+M.Sc.,Biotechnology
+M.Sc.,Zoology
+M.Sc.,Botany
+M.Sc.,Geology
+M.Sc.,Environmental Science
+M.A.,English
+M.A.,Economics
+M.A.,History
+M.A.,Political Science
+M.A.,Sociology
+M.A.,Psychology
+M.A.,Philosophy
+M.A.,Geography
+M.A.,Hindi
+M.A.,Public Administration
+M.A.,Education
+M.Com.,Accounting
+M.Com.,Finance
+M.Com.,Banking
+M.Com.,Taxation
+B.Pharm,Pharmaceutics
+B.Pharm,Pharmaceutical Chemistry
+B.Pharm,Pharmacology
+B.Pharm,Pharmacognosy
+B.Pharm,Pharmaceutical Analysis
+M.Pharm,Pharmaceutics
+M.Pharm,Pharmaceutical Chemistry
+M.Pharm,Pharmacology
+M.Pharm,Pharmacognosy
+M.Pharm,Pharmaceutical Analysis
+BDS,Orthodontics
+BDS,Oral and Maxillofacial Surgery
+BDS,Periodontology
+BDS,Prosthodontics
+BDS,Conservative Dentistry and Endodontics
+BDS,Pedodontics
+BDS,Oral Pathology
+MDS,Orthodontics
+MDS,Oral and Maxillofacial Surgery
+MDS,Periodontology
+MDS,Prosthodontics
+MDS,Conservative Dentistry and Endodontics
+MDS,Pedodontics
+MDS,Oral Pathology
+MBBS,General Medicine
+MD,General Medicine
+MD,Pediatrics
+MD,Dermatology
+MD,Anesthesiology
+MD,Radiology
+MD,Psychiatry
+MD,Obstetrics and Gynecology
+MD,Pathology
+MD,Microbiology
+MD,Pharmacology
+MD,Community Medicine
+MS,General Surgery
+MS,Orthopedics
+MS,ENT
+MS,Ophthalmology
+MS,Obstetrics and Gynecology
+B.Ed,Education
+M.Ed,Education
+LLB,Constitutional Law
+LLB,Corporate Law
+LLB,Criminal Law
+LLB,Intellectual Property Law
+LLB,International Law
+LLB,Taxation Law
+LLM,Constitutional Law
+LLM,Corporate Law
+LLM,Criminal Law
+LLM,Intellectual Property Law
+LLM,International Law
+LLM,Taxation Law
+B.Arch,Architecture
+B.Arch,Urban Design
+B.Arch,Landscape Architecture
+B.Arch,Sustainable Architecture
+M.Arch,Architecture
+M.Arch,Urban Design
+M.Arch,Landscape Architecture
+M.Arch,Sustainable Architecture
+BFA,Painting
+BFA,Sculpture
+BFA,Applied Arts
+BFA,Graphic Design
+MFA,Painting
+MFA,Sculpture
+MFA,Applied Arts
+MFA,Graphic Design
+BHM,Hotel Management
+BHM,Hospitality Administration
+BHM,Culinary Arts
+MHM,Hotel Management
+MHM,Hospitality Administration
+MHM,Culinary Arts
+BSW,Social Work
+MSW,Social Work
+BCA,Computer Applications
+BCA,Software Engineering
+BCA,Data Science
+BCA,Cyber Security
+MCA,Computer Applications
+MCA,Software Engineering
+MCA,Data Science
+MCA,Cyber Security
+BPT,Physiotherapy
+B.Optom,Optometry
+B.Voc,Software Development
+B.Voc,Retail Management
+B.Voc,Hospitality Management
+B.Voc,Healthcare
+B.Voc,Logistics
+PG Diploma,General
+Diploma,General

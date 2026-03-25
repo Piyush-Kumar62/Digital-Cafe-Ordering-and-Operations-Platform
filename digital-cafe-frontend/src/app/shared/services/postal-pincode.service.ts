@@ -2,11 +2,7 @@ import { Injectable } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
 import { Observable, of } from "rxjs";
 import { catchError, map, tap } from "rxjs/operators";
-
-interface PostalApiResponse {
-  Status: string;
-  PostOffice?: Array<{ District: string; State: string }>;
-}
+import { environment } from "@environments/environment";
 
 export interface PostalLookupResult {
   cities: string[];
@@ -20,7 +16,7 @@ export type PostalLookupResponse =
 
 @Injectable({ providedIn: "root" })
 export class PostalPincodeService {
-  private readonly apiUrl = "https://api.postalpincode.in/pincode";
+  private readonly apiUrl = `${environment.apiUrl}/postal/pincode`;
   private readonly cache = new Map<string, PostalLookupResponse>();
 
   constructor(private http: HttpClient) {}
@@ -30,19 +26,21 @@ export class PostalPincodeService {
       return of(this.cache.get(pin)!);
     }
 
-    return this.http.get<PostalApiResponse[]>(`${this.apiUrl}/${pin}`).pipe(
+    return this.http.get<PostalLookupResponse>(`${this.apiUrl}/${pin}`).pipe(
       map((res) => {
-        const first = res?.[0];
-        if (!first || first.Status !== "Success" || !first.PostOffice?.length) {
+        if (res?.status === "success" && res.data) {
+          return {
+            status: "success",
+            data: {
+              cities: res.data.cities || [],
+              states: res.data.states || [],
+            },
+          } as const;
+        }
+        if (res?.status === "not_found") {
           return { status: "not_found" } as const;
         }
-        const cities = Array.from(
-          new Set(first.PostOffice.map((office) => office.District).filter(Boolean)),
-        );
-        const states = Array.from(
-          new Set(first.PostOffice.map((office) => office.State).filter(Boolean)),
-        );
-        return { status: "success", data: { cities, states } } as const;
+        return { status: "error" } as const;
       }),
       tap((result) => this.cache.set(pin, result)),
       catchError(() => {

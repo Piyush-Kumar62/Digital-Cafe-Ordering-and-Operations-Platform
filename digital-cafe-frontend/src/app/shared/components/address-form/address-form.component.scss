@@ -25,13 +25,13 @@
 
 .address-label {
   font-weight: 600;
-  color: #cbd5e1;
+  color: #475569;
   font-size: 0.85rem;
 }
 
 .address-optional {
   font-size: 0.75rem;
-  color: #94a3b8;
+  color: #64748b;
   font-weight: 500;
   margin-left: 0.25rem;
 }
@@ -44,15 +44,16 @@
 
 .address-input {
   width: 100%;
-  border: 1px solid #334155;
-  background: #0f172a;
-  color: #f8fafc;
+  border: 1px solid #cbd5f5;
+  background: #ffffff;
+  color: #0f172a;
   border-radius: 12px;
   padding: 0.7rem 0.85rem;
   font-size: 0.95rem;
   transition:
     border-color 0.2s ease,
     box-shadow 0.2s ease;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
 }
 
 .address-input:focus {
@@ -72,12 +73,12 @@
 
 .address-hint {
   font-size: 0.75rem;
-  color: #94a3b8;
+  color: #64748b;
 }
 
 .address-error {
   font-size: 0.75rem;
-  color: #fca5a5;
+  color: #dc2626;
 }
 
 .address-msg {
@@ -157,23 +158,24 @@
 .address-form--profile {
   .address-input {
     border-radius: 9px;
-    background: var(--pp-bg, #0f172a);
-    border: 1.5px solid var(--pp-border, #334155);
-    color: var(--pp-text, #f8fafc);
+    background: #ffffff;
+    border: 1.5px solid #cbd5f5;
+    color: #0f172a;
     min-height: 44px;
     padding: 10px 12px;
     font-size: 0.9rem;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
   }
 
   .address-label {
-    color: var(--pp-sub, #cbd5e1);
+    color: #475569;
     font-size: 0.78rem;
     letter-spacing: 0.02em;
   }
 
   .address-input:focus {
-    border-color: var(--pp-accent, #4f46e5);
-    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
   }
 }
 
@@ -199,18 +201,23 @@
 }
 
 :host ::ng-deep .mat-mdc-autocomplete-panel {
-  background: #0f172a;
-  color: #e2e8f0;
-  border: 1px solid rgba(148, 163, 184, 0.25);
+  background: #ffffff;
+  color: #0f172a;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  z-index: 2000;
+}
+
+:host ::ng-deep .cdk-overlay-pane {
+  z-index: 2000 !important;
 }
 
 :host ::ng-deep .mat-mdc-option {
-  color: #e2e8f0;
+  color: #0f172a;
 }
 
 :host ::ng-deep .mat-mdc-option.mdc-list-item--selected,
 :host ::ng-deep .mat-mdc-option:hover {
-  background: rgba(59, 130, 246, 0.18);
+  background: rgba(37, 99, 235, 0.12);
 }
 
 @keyframes addressSpin {

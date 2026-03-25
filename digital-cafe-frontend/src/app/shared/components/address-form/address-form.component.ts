@@ -55,6 +55,7 @@ export class AddressFormComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     if (!this.form) return;
     this.setupPincodeLookup();
+    this.bootstrapFromExistingValues();
     this.syncCityStateDisabled();
   }
 
@@ -72,7 +73,7 @@ export class AddressFormComponent implements OnInit, OnDestroy {
   }
 
   public get cityStateDisabled(): boolean {
-    return this.lookupStatus === "idle" || this.lookupStatus === "loading";
+    return this.lookupStatus === "loading";
   }
 
   public get pincodeLoading(): boolean {
@@ -117,53 +118,9 @@ export class AddressFormComponent implements OnInit, OnDestroy {
         ),
         takeUntil(this.destroy$),
       )
-      .subscribe((result: PostalLookupResponse) => {
-        if (result.status === "success") {
-          this.lookupStatus = "success";
-          this.cityOptions = result.data.cities;
-          this.stateOptions = result.data.states;
-          this.cityReadonly = result.data.cities.length === 1;
-          this.stateReadonly = result.data.states.length === 1;
-
-          const cityControl = this.form.get(this.controlName("city"));
-          const stateControl = this.form.get(this.controlName("state"));
-
-          if (
-            cityControl &&
-            result.data.cities.length === 1 &&
-            !cityControl.value
-          ) {
-            cityControl.setValue(result.data.cities[0]);
-          }
-
-          if (
-            stateControl &&
-            result.data.states.length === 1 &&
-            !stateControl.value
-          ) {
-            stateControl.setValue(result.data.states[0]);
-          }
-          this.syncCityStateDisabled();
-          return;
-        }
-
-        if (result.status === "not_found") {
-          this.lookupStatus = "not_found";
-          this.cityOptions = [];
-          this.stateOptions = [];
-          this.cityReadonly = false;
-          this.stateReadonly = false;
-          this.syncCityStateDisabled();
-          return;
-        }
-
-        this.lookupStatus = "error";
-        this.cityOptions = [];
-        this.stateOptions = [];
-        this.cityReadonly = false;
-        this.stateReadonly = false;
-        this.syncCityStateDisabled();
-      });
+      .subscribe((result: PostalLookupResponse) =>
+        this.applyLookupResult(result),
+      );
   }
 
   private resetLookup(): void {
@@ -173,6 +130,88 @@ export class AddressFormComponent implements OnInit, OnDestroy {
     this.cityReadonly = false;
     this.stateReadonly = false;
     this.clearCityState();
+    this.syncCityStateDisabled();
+  }
+
+  private bootstrapFromExistingValues(): void {
+    const pinControl = this.form.get(this.controlName("pincode"));
+    const cityControl = this.form.get(this.controlName("city"));
+    const stateControl = this.form.get(this.controlName("state"));
+    const pin = String(pinControl?.value ?? "").trim();
+    const city = String(cityControl?.value ?? "").trim();
+    const state = String(stateControl?.value ?? "").trim();
+
+    if (!pin) {
+      if (city || state) {
+        this.lookupStatus = "success";
+        this.cityOptions = city ? [city] : [];
+        this.stateOptions = state ? [state] : [];
+      }
+      this.syncCityStateDisabled();
+      return;
+    }
+
+    if (!/^[0-9]{6}$/.test(pin)) {
+      this.syncCityStateDisabled();
+      return;
+    }
+
+    this.lookupStatus = "loading";
+    this.syncCityStateDisabled();
+    this.postalService
+      .lookupPincode(pin)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((result) => this.applyLookupResult(result, true));
+  }
+
+  private applyLookupResult(
+    result: PostalLookupResponse,
+    preserveExisting = false,
+  ): void {
+    if (result.status === "success") {
+      this.lookupStatus = "success";
+      this.cityOptions = result.data.cities;
+      this.stateOptions = result.data.states;
+      this.cityReadonly = result.data.cities.length === 1;
+      this.stateReadonly = result.data.states.length === 1;
+
+      const cityControl = this.form.get(this.controlName("city"));
+      const stateControl = this.form.get(this.controlName("state"));
+
+      if (
+        cityControl &&
+        result.data.cities.length === 1 &&
+        (!cityControl.value || !preserveExisting)
+      ) {
+        cityControl.setValue(result.data.cities[0]);
+      }
+
+      if (
+        stateControl &&
+        result.data.states.length === 1 &&
+        (!stateControl.value || !preserveExisting)
+      ) {
+        stateControl.setValue(result.data.states[0]);
+      }
+      this.syncCityStateDisabled();
+      return;
+    }
+
+    if (result.status === "not_found") {
+      this.lookupStatus = "not_found";
+      this.cityOptions = [];
+      this.stateOptions = [];
+      this.cityReadonly = false;
+      this.stateReadonly = false;
+      this.syncCityStateDisabled();
+      return;
+    }
+
+    this.lookupStatus = "error";
+    this.cityOptions = [];
+    this.stateOptions = [];
+    this.cityReadonly = false;
+    this.stateReadonly = false;
     this.syncCityStateDisabled();
   }
 

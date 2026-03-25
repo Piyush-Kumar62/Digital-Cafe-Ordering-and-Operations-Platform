@@ -32,23 +32,22 @@ type AcademicFormValue = {
   institutionId?: number | null;
   institutionName: string;
   degree: string;
-  fieldOfStudy: string;
-  startDate: string;
-  endDate: string;
-  grade: string;
-  isCurrent: boolean;
-  description: string;
+  branch: string;
+  passingYear: string | number;
+  gradingType: string;
+  score: string;
+  currentlyStudying: boolean;
 };
 
 type WorkFormValue = {
   companyName: string;
-  position: string;
+  designation: string;
   startDate: string;
   endDate: string;
-  isCurrent: boolean;
-  location: string;
-  description: string;
-  responsibilities: string;
+  currentlyWorking: boolean;
+  ctcAmount: string;
+  ctcCurrency: string;
+  reasonForLeaving: string;
 };
 
 @Component({
@@ -66,6 +65,7 @@ type WorkFormValue = {
   styleUrls: ["./my-profile.component.scss"],
 })
 export class MyProfileComponent implements OnInit, OnDestroy {
+  private readonly profileCacheKey = "dc_customer_profile_cache_v1";
   form: FormGroup;
   user: User | null = null;
   loading = true;
@@ -79,7 +79,10 @@ export class MyProfileComponent implements OnInit, OnDestroy {
   govtIdVisible = false;
   govtIdTypes = ["Aadhaar", "PAN Card", "Driving License", "Passport"];
   addressFormSubmitted = false;
+  profileEmail = "";
   degreeOptions: string[] = [];
+  academicYearOptions: number[] = [];
+  currentYear = new Date().getFullYear();
   academicBranchOptions: string[][] = [];
   academicBranchLoading: boolean[] = [];
   academicBranchNoticeDegree: string[] = [];
@@ -100,7 +103,7 @@ export class MyProfileComponent implements OnInit, OnDestroy {
     this.form = this.fb.group({
       firstName: ["", [Validators.required, Validators.maxLength(50)]],
       lastName: ["", [Validators.required, Validators.maxLength(50)]],
-      displayName: ["", [Validators.required, Validators.maxLength(120)]],
+      email: [{ value: "", disabled: true }],
       dateOfBirth: ["", Validators.required],
       gender: ["", Validators.required],
       phoneNumber: [
@@ -114,7 +117,7 @@ export class MyProfileComponent implements OnInit, OnDestroy {
       govtIdType: ["", [Validators.required, Validators.maxLength(50)]],
       govtIdNumber: ["", [Validators.required, Validators.maxLength(100)]],
       ...buildAddressControls({
-        includeCountry: true,
+        includeCountry: false,
         requireState: true,
         pincodePattern: /^[0-9]{6}$/,
       }),
@@ -126,12 +129,14 @@ export class MyProfileComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.user = this.authService.currentUserValue;
+    this.profileEmail = this.user?.email || "";
     this.educationData
       .getDegreeOptions()
       .pipe(takeUntil(this.destroy$))
       .subscribe((options) => {
         this.degreeOptions = options;
       });
+    this.academicYearOptions = this.buildYearOptions(1950);
     if (this.academicInformation.length) {
       this.initializeAcademicGroup(this.academicInformation.at(0) as FormGroup);
     }
@@ -192,7 +197,9 @@ export class MyProfileComponent implements OnInit, OnDestroy {
   get heroPhone(): string {
     const raw = String(this.form.get("phoneNumber")?.value || "").trim();
     if (!raw) return "—";
-    return raw.length === 10 ? `+91 ${raw}` : raw;
+    const digits = raw.replace(/\D/g, "");
+    if (digits.length === 10) return `+91 ${digits}`;
+    return raw;
   }
 
   get heroDob(): string {
@@ -289,6 +296,16 @@ export class MyProfileComponent implements OnInit, OnDestroy {
     this.workExperiences.removeAt(index);
   }
 
+  onWorkCurrentlyWorkingChange(index: number): void {
+    const group = this.workExperiences.at(index);
+    if (!group) return;
+    const isCurrent = !!group.get("currentlyWorking")?.value;
+    if (isCurrent) {
+      group.get("endDate")?.setValue("");
+      group.get("reasonForLeaving")?.setValue("");
+    }
+  }
+
   trackByIndex(index: number): number {
     return index;
   }
@@ -371,10 +388,8 @@ export class MyProfileComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const v = this.form.value;
-    const displayName = (
-      v.displayName || `${v.firstName} ${v.lastName}`
-    ).trim();
+    const v = this.form.getRawValue();
+    const displayName = `${v.firstName} ${v.lastName}`.trim();
 
     const fullPayload = {
       firstName: v.firstName,
@@ -391,31 +406,30 @@ export class MyProfileComponent implements OnInit, OnDestroy {
         plotNumber: v.plotNumber,
         city: v.city,
         state: v.state || "",
-        country: v.country || "India",
         pincode: v.pincode,
       },
       academicInformation: (v.academicInformation || []).map((a: any) => ({
         institutionId: a.institutionId ?? null,
         institutionName: a.institutionName,
         degree: a.degree,
-        fieldOfStudy: a.fieldOfStudy || null,
-        startDate: a.startDate || null,
-        endDate: a.endDate || null,
-        grade: a.grade || null,
-        isCurrent: !!a.isCurrent,
-        description: a.description || null,
+        fieldOfStudy: a.branch || null,
+        startDate: null,
+        endDate: a.passingYear ? `${a.passingYear}-01-01` : null,
+        grade: this.buildAcademicGrade(a.gradingType, a.score),
+        isCurrent: !!a.currentlyStudying,
+        description: null,
       })),
       workExperiences: (v.workExperiences || [])
-        .filter((w: any) => w.companyName || w.position || w.startDate)
+        .filter((w: any) => w.companyName || w.designation || w.startDate)
         .map((w: any) => ({
           companyName: w.companyName,
-          position: w.position,
+          position: w.designation,
           startDate: w.startDate,
           endDate: w.endDate || null,
-          isCurrent: !!w.isCurrent,
-          location: w.location || null,
-          description: w.description || null,
-          responsibilities: w.responsibilities || null,
+          isCurrent: !!w.currentlyWorking,
+          location: null,
+          description: this.buildWorkCtcLabel(w.ctcAmount, w.ctcCurrency),
+          responsibilities: w.reasonForLeaving || null,
         })),
     };
 
@@ -425,6 +439,18 @@ export class MyProfileComponent implements OnInit, OnDestroy {
         firstName: v.firstName,
         lastName: v.lastName,
         displayName,
+        dateOfBirth: v.dateOfBirth,
+        gender: v.gender,
+        phoneNumber: v.phoneNumber,
+        govtIdType: v.govtIdType || null,
+        govtIdNumber: v.govtIdNumber || null,
+        address: {
+          street: v.street,
+          plotNumber: v.plotNumber,
+          city: v.city,
+          state: v.state || "",
+          pincode: v.pincode,
+        },
       })
       .subscribe({
         next: (basicResponse) => {
@@ -443,6 +469,7 @@ export class MyProfileComponent implements OnInit, OnDestroy {
                       ...this.user,
                       firstName: v.firstName,
                       lastName: v.lastName,
+                      email: this.profileEmail || this.user.email,
                       profileImageUrl:
                         basicResponse?.profileImageUrl ||
                         fullResponse?.profilePictureUrl ||
@@ -456,6 +483,32 @@ export class MyProfileComponent implements OnInit, OnDestroy {
                   this.user = updatedUser;
                   this.authService.updateUserData(updatedUser);
                 }
+
+                this.writeProfileCache({
+                  firstName: v.firstName,
+                  lastName: v.lastName,
+                  email: this.profileEmail || this.user?.email || "",
+                  phoneNumber: v.phoneNumber,
+                  dateOfBirth: v.dateOfBirth,
+                  gender: v.gender,
+                  govtIdType: v.govtIdType,
+                  govtIdNumber: v.govtIdNumber,
+                  address: {
+                    street: v.street,
+                    plotNumber: v.plotNumber,
+                    city: v.city,
+                    state: v.state || "",
+                    pincode: v.pincode,
+                  },
+                  profilePictureUrl:
+                    basicResponse?.profileImageUrl ||
+                    fullResponse?.profilePictureUrl ||
+                    this.user?.profileImageUrl ||
+                    "",
+                  academicInformation: fullPayload.academicInformation,
+                  workExperiences: fullPayload.workExperiences,
+                  profileCompletionPercentage: completion,
+                });
 
                 this.profileCompletion = completion;
                 this.alertService.success("Profile saved successfully");
@@ -539,6 +592,7 @@ export class MyProfileComponent implements OnInit, OnDestroy {
     this.academicBranchLoading[index] = false;
     this.academicBranchNoticeDegree[index] = "";
     this.loadBranchesForIndex(index, String(group.get("degree")?.value || ""));
+    this.syncPassingYearState(group);
 
     group
       .get("degree")
@@ -548,8 +602,13 @@ export class MyProfileComponent implements OnInit, OnDestroy {
         if (idx < 0) return;
         this.academicBranchOptions[idx] = [];
         this.loadBranchesForIndex(idx, String(value || ""));
-        group.get("fieldOfStudy")?.setValue("", { emitEvent: false });
+        group.get("branch")?.setValue("", { emitEvent: false });
       });
+
+    group
+      .get("currentlyStudying")
+      ?.valueChanges.pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.syncPassingYearState(group));
 
     group
       .get("institutionName")
@@ -622,6 +681,21 @@ export class MyProfileComponent implements OnInit, OnDestroy {
     return this.academicInformation.controls.indexOf(group);
   }
 
+  private syncPassingYearState(group: FormGroup): void {
+    const yearControl = group.get("passingYear");
+    if (!yearControl) return;
+    const isCurrent = !!group.get("currentlyStudying")?.value;
+    if (isCurrent) {
+      yearControl.disable({ emitEvent: false });
+      const currentYear = new Date().getFullYear();
+      if (!yearControl.value) {
+        yearControl.setValue(currentYear, { emitEvent: false });
+      }
+    } else {
+      yearControl.enable({ emitEvent: false });
+    }
+  }
+
   private loadProfile(): void {
     this.loading = true;
     this.loadError = "";
@@ -636,57 +710,152 @@ export class MyProfileComponent implements OnInit, OnDestroy {
       .pipe(finalize(() => (this.loading = false)))
       .subscribe({
         next: ({ basic, full }) => {
-          if (!basic && !full) {
+          const cached = this.readProfileCache();
+          if (!basic && !full && !cached) {
             this.loadError = "Unable to load profile details right now.";
             this.suppressCompletionWatch = false;
             return;
           }
 
           const firstName =
-            full?.firstName || basic?.firstName || this.user?.firstName || "";
-          const lastName =
-            full?.lastName || basic?.lastName || this.user?.lastName || "";
-          const displayName =
-            basic?.displayName ||
-            `${firstName} ${lastName}`.trim() ||
-            this.user?.username ||
+            full?.firstName ||
+            full?.personalDetails?.firstName ||
+            basic?.firstName ||
+            cached?.firstName ||
+            this.user?.firstName ||
             "";
+          const lastName =
+            full?.lastName ||
+            full?.personalDetails?.lastName ||
+            basic?.lastName ||
+            cached?.lastName ||
+            this.user?.lastName ||
+            "";
+          const email =
+            full?.email ||
+            full?.personalDetails?.email ||
+            basic?.email ||
+            cached?.email ||
+            this.user?.email ||
+            "";
+          const phoneNumber =
+            full?.phoneNumber ||
+            full?.personalDetails?.phone ||
+            basic?.phoneNumber ||
+            cached?.phoneNumber ||
+            "";
+          const dateOfBirth =
+            full?.dateOfBirth ||
+            full?.personalDetails?.dateOfBirth ||
+            basic?.dateOfBirth ||
+            cached?.dateOfBirth ||
+            "";
+          const gender =
+            full?.gender ||
+            full?.personalDetails?.gender ||
+            basic?.gender ||
+            cached?.gender ||
+            "";
+          const govtIdType =
+            full?.govtIdType ||
+            full?.personalDetails?.govtIdType ||
+            basic?.govtIdType ||
+            cached?.govtIdType ||
+            "";
+          const govtIdNumber =
+            full?.govtIdNumber ||
+            full?.personalDetails?.govtIdNumber ||
+            basic?.govtIdNumber ||
+            cached?.govtIdNumber ||
+            "";
+          const address = {
+            street:
+              full?.address?.street ||
+              basic?.address?.street ||
+              cached?.address?.street ||
+              "",
+            plotNumber:
+              full?.address?.plotNumber ||
+              basic?.address?.plotNumber ||
+              cached?.address?.plotNumber ||
+              "",
+            city:
+              full?.address?.city ||
+              basic?.address?.city ||
+              cached?.address?.city ||
+              "",
+            state:
+              full?.address?.state ||
+              basic?.address?.state ||
+              cached?.address?.state ||
+              "",
+            pincode:
+              full?.address?.pincode ||
+              full?.address?.zipCode ||
+              basic?.address?.pincode ||
+              cached?.address?.pincode ||
+              "",
+          };
 
           this.profileCompletion =
             full?.completionPercentage ??
+            full?.profileCompletionPercentage ??
             basic?.profileCompletionPercentage ??
+            cached?.profileCompletionPercentage ??
             this.user?.profileCompletionPercentage ??
             0;
 
           this.form.patchValue({
             firstName,
             lastName,
-            displayName,
-            dateOfBirth: full?.dateOfBirth || "",
-            gender: full?.gender || "",
-            phoneNumber: full?.phoneNumber || "",
-            govtIdType: full?.govtIdType || "",
-            govtIdNumber: full?.govtIdNumber || "",
-            street: full?.address?.street || "",
-            plotNumber: full?.address?.plotNumber || "",
-            city: full?.address?.city || "",
-            state: full?.address?.state || "",
-            country: full?.address?.country || "India",
-            pincode: full?.address?.pincode || "",
+            email,
+            dateOfBirth,
+            gender,
+            phoneNumber,
+            govtIdType,
+            govtIdNumber,
+            street: address.street,
+            plotNumber: address.plotNumber,
+            city: address.city,
+            state: address.state,
+            pincode: address.pincode,
             profilePictureUrl:
-              full?.profilePictureUrl || basic?.profileImageUrl || "",
+              full?.profilePictureUrl ||
+              full?.profileImageUrl ||
+              basic?.profileImageUrl ||
+              this.user?.profileImageUrl ||
+              cached?.profilePictureUrl ||
+              "",
           });
 
-          this.replaceAcademicArray(full?.academicInformation || []);
-          this.replaceWorkArray(full?.workExperiences || []);
+          this.profileEmail = email;
+
+          const academic =
+            full?.academicInformation ||
+            full?.academicInfo ||
+            full?.academicInfoList ||
+            cached?.academicInformation ||
+            [];
+          const work =
+            full?.workExperiences ||
+            full?.workExperience ||
+            full?.workExperienceList ||
+            cached?.workExperiences ||
+            [];
+          this.replaceAcademicArray(academic);
+          this.replaceWorkArray(work);
 
           if (this.user) {
             const updatedUser = {
               ...this.user,
               firstName,
               lastName,
+              email: email || this.user.email,
               profileImageUrl:
-                basic?.profileImageUrl || this.user.profileImageUrl,
+                full?.profilePictureUrl ||
+                full?.profileImageUrl ||
+                basic?.profileImageUrl ||
+                this.user.profileImageUrl,
               profileCompletionPercentage: this.profileCompletion,
               isProfileComplete: this.profileCompletion >= 100,
               lastLogin: basic?.lastLogin || this.user.lastLogin,
@@ -699,8 +868,29 @@ export class MyProfileComponent implements OnInit, OnDestroy {
           this.avatarLoadFailed = false;
           this.profileCompletion =
             full?.completionPercentage ??
+            full?.profileCompletionPercentage ??
             this.calculateCompletionFromForm() ??
             this.profileCompletion;
+          this.writeProfileCache({
+            firstName,
+            lastName,
+            email,
+            phoneNumber,
+            dateOfBirth,
+            gender,
+            govtIdType,
+            govtIdNumber,
+            address,
+            profilePictureUrl:
+              full?.profilePictureUrl ||
+              full?.profileImageUrl ||
+              basic?.profileImageUrl ||
+              this.user?.profileImageUrl ||
+              "",
+            academicInformation: academic,
+            workExperiences: work,
+            profileCompletionPercentage: this.profileCompletion,
+          });
           this.suppressCompletionWatch = false;
         },
         error: () => {
@@ -719,16 +909,38 @@ export class MyProfileComponent implements OnInit, OnDestroy {
     }
 
     items.forEach((item) => {
+      const normalizedField =
+        (item as any)?.fieldOfStudy || (item as any)?.branch || "";
+      const normalizedIsCurrent =
+        (item as any)?.isCurrent ??
+        (item as any)?.isCurrentlyStudying ??
+        (item as any)?.currentlyStudying ??
+        false;
+      const normalizedGrade =
+        (item as any)?.grade ||
+        (item as any)?.gradeInPercentage ||
+        "";
+      const normalizedPassingYear =
+        (item as any)?.passingYear ||
+        ((item as any)?.endDate
+          ? new Date((item as any).endDate).getFullYear()
+          : "");
+      const gradingType =
+        (item as any)?.grade
+          ? "GRADE"
+          : (item as any)?.gradeInPercentage
+            ? "PERCENTAGE"
+            : this.inferGradingTypeFromProfile((item as any)?.grade);
+      const score = this.parseGradeFromProfile(normalizedGrade);
       const group = this.createAcademicGroup({
-        institutionId: item?.institutionId ?? null,
-        institutionName: item?.institutionName || "",
-        degree: item?.degree || "",
-        fieldOfStudy: item?.fieldOfStudy || "",
-        startDate: item?.startDate || "",
-        endDate: item?.endDate || "",
-        grade: item?.grade || "",
-        isCurrent: !!item?.isCurrent,
-        description: item?.description || "",
+        institutionId: (item as any)?.institutionId ?? null,
+        institutionName: (item as any)?.institutionName || "",
+        degree: (item as any)?.degree || "",
+        branch: normalizedField,
+        passingYear: normalizedPassingYear,
+        gradingType,
+        score,
+        currentlyStudying: !!normalizedIsCurrent,
       });
       this.academicInformation.push(group);
       this.initializeAcademicGroup(group);
@@ -738,16 +950,26 @@ export class MyProfileComponent implements OnInit, OnDestroy {
   private replaceWorkArray(items: WorkFormValue[]): void {
     this.workExperiences.clear();
     items.forEach((item) => {
+      const normalizedPosition =
+        (item as any)?.position || (item as any)?.designation || "";
+      const normalizedIsCurrent =
+        (item as any)?.isCurrent ??
+        (item as any)?.isCurrentlyWorking ??
+        (item as any)?.currentlyWorking ??
+        false;
       this.workExperiences.push(
         this.createWorkGroup({
-          companyName: item?.companyName || "",
-          position: item?.position || "",
-          startDate: item?.startDate || "",
-          endDate: item?.endDate || "",
-          isCurrent: !!item?.isCurrent,
-          location: item?.location || "",
-          description: item?.description || "",
-          responsibilities: item?.responsibilities || "",
+          companyName: (item as any)?.companyName || "",
+          designation: normalizedPosition,
+          startDate: (item as any)?.startDate || "",
+          endDate: (item as any)?.endDate || "",
+          currentlyWorking: !!normalizedIsCurrent,
+          ctcAmount: (item as any)?.ctc?.amount || "",
+          ctcCurrency: (item as any)?.ctc?.currency || "LPA",
+          reasonForLeaving:
+            (item as any)?.reasonForLeaving ||
+            (item as any)?.responsibilities ||
+            "",
         }),
       );
     });
@@ -764,15 +986,14 @@ export class MyProfileComponent implements OnInit, OnDestroy {
         initial?.degree || "",
         [Validators.required, Validators.maxLength(100)],
       ],
-      fieldOfStudy: [
-        initial?.fieldOfStudy || "",
+      branch: [
+        (initial as any)?.branch || "",
         [Validators.required, Validators.maxLength(100)],
       ],
-      startDate: [initial?.startDate || ""],
-      endDate: [initial?.endDate || ""],
-      grade: [initial?.grade || "", [Validators.maxLength(20)]],
-      isCurrent: [initial?.isCurrent || false],
-      description: [initial?.description || ""],
+      passingYear: [(initial as any)?.passingYear || "", Validators.required],
+      gradingType: [(initial as any)?.gradingType || "CGPA", Validators.required],
+      score: [(initial as any)?.score || ""],
+      currentlyStudying: [(initial as any)?.currentlyStudying || false],
     });
   }
 
@@ -782,16 +1003,16 @@ export class MyProfileComponent implements OnInit, OnDestroy {
         initial?.companyName || "",
         [Validators.required, Validators.maxLength(200)],
       ],
-      position: [
-        initial?.position || "",
+      designation: [
+        (initial as any)?.designation || "",
         [Validators.required, Validators.maxLength(100)],
       ],
       startDate: [initial?.startDate || "", Validators.required],
       endDate: [initial?.endDate || ""],
-      isCurrent: [initial?.isCurrent || false],
-      location: [initial?.location || "", [Validators.maxLength(100)]],
-      description: [initial?.description || ""],
-      responsibilities: [initial?.responsibilities || ""],
+      currentlyWorking: [(initial as any)?.currentlyWorking || false],
+      ctcAmount: [(initial as any)?.ctcAmount || ""],
+      ctcCurrency: [(initial as any)?.ctcCurrency || "LPA"],
+      reasonForLeaving: [(initial as any)?.reasonForLeaving || ""],
     });
   }
 
@@ -824,5 +1045,63 @@ export class MyProfileComponent implements OnInit, OnDestroy {
     if (hasAcademic) filled++;
 
     return Math.round((filled * 100) / total);
+  }
+
+  private buildAcademicGrade(gradingType: string, score: string): string | null {
+    const type = String(gradingType || "").trim();
+    const val = String(score || "").trim();
+    if (!type && !val) return null;
+    if (type === "GRADE") return val || null;
+    if (type === "CGPA") return val ? `CGPA ${val}` : "CGPA";
+    if (type === "PERCENTAGE") return val ? `${val}%` : "PERCENTAGE";
+    return val || null;
+  }
+
+  private buildWorkCtcLabel(amount: string, currency: string): string | null {
+    const amt = String(amount || "").trim();
+    const cur = String(currency || "").trim();
+    if (!amt || !cur) return null;
+    return `CTC: ${amt} ${cur}`;
+  }
+
+  private parseGradeFromProfile(raw?: string): string {
+    if (!raw) return "";
+    if (raw.startsWith("CGPA")) return raw.replace("CGPA", "").trim();
+    if (raw.endsWith("%")) return raw.replace("%", "").trim();
+    return raw.trim();
+  }
+
+  private inferGradingTypeFromProfile(
+    raw?: string,
+  ): "CGPA" | "PERCENTAGE" | "GRADE" {
+    if (!raw) return "CGPA";
+    if (raw.startsWith("CGPA")) return "CGPA";
+    if (raw.endsWith("%")) return "PERCENTAGE";
+    return "GRADE";
+  }
+
+  private buildYearOptions(minYear: number): number[] {
+    const years: number[] = [];
+    for (let y = this.currentYear; y >= minYear; y--) {
+      years.push(y);
+    }
+    return years;
+  }
+
+  private readProfileCache(): any | null {
+    try {
+      const raw = localStorage.getItem(this.profileCacheKey);
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  private writeProfileCache(payload: any): void {
+    try {
+      localStorage.setItem(this.profileCacheKey, JSON.stringify(payload));
+    } catch {
+      // ignore storage errors
+    }
   }
 }

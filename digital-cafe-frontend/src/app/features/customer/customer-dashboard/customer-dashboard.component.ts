@@ -46,6 +46,7 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.authService.currentUser.subscribe((user) => (this.user = user));
+    this.refreshProfileFromDb();
     this.startClock();
     this.loadDashboardData();
   }
@@ -282,7 +283,10 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
   }
 
   get displayName(): string {
-    return this.user?.firstName || this.user?.username || "there";
+    const first = this.user?.firstName || "";
+    const last = this.user?.lastName || "";
+    const full = `${first} ${last}`.trim();
+    return this.user?.displayName || full || this.user?.username || "there";
   }
 
   get resolvedAvatarUrl(): string {
@@ -298,5 +302,37 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     }).format(safeAmount)}`;
+  }
+
+  private refreshProfileFromDb(): void {
+    this.apiService.getCustomerProfile().subscribe({
+      next: (profile) => {
+        if (!this.user) return;
+        const firstName = profile?.firstName || this.user.firstName;
+        const lastName = profile?.lastName || this.user.lastName;
+        const updated: User = {
+          ...this.user,
+          firstName,
+          lastName,
+          displayName:
+            profile?.displayName ||
+            this.user.displayName ||
+            `${firstName} ${lastName}`.trim(),
+          phoneNumber: profile?.phoneNumber || this.user.phoneNumber,
+          govtIdType: profile?.govtIdType || this.user.govtIdType,
+          govtIdNumber: profile?.govtIdNumber || this.user.govtIdNumber,
+          profileImageUrl: profile?.profileImageUrl || this.user.profileImageUrl,
+          profileCompletionPercentage:
+            profile?.profileCompletionPercentage ??
+            this.user.profileCompletionPercentage,
+          isProfileComplete:
+            (profile?.profileCompletionPercentage ??
+              this.user.profileCompletionPercentage) >= 100,
+          lastLogin: profile?.lastLogin || this.user.lastLogin,
+        };
+        this.user = updated;
+        this.authService.updateUserData(updated);
+      },
+    });
   }
 }

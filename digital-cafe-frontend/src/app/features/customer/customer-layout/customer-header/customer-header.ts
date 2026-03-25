@@ -242,6 +242,18 @@ export class CustomerHeaderComponent implements OnInit {
           this.avatarLoadFailed = false;
         }
       },
+      error: () => {
+        const firstName = this.user?.firstName || this.user?.username || "";
+        const lastName = this.user?.lastName || "";
+        const displayName =
+          this.user?.displayName ||
+          `${firstName} ${lastName}`.trim() ||
+          this.user?.username ||
+          "";
+        this.profileForm.firstName = firstName;
+        this.profileForm.lastName = lastName;
+        this.profileForm.displayName = displayName;
+      },
     });
   }
 
@@ -266,6 +278,7 @@ export class CustomerHeaderComponent implements OnInit {
         this.syncUnreadCount();
       });
   }
+
 
   private syncUnreadCount(): void {
     this.unreadNotifications = this.notifications.filter((n) => !n.read).length;

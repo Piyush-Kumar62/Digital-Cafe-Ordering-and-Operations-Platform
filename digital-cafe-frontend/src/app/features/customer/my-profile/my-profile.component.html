@@ -80,14 +80,16 @@
           <div class="pp-hero__nameline">
             <h1 class="pp-hero__name">
               {{
-                form.get("displayName")?.value || user?.username || "Customer"
+                (form.get("firstName")?.value || form.get("lastName")?.value)
+                  ? (form.get("firstName")?.value || "") + " " + (form.get("lastName")?.value || "")
+                  : user?.username || "Customer"
               }}
             </h1>
             <span class="pp-role-chip">Customer</span>
           </div>
           <p class="pp-hero__email">
             <span class="material-icons">mail_outline</span>
-            {{ user?.email || "—" }}
+            {{ profileEmail || user?.email || "—" }}
           </p>
           <div class="pp-hero__meta">
             <span class="pp-meta-chip">
@@ -225,23 +227,20 @@
                 fieldError(form.get("lastName"), "Last Name")
               }}</span>
             </div>
-            <div class="pp-f">
-              <label class="pp-lbl"
-                >Display Name <span class="req">*</span></label
-              >
-              <input
-                class="pp-inp"
-                type="text"
-                formControlName="displayName"
-                placeholder="Shown publicly"
-              />
-              <span class="pp-err">{{
-                fieldError(form.get("displayName"), "Display Name")
-              }}</span>
-            </div>
           </div>
 
           <div class="pp-g pp-g3">
+            <div class="pp-f">
+              <label class="pp-lbl">Email</label>
+              <input
+                class="pp-inp"
+                type="email"
+                formControlName="email"
+                placeholder="Email address"
+                readonly
+              />
+              <span class="pp-hint">Email can be updated from account settings.</span>
+            </div>
             <div class="pp-f">
               <label class="pp-lbl"
                 >Date of Birth <span class="req">*</span></label
@@ -258,6 +257,7 @@
                 <option value="MALE">Male</option>
                 <option value="FEMALE">Female</option>
                 <option value="OTHER">Other</option>
+                <option value="PREFER_NOT_TO_SAY">Prefer not to say</option>
               </select>
               <span class="pp-err">{{
                 fieldError(form.get("gender"), "Gender")
@@ -351,18 +351,6 @@
             variant="profile"
             [formSubmitted]="addressFormSubmitted"
           ></app-address-form>
-
-          <div class="pp-g pp-g2 mt-4">
-            <div class="pp-f">
-              <label class="pp-lbl">Country</label>
-              <input
-                class="pp-inp"
-                type="text"
-                formControlName="country"
-                placeholder="Country"
-              />
-            </div>
-          </div>
         </div>
       </div>
 
@@ -490,7 +478,7 @@
               <ng-container
                 *ngIf="getBranchOptions(i).length > 0; else branchInput"
               >
-                <select class="pp-inp" formControlName="fieldOfStudy">
+                <select class="pp-inp" formControlName="branch">
                   <option value="">Select branch</option>
                   <option
                     *ngFor="let branch of getBranchOptions(i)"
@@ -504,7 +492,7 @@
                 <input
                   class="pp-inp"
                   type="text"
-                  formControlName="fieldOfStudy"
+                  formControlName="branch"
                   placeholder="Enter branch / stream"
                 />
               </ng-template>
@@ -518,43 +506,45 @@
                 No branches listed yet. You can type your branch manually.
               </span>
               <span class="pp-err">{{
-                fieldError(academic.get("fieldOfStudy"), "Branch / Stream")
+                fieldError(academic.get("branch"), "Branch / Stream")
               }}</span>
             </div>
             <div class="pp-f">
-              <label class="pp-lbl">Start Date</label>
-              <input class="pp-inp" type="date" formControlName="startDate" />
+              <label class="pp-lbl">Passing Year <span class="req">*</span></label>
+              <select class="pp-inp" formControlName="passingYear">
+                <option value="">Select year</option>
+                <option *ngFor="let y of academicYearOptions" [value]="y">
+                  {{ y }}
+                </option>
+              </select>
+              <span class="pp-err">{{
+                fieldError(academic.get("passingYear"), "Passing Year")
+              }}</span>
             </div>
             <div class="pp-f">
-              <label class="pp-lbl">End Date</label>
-              <input class="pp-inp" type="date" formControlName="endDate" />
+              <label class="pp-lbl">Grading Type</label>
+              <select class="pp-inp" formControlName="gradingType">
+                <option value="CGPA">CGPA</option>
+                <option value="PERCENTAGE">Percentage</option>
+                <option value="GRADE">Grade</option>
+              </select>
             </div>
             <div class="pp-f">
-              <label class="pp-lbl">Grade / CGPA</label>
+              <label class="pp-lbl">Score</label>
               <input
                 class="pp-inp"
                 type="text"
-                formControlName="grade"
-                placeholder="e.g. 9.2"
+                formControlName="score"
+                placeholder="e.g. 8.5 / 75%"
               />
             </div>
           </div>
 
           <label class="pp-chk">
-            <input type="checkbox" formControlName="isCurrent" />
+            <input type="checkbox" formControlName="currentlyStudying" />
             <span class="pp-chk__box"></span>
             <span class="pp-chk__lbl">Currently studying here</span>
           </label>
-
-          <div class="pp-f pp-f--span">
-            <label class="pp-lbl">Description</label>
-            <textarea
-              class="pp-inp"
-              rows="2"
-              formControlName="description"
-              placeholder="Brief description…"
-            ></textarea>
-          </div>
         </div>
       </div>
 
@@ -632,15 +622,15 @@
               }}</span>
             </div>
             <div class="pp-f">
-              <label class="pp-lbl">Position <span class="req">*</span></label>
+              <label class="pp-lbl">Designation <span class="req">*</span></label>
               <input
                 class="pp-inp"
                 type="text"
-                formControlName="position"
+                formControlName="designation"
                 placeholder="e.g. Software Engineer"
               />
               <span class="pp-err">{{
-                fieldError(work.get("position"), "Position")
+                fieldError(work.get("designation"), "Designation")
               }}</span>
             </div>
           </div>
@@ -657,20 +647,29 @@
             </div>
             <div class="pp-f">
               <label class="pp-lbl">End Date</label>
-              <input class="pp-inp" type="date" formControlName="endDate" />
-            </div>
-            <div class="pp-f">
-              <label class="pp-lbl">Location</label>
               <input
                 class="pp-inp"
-                type="text"
-                formControlName="location"
-                placeholder="City, Country"
+                type="date"
+                formControlName="endDate"
+                [disabled]="work.get('currentlyWorking')?.value"
+              />
+            </div>
+            <div class="pp-f">
+              <label class="pp-lbl">CTC Amount</label>
+              <input
+                class="pp-inp"
+                type="number"
+                formControlName="ctcAmount"
+                placeholder="Amount"
               />
             </div>
             <div class="pp-f pp-f--center">
               <label class="pp-chk">
-                <input type="checkbox" formControlName="isCurrent" />
+                <input
+                  type="checkbox"
+                  formControlName="currentlyWorking"
+                  (change)="onWorkCurrentlyWorkingChange(i)"
+                />
                 <span class="pp-chk__box"></span>
                 <span class="pp-chk__lbl">Currently working here</span>
               </label>
@@ -679,22 +678,20 @@
 
           <div class="pp-g pp-g2">
             <div class="pp-f">
-              <label class="pp-lbl">Description</label>
-              <textarea
-                class="pp-inp"
-                rows="3"
-                formControlName="description"
-                placeholder="Role description…"
-              ></textarea>
+              <label class="pp-lbl">CTC Currency</label>
+              <select class="pp-inp" formControlName="ctcCurrency">
+                <option value="LPA">LPA</option>
+                <option value="Per Month">Per Month</option>
+              </select>
             </div>
-            <div class="pp-f">
-              <label class="pp-lbl">Responsibilities</label>
-              <textarea
+            <div class="pp-f" *ngIf="!work.get('currentlyWorking')?.value">
+              <label class="pp-lbl">Reason for Leaving</label>
+              <input
                 class="pp-inp"
-                rows="3"
-                formControlName="responsibilities"
-                placeholder="Key responsibilities…"
-              ></textarea>
+                type="text"
+                formControlName="reasonForLeaving"
+                placeholder="Reason"
+              />
             </div>
           </div>
         </div>

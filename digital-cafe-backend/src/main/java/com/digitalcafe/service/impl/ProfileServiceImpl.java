@@ -8,8 +8,10 @@ import com.digitalcafe.entity.User;
 import com.digitalcafe.entity.WorkExperience;
 import com.digitalcafe.exception.ResourceNotFoundException;
 import com.digitalcafe.mapper.ProfileMapper;
+import com.digitalcafe.repository.AcademicInfoRepository;
 import com.digitalcafe.repository.ProfileRepository;
 import com.digitalcafe.repository.UserRepository;
+import com.digitalcafe.repository.WorkExperienceRepository;
 import com.digitalcafe.service.ProfileService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +26,8 @@ public class ProfileServiceImpl implements ProfileService {
     private final ProfileRepository profileRepository;
     private final UserRepository userRepository;
     private final ProfileMapper profileMapper;
+    private final AcademicInfoRepository academicInfoRepository;
+    private final WorkExperienceRepository workExperienceRepository;
 
     @Override
     @Transactional
@@ -90,24 +94,30 @@ public class ProfileServiceImpl implements ProfileService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ProfileResponse getProfileByUserId(Long userId) {
-        Profile profile = profileRepository.findByUserId(userId)
+        Profile profile = profileRepository.findWithDetailsByUserId(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Profile not found for user"));
+        loadCollections(profile);
         return profileMapper.toResponse(profile);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public int calculateProfileCompletion(Long userId) {
-        Profile profile = profileRepository.findByUserId(userId)
+        Profile profile = profileRepository.findWithDetailsByUserId(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Profile not found for user"));
+        loadCollections(profile);
 
         return profile.calculateCompletionPercentage();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public boolean isProfileComplete(Long userId) {
-        Profile profile = profileRepository.findByUserId(userId)
+        Profile profile = profileRepository.findWithDetailsByUserId(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Profile not found for user"));
+        loadCollections(profile);
 
 
         return profile.calculateCompletionPercentage() == 100;
@@ -160,6 +170,15 @@ public class ProfileServiceImpl implements ProfileService {
         user.setProfileCompletionPercentage(completionPercentage);
         user.setIsProfileComplete(profile.isComplete());
         userRepository.save(user);
+    }
+
+    private void loadCollections(Profile profile) {
+        if (profile == null || profile.getId() == null) {
+            return;
+        }
+        // Load bags separately to avoid MultipleBagFetchException
+        profile.setAcademicInformation(academicInfoRepository.findByProfileId(profile.getId()));
+        profile.setWorkExperiences(workExperienceRepository.findByProfileId(profile.getId()));
     }
 
     private String normalize(String value) {

@@ -123,6 +123,9 @@ public class Profile extends BaseEntity {
     }
 
     public String getFullName() {
-        return firstName + " " + lastName;
+        String first = firstName == null ? "" : firstName.trim();
+        String last = lastName == null ? "" : lastName.trim();
+        String full = (first + " " + last).trim();
+        return full.isEmpty() ? "—" : full;
     }
 }

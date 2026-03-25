@@ -2,283 +2,454 @@
   <div class="overlay"></div>
 
   <div class="owner-settings-content">
-    <!-- Page Header -->
-    <div class="page-header">
+    <div class="page-header page-header-inline">
       <h1 class="page-title">Account Settings</h1>
       <p class="page-subtitle">
         Manage your personal account, profile photo, and security preferences
       </p>
     </div>
 
-    <!-- Profile Card -->
-    <div class="settings-card" *ngIf="user">
-      <div class="card-header">
-        <h2>Account Information</h2>
-        <p class="card-subtitle">Your profile details and account status</p>
-      </div>
-      <div class="profile-content">
-        <!-- Profile image upload -->
-        <div class="profile-upload-wrap">
-          <div class="avatar-circle" (click)="triggerProfileUpload()">
-            <img
-              *ngIf="profileImageUrl"
-              [src]="profileImageUrl"
-              alt="Profile"
-            />
-            <span *ngIf="!profileImageUrl">{{ userInitials }}</span>
+    <div class="settings-grid">
+      <div class="settings-main-column">
+        <!-- Profile Card -->
+        <div class="settings-card profile-card" *ngIf="user">
+          <div class="profile-content">
+            <div class="profile-top">
+              <!-- Profile image upload -->
+              <div class="profile-upload-wrap">
+                <div class="avatar-circle" (click)="triggerProfileUpload()">
+                  <img
+                    [src]="profileImageUrl || defaultProfilePreviewUrl"
+                    alt="Profile"
+                  />
+                </div>
+                <div class="avatar-edit-overlay">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="13"
+                    height="13"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 112.828 2.828L11.828 15.828a2 2 0 01-.707.464l-3.121 1.04 1.04-3.121A2 2 0 019 13z"
+                    />
+                  </svg>
+                </div>
+                <input
+                  type="file"
+                  accept="image/*"
+                  id="profilePhotoInput"
+                  hidden
+                  (change)="onProfilePhotoChange($event)"
+                />
+              </div>
+              <div class="profile-identity">
+                <h3>{{ userDisplayName }}</h3>
+                <p>{{ user.email }}</p>
+              </div>
+            </div>
+            <div class="profile-fields">
+              <div class="field-row">
+                <span class="field-label">Full Name</span>
+                <span class="field-value">{{ userDisplayName }}</span>
+              </div>
+              <div class="field-row field-row-input">
+                <label class="field-label" for="ownerFirstName"
+                  >First Name</label
+                >
+                <input
+                  id="ownerFirstName"
+                  type="text"
+                  [(ngModel)]="profileForm.firstName"
+                  name="ownerFirstName"
+                />
+              </div>
+              <div class="field-row field-row-input">
+                <label class="field-label" for="ownerLastName">Last Name</label>
+                <input
+                  id="ownerLastName"
+                  type="text"
+                  [(ngModel)]="profileForm.lastName"
+                  name="ownerLastName"
+                />
+              </div>
+              <div class="field-row field-row-input">
+                <span class="field-label">Username</span>
+                <span class="field-value">@{{ user.username }}</span>
+              </div>
+              <div class="field-row">
+                <span class="field-label">Email</span>
+                <span class="field-value">{{ user.email }}</span>
+              </div>
+              <div class="field-row">
+                <span class="field-label">Role</span>
+                <span class="field-value role-badge">{{ primaryRole }}</span>
+              </div>
+              <div class="field-row">
+                <span class="field-label">Email Verified</span>
+                <span
+                  class="field-value"
+                  [class.verified]="user.isEmailVerified"
+                  [class.unverified]="!user.isEmailVerified"
+                >
+                  <i
+                    class="bi"
+                    [class.bi-patch-check-fill]="user.isEmailVerified"
+                    [class.bi-exclamation-circle-fill]="!user.isEmailVerified"
+                  ></i>
+                  {{ user.isEmailVerified ? "Verified" : "Not Verified" }}
+                </span>
+              </div>
+              <div class="field-row">
+                <span class="field-label">Profile Completion</span>
+                <span class="field-value"
+                  >{{ user.profileCompletionPercentage }}%</span
+                >
+              </div>
+              <div class="field-row field-row-input">
+                <label class="field-label" for="ownerPhoneNumber"
+                  >Phone Number</label
+                >
+                <input
+                  id="ownerPhoneNumber"
+                  type="text"
+                  [(ngModel)]="profileForm.phoneNumber"
+                  name="ownerPhoneNumber"
+                />
+              </div>
+              <div class="field-row field-row-actions">
+                <button
+                  class="btn-primary"
+                  type="button"
+                  [disabled]="savingProfile"
+                  (click)="saveProfile()"
+                >
+                  {{ savingProfile ? "Saving..." : "Save Profile Details" }}
+                </button>
+              </div>
+            </div>
           </div>
-          <div class="avatar-edit-overlay">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="13"
-              height="13"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              stroke-width="2.5"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 112.828 2.828L11.828 15.828a2 2 0 01-.707.464l-3.121 1.04 1.04-3.121A2 2 0 019 13z"
+        </div>
+
+        <!-- Cafe Details -->
+        <div
+          class="settings-card cafe-card"
+          *ngIf="user?.cafeId || cachedCafeDetails"
+        >
+          <div class="card-header">
+            <h2>Café Details</h2>
+            <p class="card-subtitle">
+              Update your café details. These were captured during registration.
+            </p>
+          </div>
+          <div class="profile-fields">
+            <div class="field-row field-row-input">
+              <label class="field-label" for="cafeName">Café Name</label>
+              <input
+                id="cafeName"
+                type="text"
+                [(ngModel)]="cafeForm.name"
+                name="cafeName"
               />
-            </svg>
-          </div>
-          <input
-            type="file"
-            accept="image/*"
-            id="profilePhotoInput"
-            hidden
-            (change)="onProfilePhotoChange($event)"
-          />
-        </div>
-        <div class="profile-fields">
-          <div class="field-row">
-            <span class="field-label">Full Name</span>
-            <span class="field-value">{{ userDisplayName }}</span>
-          </div>
-          <div class="field-row field-row-input">
-            <label class="field-label" for="ownerFirstName">First Name</label>
-            <input id="ownerFirstName" type="text" [(ngModel)]="profileForm.firstName" name="ownerFirstName" />
-          </div>
-          <div class="field-row field-row-input">
-            <label class="field-label" for="ownerLastName">Last Name</label>
-            <input id="ownerLastName" type="text" [(ngModel)]="profileForm.lastName" name="ownerLastName" />
-          </div>
-          <div class="field-row field-row-input">
-            <label class="field-label" for="ownerDisplayName">Display Name</label>
-            <input id="ownerDisplayName" type="text" [(ngModel)]="profileForm.displayName" name="ownerDisplayName" />
-          </div>
-          <div class="field-row">
-            <span class="field-label">Username</span>
-            <span class="field-value">@{{ user.username }}</span>
-          </div>
-          <div class="field-row">
-            <span class="field-label">Email</span>
-            <span class="field-value">{{ user.email }}</span>
-          </div>
-          <div class="field-row">
-            <span class="field-label">Role</span>
-            <span class="field-value role-badge">{{ primaryRole }}</span>
-          </div>
-          <div class="field-row">
-            <span class="field-label">Email Verified</span>
-            <span
-              class="field-value"
-              [class.verified]="user.isEmailVerified"
-              [class.unverified]="!user.isEmailVerified"
-            >
-              <i
-                class="bi"
-                [class.bi-patch-check-fill]="user.isEmailVerified"
-                [class.bi-exclamation-circle-fill]="!user.isEmailVerified"
-              ></i>
-              {{ user.isEmailVerified ? "Verified" : "Not Verified" }}
-            </span>
-          </div>
-          <div class="field-row">
-            <span class="field-label">Profile Completion</span>
-            <span class="field-value"
-              >{{ user.profileCompletionPercentage }}%</span
-            >
-          </div>
-          <div class="field-row field-row-input">
-            <label class="field-label" for="ownerPhoneNumber">Phone Number</label>
-            <input id="ownerPhoneNumber" type="text" [(ngModel)]="profileForm.phoneNumber" name="ownerPhoneNumber" />
-          </div>
-          <div class="field-row field-row-input">
-            <label class="field-label" for="ownerGovtIdType">Govt ID Type</label>
-            <input id="ownerGovtIdType" type="text" [(ngModel)]="profileForm.govtIdType" name="ownerGovtIdType" />
-          </div>
-          <div class="field-row field-row-input">
-            <label class="field-label" for="ownerGovtIdNumber">Govt ID Number</label>
-            <input id="ownerGovtIdNumber" type="text" [(ngModel)]="profileForm.govtIdNumber" name="ownerGovtIdNumber" />
-          </div>
-          <div class="field-row field-row-actions">
-            <button class="btn-primary" type="button" [disabled]="savingProfile" (click)="saveProfile()">
-              {{ savingProfile ? "Saving..." : "Save Profile Details" }}
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Café Management Shortcut -->
-    <div class="settings-card shortcut-card">
-      <div class="card-header">
-        <h2>Cafe Management</h2>
-        <p class="card-subtitle">
-          Café details, logo, cover image, branding and operational settings are
-          managed in the
-          <strong>My Café</strong> section.
-        </p>
-      </div>
-      <div class="shortcut-actions">
-        <button class="btn-primary" routerLink="/owner/cafes">
-          Go to My Café →
-        </button>
-        <button class="btn-secondary" routerLink="/owner/menu">
-          Manage Menu
-        </button>
-        <button class="btn-secondary" routerLink="/owner/tables">
-          Manage Tables
-        </button>
-        <button class="btn-secondary" routerLink="/owner/staff">
-          Manage Staff
-        </button>
-      </div>
-    </div>
-
-    <!-- Change Password -->
-    <div class="settings-card">
-      <div class="card-header">
-        <h2>Change Password</h2>
-        <p class="card-subtitle">
-          Choose a strong password to protect your account.
-        </p>
-      </div>
-
-      <form
-        (ngSubmit)="changePassword()"
-        #pwForm="ngForm"
-        class="password-form"
-      >
-        <div class="form-group">
-          <label>Current Password</label>
-          <div class="input-wrapper">
-            <input
-              [type]="showOldPassword ? 'text' : 'password'"
-              [(ngModel)]="passwordForm.oldPassword"
-              name="oldPassword"
-              placeholder="Enter current password"
-              required
-            />
-            <button
-              type="button"
-              class="toggle-pw"
-              (click)="showOldPassword = !showOldPassword"
-            >
-              {{ showOldPassword ? "Hide" : "Show" }}
-            </button>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label>New Password</label>
-          <div class="input-wrapper">
-            <input
-              [type]="showNewPassword ? 'text' : 'password'"
-              [(ngModel)]="passwordForm.newPassword"
-              name="newPassword"
-              placeholder="Enter new password (min 8 characters)"
-              required
-            />
-            <button
-              type="button"
-              class="toggle-pw"
-              (click)="showNewPassword = !showNewPassword"
-            >
-              {{ showNewPassword ? "Hide" : "Show" }}
-            </button>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label>Confirm New Password</label>
-          <div class="input-wrapper">
-            <input
-              [type]="showConfirmPassword ? 'text' : 'password'"
-              [(ngModel)]="confirmNewPassword"
-              name="confirmNewPassword"
-              placeholder="Re-enter new password"
-              required
-            />
-            <button
-              type="button"
-              class="toggle-pw"
-              (click)="showConfirmPassword = !showConfirmPassword"
-            >
-              {{ showConfirmPassword ? "Hide" : "Show" }}
-            </button>
-          </div>
-        </div>
-
-        <div class="form-actions">
-          <button
-            type="submit"
-            class="btn-primary"
-            [disabled]="passwordLoading"
-          >
-            <svg
-              *ngIf="!passwordLoading"
-              xmlns="http://www.w3.org/2000/svg"
-              width="15"
-              height="15"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+            </div>
+            <div class="field-row field-row-input">
+              <label class="field-label" for="cafeDescription"
+                >Description</label
+              >
+              <input
+                id="cafeDescription"
+                type="text"
+                [(ngModel)]="cafeForm.description"
+                name="cafeDescription"
               />
-            </svg>
-            {{ passwordLoading ? "Changing…" : "Change Password" }}
-          </button>
+            </div>
+            <div class="field-row field-row-input">
+              <label class="field-label" for="cafeAddress">Address</label>
+              <input
+                id="cafeAddress"
+                type="text"
+                [(ngModel)]="cafeForm.address"
+                name="cafeAddress"
+              />
+            </div>
+            <div class="field-row field-row-input">
+              <label class="field-label" for="cafeCity">City</label>
+              <select
+                id="cafeCity"
+                *ngIf="cafeCityOptions.length; else cafeCityInput"
+                [(ngModel)]="cafeForm.city"
+                name="cafeCity"
+              >
+                <option value="">Select city</option>
+                <option *ngFor="let city of cafeCityOptions" [value]="city">
+                  {{ city }}
+                </option>
+              </select>
+              <ng-template #cafeCityInput>
+                <input
+                  id="cafeCity"
+                  type="text"
+                  [(ngModel)]="cafeForm.city"
+                  name="cafeCity"
+                />
+              </ng-template>
+            </div>
+            <div class="field-row field-row-input">
+              <label class="field-label" for="cafeState">State</label>
+              <select
+                id="cafeState"
+                *ngIf="cafeStateOptions.length; else cafeStateInput"
+                [(ngModel)]="cafeForm.state"
+                name="cafeState"
+              >
+                <option value="">Select state</option>
+                <option *ngFor="let state of cafeStateOptions" [value]="state">
+                  {{ state }}
+                </option>
+              </select>
+              <ng-template #cafeStateInput>
+                <input
+                  id="cafeState"
+                  type="text"
+                  [(ngModel)]="cafeForm.state"
+                  name="cafeState"
+                />
+              </ng-template>
+            </div>
+            <div class="field-row field-row-input">
+              <label class="field-label" for="cafePincode">Pincode</label>
+              <input
+                id="cafePincode"
+                type="text"
+                [(ngModel)]="cafeForm.pincode"
+                name="cafePincode"
+                (input)="onCafePincodeChange($any($event.target).value)"
+              />
+              <small class="field-hint" *ngIf="cafePincodeLoading"
+                >Fetching city/state…</small
+              >
+              <small class="field-hint error" *ngIf="cafePincodeNotFound"
+                >No city/state found. You can enter manually.</small
+              >
+              <small class="field-hint error" *ngIf="cafePincodeError"
+                >Pincode lookup failed. Enter manually.</small
+              >
+            </div>
+            <div class="field-row field-row-input">
+              <label class="field-label" for="cafePhone">Phone</label>
+              <input
+                id="cafePhone"
+                type="text"
+                [(ngModel)]="cafeForm.phoneNumber"
+                name="cafePhone"
+              />
+            </div>
+            <div class="field-row field-row-input">
+              <label class="field-label" for="cafeEmail">Email</label>
+              <input
+                id="cafeEmail"
+                type="email"
+                [(ngModel)]="cafeForm.email"
+                name="cafeEmail"
+              />
+            </div>
+            <div class="field-row field-row-input">
+              <label class="field-label" for="cafeOpenTime">Opening Time</label>
+              <input
+                id="cafeOpenTime"
+                type="time"
+                [(ngModel)]="cafeForm.openingTime"
+                name="cafeOpenTime"
+              />
+            </div>
+            <div class="field-row field-row-input">
+              <label class="field-label" for="cafeCloseTime"
+                >Closing Time</label
+              >
+              <input
+                id="cafeCloseTime"
+                type="time"
+                [(ngModel)]="cafeForm.closingTime"
+                name="cafeCloseTime"
+              />
+            </div>
+            <div class="field-row field-row-input">
+              <label class="field-label" for="cafeFssai">FSSAI Number</label>
+              <input
+                id="cafeFssai"
+                type="text"
+                [(ngModel)]="cafeForm.fssaiNumber"
+                name="cafeFssai"
+              />
+            </div>
+            <div class="field-row field-row-input">
+              <label class="field-label" for="cafeGst">GST Number</label>
+              <input
+                id="cafeGst"
+                type="text"
+                [(ngModel)]="cafeForm.gstNumber"
+                name="cafeGst"
+              />
+            </div>
+            <div class="field-row field-row-input">
+              <label class="field-label" for="cafeMsme">MSME Number</label>
+              <input
+                id="cafeMsme"
+                type="text"
+                [(ngModel)]="cafeForm.msmeNumber"
+                name="cafeMsme"
+              />
+            </div>
+            <div class="field-row field-row-actions">
+              <button
+                class="btn-primary"
+                type="button"
+                [disabled]="savingCafe"
+                (click)="saveCafeDetails()"
+              >
+                {{ savingCafe ? "Saving..." : "Save Café Details" }}
+              </button>
+            </div>
+          </div>
         </div>
-      </form>
-    </div>
-
-    <!-- Session / Logout -->
-    <div class="settings-card danger-card">
-      <div class="card-header">
-        <h2>Session</h2>
-        <p class="card-subtitle">
-          End your current session and return to the login page.
-        </p>
       </div>
-      <div class="danger-actions">
-        <button class="btn-danger" (click)="logout()">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="15"
-            height="15"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            stroke-width="2"
-            style="margin-right: 6px"
+
+      <div class="settings-side-column">
+        <!-- Change Password -->
+        <div class="settings-card password-card">
+          <div class="card-header">
+            <h2>Change Password</h2>
+            <p class="card-subtitle">
+              Choose a strong password to protect your account.
+            </p>
+          </div>
+
+          <form
+            (ngSubmit)="changePassword()"
+            #pwForm="ngForm"
+            class="password-form"
+            novalidate
           >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-            />
-          </svg>
-          Sign Out
-        </button>
+            <div class="form-group">
+              <label>Current Password</label>
+              <div class="input-wrapper">
+                <input
+                  [type]="showOldPassword ? 'text' : 'password'"
+                  [(ngModel)]="passwordForm.oldPassword"
+                  name="oldPassword"
+                  placeholder="Enter current password"
+                />
+                <button
+                  type="button"
+                  class="toggle-pw"
+                  (click)="showOldPassword = !showOldPassword"
+                >
+                  {{ showOldPassword ? "Hide" : "Show" }}
+                </button>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>New Password</label>
+              <div class="input-wrapper">
+                <input
+                  [type]="showNewPassword ? 'text' : 'password'"
+                  [(ngModel)]="passwordForm.newPassword"
+                  name="newPassword"
+                  placeholder="Enter new password (min 8 characters)"
+                />
+                <button
+                  type="button"
+                  class="toggle-pw"
+                  (click)="showNewPassword = !showNewPassword"
+                >
+                  {{ showNewPassword ? "Hide" : "Show" }}
+                </button>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Confirm New Password</label>
+              <div class="input-wrapper">
+                <input
+                  [type]="showConfirmPassword ? 'text' : 'password'"
+                  [(ngModel)]="confirmNewPassword"
+                  name="confirmNewPassword"
+                  placeholder="Re-enter new password"
+                />
+                <button
+                  type="button"
+                  class="toggle-pw"
+                  (click)="showConfirmPassword = !showConfirmPassword"
+                >
+                  {{ showConfirmPassword ? "Hide" : "Show" }}
+                </button>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button
+                type="submit"
+                class="btn-primary"
+                [disabled]="passwordLoading"
+              >
+                <svg
+                  *ngIf="!passwordLoading"
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="15"
+                  height="15"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                  />
+                </svg>
+                {{ passwordLoading ? "Changing…" : "Change Password" }}
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Session / Logout -->
+        <div class="settings-card danger-card session-card">
+          <div class="card-header">
+            <h2>Session</h2>
+            <p class="card-subtitle">
+              End your current session and return to the login page.
+            </p>
+          </div>
+          <div class="danger-actions">
+            <button class="btn-danger" (click)="logout()">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="15"
+                height="15"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                stroke-width="2"
+                style="margin-right: 6px"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                />
+              </svg>
+              Sign Out
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </div>

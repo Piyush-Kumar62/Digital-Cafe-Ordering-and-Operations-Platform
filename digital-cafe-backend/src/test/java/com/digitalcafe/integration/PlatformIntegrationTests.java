@@ -124,6 +124,8 @@ class PlatformIntegrationTests {
         User chef = User.builder()
                 .id(22L)
                 .email("chef@test.com")
+                .isEmailVerified(true)
+                .isProfileComplete(true)
                 .cafe(com.digitalcafe.entity.Cafe.builder().id(5L).build())
                 .build();
         when(userRepository.findByEmail("chef@test.com")).thenReturn(Optional.of(chef));

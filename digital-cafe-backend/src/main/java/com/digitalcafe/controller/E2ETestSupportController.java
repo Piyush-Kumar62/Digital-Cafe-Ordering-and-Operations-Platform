@@ -35,7 +35,7 @@ public class E2ETestSupportController {
 
     @PostMapping("/register-cafe-owner")
     public ResponseEntity<AuthResponse> registerCafeOwner(@RequestBody CafeOwnerRegisterRequest request) {
-        return ResponseEntity.ok(authService.registerCafeOwner(request, null));
+        return ResponseEntity.ok(authService.registerCafeOwner(request, null, java.util.List.of()));
     }
 
     @GetMapping("/email-token")

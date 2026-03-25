@@ -1,6 +1,7 @@
 package com.digitalcafe.service.impl;
 
 import com.digitalcafe.email.EmailTemplateType;
+import com.digitalcafe.entity.Role;
 import com.digitalcafe.entity.User;
 import com.digitalcafe.repository.UserRepository;
 import com.digitalcafe.service.EmailService;
@@ -322,6 +323,11 @@ public class EmailServiceImpl implements EmailService {
             Map<String, Object> variables,
             List<EmailAttachment> attachments) {
 
+        if (isAdminRecipient(to)) {
+            log.info("[Email] SKIP (admin recipient) {} -> {}", templateType, to);
+            return;
+        }
+
         // Guard: skip silently if not configured rather than throwing a cryptic SMTP auth error
         if (!emailEnabled) {
             log.debug("[Email] SKIP (disabled) {} -> {}", templateType, to);
@@ -387,7 +393,19 @@ public class EmailServiceImpl implements EmailService {
         return userRepository.findByEmail(email)
                 .map(this::buildDisplayName)
                 .filter(name -> !name.isBlank())
-                .orElse(email);
+                .orElse(normalizeIdentity(email));
+    }
+
+    private boolean isAdminRecipient(String email) {
+        if (email == null || email.isBlank()) {
+            return false;
+        }
+        return userRepository.findByEmail(email)
+                .map(User::getRoles)
+                .map(roles -> roles.stream()
+                        .map(Role::getName)
+                        .anyMatch(roleName -> roleName == Role.RoleName.ADMIN))
+                .orElse(false);
     }
 
     private String buildDisplayName(User user) {
@@ -402,12 +420,46 @@ public class EmailServiceImpl implements EmailService {
             return full;
         }
         if (user.getUsername() != null && !user.getUsername().isBlank()) {
-            return user.getUsername().trim();
+            return normalizeIdentity(user.getUsername().trim());
         }
         if (user.getEmail() != null && !user.getEmail().isBlank()) {
-            return user.getEmail().trim();
+            return normalizeIdentity(user.getEmail().trim());
         }
         return "there";
+    }
+
+    private String normalizeIdentity(String identity) {
+        if (identity == null || identity.isBlank()) {
+            return "there";
+        }
+        String value = identity.trim();
+        if (value.contains("@")) {
+            value = value.substring(0, value.indexOf('@'));
+        }
+        value = value.replaceAll("[._-]+", " ").trim();
+        if (value.isBlank()) {
+            return "there";
+        }
+
+        String[] parts = value.split("\\s+");
+        StringBuilder friendly = new StringBuilder();
+        for (String part : parts) {
+            if (part.isBlank()) {
+                continue;
+            }
+            if (!friendly.isEmpty()) {
+                friendly.append(' ');
+            }
+            if (part.length() == 1) {
+                friendly.append(part.toUpperCase(Locale.ENGLISH));
+            } else {
+                friendly.append(Character.toUpperCase(part.charAt(0)))
+                        .append(part.substring(1));
+            }
+        }
+
+        String result = friendly.toString().trim();
+        return result.isBlank() ? "there" : result;
     }
 
     private boolean isBlank(String value) {

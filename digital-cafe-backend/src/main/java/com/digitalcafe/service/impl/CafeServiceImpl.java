@@ -85,9 +85,9 @@ public class CafeServiceImpl implements CafeService {
         cafe.setOpenTime(request.getOpenTime());
         cafe.setCloseTime(request.getCloseTime());
 
-        cafe.setFssaiNumber(request.getFssaiNumber());
-        cafe.setGstNumber(request.getGstNumber());
-        cafe.setMsmeNumber(request.getMsmeNumber());
+        cafe.setFssaiNumber(normalizeDigits(request.getFssaiNumber()));
+        cafe.setGstNumber(normalizeUpper(request.getGstNumber()));
+        cafe.setMsmeNumber(normalizeUpper(request.getMsmeNumber()));
         cafe.setState(request.getState());
 
         cafe.setOwner(owner);
@@ -157,6 +157,9 @@ public class CafeServiceImpl implements CafeService {
         }
 
         cafeMapper.updateCafeFromRequest(request, cafe);
+        cafe.setFssaiNumber(normalizeDigits(request.getFssaiNumber()));
+        cafe.setGstNumber(normalizeUpper(request.getGstNumber()));
+        cafe.setMsmeNumber(normalizeUpper(request.getMsmeNumber()));
 
         Cafe updatedCafe = cafeRepository.save(cafe);
 
@@ -460,7 +463,7 @@ public class CafeServiceImpl implements CafeService {
                         .closeTime(cafe.getCloseTime())
                         .rating(cafe.getRating())
                         .logoUrl(cafe.getLogoUrl())
-                        .imageUrl(cafe.getLogoUrl())  // imageUrl = logo for card display
+                        .imageUrl(resolvePublicCardImage(cafe))
                         .build())
                 .toList();
 
@@ -518,5 +521,34 @@ public class CafeServiceImpl implements CafeService {
                 .menuItems(menuItems)
                 .createdAt(cafe.getCreatedAt())
                 .build();
+    }
+
+    private String normalizeUpper(String value) {
+        if (value == null) {
+            return null;
+        }
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed.toUpperCase();
+    }
+
+    private String normalizeDigits(String value) {
+        if (value == null) {
+            return null;
+        }
+        String digits = value.replaceAll("\\D", "");
+        return digits.isEmpty() ? null : digits;
+    }
+
+    private String resolvePublicCardImage(Cafe cafe) {
+        if (cafe.getGalleryImages() != null && !cafe.getGalleryImages().isEmpty()) {
+            return cafe.getGalleryImages().stream()
+                    .map(CafeGallery::getImageUrl)
+                    .findFirst()
+                    .orElse(cafe.getLogoUrl());
+        }
+        if (cafe.getCoverUrl() != null && !cafe.getCoverUrl().isBlank()) {
+            return cafe.getCoverUrl();
+        }
+        return cafe.getLogoUrl();
     }
 }

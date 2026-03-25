@@ -19,6 +19,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -48,8 +50,10 @@ public class AuthController {
     @PostMapping(value = "/register/cafe-owner", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<AuthResponse> registerCafeOwner(
             @Valid @RequestPart("data") CafeOwnerRegisterRequest request,
-            @RequestPart(value = "logo", required = false) MultipartFile logo) {
-        AuthResponse response = authService.registerCafeOwner(request, logo);
+            @RequestPart(value = "logo", required = false) MultipartFile logo,
+            @RequestPart(value = "galleryImages", required = false) MultipartFile[] galleryImages) {
+        List<MultipartFile> images = galleryImages == null ? List.of() : Arrays.asList(galleryImages);
+        AuthResponse response = authService.registerCafeOwner(request, logo, images);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 

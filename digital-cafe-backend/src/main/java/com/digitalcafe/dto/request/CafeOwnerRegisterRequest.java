@@ -62,9 +62,18 @@ public class CafeOwnerRegisterRequest {
 
     // ── Legal / compliance numbers (all optional) ──────────────────────────
 
-    private String fssaiNumber;
+        @Pattern(regexp = "^$|^[0-9]{14}$", message = "FSSAI number must be exactly 14 digits")
+        private String fssaiNumber;
 
-    private String gstNumber;
+        @Pattern(
+            regexp = "^$|^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$",
+            message = "GST number must be a valid 15-character GSTIN"
+        )
+        private String gstNumber;
 
-    private String msmeNumber;
+        @Pattern(
+            regexp = "^$|^UDYAM-[A-Z]{2}-[0-9]{2}-[0-9]{7}$",
+            message = "MSME number must be in UDYAM-XX-00-0000000 format"
+        )
+        private String msmeNumber;
 }

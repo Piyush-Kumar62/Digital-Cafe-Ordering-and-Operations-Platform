@@ -29,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -47,6 +48,7 @@ public class AuthServiceImpl implements AuthService {
   private final UserRepository userRepository;
   private final RoleRepository roleRepository;
   private final CafeRepository cafeRepository;
+  private final CafeGalleryRepository cafeGalleryRepository;
   private final EmailVerificationTokenRepository emailVerificationTokenRepository;
   private final PasswordResetTokenRepository passwordResetTokenRepository;
   private final PasswordEncoder passwordEncoder;
@@ -100,7 +102,7 @@ public class AuthServiceImpl implements AuthService {
   }
   @Override
   @Transactional
-  public AuthResponse registerCafeOwner(CafeOwnerRegisterRequest request, MultipartFile logo) {
+  public AuthResponse registerCafeOwner(CafeOwnerRegisterRequest request, MultipartFile logo, List<MultipartFile> galleryImages) {
     if (userRepository.existsByEmail(request.getEmail()))
       throw new BadRequestException("Email already registered");
     Role cafeOwnerRole = roleRepository.findByName(Role.RoleName.CAFE_OWNER)
@@ -108,7 +110,8 @@ public class AuthServiceImpl implements AuthService {
     String tempPassword = PasswordGenerator.generateTemporaryPassword();
     User user = saveUserOrThrow(buildOwnerUser(request, tempPassword, cafeOwnerRole));
     String logoUrl = (logo != null && !logo.isEmpty()) ? fileStorageService.storeMenuItemImage(logo) : null;
-    cafeRepository.save(buildCafe(request, user, logoUrl));
+    Cafe savedCafe = cafeRepository.save(buildCafe(request, user, logoUrl));
+    persistCafeGallery(savedCafe, galleryImages);
     String verificationTokenStr = saveVerificationToken(user);
     emailService.sendVerificationEmail(user.getEmail(), verificationTokenStr, tempPassword);
     notifyAdmins("CAFE_OWNER_REGISTERED", "New Café Owner Registration",
@@ -361,6 +364,14 @@ public class AuthServiceImpl implements AuthService {
     if (request.getOwnerPhoneNumber() != null && !request.getOwnerPhoneNumber().isBlank())
       user.setPhoneNumber(request.getOwnerPhoneNumber());
     user.getRoles().add(role);
+    Profile profile = new Profile();
+    profile.setUser(user);
+    profile.setFirstName(request.getFirstName());
+    profile.setLastName(request.getLastName());
+    if (request.getOwnerPhoneNumber() != null && !request.getOwnerPhoneNumber().isBlank()) {
+      profile.setPhoneNumber(request.getOwnerPhoneNumber());
+    }
+    user.setProfile(profile);
     return user;
   }
 
@@ -370,10 +381,48 @@ public class AuthServiceImpl implements AuthService {
     cafe.setAddress(request.getAddress()); cafe.setCity(request.getCity()); cafe.setState(request.getState());
     cafe.setPincode(request.getPincode()); cafe.setPhoneNumber(request.getPhoneNumber());
     cafe.setOpenTime(request.getOpenTime()); cafe.setCloseTime(request.getCloseTime());
-    cafe.setFssaiNumber(request.getFssaiNumber()); cafe.setGstNumber(request.getGstNumber());
-    cafe.setMsmeNumber(request.getMsmeNumber()); cafe.setIsActive(false); cafe.setOwner(owner);
+    cafe.setFssaiNumber(normalizeDigits(request.getFssaiNumber()));
+    cafe.setGstNumber(normalizeUpper(request.getGstNumber()));
+    cafe.setMsmeNumber(normalizeUpper(request.getMsmeNumber()));
+    cafe.setIsActive(false); cafe.setOwner(owner);
     if (logoUrl != null) cafe.setLogoUrl(logoUrl);
     return cafe;
+  }
+
+  private void persistCafeGallery(Cafe cafe, List<MultipartFile> galleryImages) {
+    if (galleryImages == null || galleryImages.isEmpty()) {
+      return;
+    }
+
+    int displayOrder = 0;
+    for (MultipartFile file : galleryImages) {
+      if (file == null || file.isEmpty()) {
+        continue;
+      }
+      String imageUrl = fileStorageService.storeMenuItemImage(file);
+      CafeGallery gallery = CafeGallery.builder()
+          .cafe(cafe)
+          .imageUrl(imageUrl)
+          .displayOrder(displayOrder++)
+          .build();
+      cafeGalleryRepository.save(gallery);
+    }
+  }
+
+  private String normalizeUpper(String value) {
+    if (value == null) {
+      return null;
+    }
+    String trimmed = value.trim();
+    return trimmed.isEmpty() ? null : trimmed.toUpperCase();
+  }
+
+  private String normalizeDigits(String value) {
+    if (value == null) {
+      return null;
+    }
+    String digits = value.replaceAll("\\D", "");
+    return digits.isEmpty() ? null : digits;
   }
 
   private User buildUserForComprehensiveReg(RegisterRequest request, Role role, String tempPassword, String normalizedUsername) {

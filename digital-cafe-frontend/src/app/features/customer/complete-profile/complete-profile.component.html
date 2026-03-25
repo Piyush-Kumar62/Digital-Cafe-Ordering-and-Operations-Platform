@@ -17,6 +17,14 @@
         </label>
       </div>
 
+      <div class="grid one">
+        <label>
+          Email
+          <input type="email" formControlName="email" readonly />
+          <small class="hint">Email can be updated from account settings.</small>
+        </label>
+      </div>
+
       <div class="grid three">
         <label>
           Date of Birth
@@ -30,6 +38,7 @@
             <option value="MALE">Male</option>
             <option value="FEMALE">Female</option>
             <option value="OTHER">Other</option>
+            <option value="PREFER_NOT_TO_SAY">Prefer not to say</option>
           </select>
           <small class="error" *ngIf="isInvalid('gender')">Gender is required.</small>
         </label>
@@ -49,19 +58,27 @@
         </label>
       </div>
 
+      <div class="grid two">
+        <label>
+          Government ID Type
+          <select formControlName="govtIdType">
+            <option value="">Select ID Type</option>
+            <option *ngFor="let idType of govtIdTypes" [value]="idType">
+              {{ idType }}
+            </option>
+          </select>
+        </label>
+        <label>
+          Government ID Number
+          <input type="text" formControlName="govtIdNumber" placeholder="Enter ID number" />
+        </label>
+      </div>
+
       <app-address-form
         [form]="form"
         variant="profile"
         [formSubmitted]="addressFormSubmitted"
       ></app-address-form>
-
-      <div class="grid two mt-4">
-        <label>
-          Country
-          <input type="text" formControlName="country" [class.invalid]="isInvalid('country')" />
-          <small class="error" *ngIf="isInvalid('country')">Country is required.</small>
-        </label>
-      </div>
 
       <h2>Academic Information</h2>
 
@@ -125,7 +142,7 @@
             No branches yet
           </span>
           <ng-container *ngIf="branchOptions.length > 0; else branchInput">
-            <select formControlName="fieldOfStudy" [class.invalid]="isInvalid('fieldOfStudy')">
+            <select formControlName="branch" [class.invalid]="isInvalid('branch')">
               <option value="">Select branch</option>
               <option *ngFor="let branch of branchOptions" [value]="branch">
                 {{ branch }}
@@ -135,33 +152,103 @@
           <ng-template #branchInput>
             <input
               type="text"
-              formControlName="fieldOfStudy"
+              formControlName="branch"
               placeholder="Enter branch / stream"
-              [class.invalid]="isInvalid('fieldOfStudy')"
+              [class.invalid]="isInvalid('branch')"
             />
           </ng-template>
           <small class="hint" *ngIf="branchLoading">Loading branches…</small>
-          <small class="error" *ngIf="isInvalid('fieldOfStudy')">Branch / stream is required.</small>
+          <small class="error" *ngIf="isInvalid('branch')">Branch / stream is required.</small>
         </label>
         <label>
-          Start Date
-          <input type="date" formControlName="academicStartDate" />
+          Passing Year
+          <select formControlName="passingYear" [class.invalid]="isInvalid('passingYear')">
+            <option value="">Select year</option>
+            <option *ngFor="let y of academicYearOptions" [value]="y">{{ y }}</option>
+          </select>
+          <small class="error" *ngIf="isInvalid('passingYear')">Passing year is required.</small>
         </label>
         <label>
-          End Date
-          <input type="date" formControlName="academicEndDate" />
+          Grading Type
+          <select formControlName="gradingType">
+            <option value="CGPA">CGPA</option>
+            <option value="PERCENTAGE">Percentage</option>
+            <option value="GRADE">Grade</option>
+          </select>
         </label>
       </div>
 
       <div class="grid two">
         <label>
-          Grade
-          <input type="text" formControlName="grade" />
+          Score
+          <input type="text" formControlName="score" placeholder="e.g. 8.5 / 75%" />
         </label>
         <label class="checkbox">
-          <input type="checkbox" formControlName="isCurrent" />
-          Currently studying
+          <input type="checkbox" formControlName="currentlyStudying" (change)="onAcademicCurrentlyStudyingChange()" />
+          Currently studying here
         </label>
+      </div>
+
+      <h2>Work Experience (Optional)</h2>
+      <div class="work-list" formArrayName="workExperienceList">
+        <div
+          class="work-card"
+          *ngFor="let work of workExperienceList.controls; let i = index"
+          [formGroupName]="i"
+        >
+          <div class="work-header">
+            <span>Experience {{ i + 1 }}</span>
+            <button type="button" class="btn-ghost" (click)="removeWorkExperience(i)">Remove</button>
+          </div>
+          <div class="grid two">
+            <label>
+              Company
+              <input type="text" formControlName="companyName" placeholder="Company" />
+            </label>
+            <label>
+              Designation
+              <input type="text" formControlName="designation" placeholder="Designation" />
+            </label>
+          </div>
+          <div class="grid three">
+            <label>
+              Start Date
+              <input type="date" formControlName="startDate" />
+            </label>
+            <label>
+              End Date
+              <input type="date" formControlName="endDate" [disabled]="work.get('currentlyWorking')?.value" />
+            </label>
+            <label class="checkbox">
+              <input
+                type="checkbox"
+                formControlName="currentlyWorking"
+                (change)="onCurrentlyWorkingChange(i)"
+              />
+              Currently working
+            </label>
+          </div>
+          <div class="grid two">
+            <label>
+              CTC Amount
+              <input type="number" formControlName="ctcAmount" placeholder="Amount" />
+            </label>
+            <label>
+              CTC Currency
+              <select formControlName="ctcCurrency">
+                <option value="LPA">LPA</option>
+                <option value="Per Month">Per Month</option>
+              </select>
+            </label>
+          </div>
+          <div class="grid one">
+            <label *ngIf="!work.get('currentlyWorking')?.value">
+              Reason for Leaving
+              <input type="text" formControlName="reasonForLeaving" placeholder="Reason" />
+            </label>
+          </div>
+        </div>
+        <button type="button" class="btn-add" (click)="addWorkExperience()">Add Experience</button>
       </div>
 
       <button type="submit" [disabled]="loading">

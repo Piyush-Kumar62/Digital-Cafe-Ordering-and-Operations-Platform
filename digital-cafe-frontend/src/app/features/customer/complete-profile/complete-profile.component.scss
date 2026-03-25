@@ -1,32 +1,34 @@
 .complete-profile-shell {
   min-height: 100vh;
-  background: linear-gradient(160deg, #0f172a 0%, #1e293b 100%);
-  padding: 2rem 1rem;
+  background: radial-gradient(circle at top, #eef2ff 0%, #f8fafc 45%, #ffffff 100%);
+  padding: 2.5rem 1.5rem;
 }
 
 .card {
   max-width: 980px;
   margin: 0 auto;
-  background: rgba(15, 23, 42, 0.85);
-  border: 1px solid rgba(148, 163, 184, 0.25);
-  border-radius: 14px;
-  padding: 1.25rem;
-  color: #e2e8f0;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  padding: 1.75rem;
+  color: #0f172a;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+  overflow: visible;
 }
 
 h1 {
   margin: 0;
-  color: #f8fafc;
+  color: #0f172a;
 }
 
 p {
   margin: 0.35rem 0 1rem;
-  color: #cbd5e1;
+  color: #475569;
 }
 
 h2 {
   margin: 1rem 0 0.75rem;
-  color: #e2e8f0;
+  color: #0f172a;
   font-size: 1rem;
 }
 
@@ -40,6 +42,10 @@ h2 {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.grid.one {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .grid.three {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
@@ -49,16 +55,17 @@ label {
   flex-direction: column;
   gap: 0.35rem;
   font-size: 0.9rem;
-  color: #cbd5e1;
+  color: #475569;
 }
 
 input,
 select {
-  border: 1px solid #334155;
-  background: #0f172a;
-  color: #f8fafc;
-  border-radius: 10px;
-  padding: 0.65rem 0.75rem;
+  border: 1px solid #cbd5f5;
+  background: #ffffff;
+  color: #0f172a;
+  border-radius: 12px;
+  padding: 0.7rem 0.85rem;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
 }
 
 input.invalid,
@@ -69,10 +76,15 @@ select.invalid {
 
 ::ng-deep .academic-autocomplete-panel {
   max-height: 280px;
-  background: #0f172a;
-  color: #e2e8f0;
+  background: #ffffff;
+  color: #0f172a;
   border: 1px solid rgba(148, 163, 184, 0.35);
-  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.45);
+  box-shadow: 0 16px 30px rgba(15, 23, 42, 0.12);
+  z-index: 2000;
+}
+
+::ng-deep .cdk-overlay-pane {
+  z-index: 2000 !important;
 }
 
 ::ng-deep .academic-autocomplete-panel .mat-mdc-option {
@@ -84,12 +96,12 @@ select.invalid {
 
 ::ng-deep .academic-autocomplete-panel .academic-option__title {
   font-weight: 600;
-  color: #f8fafc;
+  color: #0f172a;
 }
 
 ::ng-deep .academic-autocomplete-panel .academic-option__meta {
   font-size: 0.75rem;
-  color: rgba(148, 163, 184, 0.9);
+  color: rgba(100, 116, 139, 0.9);
 }
 
 ::ng-deep .academic-autocomplete-panel .academic-option {
@@ -101,14 +113,14 @@ select.invalid {
 .hint {
   display: block;
   font-size: 0.75rem;
-  color: rgba(148, 163, 184, 0.9);
+  color: rgba(71, 85, 105, 0.9);
   margin-top: 4px;
 }
 
 .error {
   display: block;
   font-size: 0.75rem;
-  color: #fca5a5;
+  color: #dc2626;
   margin-top: 4px;
 }
 
@@ -117,7 +129,7 @@ select.invalid {
   align-self: flex-start;
   border: none;
   background: none;
-  color: #93c5fd;
+  color: #2563eb;
   font-size: 0.75rem;
   text-decoration: underline;
   cursor: pointer;
@@ -130,8 +142,8 @@ select.invalid {
   padding: 2px 8px;
   margin-left: 8px;
   border-radius: 999px;
-  background: rgba(239, 68, 68, 0.15);
-  color: #fecaca;
+  background: rgba(220, 38, 38, 0.12);
+  color: #b91c1c;
   font-size: 0.7rem;
   font-weight: 600;
 }
@@ -139,10 +151,11 @@ select.invalid {
 .phone-input {
   display: flex;
   align-items: center;
-  background: #0f172a;
-  border: 1px solid #334155;
-  border-radius: 10px;
+  background: #ffffff;
+  border: 1px solid #cbd5f5;
+  border-radius: 12px;
   overflow: hidden;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
 }
 
 .phone-input:focus-within {
@@ -156,10 +169,10 @@ select.invalid {
 }
 
 .phone-prefix {
-  padding: 0.65rem 0.75rem;
-  color: #cbd5e1;
-  background: rgba(15, 23, 42, 0.65);
-  border-right: 1px solid #334155;
+  padding: 0.7rem 0.85rem;
+  color: #1e293b;
+  background: #eef2ff;
+  border-right: 1px solid #cbd5f5;
   font-weight: 600;
   letter-spacing: 0.02em;
 }
@@ -167,9 +180,9 @@ select.invalid {
 .phone-input input {
   border: none;
   border-radius: 0;
-  padding: 0.65rem 0.75rem;
+  padding: 0.7rem 0.85rem;
   background: transparent;
-  color: #f8fafc;
+  color: #0f172a;
   width: 100%;
 }
 
@@ -187,25 +200,70 @@ select:focus {
   margin-top: 1.6rem;
 }
 
-button {
+.work-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 0.75rem;
+}
+
+.work-card {
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  border-radius: 14px;
+  padding: 1rem;
+  background: #f8fafc;
+}
+
+.work-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.6rem;
+  font-size: 0.9rem;
+  color: #1e293b;
+}
+
+.btn-ghost {
+  background: transparent;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  color: #1e293b;
+  padding: 0.35rem 0.8rem;
+  border-radius: 8px;
+  cursor: pointer;
+  width: auto;
+}
+
+.btn-add {
+  width: auto;
+  align-self: flex-start;
+  background: #1d4ed8;
+  color: #ffffff;
+  border: none;
+  padding: 0.65rem 1.1rem;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+form > button {
   width: 100%;
   border: none;
-  border-radius: 10px;
-  padding: 0.8rem;
-  background: linear-gradient(90deg, #2563eb, #0891b2);
+  border-radius: 12px;
+  padding: 0.9rem;
+  background: linear-gradient(90deg, #1d4ed8, #0ea5e9);
   color: #fff;
   font-weight: 700;
   cursor: pointer;
   margin-top: 0.25rem;
 }
 
-button:disabled {
+form > button:disabled {
   opacity: 0.75;
   cursor: not-allowed;
 }
 
 @media (max-width: 860px) {
   .grid.two,
+  .grid.one,
   .grid.three {
     grid-template-columns: 1fr;
   }

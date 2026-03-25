@@ -13,6 +13,7 @@ import { Subscription } from "rxjs";
 import { filter } from "rxjs/operators";
 
 import { AuthService } from "@core/auth/auth.service";
+import { ApiService } from "@core/services/api.service";
 import { ThemeService } from "@core/services/theme.service";
 import { WebSocketService } from "@core/websocket/websocket.service";
 
@@ -65,6 +66,7 @@ export class WaiterLayoutComponent implements OnInit, OnDestroy {
 
   constructor(
     private authService: AuthService,
+    private apiService: ApiService,
     private router: Router,
     private themeService: ThemeService,
     private webSocketService: WebSocketService,
@@ -80,10 +82,12 @@ export class WaiterLayoutComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.currentUser = this.authService.currentUserValue;
-    this.profileImage = localStorage.getItem("waiter_profile_image") || "";
+    this.profileImage = this.resolveProfileImage(this.currentUser);
     this.currentUserSub = this.authService.currentUser.subscribe((user) => {
       this.currentUser = user;
+      this.profileImage = this.resolveProfileImage(user);
     });
+    this.refreshProfileFromDb();
     this.bindOrderNotifications();
     this.routerEventsSub = this.router.events
       .pipe(filter((event) => event instanceof NavigationEnd))
@@ -130,8 +134,10 @@ export class WaiterLayoutComponent implements OnInit, OnDestroy {
 
   getDisplayName(): string {
     const u = this.currentUser;
-    if (u?.firstName && u?.lastName) return `${u.firstName} ${u.lastName}`;
-    return u?.name || u?.username || "Waiter";
+    const first = u?.firstName || "";
+    const last = u?.lastName || "";
+    const full = `${first} ${last}`.trim();
+    return u?.displayName || full || u?.username || "Waiter";
   }
 
   getUserEmail(): string {
@@ -251,5 +257,46 @@ export class WaiterLayoutComponent implements OnInit, OnDestroy {
     };
 
     this.notifications = [notification, ...this.notifications].slice(0, 20);
+  }
+
+  private resolveProfileImage(user: any): string {
+    const raw = user?.profileImageUrl || "";
+    if (!raw) return "";
+    const resolved = this.apiService.resolveImageUrl(raw);
+    return resolved || "";
+  }
+
+  private refreshProfileFromDb(): void {
+    this.apiService.getCustomerProfile().subscribe({
+      next: (profile) => {
+        if (!this.currentUser) return;
+        const firstName = profile?.firstName || this.currentUser.firstName;
+        const lastName = profile?.lastName || this.currentUser.lastName;
+        const updated = {
+          ...this.currentUser,
+          firstName,
+          lastName,
+          displayName:
+            profile?.displayName ||
+            this.currentUser.displayName ||
+            `${firstName} ${lastName}`.trim(),
+          phoneNumber: profile?.phoneNumber || this.currentUser.phoneNumber,
+          govtIdType: profile?.govtIdType || this.currentUser.govtIdType,
+          govtIdNumber: profile?.govtIdNumber || this.currentUser.govtIdNumber,
+          profileImageUrl:
+            profile?.profileImageUrl || this.currentUser.profileImageUrl,
+          profileCompletionPercentage:
+            profile?.profileCompletionPercentage ??
+            this.currentUser.profileCompletionPercentage,
+          isProfileComplete:
+            (profile?.profileCompletionPercentage ??
+              this.currentUser.profileCompletionPercentage) >= 100,
+          lastLogin: profile?.lastLogin || this.currentUser.lastLogin,
+        };
+        this.currentUser = updated;
+        this.authService.updateUserData(updated);
+        this.profileImage = this.resolveProfileImage(updated);
+      },
+    });
   }
 }

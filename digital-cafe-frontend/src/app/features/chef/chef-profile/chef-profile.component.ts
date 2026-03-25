@@ -81,14 +81,26 @@ export class ChefProfileComponent implements OnInit {
     this.loading = true;
     this.apiService.getCustomerProfile().subscribe({
       next: (data: any) => {
+        const firstName = data?.firstName || this.currentUser?.firstName || "";
+        const lastName = data?.lastName || this.currentUser?.lastName || "";
+        const displayName =
+          data?.displayName ||
+          `${firstName} ${lastName}`.trim() ||
+          this.currentUser?.username ||
+          "";
         this.profileData = {
-          firstName: data?.firstName || this.currentUser?.firstName || "",
-          lastName: data?.lastName || this.currentUser?.lastName || "",
-          displayName: data?.displayName || "",
+          firstName,
+          lastName,
+          displayName,
           email: data?.email || this.currentUser?.email || "",
-          role: data?.role || "",
-          profileImageUrl: this.apiService.resolveImageUrl(data?.profileImageUrl || ""),
-          profileCompletionPercentage: data?.profileCompletionPercentage || 0,
+          role: data?.role || this.currentUser?.roles?.[0] || "",
+          profileImageUrl: this.apiService.resolveImageUrl(
+            data?.profileImageUrl || this.currentUser?.profileImageUrl || "",
+          ),
+          profileCompletionPercentage:
+            data?.profileCompletionPercentage ??
+            this.currentUser?.profileCompletionPercentage ??
+            0,
           lastLogin: data?.lastLogin || "",
           phoneNumber: data?.phoneNumber || "",
           govtIdType: data?.govtIdType || this.currentUser?.govtIdType || "",
@@ -102,6 +114,7 @@ export class ChefProfileComponent implements OnInit {
       error: () => {
         this.profileData.firstName = this.currentUser?.firstName || "";
         this.profileData.lastName = this.currentUser?.lastName || "";
+        this.profileData.displayName = `${this.profileData.firstName} ${this.profileData.lastName}`.trim();
         this.profileData.email = this.currentUser?.email || "";
         this.profileData.govtIdType = this.currentUser?.govtIdType || "";
         this.profileData.govtIdNumber = this.currentUser?.govtIdNumber || "";
@@ -246,6 +259,9 @@ export class ChefProfileComponent implements OnInit {
         this.profileData.experienceYears =
           data?.experienceYears ?? this.editForm.experienceYears ?? 0;
         this.profileData.shift = data?.shift || this.editForm.shift || "";
+        this.profileData.profileCompletionPercentage =
+          data?.profileCompletionPercentage ??
+          this.profileData.profileCompletionPercentage;
         if (data?.profileImageUrl)
           this.profileData.profileImageUrl = this.apiService.resolveImageUrl(data.profileImageUrl);
 
@@ -254,11 +270,15 @@ export class ChefProfileComponent implements OnInit {
             ...this.currentUser,
             firstName: this.profileData.firstName,
             lastName: this.profileData.lastName,
+            displayName: this.profileData.displayName,
+            phoneNumber: this.profileData.phoneNumber,
             govtIdType: this.profileData.govtIdType,
             govtIdNumber: this.profileData.govtIdNumber,
             joiningDate: this.profileData.joiningDate,
             experienceYears: this.profileData.experienceYears,
             shift: this.profileData.shift,
+            profileCompletionPercentage: this.profileData.profileCompletionPercentage,
+            isProfileComplete: this.profileData.profileCompletionPercentage >= 100,
           };
           this.authService.updateUserData(this.currentUser);
         }
@@ -306,6 +326,13 @@ export class ChefProfileComponent implements OnInit {
           res?.profileImageUrl || res?.imageUrl || res?.url || "",
         );
         this.profileData.profileImageUrl = url;
+        if (this.currentUser) {
+          this.currentUser = {
+            ...this.currentUser,
+            profileImageUrl: res?.profileImageUrl || this.currentUser.profileImageUrl,
+          };
+          this.authService.updateUserData(this.currentUser);
+        }
         this.uploadingImage = false;
         this.alertService.success("Uploaded", "Profile picture updated.");
       },

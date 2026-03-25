@@ -8,17 +8,28 @@ import {
 } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { RouterModule, Router, NavigationEnd } from "@angular/router";
-import { Subscription, interval } from "rxjs";
+import { Subscription } from "rxjs";
 import { filter } from "rxjs/operators";
 import { AuthService } from "@core/auth/auth.service";
+import { ApiService } from "@core/services/api.service";
+import { ThemeService } from "@core/services/theme.service";
 import { CafeContextService } from "../services/cafe-context.service";
 import { Cafe } from "@shared/models/cafe.model";
+import { User } from "@shared/models/auth.model";
 
 interface NavigationItem {
   label: string;
   icon: string;
   route: string;
   active?: boolean;
+}
+
+interface OwnerHeaderNotification {
+  id: string;
+  title: string;
+  message: string;
+  createdAt: string;
+  read: boolean;
 }
 
 @Component({
@@ -31,13 +42,19 @@ interface NavigationItem {
 export class OwnerLayoutComponent implements OnInit, OnDestroy {
   isSidebarCollapsed = false;
   private isMobileView = false;
-  currentUser: any;
+  currentUser: User | null = null;
   isDarkMode = false;
   profileDropdownOpen = false;
+  showNotifications = false;
   profileImage = "";
+  private profileImageVersion = Date.now();
+  profileCompletion = 0;
+  lastLogin: Date | null = null;
+  notifications: OwnerHeaderNotification[] = [];
+  unreadNotifications = 0;
   isDashboardRoute = false;
   private routerEventsSub?: Subscription;
-  private profilePollSub?: Subscription;
+  private userSub?: Subscription;
 
   // Multi-cafe support
   allCafes: Cafe[] = [];
@@ -62,12 +79,13 @@ export class OwnerLayoutComponent implements OnInit, OnDestroy {
 
   constructor(
     private authService: AuthService,
+    private apiService: ApiService,
+    private themeService: ThemeService,
     private router: Router,
     private cafeCtx: CafeContextService,
   ) {
-    const savedTheme = localStorage.getItem("cafe_theme");
-    this.isDarkMode = savedTheme === "dark";
-    this.applyTheme();
+    this.themeService.syncFromStorage();
+    this.isDarkMode = this.themeService.isDarkMode();
 
     if (typeof window !== "undefined") {
       this.isMobileView = window.innerWidth < 1024;
@@ -76,8 +94,22 @@ export class OwnerLayoutComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.currentUser = this.authService.currentUserValue;
-    this.profileImage = localStorage.getItem("owner_profile_image") || "";
+    this.userSub = this.authService.currentUser.subscribe((user) => {
+      this.currentUser = user;
+      this.profileCompletion = user?.profileCompletionPercentage || 0;
+      this.lastLogin = user?.lastLogin ? new Date(user.lastLogin) : null;
+
+      const resolved = this.apiService.resolveImageUrl(
+        user?.profileImageUrl || "",
+      );
+      this.profileImage = resolved
+        ? `${resolved}${resolved.includes("?") ? "&" : "?"}v=${this.profileImageVersion}`
+        : "";
+      this.profileImageVersion = Date.now();
+    });
+
+    this.refreshProfileFromDb();
+    this.seedNotifications();
     this.updateRouteState(this.router.url);
 
     this.routerEventsSub = this.router.events
@@ -86,15 +118,9 @@ export class OwnerLayoutComponent implements OnInit, OnDestroy {
         const nav = event as NavigationEnd;
         this.updateRouteState(nav.urlAfterRedirects || nav.url);
         this.cafePickerOpen = false;
+        this.showNotifications = false;
+        this.profileDropdownOpen = false;
       });
-
-    // Poll for profile image updates from settings page
-    this.profilePollSub = interval(1500).subscribe(() => {
-      const stored = localStorage.getItem("owner_profile_image") || "";
-      if (stored !== this.profileImage) {
-        this.profileImage = stored;
-      }
-    });
 
     // Load cafes for multi-cafe switcher
     this.cafeCtx.loadCafes().subscribe();
@@ -121,7 +147,7 @@ export class OwnerLayoutComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.routerEventsSub?.unsubscribe();
-    this.profilePollSub?.unsubscribe();
+    this.userSub?.unsubscribe();
     this.cafeContextSub?.unsubscribe();
   }
 
@@ -137,22 +163,21 @@ export class OwnerLayoutComponent implements OnInit, OnDestroy {
 
   toggleTheme(): void {
     this.isDarkMode = !this.isDarkMode;
-    this.applyTheme();
-    localStorage.setItem("cafe_theme", this.isDarkMode ? "dark" : "light");
-  }
-
-  private applyTheme(): void {
-    if (this.isDarkMode) document.documentElement.classList.add("dark");
-    else document.documentElement.classList.remove("dark");
+    this.themeService.setTheme(this.isDarkMode);
   }
 
   getAvatarText(): string {
-    const name = this.currentUser?.name || this.currentUser?.username || "";
+    const name =
+      `${this.currentUser?.firstName || ""} ${this.currentUser?.lastName || ""}`.trim() ||
+      this.currentUser?.username ||
+      "";
     return name.charAt(0).toUpperCase() || "O";
   }
 
   getDisplayName(): string {
-    return this.currentUser?.name || this.currentUser?.username || "Café Owner";
+    return (
+      this.currentUser?.firstName || this.currentUser?.username || "Café Owner"
+    );
   }
 
   getUserEmail(): string {
@@ -164,7 +189,32 @@ export class OwnerLayoutComponent implements OnInit, OnDestroy {
   }
 
   toggleProfileDropdown(): void {
+    this.showNotifications = false;
     this.profileDropdownOpen = !this.profileDropdownOpen;
+  }
+
+  toggleNotifications(): void {
+    this.profileDropdownOpen = false;
+    this.showNotifications = !this.showNotifications;
+  }
+
+  markAllRead(): void {
+    this.notifications = this.notifications.map((n) => ({ ...n, read: true }));
+    this.syncUnreadCount();
+  }
+
+  closeHeaderPopovers(): void {
+    this.showNotifications = false;
+    this.profileDropdownOpen = false;
+  }
+
+  getWelcomeName(): string {
+    return this.getDisplayName();
+  }
+
+  getLastLoginText(): string {
+    if (!this.lastLogin) return "Just now";
+    return this.lastLogin.toLocaleString();
   }
 
   getPageTitle(): string {
@@ -195,13 +245,42 @@ export class OwnerLayoutComponent implements OnInit, OnDestroy {
 
   @HostListener("document:click", ["$event"])
   onDocumentClick(event: MouseEvent): void {
+    const target = event.target as Node;
+
+    if (
+      this.showNotifications &&
+      !this.profileContainer?.nativeElement.contains(target)
+    ) {
+      this.showNotifications = false;
+    }
+
     if (
       this.profileDropdownOpen &&
       this.profileContainer &&
-      !this.profileContainer.nativeElement.contains(event.target)
+      !this.profileContainer.nativeElement.contains(target)
     ) {
       this.profileDropdownOpen = false;
     }
+  }
+
+  @HostListener("window:storage", ["$event"])
+  onStorageThemeChange(event: StorageEvent): void {
+    if (event.key !== "theme" && event.key !== "cafe_theme") {
+      return;
+    }
+    this.themeService.syncFromStorage();
+    this.isDarkMode = this.themeService.isDarkMode();
+  }
+
+  @HostListener("window:theme-changed", ["$event"])
+  onThemeChanged(event: Event): void {
+    const customEvent = event as CustomEvent<{ dark: boolean }>;
+    if (typeof customEvent?.detail?.dark === "boolean") {
+      this.isDarkMode = customEvent.detail.dark;
+      return;
+    }
+    this.themeService.syncFromStorage();
+    this.isDarkMode = this.themeService.isDarkMode();
   }
 
   private updateRouteState(url: string): void {
@@ -215,5 +294,65 @@ export class OwnerLayoutComponent implements OnInit, OnDestroy {
       this.isMobileView = mobile;
       this.isSidebarCollapsed = mobile;
     }
+  }
+
+  private seedNotifications(): void {
+    this.notifications = [
+      {
+        id: "owner-notif-1",
+        title: "Welcome to Owner Dashboard",
+        message: "You can monitor orders, staff and reservations from here.",
+        createdAt: new Date().toLocaleString(),
+        read: false,
+      },
+    ];
+    this.syncUnreadCount();
+  }
+
+  private syncUnreadCount(): void {
+    this.unreadNotifications = this.notifications.filter((n) => !n.read).length;
+  }
+
+  private refreshProfileFromDb(): void {
+    this.apiService.getCustomerProfile().subscribe({
+      next: (profile) => {
+        if (!this.currentUser) return;
+        const firstName = profile?.firstName || this.currentUser.firstName;
+        const lastName = profile?.lastName || this.currentUser.lastName;
+        const updated: User = {
+          ...this.currentUser,
+          firstName,
+          lastName,
+          displayName:
+            profile?.displayName ||
+            this.currentUser.displayName ||
+            `${firstName} ${lastName}`.trim(),
+          phoneNumber: profile?.phoneNumber || this.currentUser.phoneNumber,
+          govtIdType: profile?.govtIdType || this.currentUser.govtIdType,
+          govtIdNumber: profile?.govtIdNumber || this.currentUser.govtIdNumber,
+          profileImageUrl:
+            profile?.profileImageUrl || this.currentUser.profileImageUrl,
+          profileCompletionPercentage:
+            profile?.profileCompletionPercentage ??
+            this.currentUser.profileCompletionPercentage,
+          isProfileComplete:
+            (profile?.profileCompletionPercentage ??
+              this.currentUser.profileCompletionPercentage) >= 100,
+          lastLogin: profile?.lastLogin || this.currentUser.lastLogin,
+        };
+        this.currentUser = updated;
+        this.authService.updateUserData(updated);
+
+        const resolved = this.apiService.resolveImageUrl(
+          updated.profileImageUrl || "",
+        );
+        this.profileImage = resolved
+          ? `${resolved}${resolved.includes("?") ? "&" : "?"}v=${this.profileImageVersion}`
+          : "";
+        this.profileImageVersion = Date.now();
+        this.profileCompletion = updated.profileCompletionPercentage || 0;
+        this.lastLogin = updated.lastLogin ? new Date(updated.lastLogin) : this.lastLogin;
+      },
+    });
   }
 }

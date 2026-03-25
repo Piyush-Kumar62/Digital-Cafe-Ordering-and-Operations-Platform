@@ -4,6 +4,8 @@ export interface User {
   email: string;
   firstName: string;
   lastName: string;
+  displayName?: string;
+  phoneNumber?: string;
   roles: string[];
   isEmailVerified: boolean;
   isProfileComplete: boolean;

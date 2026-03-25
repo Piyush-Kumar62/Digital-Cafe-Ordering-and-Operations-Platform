@@ -64,7 +64,15 @@ export class ApiService {
   }
 
   getCafeById(id: number): Observable<Cafe> {
-    return this.http.get<Cafe>(`${this.baseUrl}/cafes/${id}`);
+    return this.http
+      .get<any>(`${this.baseUrl}/cafes/${id}`)
+      .pipe(
+        map((res: any) =>
+          this.resolveCafeImages(
+            this.unwrapApiData<Cafe>(res, res as Cafe),
+          ),
+        ),
+      );
   }
 
   getActiveCafes(): Observable<Cafe[]> {
@@ -249,8 +257,38 @@ export class ApiService {
     return this.http.post<Cafe>(`${this.baseUrl}/cafes`, request);
   }
 
-  updateCafe(id: number, request: CreateCafeRequest): Observable<Cafe> {
-    return this.http.put<Cafe>(`${this.baseUrl}/cafes/${id}`, request);
+  updateCafe(id: number, request: any): Observable<Cafe> {
+    const payload = {
+      name: String(request?.name || "").trim(),
+      description: String(request?.description || "").trim(),
+      address: String(request?.address || "").trim(),
+      city: String(request?.city || "").trim(),
+      state: String(request?.state || "").trim(),
+      pincode: String(request?.pincode || request?.zipCode || "").trim(),
+      phoneNumber: String(request?.phoneNumber || "").trim(),
+      email: String(request?.email || "").trim(),
+      openTime: String(request?.openTime || request?.openingTime || "").trim(),
+      closeTime: String(request?.closeTime || request?.closingTime || "").trim(),
+      fssaiNumber: String(request?.fssaiNumber || "").trim(),
+      gstNumber: String(request?.gstNumber || "").trim(),
+      msmeNumber: String(request?.msmeNumber || "").trim(),
+    };
+
+    const formData = new FormData();
+    formData.append(
+      "data",
+      new Blob([JSON.stringify(payload)], { type: "application/json" }),
+    );
+
+    return this.http
+      .put<any>(`${this.baseUrl}/cafes/${id}`, formData)
+      .pipe(
+        map((res: any) =>
+          this.resolveCafeImages(
+            this.unwrapApiData<Cafe>(res, res as Cafe),
+          ),
+        ),
+      );
   }
 
   deleteCafe(id: number): Observable<MessageResponse> {
@@ -259,11 +297,15 @@ export class ApiService {
 
   private resolveCafeImages(cafe: any): Cafe {
     if (!cafe) return cafe;
+    const galleryImages = Array.isArray(cafe.galleryImages)
+      ? cafe.galleryImages.map((img: string) => this.resolveImageUrl(img)).filter(Boolean)
+      : [];
     return {
       ...cafe,
       logoUrl: this.resolveImageUrl(cafe.logoUrl),
       coverUrl: this.resolveImageUrl(cafe.coverUrl),
       imageUrl: this.resolveImageUrl(cafe.imageUrl || cafe.logoUrl),
+      galleryImages,
     };
   }
 
@@ -759,6 +801,7 @@ export class ApiService {
   getCustomerProfile(): Observable<{
     firstName?: string;
     lastName?: string;
+    email?: string;
     displayName?: string;
     phoneNumber?: string;
     dateOfBirth?: string;

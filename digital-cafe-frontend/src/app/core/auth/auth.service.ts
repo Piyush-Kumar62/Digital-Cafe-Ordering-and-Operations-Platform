@@ -104,6 +104,7 @@ export class AuthService {
   registerCafeOwner(
     request: CafeOwnerRegisterRequest,
     logo?: File,
+    galleryImages: File[] = [],
   ): Observable<AuthResponse> {
     const formData = new FormData();
     const dataBlob = new Blob([JSON.stringify(request)], {
@@ -113,6 +114,9 @@ export class AuthService {
     if (logo) {
       formData.append("logo", logo);
     }
+    galleryImages.forEach((file) => {
+      formData.append("galleryImages", file);
+    });
     return this.http
       .post<AuthResponse>(`${this.apiUrl}/register/cafe-owner`, formData)
       .pipe(catchError(this.handleError));
@@ -254,7 +258,19 @@ export class AuthService {
     if (error.error instanceof ErrorEvent) {
       errorMessage = error.error.message;
     } else {
-      errorMessage = error.error?.message || error.message || errorMessage;
+      const backendMessage = error.error?.message;
+      const validationErrors = error.error?.errors;
+
+      if (backendMessage) {
+        errorMessage = backendMessage;
+      } else if (validationErrors && typeof validationErrors === "object") {
+        const first = Object.values(validationErrors).find(
+          (value) => typeof value === "string" && value.trim().length > 0,
+        ) as string | undefined;
+        errorMessage = first || "Validation failed. Please check your inputs.";
+      } else {
+        errorMessage = error.message || errorMessage;
+      }
     }
 
     return throwError(() => new Error(errorMessage));

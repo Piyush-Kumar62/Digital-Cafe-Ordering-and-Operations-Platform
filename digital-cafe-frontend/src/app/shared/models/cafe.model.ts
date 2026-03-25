@@ -59,6 +59,7 @@ export interface PublicCafeCard {
   rating?: number;
   imageUrl?: string;
   logoUrl?: string;
+  galleryImages?: string[];
   city?: string;
   state?: string;
 }

@@ -1,0 +1,88 @@
+<div class="cookie-consent-overlay" *ngIf="isVisible" [@slideInOut]>
+  <div class="cookie-consent-card">
+    
+    <!-- Primary Consent View -->
+    <ng-container *ngIf="!showPreferences">
+      <div class="cookie-primary-layout">
+        <div class="cookie-consent-content">
+          <div class="cookie-icon-wrapper">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="cookie-icon"><path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5-5 4 4 0 0 1-5-5"/><path d="M8.5 8.5v.01"/><path d="M16 15.5v.01"/><path d="M12 12v.01"/><path d="M11 17v.01"/><path d="M7 14v.01"/></svg>
+          </div>
+          <div class="cookie-text-container">
+            <h3 class="cookie-title">We value your privacy</h3>
+          <p class="cookie-text">
+            We use essential cookies to make our application work seamlessly, including secure authentication and session management. With your consent, we may also use non-essential cookies to improve user experience and analyze website traffic.
+            <a class="cookie-policy-link" routerLink="/cookie-policy">Read Cookie Policy</a>
+          </p>
+          </div>
+        </div>
+        <div class="cookie-actions">
+          <button class="btn-settings" (click)="openSettings()">Cookie Settings</button>
+          <div class="cookie-primary-actions">
+            <button class="btn-reject" (click)="rejectNonEssential()">Reject Non-Essential</button>
+            <button class="btn-accept" (click)="acceptAll()">Accept All</button>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- Preferences Modal View -->
+    <ng-container *ngIf="showPreferences">
+      <div class="cookie-prefs-header">
+        <h3 class="cookie-title">Cookie Preferences</h3>
+        <button class="btn-close" (click)="closeSettings()" aria-label="Close settings">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+      
+      <div class="cookie-prefs-body">
+        <p class="cookie-text mb-4">Manage your preferences for the different types of cookies we use. Essential cookies cannot be disabled as they are required for basic site functionality.</p>
+        
+        <div class="pref-item">
+          <div class="pref-info">
+            <h4>Essential Cookies</h4>
+            <p>Required for secure authentication, session management, and CSRF protection.</p>
+          </div>
+          <div class="pref-toggle locked">
+            <span>Always Active</span>
+            <div class="toggle-track active disabled">
+              <div class="toggle-thumb"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="pref-item">
+          <div class="pref-info">
+            <h4>Analytics Cookies</h4>
+            <p>Help us understand how visitors interact with the platform by collecting anonymous metrics.</p>
+          </div>
+          <div class="pref-toggle" (click)="togglePreference('analytics')">
+            <span [class.text-active]="preferences.analytics">{{ preferences.analytics ? 'Active' : 'Disabled' }}</span>
+            <div class="toggle-track" [class.active]="preferences.analytics">
+              <div class="toggle-thumb"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="pref-item">
+          <div class="pref-info">
+            <h4>Marketing & Tracking</h4>
+            <p>Used to deliver personalized content and promotional campaigns tailored to your interests.</p>
+          </div>
+          <div class="pref-toggle" (click)="togglePreference('marketing')">
+            <span [class.text-active]="preferences.marketing">{{ preferences.marketing ? 'Active' : 'Disabled' }}</span>
+            <div class="toggle-track" [class.active]="preferences.marketing">
+              <div class="toggle-thumb"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="cookie-prefs-footer">
+        <button class="btn-reject" (click)="rejectNonEssential()">Reject All</button>
+        <button class="btn-accept" (click)="saveCustomPreferences()">Save Preferences</button>
+      </div>
+    </ng-container>
+
+  </div>
+</div>

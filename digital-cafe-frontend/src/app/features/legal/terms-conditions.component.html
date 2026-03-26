@@ -1,23 +1,47 @@
 <app-navbar></app-navbar>
-    <main class="legal-page">
-      <section class="legal-card">
-        <h1>Terms & Conditions</h1>
-        <p>
-          By using Digital Café, users agree to platform rules for role-based
-          access, secure authentication, and operational workflows.
-        </p>
-        <h2>Account & Access</h2>
+<main class="legal-page">
+  <section class="policy-card-section">
+    <div class="policy-header">
+      <span class="policy-badge" aria-hidden="true">📜</span>
+      <h2>Terms &amp; Conditions</h2>
+    </div>
+    <p class="policy-lead">
+      By using Digital Café, you agree to follow our platform rules and the
+      policies of participating cafés.
+    </p>
+    <div class="policy-grid">
+      <div class="policy-card">
+        <div class="card-head">
+          <span class="card-icon" aria-hidden="true">👤</span>
+          <h3>Account &amp; Access</h3>
+        </div>
         <ul>
-          <li>Customer self-registration is allowed through public form</li>
-          <li>Owner/Chef/Waiter accounts are provisioned via managed flow</li>
-          <li>Email verification and required profile completion are mandatory</li>
+          <li>Customer self-registration is available through the public flow</li>
+          <li>Owner, Chef, and Waiter accounts are provisioned via managed onboarding</li>
+          <li>Email verification and profile completion are mandatory</li>
         </ul>
-        <h2>Operational Usage</h2>
+      </div>
+      <div class="policy-card">
+        <div class="card-head">
+          <span class="card-icon" aria-hidden="true">⚙️</span>
+          <h3>Operational Usage</h3>
+        </div>
         <ul>
           <li>Bookings, orders, and status updates must follow workflow policy</li>
           <li>Unauthorized role actions are blocked by access controls</li>
-          <li>Payment and order records are retained for audit needs</li>
+          <li>Payments and records are retained for audit needs</li>
         </ul>
-      </section>
-    </main>
-    <app-footer></app-footer>
+      </div>
+      <div class="policy-card">
+        <div class="card-head">
+          <span class="card-icon" aria-hidden="true">💳</span>
+          <h3>Payments &amp; Refunds</h3>
+        </div>
+        <p>
+          Refunds follow café-specific cancellation rules and the platform refund policy.
+        </p>
+      </div>
+    </div>
+  </section>
+</main>
+<app-footer></app-footer>

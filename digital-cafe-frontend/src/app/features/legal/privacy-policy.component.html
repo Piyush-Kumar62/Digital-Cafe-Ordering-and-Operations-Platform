@@ -1,23 +1,80 @@
 <app-navbar></app-navbar>
-    <main class="legal-page">
-      <section class="legal-card">
-        <h1>Privacy Policy</h1>
-        <p>
-          Digital Café protects user information through secure access controls,
-          encrypted communication, and role-based authorization.
-        </p>
-        <h2>What We Store</h2>
-        <ul>
-          <li>Account and profile information required for platform operation</li>
-          <li>Booking, order, and payment transaction references</li>
-          <li>Operational logs for security and audit visibility</li>
-        </ul>
-        <h2>How We Use Data</h2>
-        <ul>
-          <li>To provide booking, ordering, and role-based workflow features</li>
-          <li>To enforce security rules (verification and profile checks)</li>
-          <li>To improve reliability, reporting, and customer experience</li>
-        </ul>
-      </section>
-    </main>
-    <app-footer></app-footer>
+<main class="legal-page">
+  <section class="policy-card-section">
+      <div class="policy-header">
+        <span class="policy-badge" aria-hidden="true">🔒</span>
+        <h2>Cookie Policy</h2>
+      </div>
+      <p class="policy-lead">
+        We use cookies to keep your account secure, remember your preferences,
+        and improve your experience. This policy explains what we use and why.
+      </p>
+
+      <div class="policy-grid">
+        <div class="policy-card">
+          <div class="card-head">
+            <span class="card-icon" aria-hidden="true">🔐</span>
+            <h3>Essential Cookies</h3>
+          </div>
+          <p>
+            Required for login, session management, CSRF protection, and secure
+            access to your dashboard. These cannot be disabled.
+          </p>
+        </div>
+        <div class="policy-card">
+          <div class="card-head">
+            <span class="card-icon" aria-hidden="true">📊</span>
+            <h3>Analytics Cookies</h3>
+          </div>
+          <p>
+            Help us understand traffic patterns and product usage. We only store
+            aggregated, non-personal insights.
+          </p>
+        </div>
+        <div class="policy-card">
+          <div class="card-head">
+            <span class="card-icon" aria-hidden="true">🎯</span>
+            <h3>Marketing &amp; Tracking</h3>
+          </div>
+          <p>
+            Used to personalize campaigns and measure performance. These are
+            optional and only enabled with your consent.
+          </p>
+        </div>
+      </div>
+
+      <div class="policy-list">
+        <div class="policy-item">
+          <div class="card-head">
+            <span class="card-icon" aria-hidden="true">⚙️</span>
+            <strong>How to manage consent</strong>
+          </div>
+          <span>
+            You can update preferences anytime in Cookie Settings at the bottom
+            of the site.
+          </span>
+        </div>
+        <div class="policy-item">
+          <div class="card-head">
+            <span class="card-icon" aria-hidden="true">🗄️</span>
+            <strong>Data retention</strong>
+          </div>
+          <span>
+            Cookies expire automatically after a defined period or when you clear
+            your browser data.
+          </span>
+        </div>
+        <div class="policy-item">
+          <div class="card-head">
+            <span class="card-icon" aria-hidden="true">✉️</span>
+            <strong>Contact</strong>
+          </div>
+          <span>
+            For privacy questions, email
+            <a href="mailto:privacy@digitalcafe.com">privacy@digitalcafe.com</a>.
+          </span>
+        </div>
+      </div>
+  </section>
+</main>
+<app-footer></app-footer>

@@ -31,6 +31,27 @@ export const routes: Routes = [
       ),
   },
   {
+    path: "cookie-policy",
+    loadComponent: () =>
+      import("./features/legal/cookie-policy.component").then(
+        (m) => m.CookiePolicyComponent,
+      ),
+  },
+  {
+    path: "refund-policy",
+    loadComponent: () =>
+      import("./features/legal/refund-policy.component").then(
+        (m) => m.RefundPolicyComponent,
+      ),
+  },
+  {
+    path: "data-deletion",
+    loadComponent: () =>
+      import("./features/legal/data-deletion.component").then(
+        (m) => m.DataDeletionComponent,
+      ),
+  },
+  {
     path: "terms",
     loadComponent: () =>
       import("./features/legal/terms-conditions.component").then(

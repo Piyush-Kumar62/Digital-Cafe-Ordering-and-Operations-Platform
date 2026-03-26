@@ -1,6 +1,7 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Router, RouterOutlet } from '@angular/router';
 import { LoadingComponent } from './shared/components/loading/loading.component';
+import { CookieConsentComponent } from './shared/components/cookie-consent/cookie-consent.component';
 import { WebSocketService } from './core/websocket/websocket.service';
 import { AuthService } from './core/auth/auth.service';
 import { ThemeService } from './core/services/theme.service';
@@ -8,7 +9,7 @@ import { ThemeService } from './core/services/theme.service';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, LoadingComponent],
+  imports: [RouterOutlet, LoadingComponent, CookieConsentComponent],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],
 })

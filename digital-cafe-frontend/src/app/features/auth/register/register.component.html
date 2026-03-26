@@ -130,6 +130,7 @@
                   [formControl]="usernameControl"
                   (blur)="usernameControl.markAsTouched()"
                   placeholder="Enter username"
+                  spellcheck="false"
                   required
                 />
               </div>
@@ -253,11 +254,15 @@
                   class="form-control"
                   id="firstName"
                   [(ngModel)]="personalDetails.firstName"
+                  (ngModelChange)="errorMessage = ''"
                   name="firstName"
+                  #firstNameCtrl="ngModel"
                   placeholder="Enter first name"
+                  spellcheck="false"
                   required
                 />
               </div>
+              <small *ngIf="firstNameCtrl.invalid && firstNameCtrl.touched" class="text-red-300 text-xs mt-1 block">First name is required</small>
             </div>
             <div>
               <label for="lastName" class="form-label">Last Name *</label>
@@ -269,11 +274,15 @@
                   class="form-control"
                   id="lastName"
                   [(ngModel)]="personalDetails.lastName"
+                  (ngModelChange)="errorMessage = ''"
                   name="lastName"
+                  #lastNameCtrl="ngModel"
                   placeholder="Enter last name"
+                  spellcheck="false"
                   required
                 />
               </div>
+              <small *ngIf="lastNameCtrl.invalid && lastNameCtrl.touched" class="text-red-300 text-xs mt-1 block">Last name is required</small>
             </div>
             <div>
               <label for="email" class="form-label">Email Address *</label>
@@ -285,11 +294,16 @@
                   class="form-control"
                   id="email"
                   [(ngModel)]="personalDetails.email"
+                  (ngModelChange)="errorMessage = ''"
                   name="email"
+                  #emailCtrl="ngModel"
+                  pattern="^[^\s@]+@[^\s@]+\.[^\s@]+$"
                   placeholder="Enter email address"
+                  spellcheck="false"
                   required
                 />
               </div>
+              <small *ngIf="emailCtrl.invalid && emailCtrl.touched" class="text-red-300 text-xs mt-1 block">Please enter a valid email address</small>
             </div>
             <div>
               <label for="phone" class="form-label">Phone Number *</label>
@@ -302,13 +316,17 @@
                   class="form-control"
                   id="phone"
                   [(ngModel)]="personalDetails.phone"
+                  (ngModelChange)="errorMessage = ''"
                   name="phone"
+                  #phoneCtrl="ngModel"
+                  pattern="^[0-9]{10}$"
                   placeholder="10-digit mobile number"
                   maxlength="10"
                   inputmode="numeric"
                   required
                 />
               </div>
+              <small *ngIf="phoneCtrl.invalid && phoneCtrl.touched" class="text-red-300 text-xs mt-1 block">Please enter a valid 10-digit mobile number</small>
             </div>
             <div>
               <label for="dateOfBirth" class="form-label"
@@ -322,10 +340,13 @@
                   class="form-control"
                   id="dateOfBirth"
                   [(ngModel)]="personalDetails.dateOfBirth"
+                  (ngModelChange)="errorMessage = ''"
                   name="dateOfBirth"
+                  #dobCtrl="ngModel"
                   required
                 />
               </div>
+              <small *ngIf="dobCtrl.invalid && dobCtrl.touched" class="text-red-300 text-xs mt-1 block">Date of birth is required</small>
             </div>
             <div>
               <label for="gender" class="form-label">Gender *</label>
@@ -336,7 +357,9 @@
                   class="form-control"
                   id="gender"
                   [(ngModel)]="personalDetails.gender"
+                  (ngModelChange)="errorMessage = ''"
                   name="gender"
+                  #genderCtrl="ngModel"
                   required
                 >
                   <option value="" disabled>Select gender</option>
@@ -348,6 +371,7 @@
                   </option>
                 </select>
               </div>
+              <small *ngIf="genderCtrl.invalid && genderCtrl.touched" class="text-red-300 text-xs mt-1 block">Gender is required</small>
             </div>
             <div>
               <label for="maritalStatus" class="form-label"
@@ -359,6 +383,7 @@
                   class="form-control"
                   id="maritalStatus"
                   [(ngModel)]="personalDetails.maritalStatus"
+                  (ngModelChange)="errorMessage = ''"
                   name="maritalStatus"
                 >
                   <option
@@ -851,11 +876,15 @@
                     class="form-control"
                     id="ownerFirstName"
                     [(ngModel)]="ownerInfo.firstName"
+                    (ngModelChange)="errorMessage = ''"
                     name="ownerFirstName"
+                    #ownerFirstNameCtrl="ngModel"
                     placeholder="Enter first name"
+                    spellcheck="false"
                     required
                   />
                 </div>
+                <small *ngIf="ownerFirstNameCtrl.invalid && ownerFirstNameCtrl.touched" class="text-red-300 text-xs mt-1 block">First name is required</small>
               </div>
               <div>
                 <label for="ownerLastName" class="form-label"
@@ -870,11 +899,15 @@
                     class="form-control"
                     id="ownerLastName"
                     [(ngModel)]="ownerInfo.lastName"
+                    (ngModelChange)="errorMessage = ''"
                     name="ownerLastName"
+                    #ownerLastNameCtrl="ngModel"
                     placeholder="Enter last name"
+                    spellcheck="false"
                     required
                   />
                 </div>
+                <small *ngIf="ownerLastNameCtrl.invalid && ownerLastNameCtrl.touched" class="text-red-300 text-xs mt-1 block">Last name is required</small>
               </div>
               <div class="col-span-1 md:col-span-2">
                 <label for="ownerEmail" class="form-label"
@@ -889,11 +922,16 @@
                     class="form-control"
                     id="ownerEmail"
                     [(ngModel)]="ownerInfo.email"
+                    (ngModelChange)="errorMessage = ''"
                     name="ownerEmail"
+                    #ownerEmailCtrl="ngModel"
+                    pattern="^[^\s@]+@[^\s@]+\.[^\s@]+$"
                     placeholder="Enter your email address"
+                    spellcheck="false"
                     required
                   />
                 </div>
+                <small *ngIf="ownerEmailCtrl.invalid && ownerEmailCtrl.touched" class="text-red-300 text-xs mt-1 block">Please enter a valid email address</small>
               </div>
               <div class="col-span-1 md:col-span-2">
                 <label for="ownerPhoneNumber" class="form-label"
@@ -909,13 +947,16 @@
                     class="form-control"
                     id="ownerPhoneNumber"
                     [(ngModel)]="ownerInfo.ownerPhoneNumber"
-                    (ngModelChange)="onOwnerPhoneInput($event)"
+                    (ngModelChange)="onOwnerPhoneInput($event); errorMessage = ''"
                     name="ownerPhoneNumber"
+                    #ownerPhoneCtrl="ngModel"
+                    pattern="^[0-9]{10}$"
                     placeholder="10-digit mobile number"
                     maxlength="10"
                     inputmode="numeric"
                   />
                 </div>
+                <small *ngIf="ownerPhoneCtrl.invalid && ownerPhoneCtrl.touched" class="text-red-300 text-xs mt-1 block">Please enter a valid 10-digit mobile number</small>
               </div>
             </div>
           </div>

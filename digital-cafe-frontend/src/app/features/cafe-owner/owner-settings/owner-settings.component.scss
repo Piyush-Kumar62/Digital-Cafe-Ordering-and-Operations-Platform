@@ -580,6 +580,61 @@ $s-input-border: #cbd5e1;
   gap: 0.75rem;
 }
 
+.logout-action {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: 12px;
+  border: 1px solid rgba(239, 68, 68, 0.28);
+  background: rgba(254, 242, 242, 0.9);
+  color: #b91c1c;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease,
+    background 0.2s ease;
+
+  &:hover {
+    transform: translateY(-1px);
+    border-color: rgba(239, 68, 68, 0.45);
+    background: rgba(254, 226, 226, 0.95);
+    box-shadow: 0 12px 24px rgba(239, 68, 68, 0.18);
+  }
+}
+
+.logout-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(239, 68, 68, 0.18);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.05rem;
+}
+
+.logout-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  gap: 0.1rem;
+}
+
+.logout-title {
+  font-size: 0.95rem;
+}
+
+.logout-subtitle {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: rgba(185, 28, 28, 0.8);
+}
+
 // ===== BUTTONS =====
 .btn-primary {
   padding: 0.6rem 1.4rem;
@@ -911,6 +966,27 @@ $s-input-border: #cbd5e1;
     &:hover {
       background: rgba(239, 68, 68, 0.22);
     }
+  }
+
+  .logout-action {
+    background: rgba(127, 29, 29, 0.25);
+    border-color: rgba(248, 113, 113, 0.3);
+    color: #fca5a5;
+
+    &:hover {
+      background: rgba(127, 29, 29, 0.38);
+      border-color: rgba(248, 113, 113, 0.45);
+      box-shadow: 0 12px 24px rgba(248, 113, 113, 0.2);
+    }
+  }
+
+  .logout-icon {
+    background: rgba(248, 113, 113, 0.18);
+    color: #fee2e2;
+  }
+
+  .logout-subtitle {
+    color: rgba(254, 226, 226, 0.7);
   }
 }
 

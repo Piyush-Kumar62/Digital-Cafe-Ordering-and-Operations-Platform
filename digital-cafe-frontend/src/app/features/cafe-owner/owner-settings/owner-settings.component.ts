@@ -200,8 +200,14 @@ export class OwnerSettingsComponent implements OnInit, OnDestroy {
     });
   }
 
-  logout(): void {
+  async logout(): Promise<void> {
+    const ok = await this.alertService.confirm(
+      "Confirm logout",
+      "Are you sure you want to log out?",
+    );
+    if (!ok) return;
     this.authService.logout();
+    this.alertService.success("Logged out", "You have been signed out successfully.");
     this.router.navigate(["/auth/login"]);
   }
 

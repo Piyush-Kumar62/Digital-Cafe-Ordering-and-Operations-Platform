@@ -208,17 +208,20 @@
   line-height: 1.2;
 }
 
-/* Branch dropdown should keep every option on a single line */
+/* Branch dropdown should allow long options to wrap to multiple lines */
 ::ng-deep .academic-branch-panel .mat-mdc-option {
-  min-height: 40px;
-  line-height: 1.2;
+  min-height: 48px;
+  height: auto;
+  line-height: 1.4;
+  padding-top: 8px;
+  padding-bottom: 8px;
 }
 
 ::ng-deep .academic-branch-panel .mdc-list-item__primary-text,
 ::ng-deep .academic-branch-panel .mat-mdc-option .mat-mdc-option-text {
-  white-space: nowrap !important;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal !important;
+  overflow: visible;
+  text-overflow: clip;
   display: block;
   color: #f8fafc !important;
 }

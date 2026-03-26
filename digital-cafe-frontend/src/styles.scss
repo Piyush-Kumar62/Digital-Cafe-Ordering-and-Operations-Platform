@@ -258,6 +258,19 @@ html.dark-mode .border-slate-200 {
   @apply bg-red-100 text-red-800;
 }
 
+/* Global inline field warnings injected by validation manager */
+.dc-inline-warning {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.75rem;
+  line-height: 1.2;
+  color: #fca5a5;
+}
+
+.dc-invalid-field {
+  border-color: #f87171 !important;
+}
+
 .badge-warning {
   @apply bg-yellow-100 text-yellow-800;
 }

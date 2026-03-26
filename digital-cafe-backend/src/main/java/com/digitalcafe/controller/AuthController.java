@@ -16,6 +16,9 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import com.digitalcafe.security.CookieUtil;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -29,10 +32,15 @@ import java.util.Map;
 public class AuthController {
 
     private final AuthService authService;
+    private final CookieUtil cookieUtil;
 
     @PostMapping("/simple-register")
-    public ResponseEntity<AuthResponse> simpleRegister(@Valid @RequestBody SimpleRegisterRequest request) {
+    public ResponseEntity<AuthResponse> simpleRegister(@Valid @RequestBody SimpleRegisterRequest request, HttpServletResponse servletResponse) {
         AuthResponse response = authService.register(request);
+        if (response.getRefreshToken() != null) {
+            HttpHeaders headers = cookieUtil.createRefreshTokenCookie(response.getRefreshToken());
+            headers.forEach((key, values) -> values.forEach(value -> servletResponse.addHeader(key, value)));
+        }
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -51,15 +59,24 @@ public class AuthController {
     public ResponseEntity<AuthResponse> registerCafeOwner(
             @Valid @RequestPart("data") CafeOwnerRegisterRequest request,
             @RequestPart(value = "logo", required = false) MultipartFile logo,
-            @RequestPart(value = "galleryImages", required = false) MultipartFile[] galleryImages) {
+            @RequestPart(value = "galleryImages", required = false) MultipartFile[] galleryImages,
+            HttpServletResponse servletResponse) {
         List<MultipartFile> images = galleryImages == null ? List.of() : Arrays.asList(galleryImages);
         AuthResponse response = authService.registerCafeOwner(request, logo, images);
+        if (response.getRefreshToken() != null) {
+            HttpHeaders headers = cookieUtil.createRefreshTokenCookie(response.getRefreshToken());
+            headers.forEach((key, values) -> values.forEach(value -> servletResponse.addHeader(key, value)));
+        }
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request, HttpServletResponse servletResponse) {
         AuthResponse response = authService.login(request);
+        if (response.getRefreshToken() != null) {
+            HttpHeaders headers = cookieUtil.createRefreshTokenCookie(response.getRefreshToken());
+            headers.forEach((key, values) -> values.forEach(value -> servletResponse.addHeader(key, value)));
+        }
         return ResponseEntity.ok(response);
     }
 
@@ -98,8 +115,14 @@ public class AuthController {
     }
 
     @PostMapping("/refresh-token")
-    public ResponseEntity<AuthResponse> refreshToken(@RequestParam String refreshToken) {
+    public ResponseEntity<AuthResponse> refreshToken(
+            @CookieValue(name = "refreshToken") String refreshToken, 
+            HttpServletResponse servletResponse) {
         AuthResponse response = authService.refreshToken(refreshToken);
+        if (response.getRefreshToken() != null) {
+            HttpHeaders headers = cookieUtil.createRefreshTokenCookie(response.getRefreshToken());
+            headers.forEach((key, values) -> values.forEach(value -> servletResponse.addHeader(key, value)));
+        }
         return ResponseEntity.ok(response);
     }
 
@@ -110,8 +133,10 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<Map<String, String>> logout() {
+    public ResponseEntity<Map<String, String>> logout(HttpServletResponse servletResponse) {
         SecurityContextHolder.clearContext();
+        HttpHeaders headers = cookieUtil.clearRefreshTokenCookie();
+        headers.forEach((key, values) -> values.forEach(value -> servletResponse.addHeader(key, value)));
         return ResponseEntity.ok(Map.of("message", "Logged out successfully"));
     }
 }

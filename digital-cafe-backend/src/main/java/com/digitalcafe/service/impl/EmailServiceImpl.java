@@ -18,6 +18,7 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.core.io.ClassPathResource;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 
@@ -61,6 +62,9 @@ public class EmailServiceImpl implements EmailService {
     @Value("${MAIL_ENABLED:true}")
     private boolean emailEnabled;
 
+    @Value("${MAIL_SKIP_ADMIN:false}")
+    private boolean skipAdminRecipients;
+
     @Value("${EMAIL_FROM_NAME:Digital Cafe Team}")
     private String fromName;
 
@@ -91,6 +95,14 @@ public class EmailServiceImpl implements EmailService {
         } else {
             log.info("[Email] ✅ Ready — from=\"{}\" <{}>, smtp={}:{}, username={}",
                     fromName, fromEmail, smtpHost, smtpPort, smtpUsername);
+        }
+
+        // Warn if any email template is missing from the classpath
+        for (EmailTemplateType type : EmailTemplateType.values()) {
+            String path = "templates/email/" + type.getTemplateName() + ".html";
+            if (!new ClassPathResource(path).exists()) {
+                log.warn("[Email] ⚠️  Missing template: {} (for {})", path, type);
+            }
         }
     }
 
@@ -323,7 +335,7 @@ public class EmailServiceImpl implements EmailService {
             Map<String, Object> variables,
             List<EmailAttachment> attachments) {
 
-        if (isAdminRecipient(to)) {
+        if (skipAdminRecipients && isAdminRecipient(to)) {
             log.info("[Email] SKIP (admin recipient) {} -> {}", templateType, to);
             return;
         }
@@ -479,7 +491,39 @@ public class EmailServiceImpl implements EmailService {
 
     private String processTemplate(EmailTemplateType templateType, Map<String, Object> variables) {
         Context context = new Context(Locale.ENGLISH, variables);
-        return templateEngine.process(templateType.getTemplateName(), context);
+        try {
+            return templateEngine.process(templateType.getTemplateName(), context);
+        } catch (Exception ex) {
+            // Fallback for template path mismatches or missing resources
+            try {
+                return templateEngine.process("email/" + templateType.getTemplateName(), context);
+            } catch (Exception ignored) {
+                log.warn("[Email] Template missing for {}. Sending fallback content.", templateType);
+                return buildFallbackEmail(templateType, variables);
+            }
+        }
+    }
+
+    private String buildFallbackEmail(EmailTemplateType templateType, Map<String, Object> variables) {
+        String username = String.valueOf(variables.getOrDefault("username", "there"));
+        String loginUrl = String.valueOf(variables.getOrDefault("loginUrl", frontendUrl + "/auth/login"));
+        String support = String.valueOf(variables.getOrDefault("supportUrl", supportUrl));
+        return """
+                <!DOCTYPE html>
+                <html lang="en">
+                <head>
+                  <meta charset="UTF-8">
+                  <title>Digital Cafe Notification</title>
+                </head>
+                <body style="font-family: Arial, sans-serif; color:#1f2937;">
+                  <h2 style="margin:0 0 8px 0;">Hello %s,</h2>
+                  <p>We couldn’t load the full email template for %s, but here’s the important info.</p>
+                  <p>You can log in here: <a href="%s">%s</a></p>
+                  <p>If you need help, contact us: <a href="%s">%s</a></p>
+                  <p style="margin-top:16px;">— Digital Cafe Team</p>
+                </body>
+                </html>
+                """.formatted(username, templateType.name(), loginUrl, loginUrl, support, support);
     }
 
     /** Strips HTML tags and entities to produce a plain-text fallback body for multipart emails. */

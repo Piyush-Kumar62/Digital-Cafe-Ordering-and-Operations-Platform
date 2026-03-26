@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.util.List;
 
@@ -17,6 +18,7 @@ import java.util.List;
 public class AuthResponse {
 
     private String token;
+    @JsonIgnore
     private String refreshToken;
     @Builder.Default
     private String tokenType = "Bearer";

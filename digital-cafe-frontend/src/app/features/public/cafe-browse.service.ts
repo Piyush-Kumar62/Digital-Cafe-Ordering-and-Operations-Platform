@@ -40,6 +40,8 @@ export class CafeBrowseService {
     if (!src) return "";
     // Already a full URL (http, https, data:)
     if (/^(https?:\/\/|data:)/.test(src)) return src;
+    // Absolute filesystem path (Windows drive letter or UNC path) — discard
+    if (/^[A-Za-z]:[/\\]/.test(src) || src.startsWith("\\\\")) return "";
     // Backend can return frontend-served static paths with a leading slash.
     if (src.startsWith("/assets/")) {
       return src.replace(/^\/+/, "");
@@ -50,8 +52,24 @@ export class CafeBrowseService {
     }
     // Relative path starting with / — prefix with backend origin
     if (src.startsWith("/")) return `${this.backendBase}${src}`;
-    // Absolute filesystem path (contains \ or Windows drive letter) — discard
+    // Backend-relative uploads path without leading slash.
+    if (src.startsWith("uploads/")) return `${this.backendBase}/${src}`;
+    // Keep relative asset path values untouched.
+    if (src.startsWith("./assets/") || src.startsWith("../assets/")) {
+      return src;
+    }
+    // Unknown relative path — keep as-is.
     return src;
+  }
+
+  private toLocation(city: any, state: any, fallback?: any): string {
+    if (typeof fallback === "string" && fallback.trim()) {
+      return fallback.trim();
+    }
+    return [city, state]
+      .map((part) => String(part || "").trim())
+      .filter(Boolean)
+      .join(", ");
   }
 
   getPublicCafes(
@@ -80,6 +98,11 @@ export class CafeBrowseService {
               rating: Number(item.rating || 0),
               imageUrl: this.resolveImageUrl(item.imageUrl || item.logoUrl),
               logoUrl: this.resolveImageUrl(item.logoUrl || item.imageUrl),
+              galleryImages: Array.isArray(item.galleryImages)
+                ? item.galleryImages
+                    .map((img: string) => this.resolveImageUrl(img))
+                    .filter(Boolean)
+                : [],
             })),
             pageNumber: Number(payload?.pageNumber ?? page),
             pageSize: Number(payload?.pageSize ?? size),
@@ -95,28 +118,65 @@ export class CafeBrowseService {
       .get<ApiResponse<any>>(`${this.apiUrl}/public/cafes/${cafeId}`)
       .pipe(
         map((res) => {
-          const data = res?.data || {};
+          const payload = res?.data || {};
+          const data = payload?.cafeDetails || payload;
+          const galleryRaw = Array.isArray(data?.galleryImages)
+            ? data.galleryImages
+            : Array.isArray(payload?.galleryImages)
+              ? payload.galleryImages
+              : [];
+          const galleryImages = galleryRaw
+            .map((img: string) => this.resolveImageUrl(img))
+            .filter(Boolean);
+
+          const openTime =
+            data?.openTime || data?.openingTime || payload?.openTime || "";
+          const closeTime =
+            data?.closeTime || data?.closingTime || payload?.closeTime || "";
+
+          const menuItemsRaw = Array.isArray(payload?.menuItems)
+            ? payload.menuItems
+            : Array.isArray(payload?.items)
+              ? payload.items
+              : [];
+
           return {
             cafeDetails: {
-              id: data.id,
-              name: data.name || "",
-              location: [data.city, data.state].filter(Boolean).join(", "),
-              description: data.description || "",
-              openTime: data.openTime || "",
-              closeTime: data.closeTime || "",
-              rating: Number(data.rating || 0),
-              imageUrl: this.resolveImageUrl(
-                data.coverUrl || data.logoUrl || data.imageUrl,
+              id: Number(data?.id ?? payload?.id ?? cafeId),
+              name: String(data?.name || payload?.name || ""),
+              location: this.toLocation(
+                data?.city ?? payload?.city,
+                data?.state ?? payload?.state,
+                data?.location ?? payload?.location,
               ),
+              description: String(
+                data?.description || payload?.description || "",
+              ),
+              openTime,
+              closeTime,
+              rating: Number(data?.rating ?? payload?.rating ?? 0),
+              imageUrl: this.resolveImageUrl(
+                data?.coverUrl ||
+                  payload?.coverUrl ||
+                  data?.imageUrl ||
+                  payload?.imageUrl ||
+                  galleryRaw[0] ||
+                  data?.logoUrl ||
+                  payload?.logoUrl,
+              ),
+              logoUrl: this.resolveImageUrl(
+                data?.logoUrl || payload?.logoUrl || data?.imageUrl,
+              ),
+              galleryImages,
             },
-            menuItems: (data.menuItems || []).map((item: any) => ({
+            menuItems: menuItemsRaw.map((item: any) => ({
               id: item.id,
               name: item.name || "",
               description: item.description || "",
               category: item.category || "OTHER",
               price: Number(item.price || 0),
               imageUrl: this.resolveImageUrl(item.imageUrl),
-              available: !!item.available,
+              available: item.available ?? item.isAvailable ?? true,
             })),
           } as PublicCafeDetail;
         }),

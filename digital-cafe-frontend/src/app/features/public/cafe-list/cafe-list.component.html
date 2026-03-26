@@ -113,13 +113,17 @@
         <!-- Image -->
         <div class="cafe-card-img-wrap">
           <img
-            [src]="cafe.imageUrl || 'assets/cafe/cafe-interior-pexels-01.jpg'"
+            *ngIf="cafe.logoUrl || cafe.imageUrl"
+            [src]="cafe.logoUrl || cafe.imageUrl"
             [alt]="cafe.name"
             class="cafe-card-img"
             [attr.loading]="i < 2 ? 'eager' : 'lazy'"
-            onerror="this.src = 'assets/cafe/cafe-interior-pexels-01.jpg'"
+            onerror="this.style.display = 'none'"
           />
-          <div class="cafe-card-img-overlay"></div>
+          <div
+            class="cafe-card-img-overlay"
+            *ngIf="cafe.logoUrl || cafe.imageUrl"
+          ></div>
           <!-- Rating badge: only show when a real rating exists -->
           <span class="cafe-rating" *ngIf="cafe.rating && cafe.rating > 0">
             <i class="bi bi-star-fill"></i>
@@ -157,10 +161,16 @@
               </ng-container>
             </span>
             <div class="cafe-card-actions">
-              <button class="cafe-card-btn cafe-card-btn--secondary" (click)="viewMenu(cafe.id, $event)">
+              <button
+                class="cafe-card-btn cafe-card-btn--secondary"
+                (click)="viewMenu(cafe.id, $event)"
+              >
                 View Menu
               </button>
-              <button class="cafe-card-btn cafe-card-btn--primary" (click)="bookTable(cafe.id, $event)">
+              <button
+                class="cafe-card-btn cafe-card-btn--primary"
+                (click)="bookTable(cafe.id, $event)"
+              >
                 Book Table
               </button>
             </div>
@@ -182,7 +192,8 @@
           [disabled]="pageIndex === 0"
           (click)="goToPage(pageIndex - 1)"
         >
-          ← Prev</button>
+          ← Prev
+        </button>
         <button
           class="page-btn"
           *ngFor="let p of allPages"
@@ -196,7 +207,8 @@
           [disabled]="pageIndex >= totalPages - 1"
           (click)="goToPage(pageIndex + 1)"
         >
-          Next →</button>
+          Next →
+        </button>
       </div>
     </div>
   </section>

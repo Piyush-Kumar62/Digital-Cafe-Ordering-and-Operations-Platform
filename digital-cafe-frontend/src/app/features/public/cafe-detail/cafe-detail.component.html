@@ -1,22 +1,124 @@
 <section class="detail-page" *ngIf="!loading && cafe as data">
-  <header class="banner">
-    <img
-      [src]="
+  <section class="cafe-overview-card">
+    <section class="cafe-identity-card">
+      <div class="identity-main">
+        <div class="identity-text">
+          <h1>{{ data.cafeDetails.name || "Cafe" }}</h1>
+          <p class="category-line" *ngIf="getTopCategories().length">
+            {{ getTopCategories().join(", ") }}
+          </p>
+          <p class="location" *ngIf="data.cafeDetails.location">
+            {{ data.cafeDetails.location }}
+          </p>
+          <p class="desc" *ngIf="data.cafeDetails.description">
+            {{ data.cafeDetails.description }}
+          </p>
+          <div class="meta-row">
+            <span
+              class="status-chip"
+              [class.status-chip--closed]="!isCafeOpenNow()"
+            >
+              {{ isCafeOpenNow() ? "Open now" : "Closed now" }}
+            </span>
+            <span class="timing-text">
+              {{ fmt12h(data.cafeDetails.openTime) || "Hours TBD" }}
+              <ng-container *ngIf="fmt12h(data.cafeDetails.closeTime)">
+                – {{ fmt12h(data.cafeDetails.closeTime) }}
+              </ng-container>
+            </span>
+          </div>
+
+          <div class="action-row">
+            <button type="button" class="action-btn" (click)="openDirections()">
+              <i class="bi bi-geo-alt"></i>
+              Direction
+            </button>
+            <button type="button" class="action-btn" (click)="shareCafe()">
+              <i class="bi bi-share"></i>
+              Share
+            </button>
+            <button
+              type="button"
+              class="action-btn action-btn--primary"
+              (click)="goToBooking()"
+            >
+              <i class="bi bi-calendar2-check"></i>
+              Book a table
+            </button>
+          </div>
+        </div>
+
+        <div class="rating-cards">
+          <div class="rating-card">
+            <span class="rating-pill">{{
+              data.cafeDetails.rating || 0 | number: "1.1-1"
+            }}</span>
+            <span class="rating-label">Dining Rating</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <header
+      class="cafe-gallery-header"
+      *ngIf="
         data.cafeDetails.imageUrl ||
-        'assets/downloads/unsplash/cafe-detail-hero.jpg'
+        data.cafeDetails.logoUrl ||
+        galleryImages.length
       "
-      [alt]="data.cafeDetails.name"
-    />
-    <div class="overlay">
-      <p class="location">{{ data.cafeDetails.location }}</p>
-      <h1>{{ data.cafeDetails.name }}</h1>
-      <p class="meta">
-        ★ {{ data.cafeDetails.rating || 0 | number: "1.1-1" }} ·
-        {{ fmt12h(data.cafeDetails.openTime) || "Hours TBD" }} –
-        {{ fmt12h(data.cafeDetails.closeTime) }}
-      </p>
-    </div>
-  </header>
+      [class.has-gallery]="data.cafeDetails.galleryImages?.length"
+    >
+      <div class="main-image">
+        <img
+          [src]="
+            data.cafeDetails.imageUrl ||
+            data.cafeDetails.logoUrl ||
+            galleryImages[0]
+          "
+          [alt]="data.cafeDetails.name"
+          (error)="onImageError($event)"
+        />
+      </div>
+
+      <div class="gallery-center">
+        <img
+          [src]="
+            galleryImages[0] ||
+            data.cafeDetails.imageUrl ||
+            data.cafeDetails.logoUrl
+          "
+          [alt]="data.cafeDetails.name + ' gallery image 1'"
+          (error)="onImageError($event)"
+        />
+        <img
+          [src]="
+            galleryImages[1] ||
+            galleryImages[0] ||
+            data.cafeDetails.imageUrl ||
+            data.cafeDetails.logoUrl
+          "
+          [alt]="data.cafeDetails.name + ' gallery image 2'"
+          (error)="onImageError($event)"
+        />
+      </div>
+
+      <div class="gallery-right" (click)="openGallery()">
+        <img
+          [src]="
+            galleryImages[2] ||
+            galleryImages[0] ||
+            data.cafeDetails.imageUrl ||
+            data.cafeDetails.logoUrl
+          "
+          [alt]="data.cafeDetails.name + ' gallery image 3'"
+          (error)="onImageError($event)"
+        />
+        <div class="view-gallery-overlay">
+          <span>View Gallery</span>
+        </div>
+      </div>
+    </header>
+  </section>
 
   <section class="controls" id="booking">
     <div class="booking-header">
@@ -132,7 +234,10 @@
         <h3>Select Slot</h3>
         <span>{{ selectedMealPeriod | titlecase }}</span>
       </div>
-      <div class="slot-chip-row" *ngIf="slotOptions.length > 0; else noSlotBlock">
+      <div
+        class="slot-chip-row"
+        *ngIf="slotOptions.length > 0; else noSlotBlock"
+      >
         <button
           type="button"
           class="slot-chip"
@@ -162,7 +267,10 @@
         (click)="showSpecialRequests = !showSpecialRequests"
       >
         <span>Special Requests (Optional)</span>
-        <i class="bi" [ngClass]="showSpecialRequests ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+        <i
+          class="bi"
+          [ngClass]="showSpecialRequests ? 'bi-chevron-up' : 'bi-chevron-down'"
+        ></i>
       </button>
       <div class="special-body" *ngIf="showSpecialRequests">
         <label for="specialRequests">Add note</label>
@@ -189,7 +297,12 @@
       </div>
 
       <!-- Loading skeleton -->
-      <div class="table-skeleton-row" *ngIf="tablesLoading && !hasLoadedTables && availableTablesList.length === 0">
+      <div
+        class="table-skeleton-row"
+        *ngIf="
+          tablesLoading && !hasLoadedTables && availableTablesList.length === 0
+        "
+      >
         <div class="table-skeleton" *ngFor="let i of [1, 2, 3, 4]"></div>
       </div>
 
@@ -215,10 +328,7 @@
       </div>
 
       <!-- Table cards -->
-      <div
-        class="table-grid"
-        *ngIf="availableTablesList.length > 0"
-      >
+      <div class="table-grid" *ngIf="availableTablesList.length > 0">
         <button
           type="button"
           class="table-card"
@@ -327,11 +437,15 @@
         <div class="menu-header-stats">
           <div class="menu-stat">
             <span class="menu-stat-label">Chef Specials</span>
-            <strong>{{ data.menuItems.length > 6 ? 6 : data.menuItems.length }}</strong>
+            <strong>{{
+              data.menuItems.length > 6 ? 6 : data.menuItems.length
+            }}</strong>
           </div>
           <div class="menu-stat">
             <span class="menu-stat-label">Best Rated</span>
-            <strong>{{ (data.cafeDetails.rating || 0) | number: "1.1-1" }}</strong>
+            <strong>{{
+              data.cafeDetails.rating || 0 | number: "1.1-1"
+            }}</strong>
           </div>
           <div class="menu-stat">
             <span class="menu-stat-label">Ready In</span>
@@ -591,6 +705,26 @@
       </div>
     </aside>
   </section>
+
+  <div class="gallery-modal" *ngIf="galleryOpen" (click)="closeGallery()">
+    <div class="gallery-dialog" (click)="$event.stopPropagation()">
+      <div class="gallery-head">
+        <h3>{{ data.cafeDetails.name }} Gallery</h3>
+        <button type="button" class="gallery-close" (click)="closeGallery()">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+
+      <div class="gallery-grid">
+        <img
+          *ngFor="let img of galleryImages"
+          [src]="img"
+          [alt]="data.cafeDetails.name + ' photo'"
+          (error)="onImageError($event)"
+        />
+      </div>
+    </div>
+  </div>
 </section>
 
 <div class="state" *ngIf="loading">Loading cafe details...</div>

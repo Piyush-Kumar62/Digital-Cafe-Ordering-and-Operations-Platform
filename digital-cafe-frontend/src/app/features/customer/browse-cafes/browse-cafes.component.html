@@ -10,63 +10,48 @@
         Find the perfect café, explore the menu, and book your table.
         {{ cafes.length > 0 ? cafes.length + " cafés available" : "" }}
       </p>
+      <div class="header-meta" *ngIf="cafes.length > 0">
+        <span class="meta-pill">
+          <span class="material-icons">local_cafe</span>
+          {{ cafes.length }} total
+        </span>
+        <span class="meta-pill" *ngIf="filteredCafes.length !== cafes.length">
+          <span class="material-icons">tune</span>
+          {{ filteredCafes.length }} filtered
+        </span>
+        <span class="meta-pill meta-pill--accent">
+          <span class="live-dot"></span>
+          Live · updates every 30s
+        </span>
+      </div>
     </div>
     <!-- Search -->
-    <div class="search-wrap">
-      <span class="material-icons search-icon">search</span>
-      <input
-        type="text"
-        class="search-input"
-        placeholder="Search by name, city or keyword…"
-        [(ngModel)]="searchQuery"
-        autocomplete="off"
-      />
+    <div class="search-wrap" aria-label="Search cafés">
+      <div class="search-field">
+        <span class="material-icons search-icon">search</span>
+        <input
+          type="text"
+          class="search-input"
+          placeholder="Search by name, city or keyword…"
+          [(ngModel)]="searchQuery"
+          autocomplete="off"
+        />
+        <button
+          class="search-clear"
+          type="button"
+          *ngIf="searchQuery"
+          (click)="searchQuery = ''"
+          aria-label="Clear search"
+          title="Clear"
+        >
+          <span class="material-icons">close</span>
+        </button>
+      </div>
       <span class="search-badge" *ngIf="searchQuery">
         {{ filteredCafes.length }} result{{
           filteredCafes.length !== 1 ? "s" : ""
         }}
       </span>
-    </div>
-  </div>
-
-  <!-- Real-time badge -->
-  <div class="live-badge" *ngIf="!loading && !error && cafes.length > 0">
-    <span class="live-dot"></span>
-    Live · updates every 30s
-  </div>
-
-  <!-- Feature spotlight card -->
-  <div class="spotlight-card" *ngIf="!loading && !error">
-    <div class="spotlight-main">
-      <div class="spotlight-icon">
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M4 7h16" />
-          <path d="M6 7v11a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7" />
-          <path d="M9 7V5a3 3 0 0 1 6 0v2" />
-          <path d="M8 12h8" />
-          <path d="M8 15h5" />
-        </svg>
-      </div>
-      <div>
-        <h2>Plan, Sip, Repeat</h2>
-        <p>
-          View menus, pick your time slot, and reserve in seconds. The best tables
-          go fast — lock yours in early.
-        </p>
-        <div class="spotlight-tags">
-          <span>Live tables</span>
-          <span>Fast booking</span>
-          <span>Curated menus</span>
-        </div>
-      </div>
-    </div>
-    <div class="spotlight-actions">
-      <a class="spotlight-btn spotlight-btn--primary" href="#cafes">
-        Explore Featured
-      </a>
-      <a class="spotlight-btn spotlight-btn--ghost" href="#cafes">
-        Top Rated Cafés
-      </a>
     </div>
   </div>
 
@@ -104,7 +89,11 @@
   </div>
 
   <!-- Cafe Grid -->
-  <div class="cafe-grid" id="cafes" *ngIf="!loading && !error && filteredCafes.length > 0">
+  <div
+    class="cafe-grid"
+    id="cafes"
+    *ngIf="!loading && !error && filteredCafes.length > 0"
+  >
     <article
       class="cafe-card"
       *ngFor="let cafe of pagedCafes; let i = index"
@@ -117,13 +106,21 @@
       <!-- Image -->
       <div class="cafe-card-img-wrap">
         <img
-          [src]="cafe.imageUrl || 'assets/cafe/cafe-interior-pexels-01.jpg'"
+          *ngIf="cafe.logoUrl || cafe.imageUrl"
+          [src]="cafe.logoUrl || cafe.imageUrl"
           [alt]="cafe.name"
           class="cafe-card-img"
           [attr.loading]="i < 2 ? 'eager' : 'lazy'"
-          onerror="this.src = 'assets/cafe/cafe-interior-pexels-01.jpg'"
+          onerror="this.style.display = 'none'"
         />
-        <div class="cafe-card-img-overlay"></div>
+        <div
+          class="cafe-card-img-overlay"
+          *ngIf="cafe.logoUrl || cafe.imageUrl"
+        ></div>
+        <span class="cafe-gallery-count" *ngIf="cafe.galleryImages?.length">
+          <i class="bi bi-images"></i>
+          {{ cafe.galleryImages?.length }} photos
+        </span>
         <span class="cafe-rating" *ngIf="cafe.rating && cafe.rating > 0">
           <i class="bi bi-star-fill"></i>
           {{ cafe.rating | number: "1.1-1" }}
@@ -190,7 +187,8 @@
         [disabled]="pageIndex === 0"
         (click)="goToPage(pageIndex - 1)"
       >
-        ← Prev</button>
+        ← Prev
+      </button>
       <button
         class="page-btn"
         *ngFor="let p of allPages"
@@ -204,7 +202,8 @@
         [disabled]="pageIndex >= totalPages - 1"
         (click)="goToPage(pageIndex + 1)"
       >
-        Next →</button>
+        Next →
+      </button>
     </div>
   </div>
 </div>

@@ -38,6 +38,8 @@ type RazorpayLoadFailureReason =
 export class CafeDetailComponent implements OnInit {
   cafe: PublicCafeDetail | null = null;
   loading = true;
+  galleryOpen = false;
+  galleryImages: string[] = [];
   bookingInProgress = false;
   orderInProgress = false;
   paymentInProgress = false;
@@ -108,6 +110,7 @@ export class CafeDetailComponent implements OnInit {
     this.cafeBrowseService.getCafeDetails(cafeId).subscribe({
       next: (res) => {
         this.cafe = res;
+        this.galleryImages = this.buildGalleryImages(res);
         this.cartService.ensureCafeScope(res.cafeDetails.id);
         this.loading = false;
         this.loadAvailability();
@@ -174,10 +177,7 @@ export class CafeDetailComponent implements OnInit {
     this.loadAvailability(true);
   }
 
-  toggleDropdown(
-    name: "date" | "guests" | "period",
-    event: MouseEvent,
-  ): void {
+  toggleDropdown(name: "date" | "guests" | "period", event: MouseEvent): void {
     event.stopPropagation();
     if (this.bookingId) return;
     this.activeDropdown = this.activeDropdown === name ? null : name;
@@ -224,8 +224,9 @@ export class CafeDetailComponent implements OnInit {
 
   getSelectedPeriodLabel(): string {
     return (
-      this.mealPeriods.find((option) => option.value === this.selectedMealPeriod)
-        ?.label || "Select period"
+      this.mealPeriods.find(
+        (option) => option.value === this.selectedMealPeriod,
+      )?.label || "Select period"
     );
   }
 
@@ -693,6 +694,106 @@ export class CafeDetailComponent implements OnInit {
     }
 
     return "category-default";
+  }
+
+  getTopCategories(limit = 6): string[] {
+    const categories = (this.cafe?.menuItems || [])
+      .map((item) => String(item.category || "").trim())
+      .filter(Boolean);
+    return Array.from(new Set(categories)).slice(0, limit);
+  }
+
+  isCafeOpenNow(): boolean {
+    const open = this.cafe?.cafeDetails?.openTime;
+    const close = this.cafe?.cafeDetails?.closeTime;
+    if (!open || !close) return false;
+
+    const openMinutes = this.toMinutes(open);
+    const closeMinutes = this.toMinutes(close);
+    if (openMinutes < 0 || closeMinutes < 0) return false;
+
+    const now = new Date();
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+    if (closeMinutes > openMinutes) {
+      return currentMinutes >= openMinutes && currentMinutes <= closeMinutes;
+    }
+
+    // Overnight window (e.g. 18:00 -> 02:00)
+    return currentMinutes >= openMinutes || currentMinutes <= closeMinutes;
+  }
+
+  goToBooking(): void {
+    const bookingSection = document.getElementById("booking");
+    bookingSection?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  openDirections(): void {
+    const query = (
+      this.cafe?.cafeDetails?.location ||
+      this.cafe?.cafeDetails?.name ||
+      ""
+    ).trim();
+    if (!query) return;
+    const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+    window.open(mapsUrl, "_blank", "noopener,noreferrer");
+  }
+
+  async shareCafe(): Promise<void> {
+    const cafeName = this.cafe?.cafeDetails?.name || "Cafe";
+    const shareData = {
+      title: cafeName,
+      text: `Check out ${cafeName}`,
+      url: window.location.href,
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+        return;
+      }
+      await navigator.clipboard.writeText(window.location.href);
+      this.alertService.success("Cafe link copied to clipboard.");
+    } catch {
+      this.alertService.info("Unable to share right now.");
+    }
+  }
+
+  private toMinutes(time: string): number {
+    const normalized = String(time || "").trim();
+    const match = normalized.match(/^(\d{1,2}):(\d{2})/);
+    if (!match) return -1;
+    const hh = Number(match[1]);
+    const mm = Number(match[2]);
+    if (!Number.isFinite(hh) || !Number.isFinite(mm)) return -1;
+    return hh * 60 + mm;
+  }
+
+  openGallery(): void {
+    if (!this.galleryImages.length) return;
+    this.galleryOpen = true;
+    document.body.style.overflow = "hidden";
+  }
+
+  closeGallery(): void {
+    this.galleryOpen = false;
+    document.body.style.overflow = "";
+  }
+
+  onImageError(event: Event): void {
+    const el = event.target as HTMLImageElement | null;
+    if (!el) return;
+    el.style.display = "none";
+  }
+
+  private buildGalleryImages(detail: PublicCafeDetail | null): string[] {
+    if (!detail) return [];
+    const ordered = [
+      detail.cafeDetails.imageUrl,
+      ...(detail.cafeDetails.galleryImages || []),
+    ].filter(Boolean) as string[];
+
+    return Array.from(new Set(ordered));
   }
 
   private handlePaymentFlow(payment: Payment): void {

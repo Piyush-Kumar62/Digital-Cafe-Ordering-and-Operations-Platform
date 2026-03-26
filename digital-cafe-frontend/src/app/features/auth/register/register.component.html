@@ -200,9 +200,7 @@
                 >Government ID Number *</label
               >
               <div class="input-group">
-                <span class="input-group-text"
-                  ><i class="bi bi-hash"></i
-                ></span>
+                <span class="input-group-text"><i class="bi bi-hash"></i></span>
                 <input
                   type="text"
                   class="form-control"
@@ -401,228 +399,244 @@
           <div class="space-y-4" [formGroup]="academicForm">
             <div formArrayName="items">
               <div
-                *ngFor="
-                  let academic of academicItems.controls;
-                  let i = index
-                "
+                *ngFor="let academic of academicItems.controls; let i = index"
                 class="bg-slate-700/50 rounded-lg p-3"
                 [formGroupName]="i"
               >
-              <div class="flex justify-between items-center mb-3">
-                <h6 class="font-semibold text-sm">Qualification {{ i + 1 }}</h6>
-                <button
-                  type="button"
-                  class="btn btn-outline-danger btn-sm"
-                  (click)="removeAcademic(i)"
-                  [disabled]="academicItems.length === 1"
-                >
-                  <i class="bi bi-trash"></i>
-                </button>
-              </div>
-
-              <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <div>
-                  <label class="form-label">Institution *</label>
-                  <input
-                    type="text"
-                    class="form-control"
-                    formControlName="institutionName"
-                    placeholder="Search institution"
-                    [title]="displayInstitution(academic.get('institutionName')?.value)"
-                    [matAutocomplete]="institutionAuto"
-                    matInput
-                  />
-                  <mat-autocomplete
-                    #institutionAuto="matAutocomplete"
-                    [displayWith]="displayInstitution"
-                    (optionSelected)="onInstitutionSelected(i, $event.option.value)"
-                    panelClass="academic-autocomplete-panel"
-                  >
-                    <mat-option
-                      *ngFor="let inst of getInstitutionOptions(i)"
-                      [value]="inst"
-                    >
-                      <div class="academic-option">
-                        <span class="academic-option__title">{{ inst.name }}</span>
-                        <span class="academic-option__meta">
-                          {{ inst.city || "India" }}{{ inst.state ? ", " + inst.state : "" }}
-                        </span>
-                      </div>
-                    </mat-option>
-                  </mat-autocomplete>
-                  <small
-                    *ngIf="isInstitutionLoading(i)"
-                    class="text-slate-300 text-xs mt-1 block"
-                  >
-                    Searching institutions…
-                  </small>
-                  <small
-                    *ngIf="isInstitutionNoResults(i)"
-                    class="text-slate-300 text-xs mt-1 block register-info-hint"
-                  >
-                    No results found. Keep typing to use manual entry.
-                  </small>
+                <div class="flex justify-between items-center mb-3">
+                  <h6 class="font-semibold text-sm">
+                    Qualification {{ i + 1 }}
+                  </h6>
                   <button
                     type="button"
-                    class="register-link-btn"
-                    *ngIf="isInstitutionNoResults(i)"
-                    (click)="useTypedInstitution(i)"
+                    class="btn btn-outline-danger btn-sm"
+                    (click)="removeAcademic(i)"
+                    [disabled]="academicItems.length === 1"
                   >
-                    Use typed institution
+                    <i class="bi bi-trash"></i>
                   </button>
-                  <small
-                    *ngIf="isAcademicInvalid(i, 'institutionName')"
-                    class="text-red-300 text-xs mt-1 block"
-                  >
-                    Institution is required.
-                  </small>
                 </div>
-                <div>
-                  <label class="form-label">Degree *</label>
-                  <mat-form-field class="w-full" appearance="fill">
-                    <mat-select
-                      formControlName="degree"
-                      panelClass="academic-select-panel"
-                      placeholder="Select degree"
-                    >
-                      <mat-option
-                        *ngFor="let degree of degreeOptions"
-                        [value]="degree"
-                      >
-                        {{ degree }}
-                      </mat-option>
-                    </mat-select>
-                  </mat-form-field>
-                  <small
-                    *ngIf="isAcademicInvalid(i, 'degree')"
-                    class="text-red-300 text-xs mt-1 block"
-                  >
-                    Degree is required.
-                  </small>
-                </div>
-                <div>
-                  <label class="form-label">
-                    Branch / Stream *
-                  </label>
-                  <ng-container *ngIf="getBranchOptions(i).length > 0; else branchInput">
-                    <mat-form-field class="w-full" appearance="fill">
-                      <mat-select
-                        formControlName="branch"
-                        panelClass="academic-branch-panel"
-                        placeholder="Select branch"
-                      >
-                        <mat-option
-                          *ngFor="let branch of getBranchOptions(i)"
-                          [value]="branch"
-                        >
-                          {{ branch }}
-                        </mat-option>
-                      </mat-select>
-                    </mat-form-field>
-                  </ng-container>
-                  <ng-template #branchInput>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <div>
+                    <label class="form-label">Institution *</label>
                     <input
                       type="text"
                       class="form-control"
-                      formControlName="branch"
-                      placeholder="Enter branch / stream"
+                      formControlName="institutionName"
+                      placeholder="Search institution"
+                      [title]="
+                        displayInstitution(
+                          academic.get('institutionName')?.value
+                        )
+                      "
+                      [matAutocomplete]="institutionAuto"
+                      matInput
                     />
-                  </ng-template>
-                  <small
-                    *ngIf="isBranchLoading(i)"
-                    class="text-slate-300 text-xs mt-1 block"
-                  >
-                    Loading branches…
-                  </small>
-                  <small
-                    *ngIf="isAcademicInvalid(i, 'branch')"
-                    class="text-red-300 text-xs mt-1 block"
-                  >
-                    Branch is required.
-                  </small>
-                </div>
-                <div>
-                  <label class="form-label">Year of Completion *</label>
-                  <mat-form-field class="w-full" appearance="fill">
-                    <mat-select
-                      formControlName="passingYear"
-                      [disabled]="academic.get('currentlyStudying')?.value"
-                      panelClass="academic-select-panel"
-                      placeholder="Select year"
+                    <mat-autocomplete
+                      #institutionAuto="matAutocomplete"
+                      [displayWith]="displayInstitution"
+                      (optionSelected)="
+                        onInstitutionSelected(i, $event.option.value)
+                      "
+                      panelClass="academic-autocomplete-panel"
                     >
                       <mat-option
-                        *ngFor="let year of academicYearOptions"
-                        [value]="year"
+                        *ngFor="let inst of getInstitutionOptions(i)"
+                        [value]="inst"
                       >
-                        {{ year }}
+                        <div class="academic-option">
+                          <span class="academic-option__title">{{
+                            inst.name
+                          }}</span>
+                          <span class="academic-option__meta">
+                            {{ inst.city || "India"
+                            }}{{ inst.state ? ", " + inst.state : "" }}
+                          </span>
+                        </div>
                       </mat-option>
-                    </mat-select>
-                  </mat-form-field>
-                  <small
-                    *ngIf="isAcademicInvalid(i, 'passingYear')"
-                    class="text-red-300 text-xs mt-1 block"
-                  >
-                    Year is required.
-                  </small>
-                </div>
-                <div>
-                  <label class="form-label">Grading System *</label>
-                  <mat-form-field class="w-full" appearance="fill">
-                    <mat-select
-                      formControlName="gradingType"
-                      panelClass="academic-select-panel"
-                      placeholder="Select grading"
+                    </mat-autocomplete>
+                    <small
+                      *ngIf="isInstitutionLoading(i)"
+                      class="text-slate-300 text-xs mt-1 block"
                     >
-                      <mat-option *ngFor="let g of gradingTypes" [value]="g">
-                        {{ g }}
-                      </mat-option>
-                    </mat-select>
-                  </mat-form-field>
-                  <small
-                    *ngIf="isAcademicInvalid(i, 'gradingType')"
-                    class="text-red-300 text-xs mt-1 block"
-                  >
-                    Select a grading system.
-                  </small>
+                      Searching institutions…
+                    </small>
+                    <small
+                      *ngIf="isInstitutionNoResults(i)"
+                      class="text-slate-300 text-xs mt-1 block register-info-hint"
+                    >
+                      No results found. Keep typing to use manual entry.
+                    </small>
+                    <button
+                      type="button"
+                      class="register-link-btn"
+                      *ngIf="isInstitutionNoResults(i)"
+                      (click)="useTypedInstitution(i)"
+                    >
+                      Use typed institution
+                    </button>
+                    <small
+                      *ngIf="isAcademicInvalid(i, 'institutionName')"
+                      class="text-red-300 text-xs mt-1 block"
+                    >
+                      Institution is required.
+                    </small>
+                  </div>
+                  <div>
+                    <label class="form-label">Degree *</label>
+                    <mat-form-field class="w-full" appearance="fill">
+                      <mat-select
+                        formControlName="degree"
+                        panelClass="academic-select-panel"
+                        placeholder="Select degree"
+                      >
+                        <mat-option
+                          *ngFor="let degree of degreeOptions"
+                          [value]="degree"
+                        >
+                          {{ degree }}
+                        </mat-option>
+                      </mat-select>
+                    </mat-form-field>
+                    <small
+                      *ngIf="isAcademicInvalid(i, 'degree')"
+                      class="text-red-300 text-xs mt-1 block"
+                    >
+                      Degree is required.
+                    </small>
+                  </div>
+                  <div>
+                    <label class="form-label"> Branch / Stream * </label>
+                    <ng-container
+                      *ngIf="getBranchOptions(i).length > 0; else branchInput"
+                    >
+                      <mat-form-field class="w-full" appearance="fill">
+                        <mat-select
+                          formControlName="branch"
+                          panelClass="academic-branch-panel"
+                          placeholder="Select branch"
+                        >
+                          <mat-option
+                            *ngFor="let branch of getBranchOptions(i)"
+                            [value]="branch"
+                          >
+                            {{ branch }}
+                          </mat-option>
+                        </mat-select>
+                      </mat-form-field>
+                    </ng-container>
+                    <ng-template #branchInput>
+                      <input
+                        type="text"
+                        class="form-control"
+                        formControlName="branch"
+                        placeholder="Enter branch / stream"
+                      />
+                    </ng-template>
+                    <small
+                      *ngIf="isBranchLoading(i)"
+                      class="text-slate-300 text-xs mt-1 block"
+                    >
+                      Loading branches…
+                    </small>
+                    <small
+                      *ngIf="isAcademicInvalid(i, 'branch')"
+                      class="text-red-300 text-xs mt-1 block"
+                    >
+                      Branch is required.
+                    </small>
+                  </div>
+                  <div>
+                    <label class="form-label">Year of Completion *</label>
+                    <mat-form-field class="w-full" appearance="fill">
+                      <mat-select
+                        formControlName="passingYear"
+                        [disabled]="academic.get('currentlyStudying')?.value"
+                        panelClass="academic-select-panel"
+                        placeholder="Select year"
+                      >
+                        <mat-option
+                          *ngFor="let year of academicYearOptions"
+                          [value]="year"
+                        >
+                          {{ year }}
+                        </mat-option>
+                      </mat-select>
+                    </mat-form-field>
+                    <small
+                      *ngIf="isAcademicInvalid(i, 'passingYear')"
+                      class="text-red-300 text-xs mt-1 block"
+                    >
+                      Year is required.
+                    </small>
+                  </div>
+                  <div>
+                    <label class="form-label">Grading System *</label>
+                    <mat-form-field class="w-full" appearance="fill">
+                      <mat-select
+                        formControlName="gradingType"
+                        panelClass="academic-select-panel"
+                        placeholder="Select grading"
+                      >
+                        <mat-option *ngFor="let g of gradingTypes" [value]="g">
+                          {{ g }}
+                        </mat-option>
+                      </mat-select>
+                    </mat-form-field>
+                    <small
+                      *ngIf="isAcademicInvalid(i, 'gradingType')"
+                      class="text-red-300 text-xs mt-1 block"
+                    >
+                      Select a grading system.
+                    </small>
+                  </div>
+                  <div>
+                    <label class="form-label">
+                      <span
+                        *ngIf="academic.get('gradingType')?.value === 'CGPA'"
+                      >
+                        CGPA *
+                      </span>
+                      <span
+                        *ngIf="
+                          academic.get('gradingType')?.value === 'PERCENTAGE'
+                        "
+                      >
+                        Percentage *
+                      </span>
+                      <span
+                        *ngIf="academic.get('gradingType')?.value === 'GRADE'"
+                      >
+                        Grade *
+                      </span>
+                    </label>
+                    <input
+                      type="text"
+                      class="form-control"
+                      formControlName="score"
+                      placeholder="e.g. 8.5 / 75%"
+                    />
+                    <small
+                      *ngIf="academicScoreError(i)"
+                      class="text-red-300 text-xs mt-1 block"
+                    >
+                      {{ academicScoreError(i) }}
+                    </small>
+                  </div>
                 </div>
-                <div>
-                  <label class="form-label">
-                    <span *ngIf="academic.get('gradingType')?.value === 'CGPA'">
-                      CGPA *
-                    </span>
-                    <span *ngIf="academic.get('gradingType')?.value === 'PERCENTAGE'">
-                      Percentage *
-                    </span>
-                    <span *ngIf="academic.get('gradingType')?.value === 'GRADE'">
-                      Grade *
-                    </span>
-                  </label>
-                  <input
-                    type="text"
-                    class="form-control"
-                    formControlName="score"
-                    placeholder="e.g. 8.5 / 75%"
-                  />
-                  <small
-                    *ngIf="academicScoreError(i)"
-                    class="text-red-300 text-xs mt-1 block"
-                  >
-                    {{ academicScoreError(i) }}
-                  </small>
-                </div>
-              </div>
 
-              <div class="mt-3">
-                <label class="register-inline-check">
-                  <input
-                    class="form-check-input"
-                    type="checkbox"
-                    formControlName="currentlyStudying"
-                    (change)="onAcademicCurrentlyStudyingChange(i)"
-                  />
-                  <span>Currently studying here</span>
-                </label>
-              </div>
+                <div class="mt-3">
+                  <label class="register-inline-check">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      formControlName="currentlyStudying"
+                      (change)="onAcademicCurrentlyStudyingChange(i)"
+                    />
+                    <span>Currently studying here</span>
+                  </label>
+                </div>
               </div>
             </div>
           </div>
@@ -895,6 +909,7 @@
                     class="form-control"
                     id="ownerPhoneNumber"
                     [(ngModel)]="ownerInfo.ownerPhoneNumber"
+                    (ngModelChange)="onOwnerPhoneInput($event)"
                     name="ownerPhoneNumber"
                     placeholder="10-digit mobile number"
                     maxlength="10"
@@ -941,8 +956,9 @@
                     class="form-control"
                     id="cafePhoneNumber"
                     [(ngModel)]="cafeDetails.phoneNumber"
+                    (ngModelChange)="onCafeBusinessPhoneInput($event)"
                     name="cafePhoneNumber"
-                    placeholder="10-digit mobile number"
+                    placeholder="mobile number"
                     maxlength="10"
                     inputmode="numeric"
                     required
@@ -950,11 +966,13 @@
                 </div>
               </div>
               <div class="col-span-1 md:col-span-2">
-                <label for="cafeDescription" class="form-label"
+                <label
+                  for="cafeDescription"
+                  class="form-label register-inline-label"
                   >Description
                   <span class="text-slate-400 text-xs">(optional)</span></label
                 >
-                <div class="input-group">
+                <div class="input-group register-textarea-group">
                   <span class="input-group-text"
                     ><i class="bi bi-chat-text"></i
                   ></span>
@@ -987,6 +1005,43 @@
                   />
                 </div>
               </div>
+              <div class="col-span-1 md:col-span-2">
+                <label for="cafePincode" class="form-label">Pincode *</label>
+                <div class="input-group register-pin-group">
+                  <span class="input-group-text"
+                    ><i class="bi bi-mailbox"></i
+                  ></span>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="cafePincode"
+                    [(ngModel)]="cafeDetails.pincode"
+                    (ngModelChange)="onCafePincodeInput($event)"
+                    name="cafePincode"
+                    placeholder="6-digit pincode"
+                    maxlength="6"
+                    inputmode="numeric"
+                    required
+                  />
+                  <span
+                    class="register-pin-spinner"
+                    *ngIf="cafePincodeLoading"
+                    aria-label="Looking up pincode"
+                  ></span>
+                </div>
+                <small
+                  class="text-red-300 text-xs mt-1 block"
+                  *ngIf="cafePincodeNotFound"
+                >
+                  No city/state found for this pincode.
+                </small>
+                <small
+                  class="text-red-300 text-xs mt-1 block"
+                  *ngIf="cafePincodeError"
+                >
+                  Unable to fetch city/state right now. Please enter manually.
+                </small>
+              </div>
               <div>
                 <label for="cafeCity" class="form-label">City *</label>
                 <div class="input-group">
@@ -1015,7 +1070,7 @@
                 </mat-autocomplete>
               </div>
               <div>
-                <label for="cafeState" class="form-label"
+                <label for="cafeState" class="form-label register-inline-label"
                   >State
                   <span class="text-slate-400 text-xs">(optional)</span></label
                 >
@@ -1043,84 +1098,57 @@
                   </mat-option>
                 </mat-autocomplete>
               </div>
-              <div>
-                <label for="cafePincode" class="form-label">Pincode *</label>
-                <div class="input-group register-pin-group">
-                  <span class="input-group-text"
-                    ><i class="bi bi-mailbox"></i
-                  ></span>
-                  <input
-                    type="text"
-                    class="form-control"
-                    id="cafePincode"
-                    [(ngModel)]="cafeDetails.pincode"
-                    (ngModelChange)="onCafePincodeInput($event)"
-                    name="cafePincode"
-                    placeholder="6-digit pincode"
-                    maxlength="6"
-                    required
-                  />
-                  <span
-                    class="register-pin-spinner"
-                    *ngIf="cafePincodeLoading"
-                    aria-label="Looking up pincode"
-                  ></span>
-                </div>
-                <small
-                  class="text-red-300 text-xs mt-1 block"
-                  *ngIf="cafePincodeNotFound"
-                >
-                  No city/state found for this pincode.
-                </small>
-                <small
-                  class="text-red-300 text-xs mt-1 block"
-                  *ngIf="cafePincodeError"
-                >
-                  Unable to fetch city/state right now. Please enter manually.
-                </small>
-              </div>
             </div>
 
-            <!-- Operating Hours -->
-            <p
-              class="text-xs text-slate-400 mt-4 mb-3 font-medium uppercase tracking-wide"
-            >
-              Operating Hours
-              <span class="normal-case font-normal">(optional)</span>
-            </p>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label for="cafeOpenTime" class="form-label"
-                  >Opening Time</label
+                  >Opening Time *</label
                 >
                 <div class="input-group">
                   <span class="input-group-text"
                     ><i class="bi bi-sunrise"></i
                   ></span>
-                  <input
-                    type="time"
+                  <select
                     class="form-control"
                     id="cafeOpenTime"
                     [(ngModel)]="cafeDetails.openTime"
                     name="cafeOpenTime"
-                  />
+                    required
+                  >
+                    <option value="">Select opening time</option>
+                    <option
+                      *ngFor="let slot of timeSlotOptions"
+                      [value]="slot.value"
+                    >
+                      {{ slot.label }}
+                    </option>
+                  </select>
                 </div>
               </div>
               <div>
                 <label for="cafeCloseTime" class="form-label"
-                  >Closing Time</label
+                  >Closing Time *</label
                 >
                 <div class="input-group">
                   <span class="input-group-text"
                     ><i class="bi bi-sunset"></i
                   ></span>
-                  <input
-                    type="time"
+                  <select
                     class="form-control"
                     id="cafeCloseTime"
                     [(ngModel)]="cafeDetails.closeTime"
                     name="cafeCloseTime"
-                  />
+                    required
+                  >
+                    <option value="">Select closing time</option>
+                    <option
+                      *ngFor="let slot of timeSlotOptions"
+                      [value]="slot.value"
+                    >
+                      {{ slot.label }}
+                    </option>
+                  </select>
                 </div>
               </div>
             </div>
@@ -1138,11 +1166,11 @@
 
             <!-- Registration Numbers -->
             <p
-              class="text-xs text-slate-400 mb-3 font-medium uppercase tracking-wide"
+              class="text-xs text-slate-300 mb-3 font-semibold uppercase tracking-wide"
             >
               Registration Numbers
             </p>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div class="grid grid-cols-1 gap-4 mb-4">
               <div>
                 <label for="cafeFssai" class="form-label">FSSAI Number</label>
                 <div class="input-group">
@@ -1154,10 +1182,18 @@
                     class="form-control"
                     id="cafeFssai"
                     [(ngModel)]="cafeDetails.fssaiNumber"
+                    (ngModelChange)="onCafeFssaiInput($event)"
                     name="cafeFssai"
                     placeholder="FSSAI licence no."
+                    maxlength="14"
+                    minlength="14"
+                    inputmode="numeric"
+                    pattern="^[0-9]{14}$"
                   />
                 </div>
+                <small class="text-slate-400 text-xs mt-1 block"
+                  >Enter exactly 14 digits</small
+                >
               </div>
               <div>
                 <label for="cafeGst" class="form-label">GST Number</label>
@@ -1170,10 +1206,17 @@
                     class="form-control"
                     id="cafeGst"
                     [(ngModel)]="cafeDetails.gstNumber"
+                    (ngModelChange)="onCafeGstInput($event)"
                     name="cafeGst"
                     placeholder="GST registration no."
+                    maxlength="15"
+                    style="text-transform: uppercase"
+                    pattern="^[0-9]{2}[A-Za-z]{5}[0-9]{4}[A-Za-z][1-9A-Za-z]Z[0-9A-Za-z]$"
                   />
                 </div>
+                <small class="text-slate-400 text-xs mt-1 block"
+                  >Enter valid 15-character GSTIN</small
+                >
               </div>
               <div>
                 <label for="cafeMsme" class="form-label">MSME Number</label>
@@ -1186,21 +1229,27 @@
                     class="form-control"
                     id="cafeMsme"
                     [(ngModel)]="cafeDetails.msmeNumber"
+                    (ngModelChange)="onCafeMsmeInput($event)"
                     name="cafeMsme"
                     placeholder="MSME registration no."
+                    maxlength="19"
+                    style="text-transform: uppercase"
+                    pattern="^UDYAM-[A-Za-z]{2}-[0-9]{2}-[0-9]{7}$"
                   />
                 </div>
+                <small class="text-slate-400 text-xs mt-1 block"
+                  >Format: UDYAM-XX-00-0000000</small
+                >
               </div>
             </div>
 
-            <!-- Logo Upload -->
-            <p
-              class="text-xs text-slate-400 mb-3 font-medium uppercase tracking-wide"
-            >
-              Café Logo
-            </p>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
-              <div>
+            <div class="register-media-row">
+              <div class="register-media-col register-upload-field">
+                <p
+                  class="text-xs text-slate-300 mb-3 font-semibold uppercase tracking-wide"
+                >
+                  Café Logo
+                </p>
                 <label for="cafeLogo" class="form-label">Upload Logo</label>
                 <div class="input-group">
                   <span class="input-group-text"
@@ -1215,22 +1264,71 @@
                     accept=".jpg,.jpeg,.png"
                   />
                 </div>
-                <small class="text-slate-400 text-xs"
-                  >JPG or PNG · Max 2 MB</small
+                <small class="text-slate-300 text-xs register-upload-hint"
+                  >JPG or PNG <span class="register-upload-dot">·</span> Max 2
+                  MB</small
+                >
+                <div
+                  *ngIf="showCafeLogoPreview && cafeLogoPreview"
+                  class="register-logo-preview-wrap"
+                >
+                  <div class="text-center">
+                    <img
+                      [src]="cafeLogoPreview"
+                      alt="Café logo preview"
+                      class="cafe-logo-preview rounded-lg shadow"
+                    />
+                    <p class="text-xs text-slate-400 mt-1">Preview</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="register-media-col register-upload-field">
+                <p
+                  class="text-xs text-slate-300 mb-3 font-semibold uppercase tracking-wide"
+                >
+                  Café Gallery
+                </p>
+                <label for="cafeGallery" class="form-label"
+                  >Upload Gallery Images</label
+                >
+                <div class="input-group">
+                  <span class="input-group-text"
+                    ><i class="bi bi-images"></i
+                  ></span>
+                  <input
+                    type="file"
+                    class="form-control"
+                    id="cafeGallery"
+                    (change)="onCafeGallerySelect($event)"
+                    name="cafeGallery"
+                    accept=".jpg,.jpeg,.png,.webp,.gif"
+                    multiple
+                  />
+                </div>
+                <small class="text-slate-300 text-xs register-upload-hint"
+                  >Up to 8 images <span class="register-upload-dot">·</span>
+                  2 MB each</small
                 >
               </div>
+            </div>
+
+            <div
+              class="register-gallery-grid"
+              *ngIf="cafeGalleryPreviews.length"
+            >
               <div
-                *ngIf="showCafeLogoPreview && cafeLogoPreview"
-                class="flex justify-center"
+                class="register-gallery-item"
+                *ngFor="let src of cafeGalleryPreviews; let i = index"
               >
-                <div class="text-center">
-                  <img
-                    [src]="cafeLogoPreview"
-                    alt="Café logo preview"
-                    class="cafe-logo-preview rounded-lg shadow"
-                  />
-                  <p class="text-xs text-slate-400 mt-1">Preview</p>
-                </div>
+                <img [src]="src" [alt]="'Café gallery image ' + (i + 1)" />
+                <button
+                  type="button"
+                  class="register-gallery-remove"
+                  (click)="removeCafeGalleryImage(i)"
+                >
+                  <i class="bi bi-x-lg"></i>
+                </button>
               </div>
             </div>
           </div>

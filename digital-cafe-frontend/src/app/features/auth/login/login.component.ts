@@ -1,6 +1,7 @@
 import { Component, OnInit } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import {
+  AbstractControl,
   FormBuilder,
   FormGroup,
   Validators,
@@ -59,8 +60,8 @@ export class LoginComponent implements OnInit {
     img.src = src;
   }
 
-  get f() {
-    return this.loginForm?.controls || {};
+  get f(): Record<string, AbstractControl> {
+    return this.loginForm?.controls ?? {};
   }
 
   togglePasswordVisibility(): void {

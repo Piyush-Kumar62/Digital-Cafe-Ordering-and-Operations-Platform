@@ -37,12 +37,12 @@
         <p class="auth-subtitle">Sign in to your account to continue</p>
       </div>
 
-      <form
-        *ngIf="loginForm"
-        [formGroup]="loginForm"
-        (ngSubmit)="onSubmit()"
-        class="auth-form"
-      >
+      @if (loginForm) {
+        <form
+          [formGroup]="loginForm"
+          (ngSubmit)="onSubmit()"
+          class="auth-form"
+        >
         <div class="form-group">
           <label for="email" class="form-label">Email</label>
           <input
@@ -53,17 +53,16 @@
             [class.error]="f['email']?.invalid && f['email']?.touched"
             placeholder="example@gmail.com"
           />
-          <div
-            *ngIf="f['email']?.invalid && f['email']?.touched"
-            class="error-message"
-          >
-            <span *ngIf="f['email']?.errors?.['required']"
-              >Email is required</span
-            >
-            <span *ngIf="f['email']?.errors?.['email']"
-              >Please enter a valid email address</span
-            >
-          </div>
+          @if (f['email']?.invalid && f['email']?.touched) {
+            <div class="error-message">
+              @if (f['email']?.errors?.['required']) {
+                <span>Email is required</span>
+              }
+              @if (f['email']?.errors?.['email']) {
+                <span>Please enter a valid email address</span>
+              }
+            </div>
+          }
         </div>
 
         <div class="form-group">
@@ -88,24 +87,28 @@
           <div class="forgot-password-row">
             <a routerLink="/auth/forgot-password" class="auth-link">Forgot Password?</a>
           </div>
-          <div
-            *ngIf="f['password']?.invalid && f['password']?.touched"
-            class="error-message"
-          >
-            <span *ngIf="f['password']?.errors?.['required']"
-              >Password is required</span
-            >
-            <span *ngIf="f['password']?.errors?.['minlength']"
-              >Password must be at least 8 characters</span
-            >
-          </div>
+          @if (f['password']?.invalid && f['password']?.touched) {
+            <div class="error-message">
+              @if (f['password']?.errors?.['required']) {
+                <span>Password is required</span>
+              }
+              @if (f['password']?.errors?.['minlength']) {
+                <span>Password must be at least 8 characters</span>
+              }
+            </div>
+          }
         </div>
 
         <button type="submit" class="btn-submit" [disabled]="loading">
-          <span *ngIf="!loading">Sign In</span>
-          <span *ngIf="loading" class="loading-spinner"></span>
+          @if (!loading) {
+            <span>Sign In</span>
+          }
+          @if (loading) {
+            <span class="loading-spinner"></span>
+          }
         </button>
-      </form>
+        </form>
+      }
 
       <div class="auth-footer">
         <p>

@@ -40,6 +40,11 @@ import { PostalPincodeService } from "../../../shared/services/postal-pincode.se
 import { EducationDataService } from "@shared/services/education-data.service";
 import { Institution } from "@shared/models/education.model";
 
+interface TimeSlotOption {
+  label: string;
+  value: string;
+}
+
 @Component({
   selector: "app-register",
   standalone: true,
@@ -59,8 +64,8 @@ import { Institution } from "@shared/models/education.model";
   styleUrl: "./register.component.scss",
 })
 export class RegisterComponent implements OnInit, OnDestroy {
-  private static readonly USERNAME_REGEX =
-    /^[A-Za-z][A-Za-z0-9._]{2,29}$/;
+  private readonly registrationCacheKey = "dc_registration_cache_v1";
+  private static readonly USERNAME_REGEX = /^[A-Za-z][A-Za-z0-9._]{2,29}$/;
   readonly customerPanelImage = "assets/coffee/coffee-table-pexels.jpg";
   readonly cafeOwnerPanelImage = "assets/cafe/cafe-ambience.jpg";
 
@@ -149,6 +154,7 @@ export class RegisterComponent implements OnInit, OnDestroy {
   genderOptions = ["MALE", "FEMALE", "OTHER", "PREFER_NOT_TO_SAY"];
   maritalStatusOptions = ["SINGLE", "MARRIED", "DIVORCED", "WIDOWED"];
   currentYear = new Date().getFullYear();
+  readonly timeSlotOptions: TimeSlotOption[] = this.buildTimeSlotOptions();
 
   // ── Café Owner Registration ────────────────────────────────────────────────
   // Only active when role === 'CAFE_OWNER'.  The 5-step customer form is hidden.
@@ -188,6 +194,13 @@ export class RegisterComponent implements OnInit, OnDestroy {
   cafeLogoFile: File | null = null;
   cafeLogoPreview: string | null = null;
   showCafeLogoPreview = false;
+  cafeGalleryFiles: File[] = [];
+  cafeGalleryPreviews: string[] = [];
+
+  private readonly gstRegex =
+    /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/;
+  private readonly msmeRegex = /^UDYAM-[A-Z]{2}-[0-9]{2}-[0-9]{7}$/;
+  private readonly indianMobileRegex = /^[6-9][0-9]{9}$/;
 
   // Café owner step tracking (3 steps)
   cafeCurrentStep = 1;
@@ -391,7 +404,7 @@ export class RegisterComponent implements OnInit, OnDestroy {
     // ownerPhoneNumber is optional; validate format if provided
     if (
       this.ownerInfo.ownerPhoneNumber.trim() &&
-      !/^[0-9]{10}$/.test(this.ownerInfo.ownerPhoneNumber.trim())
+      !this.indianMobileRegex.test(this.ownerInfo.ownerPhoneNumber.trim())
     ) {
       this.errorMessage = "Please enter a valid 10-digit Indian mobile number";
       return false;
@@ -406,7 +419,7 @@ export class RegisterComponent implements OnInit, OnDestroy {
     }
     if (
       !this.cafeDetails.phoneNumber.trim() ||
-      !/^[0-9]{10}$/.test(this.cafeDetails.phoneNumber)
+      !this.indianMobileRegex.test(this.cafeDetails.phoneNumber)
     ) {
       this.errorMessage = "Please enter a valid 10-digit Indian mobile number";
       return false;
@@ -415,15 +428,31 @@ export class RegisterComponent implements OnInit, OnDestroy {
       this.errorMessage = "Café address is required";
       return false;
     }
-    if (!this.cafeDetails.city.trim()) {
-      this.errorMessage = "City is required";
-      return false;
-    }
     if (
       !this.cafeDetails.pincode.trim() ||
       !/^[0-9]{6}$/.test(this.cafeDetails.pincode)
     ) {
       this.errorMessage = "Please enter a valid 6-digit pincode";
+      return false;
+    }
+    if (!this.cafeDetails.city.trim()) {
+      this.errorMessage = "City is required";
+      return false;
+    }
+    if (!this.cafeDetails.openTime) {
+      this.errorMessage = "Opening time is required";
+      return false;
+    }
+    if (!this.cafeDetails.closeTime) {
+      this.errorMessage = "Closing time is required";
+      return false;
+    }
+    if (
+      this.cafeDetails.openTime &&
+      this.cafeDetails.closeTime &&
+      this.cafeDetails.openTime === this.cafeDetails.closeTime
+    ) {
+      this.errorMessage = "Opening and closing time cannot be the same";
       return false;
     }
     return true;
@@ -450,8 +479,88 @@ export class RegisterComponent implements OnInit, OnDestroy {
     }
   }
 
+  onCafeGallerySelect(event: Event): void {
+    const input = event.currentTarget as HTMLInputElement;
+    const selected = Array.from(input.files || []);
+    if (!selected.length) return;
+
+    const remaining = Math.max(0, 8 - this.cafeGalleryFiles.length);
+    if (remaining === 0) {
+      this.alertService.warning(
+        "Gallery limit reached",
+        "You can upload up to 8 gallery images.",
+      );
+      input.value = "";
+      return;
+    }
+
+    const accepted = selected.slice(0, remaining);
+    for (const file of accepted) {
+      const isImage = /^image\/(jpeg|jpg|png|webp|gif)$/i.test(file.type);
+      if (!isImage) {
+        this.alertService.error(
+          "Only JPG, PNG, WEBP, or GIF images are allowed for gallery.",
+        );
+        continue;
+      }
+      if (file.size > 2 * 1024 * 1024) {
+        this.alertService.error("Each gallery image must be 2MB or less.");
+        continue;
+      }
+
+      this.cafeGalleryFiles.push(file);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const src = String(e.target?.result || "");
+        if (src) this.cafeGalleryPreviews.push(src);
+      };
+      reader.readAsDataURL(file);
+    }
+
+    input.value = "";
+  }
+
+  removeCafeGalleryImage(index: number): void {
+    if (index < 0 || index >= this.cafeGalleryFiles.length) return;
+    this.cafeGalleryFiles.splice(index, 1);
+    this.cafeGalleryPreviews.splice(index, 1);
+  }
+
+  onCafeFssaiInput(value: string): void {
+    this.cafeDetails.fssaiNumber = String(value || "")
+      .replace(/\D/g, "")
+      .slice(0, 14);
+  }
+
+  onCafeGstInput(value: string): void {
+    this.cafeDetails.gstNumber = String(value || "")
+      .toUpperCase()
+      .replace(/[^0-9A-Z]/g, "")
+      .slice(0, 15);
+  }
+
+  onCafeMsmeInput(value: string): void {
+    this.cafeDetails.msmeNumber = String(value || "")
+      .toUpperCase()
+      .replace(/[^0-9A-Z-]/g, "")
+      .slice(0, 19);
+  }
+
+  onOwnerPhoneInput(value: string): void {
+    this.ownerInfo.ownerPhoneNumber = String(value || "")
+      .replace(/\D/g, "")
+      .slice(0, 10);
+  }
+
+  onCafeBusinessPhoneInput(value: string): void {
+    this.cafeDetails.phoneNumber = String(value || "")
+      .replace(/\D/g, "")
+      .slice(0, 10);
+  }
+
   validateCafeOwnerForm(): boolean {
     this.errorMessage = "";
+    this.normalizeComplianceNumbers();
 
     if (!this.ownerInfo.firstName.trim() || !this.ownerInfo.lastName.trim()) {
       this.errorMessage = "First name and last name are required";
@@ -470,10 +579,6 @@ export class RegisterComponent implements OnInit, OnDestroy {
       this.errorMessage = "Café address is required";
       return false;
     }
-    if (!this.cafeDetails.city.trim()) {
-      this.errorMessage = "City is required";
-      return false;
-    }
     if (
       !this.cafeDetails.pincode.trim() ||
       !/^[0-9]{6}$/.test(this.cafeDetails.pincode)
@@ -481,11 +586,48 @@ export class RegisterComponent implements OnInit, OnDestroy {
       this.errorMessage = "Please enter a valid 6-digit pincode";
       return false;
     }
+    if (!this.cafeDetails.city.trim()) {
+      this.errorMessage = "City is required";
+      return false;
+    }
     if (
       !this.cafeDetails.phoneNumber.trim() ||
-      !/^[0-9]{10}$/.test(this.cafeDetails.phoneNumber)
+      !this.indianMobileRegex.test(this.cafeDetails.phoneNumber)
     ) {
       this.errorMessage = "Please enter a valid 10-digit Indian mobile number";
+      return false;
+    }
+    if (!this.cafeDetails.openTime) {
+      this.errorMessage = "Opening time is required";
+      return false;
+    }
+    if (!this.cafeDetails.closeTime) {
+      this.errorMessage = "Closing time is required";
+      return false;
+    }
+    if (this.cafeDetails.openTime === this.cafeDetails.closeTime) {
+      this.errorMessage = "Opening and closing time cannot be the same";
+      return false;
+    }
+    if (
+      this.cafeDetails.fssaiNumber &&
+      !/^\d{14}$/.test(this.cafeDetails.fssaiNumber)
+    ) {
+      this.errorMessage = "FSSAI number must be exactly 14 digits";
+      return false;
+    }
+    if (
+      this.cafeDetails.gstNumber &&
+      !this.gstRegex.test(this.cafeDetails.gstNumber)
+    ) {
+      this.errorMessage = "GST number must be a valid 15-character GSTIN";
+      return false;
+    }
+    if (
+      this.cafeDetails.msmeNumber &&
+      !this.msmeRegex.test(this.cafeDetails.msmeNumber)
+    ) {
+      this.errorMessage = "MSME number must be in UDYAM-XX-00-0000000 format";
       return false;
     }
     return true;
@@ -521,7 +663,11 @@ export class RegisterComponent implements OnInit, OnDestroy {
     };
 
     this.authService
-      .registerCafeOwner(payload, this.cafeLogoFile ?? undefined)
+      .registerCafeOwner(
+        payload,
+        this.cafeLogoFile ?? undefined,
+        this.cafeGalleryFiles,
+      )
       .subscribe({
         next: (response) => {
           this.isLoading = false;
@@ -533,6 +679,7 @@ export class RegisterComponent implements OnInit, OnDestroy {
             "Registration Successful",
             this.successMessage,
           );
+          this.cacheRegistrationPayload(payload.email, "owner", payload);
           setTimeout(() => {
             this.router.navigate(["/auth/login"]);
           }, 2500);
@@ -886,6 +1033,11 @@ export class RegisterComponent implements OnInit, OnDestroy {
           "Registration Successful",
           this.successMessage,
         );
+        this.cacheRegistrationPayload(
+          payload.personalDetails.email,
+          "customer",
+          payload,
+        );
         setTimeout(() => {
           this.router.navigate(["/auth/login"]);
         }, 2000);
@@ -934,6 +1086,29 @@ export class RegisterComponent implements OnInit, OnDestroy {
   onGovtIdTypeChange() {
     if (this.govtIdNumber.trim()) {
       this.govtIdNumber = this.govtIdNumber.trim();
+    }
+  }
+
+  private cacheRegistrationPayload(
+    email: string,
+    role: "customer" | "owner",
+    payload: any,
+  ): void {
+    const key = String(email || "")
+      .trim()
+      .toLowerCase();
+    if (!key) return;
+    try {
+      const raw = localStorage.getItem(this.registrationCacheKey);
+      const existing = raw ? JSON.parse(raw) : {};
+      existing[key] = {
+        role,
+        payload,
+        savedAt: Date.now(),
+      };
+      localStorage.setItem(this.registrationCacheKey, JSON.stringify(existing));
+    } catch {
+      // ignore storage errors
     }
   }
 
@@ -1044,7 +1219,9 @@ export class RegisterComponent implements OnInit, OnDestroy {
     const group = this.academicItems.at(index);
     if (!group) return;
     const raw = group.get("institutionName")?.value;
-    const value = String(typeof raw === "string" ? raw : raw?.name || "").trim();
+    const value = String(
+      typeof raw === "string" ? raw : raw?.name || "",
+    ).trim();
     group.get("institutionName")?.setValue(value, { emitEvent: false });
     group.get("institutionId")?.setValue(null, { emitEvent: false });
     this.academicInstitutionNoResults[index] = false;
@@ -1081,8 +1258,7 @@ export class RegisterComponent implements OnInit, OnDestroy {
         tap((value) => {
           const idx = this.getAcademicIndex(group);
           if (idx < 0) return;
-          const query =
-            typeof value === "string" ? value : value?.name || "";
+          const query = typeof value === "string" ? value : value?.name || "";
           const normalized = String(query || "").trim();
           this.academicInstitutionLoading[idx] = normalized.length >= 2;
           this.academicInstitutionNoResults[idx] = false;
@@ -1090,8 +1266,7 @@ export class RegisterComponent implements OnInit, OnDestroy {
           group.get("institutionId")?.setValue(null, { emitEvent: false });
         }),
         switchMap((value) => {
-          const query =
-            typeof value === "string" ? value : value?.name || "";
+          const query = typeof value === "string" ? value : value?.name || "";
           const normalized = String(query || "").trim();
           if (normalized.length < 2) {
             const idx = this.getAcademicIndex(group);
@@ -1101,9 +1276,9 @@ export class RegisterComponent implements OnInit, OnDestroy {
             }
             return of([]);
           }
-          return this.educationData.searchInstitutions(normalized).pipe(
-            catchError(() => of([])),
-          );
+          return this.educationData
+            .searchInstitutions(normalized)
+            .pipe(catchError(() => of([])));
         }),
         takeUntil(this.destroy$),
       )
@@ -1232,5 +1407,34 @@ export class RegisterComponent implements OnInit, OnDestroy {
       state: String(raw.state || "").trim(),
       pincode: String(raw.pincode || "").trim(),
     };
+  }
+
+  private buildTimeSlotOptions(): TimeSlotOption[] {
+    const slots: TimeSlotOption[] = [];
+    for (let hour = 0; hour < 24; hour++) {
+      const displayHour = hour % 12 === 0 ? 12 : hour % 12;
+      const period = hour < 12 ? "AM" : "PM";
+      slots.push({
+        value: `${String(hour).padStart(2, "0")}:00`,
+        label: `${displayHour}:00 ${period}`,
+      });
+    }
+    return slots;
+  }
+
+  private normalizeComplianceNumbers(): void {
+    this.cafeDetails.fssaiNumber = String(this.cafeDetails.fssaiNumber || "")
+      .replace(/\D/g, "")
+      .slice(0, 14);
+
+    this.cafeDetails.gstNumber = String(this.cafeDetails.gstNumber || "")
+      .toUpperCase()
+      .replace(/[^0-9A-Z]/g, "")
+      .slice(0, 15);
+
+    this.cafeDetails.msmeNumber = String(this.cafeDetails.msmeNumber || "")
+      .toUpperCase()
+      .replace(/[^0-9A-Z-]/g, "")
+      .slice(0, 19);
   }
 }

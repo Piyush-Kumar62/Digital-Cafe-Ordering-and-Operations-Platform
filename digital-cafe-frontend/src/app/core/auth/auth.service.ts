@@ -31,6 +31,7 @@ export class AuthService {
       storedUser ? JSON.parse(storedUser) : null,
     );
     this.currentUser = this.currentUserSubject.asObservable();
+    this.normalizeAuthState();
   }
 
   public get currentUserValue(): User | null {
@@ -38,7 +39,7 @@ export class AuthService {
   }
 
   public get isAuthenticated(): boolean {
-    return !!this.getToken();
+    return !!this.getToken() && !!this.currentUserValue;
   }
 
   public get userRoles(): string[] {
@@ -123,7 +124,7 @@ export class AuthService {
   }
 
   login(request: LoginRequest): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.apiUrl}/login`, request).pipe(
+    return this.http.post<AuthResponse>(`${this.apiUrl}/login`, request, { withCredentials: true }).pipe(
       tap((response) => this.handleAuthResponse(response)),
       catchError(this.handleError),
     );
@@ -187,26 +188,43 @@ export class AuthService {
   }
 
   logout(): void {
-    localStorage.removeItem(environment.tokenKey);
-    localStorage.removeItem(environment.refreshTokenKey);
-    localStorage.removeItem(environment.userKey);
+    // Notify backend to clear the HTTP-only refresh cookie
+    this.http.post(`${this.apiUrl}/logout`, null, { withCredentials: true }).subscribe({
+      next: () => this.clearClientState(),
+      error: () => this.clearClientState()
+    });
+  }
 
+  private clearClientState(): void {
+    localStorage.removeItem(environment.tokenKey);
+    localStorage.removeItem(environment.userKey);
     this.currentUserSubject.next(null);
   }
 
   getToken(): string | null {
-    return localStorage.getItem(environment.tokenKey);
+    const token = localStorage.getItem(environment.tokenKey);
+    if (!token) {
+      this.clearStaleUser();
+      return null;
+    }
+
+    if (this.isTokenExpired(token)) {
+      this.logout();
+      return null;
+    }
+
+    return token;
   }
 
-  getRefreshToken(): string | null {
-    return localStorage.getItem(environment.refreshTokenKey);
+  refreshToken(): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/refresh-token`, null, { withCredentials: true }).pipe(
+      tap((response) => this.handleAuthResponse(response))
+    );
   }
 
   private handleAuthResponse(response: AuthResponse): void {
     localStorage.setItem(environment.tokenKey, response.token);
-    if (response.refreshToken) {
-      localStorage.setItem(environment.refreshTokenKey, response.refreshToken);
-    }
+    
 
     const user: User = {
       id: response.userId,
@@ -223,6 +241,51 @@ export class AuthService {
 
     localStorage.setItem(environment.userKey, JSON.stringify(user));
     this.currentUserSubject.next(user);
+  }
+
+  private normalizeAuthState(): void {
+    const token = localStorage.getItem(environment.tokenKey);
+    if (!token) {
+      this.clearStaleUser();
+      return;
+    }
+
+    if (this.isTokenExpired(token)) {
+      this.logout();
+      return;
+    }
+
+    // Token exists but no cached user — clear token to avoid auth drift
+    if (!this.currentUserSubject.value) {
+      this.logout();
+    }
+  }
+
+  private clearStaleUser(): void {
+    if (this.currentUserSubject.value) {
+      localStorage.removeItem(environment.userKey);
+      this.currentUserSubject.next(null);
+    }
+  }
+
+  private isTokenExpired(token: string): boolean {
+    try {
+      const payload = token.split(".")[1];
+      if (!payload) return false;
+      const base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
+      const json = decodeURIComponent(
+        atob(base64)
+          .split("")
+          .map((c) => `%${("00" + c.charCodeAt(0).toString(16)).slice(-2)}`)
+          .join(""),
+      );
+      const data = JSON.parse(json) as { exp?: number };
+      if (!data?.exp) return false;
+      const nowSeconds = Math.floor(Date.now() / 1000);
+      return data.exp <= nowSeconds;
+    } catch {
+      return false;
+    }
   }
 
   public updateUserData(user: User): void {

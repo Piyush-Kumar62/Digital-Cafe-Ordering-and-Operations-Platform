@@ -856,6 +856,7 @@ textarea.form-input {
   min-width: 180px;
 }
 
+
 .map-action-btn {
   display: inline-flex;
   align-items: center;
@@ -898,6 +899,11 @@ textarea.form-input {
 // ─── RESPONSIVE ───────────────────────────────────────────────────────────────
 @media (max-width: 1024px) {
   .content-wrapper {
+    grid-template-columns: 1fr;
+  }
+
+  .policy-grid,
+  .policy-list {
     grid-template-columns: 1fr;
   }
 }

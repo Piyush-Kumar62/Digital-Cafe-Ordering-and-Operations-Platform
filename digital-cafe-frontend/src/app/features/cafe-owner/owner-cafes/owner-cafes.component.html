@@ -8,35 +8,50 @@
 <div *ngIf="!loading" class="owner-cafes-page">
   <!-- Page Header -->
   <header class="page-header">
-    <div class="header-text">
-      <h1>Café Management</h1>
-      <p>
-        Create, manage and showcase your cafés to customers on the platform.
-      </p>
-    </div>
-    <div class="header-actions">
-      <button
-        *ngIf="hasCafe"
-        class="btn-seed"
-        type="button"
-        (click)="openQuickEditModal()"
-      >
-        <i class="bi bi-pencil-square"></i> Quick Edit
-      </button>
-      <button class="btn-primary" type="button" (click)="openCreate()">
-        <i class="bi bi-plus-circle"></i>
-        {{ hasCafe ? "Add Another Café" : "Create My Café" }}
-      </button>
+    <div class="header-surface">
+      <div class="header-main">
+        <div class="header-text">
+          <h1>Café Management</h1>
+          <p>
+            Create, manage and showcase your cafés to customers on the platform.
+          </p>
+        </div>
+
+        <div class="header-actions">
+          <button
+            *ngIf="hasCafe"
+            class="btn-seed"
+            type="button"
+            (click)="openQuickEditModal()"
+          >
+            <i class="bi bi-pencil-square"></i> Quick Edit
+          </button>
+          <button class="btn-primary" type="button" (click)="openCreate()">
+            <i class="bi bi-plus-circle"></i>
+            {{ hasCafe ? "Add Another Café" : "Create My Café" }}
+          </button>
+        </div>
+      </div>
+
+      <div class="header-interactive-grid" *ngIf="hasCafe">
+        <div class="header-interactive-card status">
+          <span class="card-label">Portfolio</span>
+          <strong style="display:flex; align-items:center; gap:0.4rem;">
+            <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: #fde047; animation: pulse-dot 1.5s infinite;"></span>
+            ● Live - {{ cafes.length }} Active Café{{ cafes.length > 1 ? 's' : '' }}
+          </strong>
+          <small>Operate and scale from one control surface</small>
+        </div>
+
+        <!-- Actions removed as per user request -->
+      </div>
+
+      <!-- Live row removed as per user request -->
     </div>
   </header>
 
   <!-- ================ My Cafes Grid ================ -->
   <section *ngIf="hasCafe && !showForm" class="my-cafe-section">
-    <div class="section-label">
-      <span class="badge-live">● Live</span>
-      <h2>My Cafés ({{ cafes.length }})</h2>
-    </div>
-
     <div class="cafes-list">
       <div class="my-cafe-card" *ngFor="let cafe of cafes">
         <div class="cafe-img-wrap">
@@ -126,6 +141,23 @@
               <i class="bi bi-shield-check"></i>
               <span>FSSAI: {{ $any(cafe).fssaiNumber }}</span>
             </div>
+          </div>
+
+          <div
+            class="cafe-gallery-strip"
+            *ngIf="$any(cafe).galleryImages?.length"
+          >
+            <img
+              *ngFor="let img of $any(cafe).galleryImages | slice: 0 : 4"
+              [src]="img"
+              alt="Café gallery"
+            />
+            <span
+              class="gallery-more"
+              *ngIf="$any(cafe).galleryImages.length > 4"
+            >
+              +{{ $any(cafe).galleryImages.length - 4 }}
+            </span>
           </div>
 
           <div class="cafe-action-row">
@@ -339,10 +371,49 @@
         </div>
       </div>
 
-      <!-- ── Card 2: Location ── -->
-      <div class="form-card">
+      <!-- ── Card 2: Gallery ── -->
+      <div class="form-card form-card--gallery">
         <div class="form-card-header">
           <span class="form-card-num">2</span>
+          <div>
+            <h3>Café Gallery</h3>
+            <p>Add images customers can see while browsing</p>
+          </div>
+        </div>
+
+        <div class="form-group full">
+          <input
+            type="file"
+            id="galleryInput"
+            hidden
+            multiple
+            accept=".jpg,.jpeg,.png,.webp,.gif"
+            (change)="onGalleryChange($event)"
+          />
+          <label for="galleryInput" class="gallery-upload-btn">
+            <i class="bi bi-images"></i>
+            Upload Gallery Images
+          </label>
+          <small class="field-hint">Up to 8 images, 2MB each</small>
+        </div>
+
+        <div class="gallery-preview-grid" *ngIf="galleryPreviews.length">
+          <div
+            class="gallery-preview-item"
+            *ngFor="let src of galleryPreviews; let i = index"
+          >
+            <img [src]="src" [alt]="'Gallery image ' + (i + 1)" />
+            <button type="button" (click)="removeGalleryImage(i)">
+              <i class="bi bi-x-lg"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Card 3: Location ── -->
+      <div class="form-card">
+        <div class="form-card-header">
+          <span class="form-card-num">3</span>
           <div>
             <h3>Location</h3>
             <p>Where customers will find you</p>
@@ -407,10 +478,10 @@
         </div>
       </div>
 
-      <!-- ── Card 3: Contact & Hours ── -->
+      <!-- ── Card 4: Contact & Hours ── -->
       <div class="form-card">
         <div class="form-card-header">
-          <span class="form-card-num">3</span>
+          <span class="form-card-num">4</span>
           <div>
             <h3>Contact &amp; Hours</h3>
             <p>How customers reach you and when you're open</p>
@@ -444,16 +515,32 @@
           <div class="hours-field-row">
             <div class="hours-field-group">
               <label> <i class="bi bi-sunrise"></i>&nbsp;Opening Time </label>
-              <input type="time" formControlName="openingTime" />
-              <small class="field-hint">24-hour format (e.g. 09:00)</small>
+              <select formControlName="openingTime">
+                <option value="">Select opening time</option>
+                <option
+                  *ngFor="let slot of timeSlotOptions"
+                  [value]="slot.value"
+                >
+                  {{ slot.label }}
+                </option>
+              </select>
+              <small class="field-hint">Choose opening slot</small>
             </div>
             <div class="hours-divider-arrow">
               <i class="bi bi-arrow-right-circle-fill"></i>
             </div>
             <div class="hours-field-group">
               <label> <i class="bi bi-sunset"></i>&nbsp;Closing Time </label>
-              <input type="time" formControlName="closingTime" />
-              <small class="field-hint">24-hour format (e.g. 22:00)</small>
+              <select formControlName="closingTime">
+                <option value="">Select closing time</option>
+                <option
+                  *ngFor="let slot of timeSlotOptions"
+                  [value]="slot.value"
+                >
+                  {{ slot.label }}
+                </option>
+              </select>
+              <small class="field-hint">Choose closing slot</small>
             </div>
           </div>
           <!-- Live preview of selected hours -->
@@ -474,12 +561,10 @@
         </div>
       </div>
 
-      <!-- ── Card 4: Legal (Optional) ── -->
+      <!-- ── Card 5: Legal (Optional) ── -->
       <div class="form-card form-card--legal">
         <div class="form-card-header">
-          <span class="form-card-num form-card-num--opt">
-            <i class="bi bi-shield-check"></i>
-          </span>
+          <span class="form-card-num">5</span>
           <div>
             <h3>
               Legal Details&nbsp;<span class="badge-optional">Optional</span>
@@ -494,7 +579,15 @@
               type="text"
               formControlName="fssaiNumber"
               placeholder="14-digit FSSAI"
+              maxlength="14"
+              inputmode="numeric"
             />
+            <span
+              class="err"
+              *ngIf="f['fssaiNumber'].touched && f['fssaiNumber'].invalid"
+            >
+              Enter exactly 14 digits.
+            </span>
           </div>
           <div class="form-group">
             <label>GST Number</label>
@@ -502,7 +595,15 @@
               type="text"
               formControlName="gstNumber"
               placeholder="15-char GST"
+              maxlength="15"
+              style="text-transform: uppercase"
             />
+            <span
+              class="err"
+              *ngIf="f['gstNumber'].touched && f['gstNumber'].invalid"
+            >
+              Enter valid 15-character GSTIN.
+            </span>
           </div>
           <div class="form-group">
             <label>MSME Number</label>
@@ -510,7 +611,15 @@
               type="text"
               formControlName="msmeNumber"
               placeholder="MSME Udyam number"
+              maxlength="19"
+              style="text-transform: uppercase"
             />
+            <span
+              class="err"
+              *ngIf="f['msmeNumber'].touched && f['msmeNumber'].invalid"
+            >
+              Use format: UDYAM-XX-00-0000000.
+            </span>
           </div>
         </div>
       </div>

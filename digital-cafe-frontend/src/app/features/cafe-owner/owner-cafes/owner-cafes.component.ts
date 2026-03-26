@@ -8,6 +8,7 @@ import {
   FormGroup,
   Validators,
 } from "@angular/forms";
+import { of, switchMap } from "rxjs";
 import { ApiService } from "@core/services/api.service";
 import { AlertService } from "@core/services/alert.service";
 import { CafeContextService } from "../services/cafe-context.service";
@@ -25,6 +26,7 @@ export class OwnerCafesComponent implements OnInit {
   cafes: Cafe[] = [];
   editingCafe: Cafe | null = null;
   loading = true;
+  readonly timeSlotOptions = this.buildTimeSlotOptions();
 
   get hasCafe(): boolean {
     return this.cafes.length > 0;
@@ -56,6 +58,8 @@ export class OwnerCafesComponent implements OnInit {
   formLoading = false;
   selectedFile: File | null = null;
   previewUrl: string | null = null;
+  galleryFiles: File[] = [];
+  galleryPreviews: string[] = [];
   cafeForm!: FormGroup;
 
   constructor(
@@ -90,9 +94,54 @@ export class OwnerCafesComponent implements OnInit {
       pincode: ["", [Validators.required, Validators.maxLength(10)]],
       openingTime: [""],
       closingTime: [""],
-      fssaiNumber: [""],
-      gstNumber: [""],
-      msmeNumber: [""],
+      fssaiNumber: ["", [Validators.pattern(/^$|^[0-9]{14}$/)]],
+      gstNumber: [
+        "",
+        [
+          Validators.pattern(
+            /^$|^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/,
+          ),
+        ],
+      ],
+      msmeNumber: [
+        "",
+        [Validators.pattern(/^$|^UDYAM-[A-Z]{2}-[0-9]{2}-[0-9]{7}$/)],
+      ],
+    });
+
+    this.cafeForm.get("fssaiNumber")?.valueChanges.subscribe((value) => {
+      const normalized = String(value || "")
+        .replace(/\D/g, "")
+        .slice(0, 14);
+      if (normalized !== value) {
+        this.cafeForm
+          .get("fssaiNumber")
+          ?.setValue(normalized, { emitEvent: false });
+      }
+    });
+
+    this.cafeForm.get("gstNumber")?.valueChanges.subscribe((value) => {
+      const normalized = String(value || "")
+        .toUpperCase()
+        .replace(/[^0-9A-Z]/g, "")
+        .slice(0, 15);
+      if (normalized !== value) {
+        this.cafeForm
+          .get("gstNumber")
+          ?.setValue(normalized, { emitEvent: false });
+      }
+    });
+
+    this.cafeForm.get("msmeNumber")?.valueChanges.subscribe((value) => {
+      const normalized = String(value || "")
+        .toUpperCase()
+        .replace(/[^0-9A-Z-]/g, "")
+        .slice(0, 19);
+      if (normalized !== value) {
+        this.cafeForm
+          .get("msmeNumber")
+          ?.setValue(normalized, { emitEvent: false });
+      }
     });
   }
 
@@ -154,6 +203,8 @@ export class OwnerCafesComponent implements OnInit {
     this.cafeForm.reset();
     this.selectedFile = null;
     this.previewUrl = null;
+    this.galleryFiles = [];
+    this.galleryPreviews = [];
     this.showForm = true;
   }
 
@@ -181,6 +232,10 @@ export class OwnerCafesComponent implements OnInit {
     // no logo is uploaded, causing a broken image instead of the empty-state.
     const rawImg = cafe.logoUrl || cafe.imageUrl;
     this.previewUrl = rawImg ? this.getCafeImage(cafe) : null;
+    this.galleryFiles = [];
+    this.galleryPreviews = Array.isArray(cafe.galleryImages)
+      ? cafe.galleryImages.filter((img) => !!img)
+      : [];
     this.showForm = true;
   }
 
@@ -191,6 +246,8 @@ export class OwnerCafesComponent implements OnInit {
     this.cafeForm.reset();
     this.selectedFile = null;
     this.previewUrl = null;
+    this.galleryFiles = [];
+    this.galleryPreviews = [];
   }
 
   onFileChange(event: Event): void {
@@ -209,6 +266,50 @@ export class OwnerCafesComponent implements OnInit {
     reader.readAsDataURL(file);
   }
 
+  onGalleryChange(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const selected = Array.from(input.files || []);
+    if (!selected.length) return;
+
+    const remaining = Math.max(0, 8 - this.galleryFiles.length);
+    if (remaining === 0) {
+      this.alertService.warning(
+        "Gallery limit reached",
+        "You can upload up to 8 gallery images.",
+      );
+      input.value = "";
+      return;
+    }
+
+    selected.slice(0, remaining).forEach((file) => {
+      if (!/^image\/(jpeg|jpg|png|webp|gif)$/i.test(file.type)) {
+        this.alertService.error(
+          "Only JPG, PNG, WEBP, or GIF images are allowed.",
+        );
+        return;
+      }
+      if (file.size > 2 * 1024 * 1024) {
+        this.alertService.error("Each gallery image must be 2MB or less.");
+        return;
+      }
+      this.galleryFiles.push(file);
+      const reader = new FileReader();
+      reader.onload = () => {
+        const src = String(reader.result || "");
+        if (src) this.galleryPreviews.push(src);
+      };
+      reader.readAsDataURL(file);
+    });
+
+    input.value = "";
+  }
+
+  removeGalleryImage(index: number): void {
+    if (index < 0 || index >= this.galleryFiles.length) return;
+    this.galleryFiles.splice(index, 1);
+    this.galleryPreviews.splice(index, 1);
+  }
+
   submitForm(): void {
     if (this.cafeForm.invalid) {
       this.cafeForm.markAllAsTouched();
@@ -217,6 +318,39 @@ export class OwnerCafesComponent implements OnInit {
     }
 
     const raw = this.cafeForm.value;
+    const normalizedFssai = String(raw.fssaiNumber || "")
+      .replace(/\D/g, "")
+      .slice(0, 14);
+    const normalizedGst = String(raw.gstNumber || "")
+      .toUpperCase()
+      .replace(/[^0-9A-Z]/g, "")
+      .slice(0, 15);
+    const normalizedMsme = String(raw.msmeNumber || "")
+      .toUpperCase()
+      .replace(/[^0-9A-Z-]/g, "")
+      .slice(0, 19);
+
+    if (normalizedFssai && !/^\d{14}$/.test(normalizedFssai)) {
+      this.alertService.error("FSSAI number must be exactly 14 digits.");
+      return;
+    }
+    if (
+      normalizedGst &&
+      !/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/.test(normalizedGst)
+    ) {
+      this.alertService.error("GST number must be a valid 15-character GSTIN.");
+      return;
+    }
+    if (
+      normalizedMsme &&
+      !/^UDYAM-[A-Z]{2}-[0-9]{2}-[0-9]{7}$/.test(normalizedMsme)
+    ) {
+      this.alertService.error(
+        "MSME number must be in UDYAM-XX-00-0000000 format.",
+      );
+      return;
+    }
+
     const fd = new FormData();
 
     const data: Record<string, any> = {
@@ -230,9 +364,9 @@ export class OwnerCafesComponent implements OnInit {
       pincode: String(raw.pincode || "").trim(),
       openTime: this.normalizeTime(raw.openingTime) || null,
       closeTime: this.normalizeTime(raw.closingTime) || null,
-      fssaiNumber: raw.fssaiNumber?.trim() || "",
-      gstNumber: raw.gstNumber?.trim() || "",
-      msmeNumber: raw.msmeNumber?.trim() || "",
+      fssaiNumber: normalizedFssai || "",
+      gstNumber: normalizedGst || "",
+      msmeNumber: normalizedMsme || "",
     };
 
     if (String(data["phoneNumber"] || "").length !== 10) {
@@ -254,25 +388,40 @@ export class OwnerCafesComponent implements OnInit {
         ? this.apiService.updateCafeSetup(this.editingCafe.id, fd)
         : this.apiService.createCafeSetup(fd);
 
-    obs.subscribe({
-      next: () => {
-        this.alertService.success(
-          this.isEditMode
-            ? "Cafe updated successfully!"
-            : "Cafe created successfully!",
-        );
-        this.formLoading = false;
-        this.closeForm();
-        this.loadCafe();
-      },
-      error: (err) => {
-        this.formLoading = false;
-        const msg =
-          err?.error?.message ||
-          (this.isEditMode ? "Update failed." : "Creation failed.");
-        this.alertService.error(msg);
-      },
-    });
+    obs
+      .pipe(
+        switchMap((res: any) => {
+          const cafeId =
+            this.isEditMode && this.editingCafe
+              ? this.editingCafe.id
+              : Number(res?.id || res?.data?.id || 0);
+          if (!this.galleryFiles.length || !cafeId) {
+            return of(null);
+          }
+          const galleryFd = new FormData();
+          this.galleryFiles.forEach((file) => galleryFd.append("files", file));
+          return this.apiService.uploadGallery(cafeId, galleryFd);
+        }),
+      )
+      .subscribe({
+        next: () => {
+          this.alertService.success(
+            this.isEditMode
+              ? "Cafe updated successfully!"
+              : "Cafe created successfully!",
+          );
+          this.formLoading = false;
+          this.closeForm();
+          this.loadCafe();
+        },
+        error: (err) => {
+          this.formLoading = false;
+          const msg =
+            err?.error?.message ||
+            (this.isEditMode ? "Update failed." : "Creation failed.");
+          this.alertService.error(msg);
+        },
+      });
   }
 
   toggleStatus(cafe: Cafe): void {
@@ -324,6 +473,19 @@ export class OwnerCafesComponent implements OnInit {
     const ampm = h >= 12 ? "PM" : "AM";
     const hour = h % 12 || 12;
     return `${hour}:${String(m).padStart(2, "0")} ${ampm}`;
+  }
+
+  private buildTimeSlotOptions(): Array<{ label: string; value: string }> {
+    const slots: Array<{ label: string; value: string }> = [];
+    for (let hour = 0; hour < 24; hour++) {
+      const displayHour = hour % 12 === 0 ? 12 : hour % 12;
+      const period = hour < 12 ? "AM" : "PM";
+      slots.push({
+        value: `${String(hour).padStart(2, "0")}:00`,
+        label: `${displayHour}:00 ${period}`,
+      });
+    }
+    return slots;
   }
 
   get f() {

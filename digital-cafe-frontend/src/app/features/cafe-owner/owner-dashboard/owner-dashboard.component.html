@@ -6,33 +6,61 @@
 
 <!-- DASHBOARD -->
 <div *ngIf="!loading" class="dashboard">
-  <!-- Page Header -->
-  <header class="page-header">
-    <div class="header-left">
-      <span class="eyebrow">&#9749; CAFE OPERATIONS</span>
-      <h1>{{ cafeName }}</h1>
-      <p class="sub">
-        Live overview of tables, staff, orders &amp; reservations
+  <!-- Hero Header (matches customer dashboard style) -->
+  <div class="db-hero">
+    <!-- left: greeting + cafe name + CTA -->
+    <div class="db-hero__content">
+      <p class="db-hero__greeting">
+        <span class="material-icons">{{ greetingIcon }}</span>
+        {{ greeting }}
       </p>
-    </div>
-    <div class="header-right">
-      <div class="live-badge">
-        <span class="live-dot"></span>Live &mdash; auto-refreshes
+      <h1 class="db-hero__name">{{ cafeName }}</h1>
+      <p class="db-hero__date">Live overview of tables, staff, orders &amp; reservations</p>
+      <p class="db-hero__date">{{ dateTimeFormatted }}</p>
+      <div class="db-hero__btns">
+        <div class="live-badge">
+          <span class="live-dot" style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: #fde047; animation: pulse-dot 1.5s infinite; margin-right: 6px;"></span>Live &mdash; auto-refreshes
+        </div>
+        <button
+          class="db-hero__cta db-hero__cta--ghost btn-refresh"
+          [class.refreshing]="refreshing"
+          (click)="refresh()"
+          type="button"
+        >
+          <span class="spin-icon">&#8635;</span>
+          {{ refreshing ? 'Refreshing&hellip;' : 'Refresh' }}
+        </button>
       </div>
-      <span class="last-refresh"
-        >Updated {{ lastRefreshed | date: "h:mm a" }}</span
-      >
-      <button
-        class="btn-refresh"
-        [class.refreshing]="refreshing"
-        (click)="refresh()"
-        type="button"
-      >
-        <span class="spin-icon">&#8635;</span>
-        {{ refreshing ? "Refreshing&hellip;" : "Refresh" }}
-      </button>
     </div>
-  </header>
+    <!-- right: avatar + mini-stats -->
+    <div class="db-hero__right">
+      <div class="db-hero__avatar">
+        <img *ngIf="resolvedAvatarUrl" [src]="resolvedAvatarUrl" alt="Profile" />
+        <span *ngIf="!resolvedAvatarUrl" class="material-icons">person</span>
+      </div>
+      <div class="db-hero__meta">
+        <p class="db-hero__owner-name">{{ displayName }}</p>
+        <p class="db-hero__owner-role">Café Owner</p>
+      </div>
+      <div class="db-hero__mini-stats">
+        <div class="db-mini-stat">
+          <span class="material-icons">people</span>
+          <strong>{{ stats.activeStaff }}</strong>
+          <span>Active Staff</span>
+        </div>
+        <div class="db-mini-stat">
+          <span class="material-icons">table_restaurant</span>
+          <strong>{{ stats.occupiedTables }}</strong>
+          <span>Tables Busy</span>
+        </div>
+        <div class="db-mini-stat">
+          <span class="material-icons">receipt_long</span>
+          <strong>{{ stats.todayOrders }}</strong>
+          <span>Orders Today</span>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- KPI Cards -->
   <section class="kpi-grid">

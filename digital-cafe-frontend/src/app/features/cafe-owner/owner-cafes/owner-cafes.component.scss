@@ -41,6 +41,11 @@ $radius: 16px;
   }
 }
 
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(1.4); }
+}
+
 /* ============================= PAGE ============================= */
 .owner-cafes-page {
   padding: 1.5rem;
@@ -53,20 +58,48 @@ $radius: 16px;
 
 /* ============================= HEADER ============================= */
 .page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 1rem;
-  flex-wrap: wrap;
-
-  h1 {
-    margin: 0;
-    font-size: 1.7rem;
-    color: $text;
+  .header-surface {
+    width: 100%;
+    border-radius: 20px;
+    padding: 1.1rem;
+    background:
+      radial-gradient(
+        circle at 95% 0%,
+        rgba(109, 40, 217, 0.18),
+        transparent 40%
+      ),
+      radial-gradient(
+        circle at 0% 100%,
+        rgba(245, 158, 11, 0.12),
+        transparent 40%
+      ),
+      linear-gradient(145deg, #f8fafc, #eef2ff);
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    box-shadow: 0 14px 28px rgba(15, 23, 42, 0.08);
   }
-  p {
-    margin: 0.3rem 0 0;
-    color: $muted;
+
+  .header-main {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .header-text {
+    h1 {
+      margin: 0;
+      font-size: clamp(1.55rem, 2.3vw, 2rem);
+      letter-spacing: -0.01em;
+      color: $text;
+    }
+
+    p {
+      margin: 0.35rem 0 0;
+      color: color.adjust($muted, $lightness: -8%);
+      font-size: 1rem;
+      max-width: 640px;
+    }
   }
 
   .header-actions {
@@ -74,6 +107,94 @@ $radius: 16px;
     gap: 0.7rem;
     flex-wrap: wrap;
     align-items: center;
+  }
+
+  .header-interactive-grid {
+    margin-top: 1rem;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .header-interactive-card {
+    text-align: left;
+    border-radius: 14px;
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    background: rgba(255, 255, 255, 0.78);
+    padding: 0.85rem 0.9rem;
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
+    color: $text;
+
+    .card-label {
+      display: inline-flex;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: $muted;
+      margin-bottom: 0.35rem;
+    }
+
+    strong {
+      display: block;
+      font-size: 0.95rem;
+      line-height: 1.3;
+      margin-bottom: 0.22rem;
+    }
+
+    small {
+      display: block;
+      color: color.adjust($muted, $lightness: -6%);
+      font-size: 0.76rem;
+      line-height: 1.3;
+    }
+
+    &.status {
+      border-color: rgba(34, 197, 94, 0.35);
+      background: linear-gradient(145deg, #ecfdf5, #ffffff);
+    }
+
+    &.action {
+      position: relative;
+      width: 100%;
+      cursor: pointer;
+      transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease,
+        border-color 0.2s ease,
+        background 0.2s ease;
+
+      i {
+        position: absolute;
+        right: 0.7rem;
+        bottom: 0.6rem;
+        font-size: 1.05rem;
+        color: #6d28d9;
+      }
+
+      &:hover {
+        transform: translateY(-2px);
+        border-color: rgba(109, 40, 217, 0.45);
+        background: #ffffff;
+        box-shadow: 0 12px 20px rgba(49, 46, 129, 0.13);
+      }
+    }
+  }
+
+  .header-live-row {
+    margin-top: 0.95rem;
+    padding-top: 0.85rem;
+    border-top: 1px solid rgba(148, 163, 184, 0.28);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+
+    h2 {
+      margin: 0;
+      font-size: 1.05rem;
+      color: $text;
+      letter-spacing: -0.01em;
+    }
   }
 }
 
@@ -208,16 +329,6 @@ $radius: 16px;
 
 /* ============================= MY CAFE SECTION ============================= */
 .my-cafe-section {
-  .section-label {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    margin-bottom: 1rem;
-    h2 {
-      margin: 0;
-      font-size: 1.2rem;
-    }
-  }
   .badge-live {
     background: #dcfce7;
     color: #166534;
@@ -339,6 +450,7 @@ $radius: 16px;
     font-size: 0.85rem;
     display: -webkit-box;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
@@ -378,6 +490,103 @@ $radius: 16px;
     &::-webkit-scrollbar {
       display: none;
     }
+  }
+
+  .cafe-gallery-strip {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-top: 0.25rem;
+
+    img {
+      width: 42px;
+      height: 42px;
+      border-radius: 8px;
+      object-fit: cover;
+      border: 1px solid $border;
+      background: #f8fafc;
+    }
+
+    .gallery-more {
+      min-width: 42px;
+      height: 42px;
+      border-radius: 8px;
+      background: #ede9fe;
+      color: $primary;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      font-weight: 700;
+      border: 1px solid rgba(109, 40, 217, 0.25);
+    }
+  }
+}
+
+.gallery-upload-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px dashed rgba(109, 40, 217, 0.55);
+  color: $primary;
+  background: #f8f5ff;
+  border-radius: 10px;
+  padding: 0.55rem 0.9rem;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.form-card--gallery {
+  .form-group.full {
+    margin-bottom: 0.25rem;
+  }
+
+  .gallery-upload-btn {
+    min-height: 42px;
+  }
+
+  .field-hint {
+    margin-top: 0.45rem;
+    font-size: 0.78rem;
+  }
+}
+
+.gallery-preview-grid {
+  margin-top: 0.75rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(94px, 1fr));
+  gap: 0.6rem;
+}
+
+.gallery-preview-item {
+  position: relative;
+  border-radius: 10px;
+  border: 1px solid $border;
+  overflow: hidden;
+  aspect-ratio: 1 / 1;
+  background: #f8fafc;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  button {
+    position: absolute;
+    top: 0.3rem;
+    right: 0.3rem;
+    width: 1.5rem;
+    height: 1.5rem;
+    border: none;
+    border-radius: 999px;
+    background: rgba(15, 23, 42, 0.75);
+    color: #fff;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
 }
 
@@ -1228,11 +1437,72 @@ $radius: 16px;
   }
 
   .page-header {
-    h1 {
-      color: #f1f5f9;
+    .header-surface {
+      background:
+        radial-gradient(
+          circle at 95% 0%,
+          rgba(167, 139, 250, 0.25),
+          transparent 42%
+        ),
+        radial-gradient(
+          circle at 0% 100%,
+          rgba(245, 158, 11, 0.2),
+          transparent 42%
+        ),
+        linear-gradient(145deg, rgba(15, 23, 42, 0.94), rgba(30, 41, 59, 0.94));
+      border-color: rgba(148, 163, 184, 0.24);
+      box-shadow: 0 16px 32px rgba(2, 6, 23, 0.45);
     }
-    p {
-      color: #94a3b8;
+
+    .header-text {
+      h1 {
+        color: #f1f5f9;
+      }
+
+      p {
+        color: #94a3b8;
+      }
+    }
+
+    .header-interactive-card {
+      background: rgba(15, 23, 42, 0.58);
+      border-color: rgba(148, 163, 184, 0.28);
+      color: #e2e8f0;
+
+      .card-label {
+        color: #94a3b8;
+      }
+
+      small {
+        color: #cbd5e1;
+      }
+
+      &.status {
+        background: linear-gradient(
+          145deg,
+          rgba(6, 78, 59, 0.55),
+          rgba(15, 23, 42, 0.6)
+        );
+        border-color: rgba(34, 197, 94, 0.35);
+      }
+
+      &.action i {
+        color: #c4b5fd;
+      }
+
+      &.action:hover {
+        border-color: rgba(167, 139, 250, 0.5);
+        background: rgba(30, 41, 59, 0.95);
+        box-shadow: 0 14px 24px rgba(2, 6, 23, 0.45);
+      }
+    }
+
+    .header-live-row {
+      border-top-color: rgba(148, 163, 184, 0.26);
+
+      h2 {
+        color: #f1f5f9;
+      }
     }
   }
 
@@ -1253,10 +1523,6 @@ $radius: 16px;
     }
   }
 
-  /* Section labels */
-  .my-cafe-section .section-label h2 {
-    color: #f1f5f9;
-  }
   .badge-live {
     background: rgba(22, 101, 52, 0.4);
     color: #86efac;
@@ -1567,6 +1833,12 @@ $radius: 16px;
 
 /* ============================= RESPONSIVE ============================= */
 @media (max-width: 900px) {
+  .page-header {
+    .header-interactive-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
   .my-cafe-card {
     flex-direction: column;
     .cafe-img-wrap {
@@ -1586,7 +1858,32 @@ $radius: 16px;
 }
 @media (max-width: 600px) {
   .page-header {
-    flex-direction: column;
+    .header-main {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .header-actions {
+      width: 100%;
+
+      .btn-seed,
+      .btn-primary {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+
+    .header-interactive-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .header-live-row {
+      align-items: flex-start;
+
+      h2 {
+        font-size: 1rem;
+      }
+    }
   }
   .cafe-meta-grid {
     grid-template-columns: 1fr;

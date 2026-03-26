@@ -52,111 +52,215 @@ $font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
   min-height: 100vh;
 }
 
-// ─── Page Header ──────────────────────────────────────────────────────────────
-.page-header {
+// ─── Hero Header (matches customer dashboard pattern) ─────────────────────────
+.db-hero {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 1.5rem;
+  padding: 1rem 1.5rem;
+  border-radius: 1.5rem;
+  background: linear-gradient(135deg, #4338ca 0%, #6366f1 40%, #818cf8 100%);
+  position: relative;
+  overflow: hidden;
+
+  &::before,
+  &::after {
+    content: "";
+    position: absolute;
+    border-radius: 50%;
+    opacity: 0.12;
+    pointer-events: none;
+  }
+  &::before {
+    width: 300px;
+    height: 300px;
+    top: -90px;
+    right: -60px;
+    background: #fff;
+  }
+  &::after {
+    width: 200px;
+    height: 200px;
+    bottom: -70px;
+    left: 38%;
+    background: #fff;
+  }
+}
+
+.db-hero__content {
+  flex: 1;
+  position: relative;
+  z-index: 1;
+}
+.db-hero__greeting {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0 0 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+  .material-icons {
+    font-size: 1rem;
+  }
+}
+.db-hero__name {
+  margin: 0 0 0.35rem;
+  font-size: clamp(1.4rem, 2.5vw, 2rem);
+  font-weight: 800;
+  color: #fff;
+  line-height: 1.2;
+  letter-spacing: -0.3px;
+}
+.db-hero__date {
+  margin: 0 0 0.25rem;
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.72);
+}
+.db-hero__btns {
+  display: flex;
   flex-wrap: wrap;
-  gap: 16px;
-  background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%);
-  border-radius: 20px;
-  padding: 28px 32px;
-  color: #fff;
-  box-shadow:
-    0 8px 32px rgba(67, 56, 202, 0.35),
-    0 0 0 1px rgba(129, 140, 248, 0.2);
-
-  .eyebrow {
-    font-size: 11px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.6);
-    margin: 0 0 6px;
-    display: block;
-  }
-  h1 {
-    font-size: 28px;
-    font-weight: 800;
-    margin: 0 0 4px;
-    color: #fff;
-    letter-spacing: -0.3px;
-  }
-  .sub {
-    font-size: 14px;
-    color: rgba(255, 255, 255, 0.75);
-    margin: 0;
-  }
-  .header-right {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
-  }
-  .last-refresh {
-    font-size: 12px;
-    color: rgba(255, 255, 255, 0.55);
-    white-space: nowrap;
-  }
+  gap: 0.65rem;
+  margin-top: 1rem;
+  align-items: center;
 }
-
-.live-badge {
+.db-hero__cta {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  background: rgba(34, 197, 94, 0.15);
-  border: 1px solid rgba(34, 197, 94, 0.35);
-  color: #86efac;
-  border-radius: 999px;
-  padding: 4px 12px;
-  font-size: 11px;
-  font-weight: 600;
-}
-.live-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #22c55e;
-  animation: pulse-dot 1.5s ease-in-out infinite;
-}
-@keyframes pulse-dot {
-  0%,
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.4;
-    transform: scale(1.4);
-  }
-}
-
-.btn-refresh {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: rgba(255, 255, 255, 0.15);
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 10px;
-  padding: 9px 18px;
-  font-size: 14px;
-  font-weight: 600;
+  gap: 0.4rem;
+  padding: 0.55rem 1.25rem;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-decoration: none;
   cursor: pointer;
-  transition: background 0.2s;
-  white-space: nowrap;
+  border: none;
+  transition: transform 0.18s, box-shadow 0.18s, background 0.2s;
+  background: #fff;
+  color: #4338ca;
+
+  &--ghost {
+    background: rgba(255, 255, 255, 0.18);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    &:hover {
+      background: rgba(255, 255, 255, 0.28);
+      transform: translateY(-2px);
+    }
+  }
   .spin-icon {
     display: inline-block;
+    font-size: 1rem;
     transition: transform 0.4s;
-    font-size: 16px;
-  }
-  &:hover {
-    background: rgba(255, 255, 255, 0.25);
   }
   &.refreshing .spin-icon {
     animation: spin 0.8s linear infinite;
   }
 }
+
+/* right: avatar + meta + mini-stats */
+.db-hero__right {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+}
+.db-hero__avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .material-icons {
+    font-size: 2.5rem;
+    color: rgba(255, 255, 255, 0.8);
+  }
+}
+.db-hero__meta {
+  text-align: center;
+  .db-hero__owner-name {
+    margin: 0;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #fff;
+  }
+  .db-hero__owner-role {
+    margin: 0;
+    font-size: 0.72rem;
+    color: rgba(255, 255, 255, 0.65);
+  }
+}
+.db-hero__mini-stats {
+  display: flex;
+  gap: 0.65rem;
+}
+.db-mini-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 0.875rem;
+  padding: 0.5rem 0.75rem;
+  min-width: 72px;
+  text-align: center;
+
+  .material-icons {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.7);
+  }
+  strong {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1;
+  }
+  span {
+    font-size: 0.65rem;
+    color: rgba(255, 255, 255, 0.7);
+    white-space: nowrap;
+  }
+}
+
+// live-badge already exists below; keep pulse-dot animation here
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(1.4); }
+}
+
+@media (max-width: 860px) {
+  .db-hero {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .db-hero__right {
+    flex-direction: row;
+    align-items: center;
+    width: 100%;
+    flex-wrap: wrap;
+  }
+  .db-hero__mini-stats {
+    gap: 0.5rem;
+  }
+}
+
+
 
 // ─── KPI Grid ─────────────────────────────────────────────────────────────────
 .kpi-grid {
@@ -806,8 +910,6 @@ $font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
 }
 
 // ─── Quick Actions ────────────────────────────────────────────────────────────
-.quick-actions {
-}
 .qa-title {
   font-size: 16px;
   font-weight: 700;

@@ -16,6 +16,8 @@ import { ApiService } from "@core/services/api.service";
 import { AlertService } from "@core/services/alert.service";
 import { OwnerDashboard } from "@shared/models/dashboard.model";
 import { CafeContextService } from "../services/cafe-context.service";
+import { AuthService } from "@core/auth/auth.service";
+import { User } from "@shared/models/auth.model";
 import { Chart, registerables } from "chart.js";
 
 Chart.register(...registerables);
@@ -57,6 +59,10 @@ export class CafeOwnerDashboardComponent
   cafeId!: number;
   cafeName = "";
   lastRefreshed = new Date();
+
+  user: User | null = null;
+  currentDateTime = new Date();
+  private clockTimerId?: ReturnType<typeof setInterval>;
 
   stats = {
     totalTables: 0,
@@ -149,9 +155,13 @@ export class CafeOwnerDashboardComponent
     private router: Router,
     private cdr: ChangeDetectorRef,
     private cafeCtx: CafeContextService,
+    private authService: AuthService,
   ) {}
 
   ngOnInit(): void {
+    this.authService.currentUser.subscribe((user) => (this.user = user));
+    this.startClock();
+
     this.cafeContextSubscription = this.cafeCtx.activeCafe$
       .pipe(distinctUntilChanged((a, b) => a?.id === b?.id))
       .subscribe((cafe) => {
@@ -175,9 +185,18 @@ export class CafeOwnerDashboardComponent
   }
 
   ngOnDestroy(): void {
+    if (this.clockTimerId) {
+      clearInterval(this.clockTimerId);
+    }
     this.pollingSubscription?.unsubscribe();
     this.cafeContextSubscription?.unsubscribe();
     this.destroyCharts();
+  }
+
+  private startClock(): void {
+    this.clockTimerId = setInterval(() => {
+      this.currentDateTime = new Date();
+    }, 1000);
   }
 
   private startPolling(): void {
@@ -217,6 +236,11 @@ export class CafeOwnerDashboardComponent
         }
         this.apiService.getMyCafe().subscribe({
           next: (cafe) => {
+            // Skip if activeCafe$ subscription already resolved a cafe (race condition guard)
+            if (this.cafeId) {
+              this.loading = false;
+              return;
+            }
             this.cafeId = cafe.id;
             this.cafeName = cafe.name || "My Cafe";
             this.fetchAllDashboardData();
@@ -694,5 +718,44 @@ export class CafeOwnerDashboardComponent
 
   refresh(): void {
     this.loadDashboard(true);
+  }
+
+  get greeting(): string {
+    const h = this.currentDateTime.getHours();
+    if (h < 12) return 'Good Morning';
+    if (h < 18) return 'Good Afternoon';
+    return 'Good Evening';
+  }
+
+  get greetingIcon(): string {
+    const h = this.currentDateTime.getHours();
+    if (h < 12) return 'wb_sunny';
+    if (h < 18) return 'light_mode';
+    return 'nights_stay';
+  }
+
+  get dateTimeFormatted(): string {
+    const date = this.currentDateTime.toLocaleDateString('en-IN', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+    const time = this.currentDateTime.toLocaleTimeString('en-IN', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    });
+    return `${date} | ${time}`;
+  }
+
+  get displayName(): string {
+    return this.user?.firstName || this.user?.username || 'there';
+  }
+
+  get resolvedAvatarUrl(): string {
+    return this.apiService.resolveImageUrl(
+      this.user?.profileImageUrl ?? (this.user as any)?.avatarUrl,
+    );
   }
 }

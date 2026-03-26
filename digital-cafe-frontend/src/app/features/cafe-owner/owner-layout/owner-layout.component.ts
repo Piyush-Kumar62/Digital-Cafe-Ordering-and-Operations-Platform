@@ -13,6 +13,7 @@ import { filter } from "rxjs/operators";
 import { AuthService } from "@core/auth/auth.service";
 import { ApiService } from "@core/services/api.service";
 import { ThemeService } from "@core/services/theme.service";
+import { AlertService } from "@core/services/alert.service";
 import { CafeContextService } from "../services/cafe-context.service";
 import { Cafe } from "@shared/models/cafe.model";
 import { User } from "@shared/models/auth.model";
@@ -83,6 +84,7 @@ export class OwnerLayoutComponent implements OnInit, OnDestroy {
     private themeService: ThemeService,
     private router: Router,
     private cafeCtx: CafeContextService,
+    private alertService: AlertService,
   ) {
     this.themeService.syncFromStorage();
     this.isDarkMode = this.themeService.isDarkMode();
@@ -155,9 +157,15 @@ export class OwnerLayoutComponent implements OnInit, OnDestroy {
     this.isSidebarCollapsed = !this.isSidebarCollapsed;
   }
 
-  logout(): void {
+  async logout(): Promise<void> {
+    const ok = await this.alertService.confirm(
+      "Confirm logout",
+      "Are you sure you want to log out?",
+    );
+    if (!ok) return;
     this.cafeCtx.clear();
     this.authService.logout();
+    this.alertService.success("Logged out", "You have been signed out successfully.");
     this.router.navigate(["/auth/login"]);
   }
 

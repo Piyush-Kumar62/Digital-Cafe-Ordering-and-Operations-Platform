@@ -17,6 +17,7 @@ import { filter } from "rxjs/operators";
 
 import { AuthService } from "@core/auth/auth.service";
 import { ThemeService } from "@core/services/theme.service";
+import { AlertService } from "@core/services/alert.service";
 import { AdminProfileService } from "../profile/admin-profile.service";
 import { WebSocketService } from "@core/websocket/websocket.service";
 import { AdminProfile } from "@shared/models/admin-profile.model";
@@ -152,6 +153,7 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
     private adminProfileService: AdminProfileService,
     private webSocketService: WebSocketService,
     private ngZone: NgZone,
+    private alertService: AlertService,
   ) {
     this.themeService.syncFromStorage();
     this.isDarkMode = this.themeService.isDarkMode();
@@ -226,8 +228,14 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
     this.router.navigate(["/"]);
   }
 
-  logout(): void {
+  async logout(): Promise<void> {
+    const ok = await this.alertService.confirm(
+      "Confirm logout",
+      "Are you sure you want to log out?",
+    );
+    if (!ok) return;
     this.authService.logout();
+    this.alertService.success("Logged out", "You have been signed out successfully.");
     this.router.navigate(["/auth/login"]).catch(() => {});
   }
   @HostListener("document:click", ["$event"])

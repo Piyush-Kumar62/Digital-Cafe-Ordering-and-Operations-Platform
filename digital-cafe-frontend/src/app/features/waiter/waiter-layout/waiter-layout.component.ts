@@ -15,6 +15,7 @@ import { filter } from "rxjs/operators";
 import { AuthService } from "@core/auth/auth.service";
 import { ApiService } from "@core/services/api.service";
 import { ThemeService } from "@core/services/theme.service";
+import { AlertService } from "@core/services/alert.service";
 import { WebSocketService } from "@core/websocket/websocket.service";
 
 interface WaiterNavItem {
@@ -71,6 +72,7 @@ export class WaiterLayoutComponent implements OnInit, OnDestroy {
     private themeService: ThemeService,
     private webSocketService: WebSocketService,
     private ngZone: NgZone,
+    private alertService: AlertService,
   ) {
     this.themeService.syncFromStorage();
     this.isDarkMode = this.themeService.isDarkMode();
@@ -127,8 +129,14 @@ export class WaiterLayoutComponent implements OnInit, OnDestroy {
     this.router.navigate(["/"]);
   }
 
-  logout(): void {
+  async logout(): Promise<void> {
+    const ok = await this.alertService.confirm(
+      "Confirm logout",
+      "Are you sure you want to log out?",
+    );
+    if (!ok) return;
     this.authService.logout();
+    this.alertService.success("Logged out", "You have been signed out successfully.");
     this.router.navigate(["/auth/login"]).catch(() => {});
   }
 

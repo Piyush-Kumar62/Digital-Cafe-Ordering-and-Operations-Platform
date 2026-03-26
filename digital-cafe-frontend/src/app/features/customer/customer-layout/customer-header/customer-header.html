@@ -189,7 +189,12 @@
           >Open full profile</a
         >
       </div>
-      <button class="logout-btn" (click)="logout()">Logout</button>
+      <button class="logout-action" (click)="logout()">
+        <span class="logout-icon material-icons" aria-hidden="true">logout</span>
+        <span class="logout-text">
+          <span class="logout-title">Logout</span>
+        </span>
+      </button>
     </div>
   </div>
   <!-- /.header-right -->

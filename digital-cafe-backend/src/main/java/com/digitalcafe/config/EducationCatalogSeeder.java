@@ -67,9 +67,9 @@ public class EducationCatalogSeeder {
     }
 
     private void seedBranchesIfEmpty() {
-        if (branchRepository.count() > 0) {
-            log.info("[EducationSeed] Branches already present ({}). Skipping seed.", branchRepository.count());
-            return;
+        long existing = branchRepository.count();
+        if (existing > 0) {
+            log.info("[EducationSeed] Branches already present ({}). Seeding missing rows only.", existing);
         }
         List<List<String>> rows = readCsv(BRANCHES_RESOURCE);
         Set<String> seen = new HashSet<>();

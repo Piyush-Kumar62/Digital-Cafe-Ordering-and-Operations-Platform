@@ -1,8 +1,10 @@
-import { Component, HostListener, OnInit } from "@angular/core";
+import { Component, ElementRef, HostListener, OnInit, ViewChild } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { RouterModule, Router, NavigationEnd } from "@angular/router";
 import { AuthService } from "@core/auth/auth.service";
+import { ApiService } from "@core/services/api.service";
 import { ThemeService } from "@core/services/theme.service";
+import { AlertService } from "@core/services/alert.service";
 import { User } from "@shared/models/auth.model";
 
 @Component({
@@ -19,11 +21,23 @@ export class NavbarComponent implements OnInit {
   dashboardRoute = "/";
   isDarkMode = false;
   isLandingPage = false;
+  isLegalPage = false;
+  userMenuOpen = false;
+  avatarUrl = "";
+  private avatarLoadFailed = false;
+  private avatarVersion = Date.now();
+  roleLabel = "Account";
+  profileRoute = "/auth/login";
+
+  @ViewChild("userMenuRef", { static: false })
+  userMenuRef?: ElementRef;
 
   constructor(
     private authService: AuthService,
     private router: Router,
+    private apiService: ApiService,
     private themeService: ThemeService,
+    private alertService: AlertService,
   ) {}
 
   ngOnInit(): void {
@@ -34,6 +48,14 @@ export class NavbarComponent implements OnInit {
       this.isAuthenticated = !!user;
       if (user) {
         this.dashboardRoute = this.authService.getRoleDashboardRoute();
+        this.roleLabel = this.getRoleLabel(user);
+        this.profileRoute = this.getProfileRoute(user);
+        this.refreshAvatar(user);
+      } else {
+        this.avatarUrl = "";
+        this.avatarLoadFailed = false;
+        this.roleLabel = "Account";
+        this.profileRoute = "/auth/login";
       }
     });
 
@@ -72,9 +94,7 @@ export class NavbarComponent implements OnInit {
   }
 
   logout(): void {
-    this.authService.logout();
-    this.closeMenu();
-    this.router.navigate(["/auth/login"]);
+    this.confirmLogout();
   }
 
   toggleTheme(): void {
@@ -105,6 +125,7 @@ export class NavbarComponent implements OnInit {
   private updateRouteContext(url: string): void {
     const pathOnly = url.split("?")[0].split("#")[0];
     this.isLandingPage = this.shouldUseLandingNavbar(pathOnly);
+    this.isLegalPage = this.isLegalRoute(pathOnly);
   }
 
   private shouldUseLandingNavbar(path: string): boolean {
@@ -116,9 +137,17 @@ export class NavbarComponent implements OnInit {
       path.startsWith("/cafes") ||
       path.startsWith("/about") ||
       path.startsWith("/contact") ||
-      path.startsWith("/auth/") ||
+      path.startsWith("/auth/")
+    );
+  }
+
+  private isLegalRoute(path: string): boolean {
+    return (
       path.startsWith("/privacy") ||
-      path.startsWith("/terms")
+      path.startsWith("/terms") ||
+      path.startsWith("/cookie-policy") ||
+      path.startsWith("/refund-policy") ||
+      path.startsWith("/data-deletion")
     );
   }
 
@@ -137,6 +166,88 @@ export class NavbarComponent implements OnInit {
     }
 
     return username;
+  }
+
+  get hasAvatar(): boolean {
+    return !!this.avatarUrl && !this.avatarLoadFailed;
+  }
+
+  onAvatarError(): void {
+    this.avatarLoadFailed = true;
+  }
+
+  private refreshAvatar(user: User): void {
+    const resolved = this.apiService.resolveImageUrl(user.profileImageUrl || "");
+    if (!resolved) {
+      this.avatarUrl = "";
+      this.avatarLoadFailed = false;
+      return;
+    }
+    this.avatarVersion = Date.now();
+    this.avatarUrl = `${resolved}${resolved.includes("?") ? "&" : "?"}v=${this.avatarVersion}`;
+    this.avatarLoadFailed = false;
+  }
+
+  toggleUserMenu(event: MouseEvent): void {
+    event.stopPropagation();
+    this.userMenuOpen = !this.userMenuOpen;
+  }
+
+  closeUserMenu(): void {
+    this.userMenuOpen = false;
+  }
+
+  private async confirmLogout(): Promise<void> {
+    const ok = await this.alertService.confirm(
+      "Confirm logout",
+      "Are you sure you want to log out?",
+    );
+    if (!ok) return;
+    this.authService.logout();
+    this.userMenuOpen = false;
+    this.closeMenu();
+    this.alertService.success("Logged out", "You have been signed out successfully.");
+    this.router.navigate(["/auth/login"]);
+  }
+
+  @HostListener("document:click", ["$event"])
+  onDocumentClick(event: MouseEvent): void {
+    if (!this.userMenuOpen) return;
+    const target = event.target as HTMLElement;
+    if (this.userMenuRef?.nativeElement?.contains(target)) return;
+    this.userMenuOpen = false;
+  }
+
+  @HostListener("document:keydown.escape")
+  onEscape(): void {
+    this.userMenuOpen = false;
+  }
+
+  private getRoleLabel(user: User): string {
+    const raw = user?.roles?.[0] || "ACCOUNT";
+    return raw
+      .replace("ROLE_", "")
+      .replace(/_/g, " ")
+      .toLowerCase()
+      .replace(/\b\w/g, (c) => c.toUpperCase());
+  }
+
+  private getProfileRoute(user: User): string {
+    const role = (user?.roles?.[0] || "").replace("ROLE_", "");
+    switch (role) {
+      case "ADMIN":
+        return "/admin/profile";
+      case "CAFE_OWNER":
+        return "/owner/settings";
+      case "CHEF":
+        return "/chef/profile";
+      case "WAITER":
+        return "/waiter/profile";
+      case "CUSTOMER":
+        return "/customer/profile";
+      default:
+        return this.dashboardRoute || "/";
+    }
   }
 }
 

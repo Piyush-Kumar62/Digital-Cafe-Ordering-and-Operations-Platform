@@ -42,21 +42,21 @@
           routerLink="/cafes"
           class="nav-link"
           routerLinkActive="active"
-          (click)="closeMenu()"
+          (click)="closeMenu(); scrollToTop()"
           >Cafés</a
         >
         <a
           routerLink="/about"
           class="nav-link"
           routerLinkActive="active"
-          (click)="closeMenu()"
+          (click)="closeMenu(); scrollToTop()"
           >About</a
         >
         <a
           routerLink="/contact"
           class="nav-link"
           routerLinkActive="active"
-          (click)="closeMenu()"
+          (click)="closeMenu(); scrollToTop()"
           >Contact</a
         >
 
@@ -76,16 +76,90 @@
             (click)="closeMenu()"
             >Dashboard</a
           >
-          <div class="user-menu">
-            <div class="user-avatar">
-              {{ getDisplayName().charAt(0) }}
+          <div class="user-menu" #userMenuRef [class.open]="userMenuOpen">
+            <button
+              class="user-trigger"
+              type="button"
+              aria-haspopup="true"
+              [attr.aria-expanded]="userMenuOpen"
+              (click)="toggleUserMenu($event)"
+            >
+              <span class="user-avatar">
+                <img
+                  *ngIf="hasAvatar; else avatarFallback"
+                  [src]="avatarUrl"
+                  alt="Profile"
+                  (error)="onAvatarError()"
+                />
+                <ng-template #avatarFallback>
+                  {{ getDisplayName().charAt(0) }}
+                </ng-template>
+                <span class="online-dot" aria-hidden="true"></span>
+              </span>
+              <span class="user-meta">
+                <span class="user-name">{{ getDisplayName() }}</span>
+                <span class="user-role">{{ roleLabel }}</span>
+              </span>
+              <span class="user-caret">▾</span>
+            </button>
+            <div class="user-dropdown" (click)="$event.stopPropagation()">
+              <div class="dropdown-card">
+                <div class="dropdown-header">
+                  <div class="dropdown-avatar">
+                    <img
+                      *ngIf="hasAvatar; else dropdownFallback"
+                      [src]="avatarUrl"
+                      alt="Profile"
+                      (error)="onAvatarError()"
+                    />
+                    <ng-template #dropdownFallback>
+                      {{ getDisplayName().charAt(0) }}
+                    </ng-template>
+                    <span class="online-dot" aria-hidden="true"></span>
+                  </div>
+                  <div class="dropdown-meta">
+                    <span class="dropdown-name">{{ getDisplayName() }}</span>
+                    <span class="dropdown-email">{{ user.email }}</span>
+                    <span class="dropdown-role">{{ roleLabel }}</span>
+                  </div>
+                </div>
+                <div class="dropdown-actions">
+                  <a
+                    class="dropdown-link"
+                    [routerLink]="dashboardRoute"
+                    (click)="closeUserMenu()"
+                  >
+                    <span class="link-icon link-icon--dashboard">
+                      <span class="icon-bars"></span>
+                    </span>
+                    <span class="link-text">
+                      <span class="link-title">Dashboard</span>
+                      <span class="link-subtitle">View activity</span>
+                    </span>
+                  </a>
+                  <a
+                    class="dropdown-link"
+                    [routerLink]="profileRoute"
+                    (click)="closeUserMenu()"
+                  >
+                    <span class="link-icon link-icon--profile">
+                      <span class="icon-user"></span>
+                    </span>
+                    <span class="link-text">
+                      <span class="link-title">My Profile</span>
+                      <span class="link-subtitle">Edit account</span>
+                    </span>
+                  </a>
+                </div>
+                <div class="dropdown-divider"></div>
+                <button class="dropdown-item logout-item" (click)="logout()">
+                  <span class="logout-icon">⏻</span>
+                  <span class="logout-text">
+                    <span class="logout-title">Sign Out</span>
+                  </span>
+                </button>
+              </div>
             </div>
-
-            <span class="user-name">
-              {{ getDisplayName() }}
-            </span>
-
-            <button class="btn-logout" (click)="logout()">Logout</button>
           </div>
         </ng-container>
       </div>
@@ -119,6 +193,7 @@
 </nav>
 <div
   class="navbar-spacer"
-  [class.landing-spacer]="isLandingPage"
+  [class.landing-spacer]="isLandingPage || isLegalPage"
+  [class.legal-spacer]="isLegalPage"
   aria-hidden="true"
 ></div>

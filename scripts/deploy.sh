@@ -9,6 +9,13 @@ SSM_PREFIX="${SSM_PREFIX:-/digital-cafe/prod}"
 
 cd "$APP_DIR"
 
+# Optional GHCR login for private packages.
+# If images are public, these can remain unset.
+if [[ -n "${GHCR_USERNAME:-}" && -n "${GHCR_TOKEN:-}" ]]; then
+  echo "Logging in to GHCR as ${GHCR_USERNAME}..."
+  echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USERNAME" --password-stdin
+fi
+
 if [[ "$RENDER_ENV_FROM_SSM" == "true" && -x "./scripts/render-env-from-ssm.sh" ]]; then
   if ! command -v aws >/dev/null 2>&1; then
     echo "AWS CLI is required when RENDER_ENV_FROM_SSM=true, but it is not installed."

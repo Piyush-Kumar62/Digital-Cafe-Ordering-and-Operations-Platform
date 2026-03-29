@@ -278,6 +278,8 @@ jobs:
             fi
             export BACKEND_HEALTH_URL=${{ secrets.DEPLOY_BACKEND_HEALTH_URL }}
             export FRONTEND_HEALTH_URL=${{ secrets.DEPLOY_FRONTEND_HEALTH_URL }}
+            export GHCR_USERNAME=${{ secrets.GHCR_USERNAME }}
+            export GHCR_TOKEN=${{ secrets.GHCR_TOKEN }}
             ./scripts/deploy.sh
             docker image prune -f
 

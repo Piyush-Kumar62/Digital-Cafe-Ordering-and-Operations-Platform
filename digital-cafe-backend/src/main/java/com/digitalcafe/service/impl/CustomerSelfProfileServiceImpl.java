@@ -10,7 +10,7 @@ import com.digitalcafe.exception.ResourceNotFoundException;
 import com.digitalcafe.repository.ProfileRepository;
 import com.digitalcafe.repository.UserRepository;
 import com.digitalcafe.service.CustomerSelfProfileService;
-import com.digitalcafe.service.FileStorageService;
+import com.digitalcafe.storage.FileStorageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;

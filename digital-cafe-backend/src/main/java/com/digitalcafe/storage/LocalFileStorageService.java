@@ -1,6 +1,8 @@
 package com.digitalcafe.storage;
 
 import com.digitalcafe.exception.BusinessException;
+import com.digitalcafe.exception.FileTooLargeException;
+import com.digitalcafe.exception.InvalidFileTypeException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.beans.factory.annotation.Value;
@@ -12,6 +14,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -28,33 +31,44 @@ public class LocalFileStorageService implements FileStorageService {
     @Value("${app.upload.dir:uploads}")
     private String uploadDir;
 
+    private static final long MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
+    private static final Set<String> PROFILE_TYPES = Set.of(
+            "image/png",
+            "image/jpeg",
+            "image/webp",
+            "image/avif",
+            "image/gif"
+    );
+    private static final Set<String> MENU_TYPES = Set.of(
+            "image/png",
+            "image/jpeg",
+            "image/webp",
+            "image/gif"
+    );
+    private static final Set<String> GENERAL_TYPES = Set.of(
+            "image/png",
+            "image/jpeg",
+            "image/webp",
+            "image/avif",
+            "image/gif"
+    );
+
     @Override
     public String uploadFile(MultipartFile file) {
-        if (file == null || file.isEmpty()) {
-            throw new BusinessException("Cannot upload empty file");
-        }
-        if (file.getSize() > 2 * 1024 * 1024) {
-            throw new BusinessException("File size must be 2MB or less");
-        }
+        validate(file, GENERAL_TYPES, MAX_FILE_SIZE);
+        return store(file, "", GENERAL_TYPES);
+    }
 
-        try {
-            Path uploadPath = Paths.get(uploadDir).toAbsolutePath().normalize();
-            if (!Files.exists(uploadPath)) {
-                Files.createDirectories(uploadPath);
-            }
+    @Override
+    public String storeProfileImage(MultipartFile file) {
+        validate(file, PROFILE_TYPES, MAX_FILE_SIZE);
+        return store(file, "profile", PROFILE_TYPES);
+    }
 
-            String extension = getExtension(file.getOriginalFilename());
-            String fileName = UUID.randomUUID() + extension;
-            Path targetPath = uploadPath.resolve(fileName);
-            file.transferTo(targetPath.toFile());
-
-            log.info("File uploaded: path={}, originalName={}", targetPath, file.getOriginalFilename());
-            // Return a web-accessible relative path instead of absolute filesystem path
-            return "/uploads/" + fileName;
-        } catch (IOException e) {
-            log.error("File upload failed: {}", e.getMessage(), e);
-            throw new BusinessException("File upload failed: " + e.getMessage());
-        }
+    @Override
+    public String storeMenuItemImage(MultipartFile file) {
+        validate(file, MENU_TYPES, MAX_FILE_SIZE);
+        return store(file, "menu-items", MENU_TYPES);
     }
 
     @Override
@@ -88,5 +102,68 @@ public class LocalFileStorageService implements FileStorageService {
             return "";
         }
         return filename.substring(filename.lastIndexOf('.'));
+    }
+
+    private void validate(MultipartFile file, Set<String> allowedTypes, long maxBytes) {
+        if (file == null || file.isEmpty()) {
+            throw new BusinessException("Cannot upload empty file");
+        }
+        String contentType = file.getContentType();
+        if (contentType == null || !allowedTypes.contains(contentType)) {
+            throw new InvalidFileTypeException(
+                    contentType != null ? contentType : "unknown",
+                    allowedTypes
+            );
+        }
+        if (file.getSize() > maxBytes) {
+            throw new FileTooLargeException(maxBytes);
+        }
+    }
+
+    private String store(MultipartFile file, String subDir, Set<String> allowedTypes) {
+        try {
+            Path uploadPath = Paths.get(uploadDir).toAbsolutePath().normalize();
+            if (!Files.exists(uploadPath)) {
+                Files.createDirectories(uploadPath);
+            }
+
+            Path targetDir = subDir == null || subDir.isBlank()
+                    ? uploadPath
+                    : uploadPath.resolve(subDir).normalize();
+            if (!targetDir.startsWith(uploadPath)) {
+                throw new BusinessException("Invalid upload path");
+            }
+            Files.createDirectories(targetDir);
+
+            String extension = resolveExtension(file.getContentType(), file.getOriginalFilename(), allowedTypes);
+            String fileName = UUID.randomUUID() + extension;
+            Path targetPath = targetDir.resolve(fileName).normalize();
+            if (!targetPath.startsWith(targetDir)) {
+                throw new BusinessException("Invalid file destination");
+            }
+            file.transferTo(targetPath.toFile());
+
+            String prefix = subDir == null || subDir.isBlank() ? "" : (subDir + "/");
+            return "/uploads/" + prefix + fileName;
+        } catch (IOException e) {
+            log.error("File upload failed: {}", e.getMessage(), e);
+            throw new BusinessException("File upload failed: " + e.getMessage());
+        }
+    }
+
+    private String resolveExtension(String contentType, String originalFilename, Set<String> allowedTypes) {
+        if (contentType != null) {
+            return switch (contentType) {
+                case "image/png" -> ".png";
+                case "image/webp" -> ".webp";
+                case "image/avif" -> ".avif";
+                case "image/gif" -> ".gif";
+                default -> ".jpg";
+            };
+        }
+        if (originalFilename != null && originalFilename.contains(".")) {
+            return originalFilename.substring(originalFilename.lastIndexOf('.'));
+        }
+        return ".jpg";
     }
 }

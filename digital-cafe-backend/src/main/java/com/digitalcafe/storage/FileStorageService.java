@@ -18,6 +18,16 @@ public interface FileStorageService {
     String uploadFile(MultipartFile file);
 
     /**
+     * Uploads a profile image and returns its access path or URL.
+     */
+    String storeProfileImage(MultipartFile file);
+
+    /**
+     * Uploads a menu item image and returns its access path or URL.
+     */
+    String storeMenuItemImage(MultipartFile file);
+
+    /**
      * Deletes a file by its path or URL.
      */
     void deleteFile(String filePath);

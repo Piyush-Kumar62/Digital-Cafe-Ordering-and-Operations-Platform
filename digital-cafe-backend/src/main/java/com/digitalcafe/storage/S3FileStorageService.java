@@ -26,6 +26,27 @@ public class S3FileStorageService implements FileStorageService {
     private final S3Client s3Client;
     private final String bucket;
     private final String baseUrl;
+    private static final long MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
+    private static final java.util.Set<String> PROFILE_TYPES = java.util.Set.of(
+            "image/png",
+            "image/jpeg",
+            "image/webp",
+            "image/avif",
+            "image/gif"
+    );
+    private static final java.util.Set<String> MENU_TYPES = java.util.Set.of(
+            "image/png",
+            "image/jpeg",
+            "image/webp",
+            "image/gif"
+    );
+    private static final java.util.Set<String> GENERAL_TYPES = java.util.Set.of(
+            "image/png",
+            "image/jpeg",
+            "image/webp",
+            "image/avif",
+            "image/gif"
+    );
 
     public S3FileStorageService(
             @Value("${aws.s3.bucket}") String bucket,
@@ -33,6 +54,9 @@ public class S3FileStorageService implements FileStorageService {
             @Value("${aws.credentials.access-key:}") String accessKey,
             @Value("${aws.credentials.secret-key:}") String secretKey,
             @Value("${aws.s3.base-url:}") String baseUrl) {
+        if (bucket == null || bucket.isBlank()) {
+            throw new IllegalStateException("S3 bucket is not configured. Set S3_BUCKET for deploy profile.");
+        }
         this.bucket = bucket;
         this.baseUrl = (baseUrl == null || baseUrl.isBlank())
                 ? ("https://" + bucket + ".s3." + region + ".amazonaws.com")
@@ -57,31 +81,17 @@ public class S3FileStorageService implements FileStorageService {
 
     @Override
     public String uploadFile(MultipartFile file) {
-        if (file == null || file.isEmpty()) {
-            throw new BusinessException("Cannot upload empty file");
-        }
-        if (file.getSize() > 2 * 1024 * 1024) {
-            throw new BusinessException("File size must be 2MB or less");
-        }
+        return uploadWithPrefix(file, "cafes", GENERAL_TYPES);
+    }
 
-        try {
-            String extension = getExtension(file.getOriginalFilename());
-            String key = "cafes/" + UUID.randomUUID() + extension;
+    @Override
+    public String storeProfileImage(MultipartFile file) {
+        return uploadWithPrefix(file, "profile", PROFILE_TYPES);
+    }
 
-            PutObjectRequest request = PutObjectRequest.builder()
-                    .bucket(bucket)
-                    .key(key)
-                    .contentType(file.getContentType())
-                    .build();
-
-            s3Client.putObject(request, RequestBody.fromBytes(file.getBytes()));
-            String url = baseUrl + "/" + key;
-            log.info("Uploaded file to S3 bucket={}, key={}", bucket, key);
-            return url;
-        } catch (Exception ex) {
-            log.error("S3 upload failed: {}", ex.getMessage(), ex);
-            throw new BusinessException("File upload failed: " + ex.getMessage());
-        }
+    @Override
+    public String storeMenuItemImage(MultipartFile file) {
+        return uploadWithPrefix(file, "menu-items", MENU_TYPES);
     }
 
     @Override
@@ -123,5 +133,53 @@ public class S3FileStorageService implements FileStorageService {
             return "";
         }
         return filename.substring(filename.lastIndexOf('.'));
+    }
+
+    private String uploadWithPrefix(MultipartFile file, String prefix, java.util.Set<String> allowedTypes) {
+        if (file == null || file.isEmpty()) {
+            throw new BusinessException("Cannot upload empty file");
+        }
+        String contentType = file.getContentType();
+        if (contentType == null || !allowedTypes.contains(contentType)) {
+            throw new BusinessException("Unsupported file type: " + (contentType != null ? contentType : "unknown"));
+        }
+        if (file.getSize() > MAX_FILE_SIZE) {
+            throw new BusinessException("File size must be 2MB or less");
+        }
+
+        try {
+            String extension = resolveExtension(contentType, file.getOriginalFilename());
+            String key = prefix + "/" + UUID.randomUUID() + extension;
+
+            PutObjectRequest request = PutObjectRequest.builder()
+                    .bucket(bucket)
+                    .key(key)
+                    .contentType(contentType)
+                    .build();
+
+            s3Client.putObject(request, RequestBody.fromBytes(file.getBytes()));
+            String url = baseUrl + "/" + key;
+            log.info("Uploaded file to S3 bucket={}, key={}", bucket, key);
+            return url;
+        } catch (Exception ex) {
+            log.error("S3 upload failed: {}", ex.getMessage(), ex);
+            throw new BusinessException("File upload failed: " + ex.getMessage());
+        }
+    }
+
+    private String resolveExtension(String contentType, String originalFilename) {
+        if (contentType != null) {
+            return switch (contentType) {
+                case "image/png" -> ".png";
+                case "image/webp" -> ".webp";
+                case "image/avif" -> ".avif";
+                case "image/gif" -> ".gif";
+                default -> ".jpg";
+            };
+        }
+        if (originalFilename != null && originalFilename.contains(".")) {
+            return originalFilename.substring(originalFilename.lastIndexOf('.'));
+        }
+        return ".jpg";
     }
 }

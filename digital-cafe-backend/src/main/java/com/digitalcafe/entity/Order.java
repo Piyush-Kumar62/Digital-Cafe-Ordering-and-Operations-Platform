@@ -16,6 +16,7 @@ import java.util.List;
 @Entity
 @Table(name = "orders", indexes = {
         @Index(name = "idx_order_number", columnList = "order_number"),
+        @Index(name = "idx_order_booking", columnList = "booking_id"),
         @Index(name = "idx_customer_order", columnList = "customer_id"),
         @Index(name = "idx_cafe_order", columnList = "cafe_id"),
         @Index(name = "idx_order_status", columnList = "status"),

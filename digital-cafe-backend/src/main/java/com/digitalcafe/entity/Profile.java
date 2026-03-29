@@ -13,7 +13,9 @@ import java.util.List;
  * Profile completion is mandatory for system access.
  */
 @Entity
-@Table(name = "profiles")
+@Table(name = "profiles", indexes = {
+        @Index(name = "idx_profile_user", columnList = "user_id")
+})
 @Getter
 @Setter
 @NoArgsConstructor

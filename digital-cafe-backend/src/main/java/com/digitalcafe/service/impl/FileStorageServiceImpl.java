@@ -3,7 +3,8 @@ package com.digitalcafe.service.impl;
 import com.digitalcafe.exception.BadRequestException;
 import com.digitalcafe.exception.FileTooLargeException;
 import com.digitalcafe.exception.InvalidFileTypeException;
-import com.digitalcafe.service.FileStorageService;
+import com.digitalcafe.storage.FileStorageService;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -16,17 +17,46 @@ import java.nio.file.StandardCopyOption;
 import java.util.Set;
 import java.util.UUID;
 
+@Deprecated(forRemoval = true)
 @Service
+@ConditionalOnProperty(name = "app.storage.legacy", havingValue = "true")
 public class FileStorageServiceImpl implements FileStorageService {
 
     private static final long MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
     private static final long MAX_PROFILE_IMAGE_SIZE = MAX_FILE_SIZE;
-    private static final Set<String> ALLOWED_CONTENT_TYPES = Set.of("image/png", "image/jpeg");
+    private static final Set<String> ALLOWED_CONTENT_TYPES = Set.of(
+            "image/png",
+            "image/jpeg",
+            "image/webp",
+            "image/avif",
+            "image/gif"
+    );
 
     private final Path rootUploadPath;
 
     public FileStorageServiceImpl(@Value("${app.upload.dir:uploads}") String uploadDir) {
         this.rootUploadPath = Paths.get(uploadDir).toAbsolutePath().normalize();
+    }
+
+    @Override
+    public String uploadFile(MultipartFile file) {
+        validate(file);
+
+        String extension = resolveExtension(file.getContentType());
+        String generatedName = UUID.randomUUID() + extension;
+
+        Path targetDir = rootUploadPath.normalize();
+        try {
+            Files.createDirectories(targetDir);
+            Path targetPath = targetDir.resolve(generatedName).normalize();
+            if (!targetPath.startsWith(targetDir)) {
+                throw new BadRequestException("Invalid file destination");
+            }
+            Files.copy(file.getInputStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
+            return "/uploads/" + generatedName;
+        } catch (IOException e) {
+            throw new BadRequestException("Failed to store file");
+        }
     }
 
     @Override
@@ -88,6 +118,27 @@ public class FileStorageServiceImpl implements FileStorageService {
         }
     }
 
+    @Override
+    public void deleteFile(String filePath) {
+        if (filePath == null || filePath.isBlank()) {
+            return;
+        }
+        try {
+            Path targetPath;
+            if (filePath.startsWith("/uploads/")) {
+                String relative = filePath.substring("/uploads/".length());
+                targetPath = rootUploadPath.resolve(relative).normalize();
+                if (!targetPath.startsWith(rootUploadPath)) {
+                    return;
+                }
+            } else {
+                targetPath = Paths.get(filePath).toAbsolutePath().normalize();
+            }
+            Files.deleteIfExists(targetPath);
+        } catch (IOException ignored) {
+        }
+    }
+
     private void validate(MultipartFile file) {
         if (file == null || file.isEmpty()) {
             throw new BadRequestException("Image file is required");
@@ -111,6 +162,7 @@ public class FileStorageServiceImpl implements FileStorageService {
         return switch (contentType) {
             case "image/png"  -> ".png";
             case "image/webp" -> ".webp";
+            case "image/avif" -> ".avif";
             case "image/gif"  -> ".gif";
             default           -> ".jpg";
         };

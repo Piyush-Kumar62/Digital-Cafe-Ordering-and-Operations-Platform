@@ -3,7 +3,7 @@ package com.digitalcafe.controller;
 import com.digitalcafe.dto.request.MenuItemRequest;
 import com.digitalcafe.dto.response.ApiResponse;
 import com.digitalcafe.dto.response.MenuItemResponse;
-import com.digitalcafe.service.FileStorageService;
+import com.digitalcafe.storage.FileStorageService;
 import com.digitalcafe.service.MenuItemService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

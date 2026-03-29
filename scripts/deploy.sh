@@ -4,12 +4,16 @@ set -euo pipefail
 APP_DIR="/opt/digital-cafe"
 BACKEND_HEALTH_URL="${BACKEND_HEALTH_URL:-http://localhost:8080/api/public/health}"
 FRONTEND_HEALTH_URL="${FRONTEND_HEALTH_URL:-http://localhost}"
-RENDER_ENV_FROM_SSM="${RENDER_ENV_FROM_SSM:-true}"
+RENDER_ENV_FROM_SSM="${RENDER_ENV_FROM_SSM:-false}"
 SSM_PREFIX="${SSM_PREFIX:-/digital-cafe/prod}"
 
 cd "$APP_DIR"
 
 if [[ "$RENDER_ENV_FROM_SSM" == "true" && -x "./scripts/render-env-from-ssm.sh" ]]; then
+  if ! command -v aws >/dev/null 2>&1; then
+    echo "AWS CLI is required when RENDER_ENV_FROM_SSM=true, but it is not installed."
+    exit 1
+  fi
   echo "Rendering backend env from AWS SSM..."
   APP_DIR="$APP_DIR" SSM_PREFIX="$SSM_PREFIX" ./scripts/render-env-from-ssm.sh
 fi

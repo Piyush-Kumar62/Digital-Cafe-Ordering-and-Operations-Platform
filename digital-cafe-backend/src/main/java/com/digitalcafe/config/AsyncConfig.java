@@ -4,10 +4,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.aop.interceptor.AsyncUncaughtExceptionHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.task.TaskDecorator;
 import org.springframework.scheduling.annotation.AsyncConfigurer;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.slf4j.MDC;
 
+import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadPoolExecutor;
 
@@ -32,6 +35,7 @@ public class AsyncConfig implements AsyncConfigurer {
         executor.setMaxPoolSize(5);
         executor.setQueueCapacity(100);
         executor.setThreadNamePrefix("email-");
+        executor.setTaskDecorator(mdcTaskDecorator());
         // If queue is full, caller thread executes the task — avoids silently dropping emails
         executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
         executor.setWaitForTasksToCompleteOnShutdown(true);
@@ -50,6 +54,7 @@ public class AsyncConfig implements AsyncConfigurer {
         executor.setMaxPoolSize(4);
         executor.setQueueCapacity(200);
         executor.setThreadNamePrefix("webhook-");
+        executor.setTaskDecorator(mdcTaskDecorator());
         executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
         executor.setWaitForTasksToCompleteOnShutdown(true);
         executor.setAwaitTerminationSeconds(30);
@@ -67,6 +72,7 @@ public class AsyncConfig implements AsyncConfigurer {
         executor.setMaxPoolSize(2);
         executor.setQueueCapacity(20);
         executor.setThreadNamePrefix("edu-import-");
+        executor.setTaskDecorator(mdcTaskDecorator());
         executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
         executor.setWaitForTasksToCompleteOnShutdown(true);
         executor.setAwaitTerminationSeconds(60);
@@ -78,5 +84,28 @@ public class AsyncConfig implements AsyncConfigurer {
     public AsyncUncaughtExceptionHandler getAsyncUncaughtExceptionHandler() {
         return (throwable, method, objects) ->
                 log.error("[Async] Uncaught exception in method '{}': {}", method.getName(), throwable.getMessage(), throwable);
+    }
+
+    private TaskDecorator mdcTaskDecorator() {
+        return runnable -> {
+            Map<String, String> contextMap = MDC.getCopyOfContextMap();
+            return () -> {
+                Map<String, String> previous = MDC.getCopyOfContextMap();
+                if (contextMap != null) {
+                    MDC.setContextMap(contextMap);
+                } else {
+                    MDC.clear();
+                }
+                try {
+                    runnable.run();
+                } finally {
+                    if (previous != null) {
+                        MDC.setContextMap(previous);
+                    } else {
+                        MDC.clear();
+                    }
+                }
+            };
+        };
     }
 }

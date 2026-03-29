@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -62,6 +63,12 @@ public class DevDataInitializer implements CommandLineRunner {
     private final OrderRepository       orderRepository;
     private final PaymentRepository     paymentRepository;
     private final PasswordEncoder       passwordEncoder;
+
+    @Value("${app.dev.seed.log-credentials:false}")
+    private boolean logCredentials;
+
+    @Value("${app.dev.seed.verbose:false}")
+    private boolean verboseLogging;
 
     // ── Image asset paths (Angular-relative, served at localhost:4200/assets/…) ─
     private static final String ASSETS_MENU    = "assets/downloads/menu-items/";
@@ -155,7 +162,7 @@ public class DevDataInitializer implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) {
-        log.info("[DevSeed] DevDataInitializer active (profile=dev/e2e, app.dev.seed.enabled=true)");
+        log.info("[DevSeed] Dev seed enabled (verbose={}, logCredentials={})", verboseLogging, logCredentials);
         // ── 1. Roles — always idempotent ────────────────────────────────────────
         ensureRole(Role.RoleName.ADMIN, "System Administrator");
         Role ownerRole    = ensureRole(Role.RoleName.CAFE_OWNER, "Cafe Owner");
@@ -171,14 +178,50 @@ public class DevDataInitializer implements CommandLineRunner {
         if (cafeRepository.count() > 0) {
             log.info("[DevSeed] Cafes already present ({}) — skipping demo seed.", cafeRepository.count());
             repairExistingMetadata(owner1);
+
+            if (orderRepository.count() == 0) {
+                log.info("[DevSeed] No orders found — seeding demo transactions for dashboards.");
+                List<Cafe> cafes = cafeRepository.findAll();
+
+                for (int i = 0; i < cafes.size(); i++) {
+                    Cafe cafe = cafes.get(i);
+                    int seedIndex = i % CHEF_SEEDS.size();
+                    if (cafeTableRepository.findByCafeId(cafe.getId()).isEmpty()) {
+                        seedTables(cafe, seedIndex);
+                    }
+                    if (menuItemRepository.findByCafeIdAndIsAvailableTrueAndIsDeletedFalse(cafe.getId()).isEmpty()) {
+                        seedMenuItems(cafe, seedIndex);
+                    }
+                    if (userRepository.findByCafeIdAndRoleName(cafe.getId(), Role.RoleName.CHEF).isEmpty()) {
+                        User owner = cafe.getOwner() != null ? cafe.getOwner() : owner1;
+                        seedStaff(cafe, chefRole, owner, seedIndex, true);
+                    }
+                    if (userRepository.findByCafeIdAndRoleName(cafe.getId(), Role.RoleName.WAITER).isEmpty()) {
+                        User owner = cafe.getOwner() != null ? cafe.getOwner() : owner1;
+                        seedStaff(cafe, waiterRole, owner, seedIndex, false);
+                    }
+                }
+
+                List<User> customers = userRepository.findByRoleName(Role.RoleName.CUSTOMER);
+                if (customers.isEmpty()) {
+                    customers = batchCreateCustomers(customerRole);
+                }
+
+                List<User> chefs = userRepository.findByRoleName(Role.RoleName.CHEF);
+                List<User> waiters = userRepository.findByRoleName(Role.RoleName.WAITER);
+
+                int totalOrders = seedDemoTransactions(cafes, customers, chefs, waiters);
+                log.info("[DevSeed] Demo transactions seeded for existing cafes | orders={}", totalOrders);
+            }
+
             logAllCredentials();
             log.info("[DevSeed] DevDataInitializer completed (skipped demo seed).");
             return;
         }
 
-        log.info("[DevSeed] =====================================================");
-        log.info("[DevSeed]  Seeding demo data for Digital Cafe Platform");
-        log.info("[DevSeed] =====================================================");
+        if (verboseLogging) {
+            log.info("[DevSeed] Seeding demo data for Digital Cafe Platform");
+        }
 
         // 4. Remaining cafe owners — owner2–owner5
         User owner2 = findOrCreateOwner("owner2@cafe.com", "Priya",  "Nair",     "9876540002", OWNER2_PW, ownerRole);
@@ -208,16 +251,8 @@ public class DevDataInitializer implements CommandLineRunner {
         // 8. Bookings + orders + payments for all cafes
         int totalOrders = seedDemoTransactions(cafes, customers, allChefs, allWaiters);
 
-        log.info("[DevSeed] =====================================================");
-        log.info("[DevSeed]  Seed complete — summary:");
-        log.info("[DevSeed]   Owner      → owner@cafe.com  (6 cafes) / {}", OWNER_PW);
-        log.info("[DevSeed]   Owner 2    → owner2@cafe.com (2 cafes) / {}", OWNER2_PW);
-        log.info("[DevSeed]   Owner 3    → owner3@cafe.com (1 cafe)  / {}", OWNER3_PW);
-        log.info("[DevSeed]   Owner 4    → owner4@cafe.com (1 cafe)  / {}", OWNER4_PW);
-        log.info("[DevSeed]   Owner 5    → owner5@cafe.com (2 cafes) / {}", OWNER5_PW);
-        log.info("[DevSeed]   Cafes → 11 | Tables → 110 | Menu items → 209 | Staff → 44");
-        log.info("[DevSeed]   Customers  → {} | Orders → {}", customers.size(), totalOrders);
-        log.info("[DevSeed] =====================================================");
+        log.info("[DevSeed] Seed complete | cafes=11 tables=110 menuItems=209 staff=44 customers={} orders={}",
+            customers.size(), totalOrders);
         logAllCredentials();
         log.info("[DevSeed] DevDataInitializer completed.");
     }
@@ -226,6 +261,9 @@ public class DevDataInitializer implements CommandLineRunner {
     //  Dev credentials summary — always printed on startup
     // ============================================================
     private void logAllCredentials() {
+        if (!logCredentials) {
+            return;
+        }
         log.info("");
         log.info("[DevSeed] ╔══════════════════════════════════════════════════════════════════════╗");
         log.info("[DevSeed] ║                DEV SEED — LOGIN CREDENTIALS                         ║");
@@ -298,6 +336,12 @@ public class DevDataInitializer implements CommandLineRunner {
         log.info("");
     }
 
+    private void logVerbose(String message, Object... args) {
+        if (verboseLogging) {
+            log.info(message, args);
+        }
+    }
+
     // ============================================================
     //  1. Roles
     // ============================================================
@@ -361,7 +405,7 @@ public class DevDataInitializer implements CommandLineRunner {
             }
             if (dirty) {
                 existing = userRepository.save(existing);
-                log.info("[DevSeed] Activated/updated existing owner for dev: {}", email);
+                logVerbose("[DevSeed] Activated/updated existing owner for dev: {}", email);
             }
             return existing;
         }).orElseGet(() -> {
@@ -369,7 +413,7 @@ public class DevDataInitializer implements CommandLineRunner {
             u.setPhoneNumber(phone);
             u.getRoles().add(ownerRole);
             User saved = userRepository.save(u);
-            log.info("[DevSeed] Created cafe owner: {}", email);
+            logVerbose("[DevSeed] Created cafe owner: {}", email);
             return saved;
         });
     }
@@ -528,7 +572,7 @@ public class DevDataInitializer implements CommandLineRunner {
             cafeGalleryRepository.saveAll(galleryBatch);
 
             cafes.add(savedCafe);
-            log.info("[DevSeed] Created cafe: {} (owner: {})", s.name(), o.getEmail());
+            logVerbose("[DevSeed] Created cafe: {} (owner: {})", s.name(), o.getEmail());
         }
         return cafes;
     }
@@ -567,7 +611,7 @@ public class DevDataInitializer implements CommandLineRunner {
         }
         if (!batch.isEmpty()) {
             cafeTableRepository.saveAll(batch);
-            log.info("[DevSeed] {} tables seeded for: {}", batch.size(), cafe.getName());
+            logVerbose("[DevSeed] {} tables seeded for: {}", batch.size(), cafe.getName());
         }
     }
 
@@ -606,7 +650,7 @@ public class DevDataInitializer implements CommandLineRunner {
             batch.add(item);
         }
         menuItemRepository.saveAll(batch);
-        log.info("[DevSeed] {} menu items seeded for: {}", batch.size(), cafe.getName());
+        logVerbose("[DevSeed] {} menu items seeded for: {}", batch.size(), cafe.getName());
     }
 
     private String resolveMenuImage(int cafeIndex, int itemIndex, MenuItem.Category category, String fallbackImage) {
@@ -1018,8 +1062,8 @@ public class DevDataInitializer implements CommandLineRunner {
         }
         List<User> saved = userRepository.saveAll(batch);   // Req #2
         if (!saved.isEmpty()) {
-            log.info("[DevSeed] {} {} seeded for: {}",
-                     saved.size(), isChef ? "chefs" : "waiters", cafe.getName());
+            logVerbose("[DevSeed] {} {} seeded for: {}",
+                      saved.size(), isChef ? "chefs" : "waiters", cafe.getName());
         }
         return saved;
     }
@@ -1051,7 +1095,7 @@ public class DevDataInitializer implements CommandLineRunner {
             }
         }
         List<User> saved = userRepository.saveAll(batch);   // Req #2
-        log.info("[DevSeed] {} customers seeded.", saved.size());
+        logVerbose("[DevSeed] {} customers seeded.", saved.size());
         return saved;
     }
 

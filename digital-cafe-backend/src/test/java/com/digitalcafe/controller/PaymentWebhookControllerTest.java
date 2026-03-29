@@ -2,11 +2,12 @@ package com.digitalcafe.controller;
 
 import com.digitalcafe.dto.response.PaymentWebhookAckResponse;
 import com.digitalcafe.payment.PaymentService;
+import com.digitalcafe.security.ProfileCompletionFilter;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -24,17 +25,20 @@ class PaymentWebhookControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+    @MockitoBean
     private PaymentService paymentService;
 
-    @MockBean
+    @MockitoBean
     private com.digitalcafe.security.JwtUtil jwtUtil;
 
-    @MockBean
+    @MockitoBean
     private com.digitalcafe.security.CustomUserDetailsService customUserDetailsService;
 
-    @MockBean
+    @MockitoBean
     private com.digitalcafe.repository.UserRepository userRepository;
+
+    @MockitoBean
+    private ProfileCompletionFilter profileCompletionFilter;
 
     @Test
     void webhookEndpoint_returnsAck() throws Exception {
@@ -52,3 +56,4 @@ class PaymentWebhookControllerTest {
                 .andExpect(jsonPath("$.data.status").value("ACCEPTED"));
     }
 }
+

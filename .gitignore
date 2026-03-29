@@ -106,8 +106,6 @@ JPA_ENTITY_STRUCTURE_BLUEPRINT.md
 file-storage-and-cafe-setup.md
 PRODUCTION_DATABASE_SCHEMA_ANALYSIS.md
 docs/sql
-digital-cafe-frontend/Dockerfile
-digital-cafe-frontend/nginx.conf
 
 docs/assets
 docs/images

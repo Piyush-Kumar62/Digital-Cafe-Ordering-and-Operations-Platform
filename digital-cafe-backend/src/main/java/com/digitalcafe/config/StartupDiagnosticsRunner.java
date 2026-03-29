@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.Environment;
 import org.springframework.core.annotation.Order;
-import jakarta.annotation.PostConstruct;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
 import java.util.Arrays;
 
@@ -19,21 +19,11 @@ import java.util.Arrays;
 @Slf4j
 @Configuration
 @Profile("dev")
+@ConditionalOnProperty(name = "app.startup.diagnostics.enabled", havingValue = "true", matchIfMissing = false)
 @RequiredArgsConstructor
 public class StartupDiagnosticsRunner {
 
     private final Environment environment;
-
-    @PostConstruct
-    public void logOnInit() {
-        String[] profiles = environment.getActiveProfiles();
-        System.out.println("[Startup] (post-construct) Active profiles: " +
-                (profiles.length == 0 ? "default" : Arrays.toString(profiles)));
-        System.out.println("[Startup] (post-construct) app.dev.seed.enabled=" +
-                environment.getProperty("app.dev.seed.enabled"));
-        System.out.println("[Startup] (post-construct) app.data.init.enabled=" +
-                environment.getProperty("app.data.init.enabled"));
-    }
 
     @Bean
     @Order(0)

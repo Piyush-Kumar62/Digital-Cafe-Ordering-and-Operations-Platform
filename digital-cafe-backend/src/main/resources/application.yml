@@ -1,0 +1,24 @@
+spring:
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+  main:
+    banner-mode: console
+
+logging:
+  level:
+    root: INFO
+    com.digitalcafe: DEBUG
+    org.springframework.security: INFO
+    org.hibernate.SQL: OFF
+    org.hibernate.orm.jdbc.bind: OFF
+    org.hibernate.tool.schema: ERROR
+    org.hibernate.SQL_SLOW: WARN
+    org.hibernate.validator.internal.util.Version: OFF
+    org.hibernate.orm.connections.pooling: ERROR
+
+app:
+  logging:
+    service:
+      enabled: ${SERVICE_LOGGING_ENABLED:true}
+    slow-service-ms: ${SERVICE_LOGGING_SLOW_MS:500}

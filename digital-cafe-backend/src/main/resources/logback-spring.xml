@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <conversionRule conversionWord="clr" class="org.springframework.boot.logging.logback.ColorConverter"/>
+    <conversionRule conversionWord="wex" class="org.springframework.boot.logging.logback.WhitespaceThrowableProxyConverter"/>
+    <property name="LOG_PATTERN"
+              value="%clr(%d{yyyy-MM-dd HH:mm:ss.SSSXXX}){faint} %clr(%-5level){ERROR=boldRed, WARN=yellow, INFO=green, DEBUG=blue, TRACE=cyan} %replace([%X{correlationId}]){'\\[\\]',''}%clr(%thread){cyan} %clr(%logger{36}){blue} - %msg%n%wex"/>
+    <property name="SHORT_LOG_PATTERN"
+              value="%clr(%d{yyyy-MM-dd HH:mm:ss.SSSXXX}){faint} %clr(%-5level){ERROR=boldRed, WARN=yellow, INFO=green, DEBUG=blue, TRACE=cyan} %replace([%X{requestId}]){'\\[\\]',''}%clr(%logger{24}){blue} - %msg%n%wex"/>
+
+    <springProfile name="prod, deployment">
+        <appender name="JSON_CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+                <timeZone>UTC</timeZone>
+                <includeMdcKeyName>correlationId</includeMdcKeyName>
+                <includeMdcKeyName>userId</includeMdcKeyName>
+                <includeMdcKeyName>username</includeMdcKeyName>
+                <fieldNames>
+                    <timestamp>timestamp</timestamp>
+                    <level>level</level>
+                    <logger>logger</logger>
+                    <thread>thread</thread>
+                    <message>message</message>
+                </fieldNames>
+                <customFields>{"service":"digital-cafe-backend"}</customFields>
+            </encoder>
+        </appender>
+        <root level="INFO">
+            <appender-ref ref="JSON_CONSOLE"/>
+        </root>
+    </springProfile>
+
+    <springProfile name="dev, e2e">
+        <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder>
+                <pattern>${SHORT_LOG_PATTERN}</pattern>
+            </encoder>
+        </appender>
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+    </springProfile>
+
+    <springProfile name="!prod &amp; !deployment &amp; !dev &amp; !e2e">
+        <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder>
+                <pattern>${LOG_PATTERN}</pattern>
+            </encoder>
+        </appender>
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+    </springProfile>
+</configuration>

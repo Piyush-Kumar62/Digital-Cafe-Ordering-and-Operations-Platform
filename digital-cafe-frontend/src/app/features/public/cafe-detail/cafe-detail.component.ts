@@ -106,6 +106,9 @@ export class CafeDetailComponent implements OnInit {
       this.router.navigate(["/cafes"]);
       return;
     }
+    if (this.redirectCustomerToDashboardCafeContext(cafeId)) {
+      return;
+    }
 
     this.cafeBrowseService.getCafeDetails(cafeId).subscribe({
       next: (res) => {
@@ -142,6 +145,9 @@ export class CafeDetailComponent implements OnInit {
   }
 
   addToCart(item: PublicCafeMenuItem): void {
+    if (!this.requireAuthenticatedCustomer("menu")) {
+      return;
+    }
     if (!item.available || !this.cafe) {
       return;
     }
@@ -246,10 +252,7 @@ export class CafeDetailComponent implements OnInit {
       this.alertService.info("Table already booked for this session.");
       return;
     }
-    if (!this.authService.isAuthenticated || !this.authService.isCustomer()) {
-      this.router.navigate(["/auth/login"], {
-        queryParams: { returnUrl: this.router.url },
-      });
+    if (!this.requireAuthenticatedCustomer("booking")) {
       return;
     }
     const timeSlot = this.selectedTime
@@ -303,10 +306,7 @@ export class CafeDetailComponent implements OnInit {
       this.alertService.error("Book a table first.");
       return;
     }
-    if (!this.authService.isAuthenticated || !this.authService.isCustomer()) {
-      this.router.navigate(["/auth/login"], {
-        queryParams: { returnUrl: this.router.url },
-      });
+    if (!this.requireAuthenticatedCustomer("menu")) {
       return;
     }
 
@@ -410,6 +410,9 @@ export class CafeDetailComponent implements OnInit {
   }
 
   placeOrder(): void {
+    if (!this.requireAuthenticatedCustomer("menu")) {
+      return;
+    }
     if (!this.bookingId) {
       this.alertService.error("Book a table first.");
       return;
@@ -464,6 +467,9 @@ export class CafeDetailComponent implements OnInit {
   }
 
   payNow(): void {
+    if (!this.requireAuthenticatedCustomer("menu")) {
+      return;
+    }
     if (!this.orderId) {
       this.alertService.error("Place order before payment.");
       return;
@@ -1040,5 +1046,50 @@ export class CafeDetailComponent implements OnInit {
       .then(() => {
         this.router.navigate(["/customer/order-tracking", this.orderId]);
       });
+  }
+
+  private requireAuthenticatedCustomer(
+    fragment?: "booking" | "menu",
+  ): boolean {
+    if (!this.authService.isAuthenticated) {
+      this.router.navigate(["/auth/login"], {
+        queryParams: { returnUrl: this.withFragment(this.router.url, fragment) },
+      });
+      return false;
+    }
+
+    if (!this.authService.isCustomer()) {
+      this.alertService.info(
+        "Only customer accounts can book tables, order items, and pay.",
+      );
+      this.router.navigate([this.authService.getRoleDashboardRoute()]);
+      return false;
+    }
+
+    return true;
+  }
+
+  private withFragment(url: string, fragment?: "booking" | "menu"): string {
+    if (!fragment) return url;
+    const [base] = url.split("#");
+    return `${base}#${fragment}`;
+  }
+
+  private redirectCustomerToDashboardCafeContext(cafeId: number): boolean {
+    const currentPath = this.router.url.split("?")[0].split("#")[0];
+    if (
+      !currentPath.startsWith("/cafes/") ||
+      !this.authService.isAuthenticated ||
+      !this.authService.isCustomer()
+    ) {
+      return false;
+    }
+
+    this.router.navigate(["/customer/browse-cafes", cafeId], {
+      fragment: this.route.snapshot.fragment ?? undefined,
+      queryParams: this.route.snapshot.queryParams,
+      replaceUrl: true,
+    });
+    return true;
   }
 }

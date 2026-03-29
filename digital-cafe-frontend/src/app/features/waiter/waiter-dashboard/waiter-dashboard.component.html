@@ -145,7 +145,11 @@
             >₹{{ order.totalAmount | number: "1.2-2" }}</span
           >
         </div>
-        <button class="wd-serve-btn" (click)="markServed(order.id)">
+        <button
+          class="wd-serve-btn"
+          [attr.data-testid]="'waiter-mark-served-' + order.id"
+          (click)="markServed(order.id)"
+        >
           <span class="material-icons">done_all</span>
           Mark As Served
         </button>

@@ -75,6 +75,11 @@ export class CafeListComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    if (this.authService.isAuthenticated && this.authService.isCustomer()) {
+      this.router.navigate(["/customer/browse-cafes"], { replaceUrl: true });
+      return;
+    }
+
     // Single polling stream (refreshes every 30s).
     // NavigationEnd to /cafes resets the stream so fresh data loads immediately.
     const onCafesRoute$ = this.router.events.pipe(
@@ -127,12 +132,14 @@ export class CafeListComponent implements OnInit, OnDestroy {
   }
 
   openCafe(cafeId: number): void {
-    this.router.navigate(["/cafes", cafeId]);
+    this.router.navigate(this.getCafeDetailRoute(cafeId));
   }
 
   viewMenu(cafeId: number, event?: Event): void {
     event?.stopPropagation();
-    this.router.navigate(["/cafes", cafeId]);
+    this.router.navigate(this.getCafeDetailRoute(cafeId), {
+      fragment: "menu",
+    });
   }
 
   bookTable(cafeId: number, event?: Event): void {
@@ -189,5 +196,11 @@ export class CafeListComponent implements OnInit, OnDestroy {
         this.loading = false;
       },
     });
+  }
+
+  private getCafeDetailRoute(cafeId: number): string[] {
+    return this.authService.isAuthenticated && this.authService.isCustomer()
+      ? ["/customer/browse-cafes", String(cafeId)]
+      : ["/cafes", String(cafeId)];
   }
 }

@@ -120,7 +120,11 @@
           </div>
         </div>
 
-        <button class="action-btn btn-start" (click)="startPreparing(order.id)">
+        <button
+          class="action-btn btn-start"
+          [attr.data-testid]="'chef-start-preparing-' + order.id"
+          (click)="startPreparing(order.id)"
+        >
           <i class="bi bi-play-circle"></i> Start Preparing
         </button>
       </div>
@@ -214,7 +218,11 @@
           </div>
         </div>
 
-        <button class="action-btn btn-ready" (click)="markReady(order.id)">
+        <button
+          class="action-btn btn-ready"
+          [attr.data-testid]="'chef-mark-ready-' + order.id"
+          (click)="markReady(order.id)"
+        >
           <i class="bi bi-check2-circle"></i> Mark as Ready
         </button>
       </div>

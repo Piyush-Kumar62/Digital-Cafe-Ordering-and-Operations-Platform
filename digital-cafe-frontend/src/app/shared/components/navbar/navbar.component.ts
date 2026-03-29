@@ -28,6 +28,7 @@ export class NavbarComponent implements OnInit {
   private avatarVersion = Date.now();
   roleLabel = "Account";
   profileRoute = "/auth/login";
+  cafesRoute = "/cafes";
 
   @ViewChild("userMenuRef", { static: false })
   userMenuRef?: ElementRef;
@@ -50,12 +51,16 @@ export class NavbarComponent implements OnInit {
         this.dashboardRoute = this.authService.getRoleDashboardRoute();
         this.roleLabel = this.getRoleLabel(user);
         this.profileRoute = this.getProfileRoute(user);
+        this.cafesRoute = this.authService.isCustomer()
+          ? "/customer/browse-cafes"
+          : "/cafes";
         this.refreshAvatar(user);
       } else {
         this.avatarUrl = "";
         this.avatarLoadFailed = false;
         this.roleLabel = "Account";
         this.profileRoute = "/auth/login";
+        this.cafesRoute = "/cafes";
       }
     });
 

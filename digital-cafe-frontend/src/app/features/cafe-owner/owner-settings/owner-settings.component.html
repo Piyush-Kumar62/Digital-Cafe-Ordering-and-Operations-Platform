@@ -48,6 +48,25 @@
                   (change)="onProfilePhotoChange($event)"
                 />
               </div>
+              <div class="avatar-actions">
+                <button
+                  type="button"
+                  class="btn-secondary btn-xs"
+                  [disabled]="uploadingProfilePhoto"
+                  (click)="triggerProfileUpload()"
+                >
+                  {{ uploadingProfilePhoto ? "Uploading..." : "Change Photo" }}
+                </button>
+                <button
+                  *ngIf="profileImageUrl"
+                  type="button"
+                  class="btn-danger btn-xs"
+                  [disabled]="uploadingProfilePhoto"
+                  (click)="removeProfileImage()"
+                >
+                  Remove Photo
+                </button>
+              </div>
               <div class="profile-identity">
                 <h3>{{ userDisplayName }}</h3>
                 <p>{{ user.email }}</p>

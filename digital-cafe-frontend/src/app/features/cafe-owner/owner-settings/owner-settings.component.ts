@@ -29,6 +29,7 @@ export class OwnerSettingsComponent implements OnInit, OnDestroy {
   readonly defaultProfilePreviewUrl = "assets/placeholders/profile-avatar.svg";
   user: User | null = null;
   profileImageUrl = "";
+  uploadingProfilePhoto = false;
   loadingProfile = false;
   savingProfile = false;
   loadingCafe = false;
@@ -222,17 +223,35 @@ export class OwnerSettingsComponent implements OnInit, OnDestroy {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) return;
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "image/avif",
+      "image/gif",
+    ];
+    if (!allowedTypes.includes(file.type)) {
+      this.alertService.error(
+        "Please upload a JPEG, PNG, WEBP, AVIF or GIF image.",
+      );
+      input.value = "";
+      return;
+    }
     const twoMb = 2 * 1024 * 1024;
     if (file.size > twoMb) {
       this.alertService.error("Profile photo must be 2MB or less");
       input.value = "";
       return;
     }
+    this.uploadingProfilePhoto = true;
     this.apiService.uploadCustomerProfileImage(file).subscribe({
       next: (res) => {
-        this.profileImageUrl = this.apiService.resolveImageUrl(
+        const resolved = this.apiService.resolveImageUrl(
           res?.profileImageUrl || "",
         );
+        this.profileImageUrl = resolved
+          ? `${resolved}${resolved.includes("?") ? "&" : "?"}v=${Date.now()}`
+          : "";
         if (this.user) {
           this.user = {
             ...this.user,
@@ -241,12 +260,40 @@ export class OwnerSettingsComponent implements OnInit, OnDestroy {
           this.authService.updateUserData(this.user);
         }
         this.alertService.success("Profile photo updated!");
+        this.uploadingProfilePhoto = false;
       },
       error: () => {
         this.alertService.error("Failed to upload profile photo.");
+        this.uploadingProfilePhoto = false;
       },
     });
     input.value = "";
+  }
+
+  async removeProfileImage(): Promise<void> {
+    if (!this.profileImageUrl) return;
+    const ok = await this.alertService.confirm(
+      "Remove profile photo?",
+      "Your profile photo will be removed.",
+    );
+    if (!ok) return;
+
+    this.uploadingProfilePhoto = true;
+    this.apiService.deleteCustomerProfileImage().subscribe({
+      next: () => {
+        this.profileImageUrl = "";
+        if (this.user) {
+          this.user = { ...this.user, profileImageUrl: undefined };
+          this.authService.updateUserData(this.user);
+        }
+        this.alertService.success("Profile photo removed.");
+        this.uploadingProfilePhoto = false;
+      },
+      error: () => {
+        this.alertService.error("Failed to remove profile photo.");
+        this.uploadingProfilePhoto = false;
+      },
+    });
   }
 
   private loadProfile(): void {

@@ -84,9 +84,6 @@
               {{ showPassword ? "👁️" : "👁️‍🗨️" }}
             </button>
           </div>
-          <div class="forgot-password-row">
-            <a routerLink="/auth/forgot-password" class="auth-link">Forgot Password?</a>
-          </div>
           @if (f['password']?.invalid && f['password']?.touched) {
             <div class="error-message">
               @if (f['password']?.errors?.['required']) {
@@ -97,6 +94,9 @@
               }
             </div>
           }
+          <div class="forgot-password-row">
+            <a routerLink="/auth/forgot-password" class="auth-link">Forgot Password?</a>
+          </div>
         </div>
 
         <button type="submit" class="btn-submit" [disabled]="loading">

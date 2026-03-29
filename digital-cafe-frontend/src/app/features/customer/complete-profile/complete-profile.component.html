@@ -7,12 +7,12 @@
       <div class="grid two">
         <label>
           First Name
-          <input type="text" formControlName="firstName" [class.invalid]="isInvalid('firstName')" />
+          <input type="text" formControlName="firstName" [class.invalid]="isInvalid('firstName')" data-testid="profile-first-name" />
           <small class="error" *ngIf="isInvalid('firstName')">First name is required.</small>
         </label>
         <label>
           Last Name
-          <input type="text" formControlName="lastName" [class.invalid]="isInvalid('lastName')" />
+          <input type="text" formControlName="lastName" [class.invalid]="isInvalid('lastName')" data-testid="profile-last-name" />
           <small class="error" *ngIf="isInvalid('lastName')">Last name is required.</small>
         </label>
       </div>
@@ -20,7 +20,7 @@
       <div class="grid one">
         <label>
           Email
-          <input type="email" formControlName="email" readonly />
+          <input type="email" formControlName="email" readonly data-testid="profile-email" />
           <small class="hint">Email can be updated from account settings.</small>
         </label>
       </div>
@@ -28,12 +28,12 @@
       <div class="grid three">
         <label>
           Date of Birth
-          <input type="date" formControlName="dateOfBirth" [class.invalid]="isInvalid('dateOfBirth')" />
+          <input type="date" formControlName="dateOfBirth" [class.invalid]="isInvalid('dateOfBirth')" data-testid="profile-dob" />
           <small class="error" *ngIf="isInvalid('dateOfBirth')">Date of birth is required.</small>
         </label>
         <label>
           Gender
-          <select formControlName="gender" [class.invalid]="isInvalid('gender')">
+          <select formControlName="gender" [class.invalid]="isInvalid('gender')" data-testid="profile-gender">
             <option value="">Select</option>
             <option value="MALE">Male</option>
             <option value="FEMALE">Female</option>
@@ -52,6 +52,7 @@
               placeholder="10-digit mobile number"
               maxlength="10"
               inputmode="numeric"
+              data-testid="profile-phone"
             />
           </div>
           <small class="error" *ngIf="isInvalid('phoneNumber')">Enter a valid 10-digit number.</small>
@@ -61,7 +62,7 @@
       <div class="grid two">
         <label>
           Government ID Type
-          <select formControlName="govtIdType">
+          <select formControlName="govtIdType" data-testid="profile-govt-id-type">
             <option value="">Select ID Type</option>
             <option *ngFor="let idType of govtIdTypes" [value]="idType">
               {{ idType }}
@@ -70,7 +71,7 @@
         </label>
         <label>
           Government ID Number
-          <input type="text" formControlName="govtIdNumber" placeholder="Enter ID number" />
+          <input type="text" formControlName="govtIdNumber" placeholder="Enter ID number" data-testid="profile-govt-id-number" />
         </label>
       </div>
 
@@ -92,6 +93,7 @@
             matInput
             placeholder="Search institution"
             [class.invalid]="isInvalid('institutionName')"
+            data-testid="profile-institution"
           />
           <mat-autocomplete
             #institutionAuto="matAutocomplete"
@@ -115,6 +117,7 @@
             class="link-btn"
             *ngIf="institutionNoResults"
             (click)="useTypedInstitution()"
+            data-testid="profile-institution-use-typed"
           >
             Use typed institution
           </button>
@@ -122,7 +125,7 @@
         </label>
         <label>
           Degree
-          <select formControlName="degree" [class.invalid]="isInvalid('degree')">
+          <select formControlName="degree" [class.invalid]="isInvalid('degree')" data-testid="profile-degree">
             <option value="">Select degree</option>
             <option *ngFor="let degree of degreeOptions" [value]="degree">
               {{ degree }}
@@ -142,7 +145,7 @@
             No branches yet
           </span>
           <ng-container *ngIf="branchOptions.length > 0; else branchInput">
-            <select formControlName="branch" [class.invalid]="isInvalid('branch')">
+            <select formControlName="branch" [class.invalid]="isInvalid('branch')" data-testid="profile-branch">
               <option value="">Select branch</option>
               <option *ngFor="let branch of branchOptions" [value]="branch">
                 {{ branch }}
@@ -155,6 +158,7 @@
               formControlName="branch"
               placeholder="Enter branch / stream"
               [class.invalid]="isInvalid('branch')"
+              data-testid="profile-branch"
             />
           </ng-template>
           <small class="hint" *ngIf="branchLoading">Loading branches…</small>
@@ -162,7 +166,7 @@
         </label>
         <label>
           Passing Year
-          <select formControlName="passingYear" [class.invalid]="isInvalid('passingYear')">
+          <select formControlName="passingYear" [class.invalid]="isInvalid('passingYear')" data-testid="profile-passing-year">
             <option value="">Select year</option>
             <option *ngFor="let y of academicYearOptions" [value]="y">{{ y }}</option>
           </select>
@@ -170,7 +174,7 @@
         </label>
         <label>
           Grading Type
-          <select formControlName="gradingType">
+          <select formControlName="gradingType" data-testid="profile-grading-type">
             <option value="CGPA">CGPA</option>
             <option value="PERCENTAGE">Percentage</option>
             <option value="GRADE">Grade</option>
@@ -181,7 +185,7 @@
       <div class="grid two">
         <label>
           Score
-          <input type="text" formControlName="score" placeholder="e.g. 8.5 / 75%" />
+          <input type="text" formControlName="score" placeholder="e.g. 8.5 / 75%" data-testid="profile-score" />
         </label>
         <label class="checkbox">
           <input type="checkbox" formControlName="currentlyStudying" (change)="onAcademicCurrentlyStudyingChange()" />
@@ -251,7 +255,7 @@
         <button type="button" class="btn-add" (click)="addWorkExperience()">Add Experience</button>
       </div>
 
-      <button type="submit" [disabled]="loading">
+      <button type="submit" [disabled]="loading" data-testid="profile-submit">
         {{ loading ? "Saving..." : "Save and Continue" }}
       </button>
     </form>

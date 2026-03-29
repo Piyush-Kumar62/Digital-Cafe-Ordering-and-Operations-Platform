@@ -40,6 +40,7 @@
             <button
               type="button"
               class="action-btn action-btn--primary"
+              data-testid="go-to-booking"
               (click)="goToBooking()"
             >
               <i class="bi bi-calendar2-check"></i>
@@ -167,6 +168,7 @@
         [class.slot-select--disabled]="!!bookingId"
         [class.custom-dropdown--open]="activeDropdown === 'date'"
         (click)="toggleDropdown('date', $event)"
+        data-testid="booking-date-dropdown"
       >
         <span class="slot-icon"><i class="bi bi-calendar-check"></i></span>
         <span class="slot-value">{{ getSelectedDateLabel() }}</span>
@@ -178,6 +180,7 @@
             *ngFor="let date of dateOptions"
             [class.slot-option--active]="selectedDate === date.value"
             (click)="selectDate(date.value, $event)"
+            [attr.data-testid]="'booking-date-option-' + date.value"
           >
             {{ date.label }}
           </button>
@@ -189,6 +192,7 @@
         [class.slot-select--disabled]="!!bookingId"
         [class.custom-dropdown--open]="activeDropdown === 'guests'"
         (click)="toggleDropdown('guests', $event)"
+        data-testid="booking-guests-dropdown"
       >
         <span class="slot-icon"><i class="bi bi-people"></i></span>
         <span class="slot-value">{{ getSelectedGuestsLabel() }}</span>
@@ -200,6 +204,7 @@
             *ngFor="let guest of guestOptions"
             [class.slot-option--active]="guests === guest"
             (click)="selectGuests(guest, $event)"
+            [attr.data-testid]="'booking-guest-option-' + guest"
           >
             {{ guest }} {{ guest === 1 ? "guest" : "guests" }}
           </button>
@@ -211,6 +216,7 @@
         [class.slot-select--disabled]="!!bookingId"
         [class.custom-dropdown--open]="activeDropdown === 'period'"
         (click)="toggleDropdown('period', $event)"
+        data-testid="booking-period-dropdown"
       >
         <span class="slot-icon"><i class="bi bi-clock"></i></span>
         <span class="slot-value">{{ getSelectedPeriodLabel() }}</span>
@@ -222,6 +228,7 @@
             *ngFor="let period of mealPeriods"
             [class.slot-option--active]="selectedMealPeriod === period.value"
             (click)="selectMealPeriod(period.value, $event)"
+            [attr.data-testid]="'booking-period-option-' + period.value"
           >
             {{ period.label }}
           </button>
@@ -245,6 +252,7 @@
           [class.slot-chip--active]="selectedTime === slot.value"
           [disabled]="!!bookingId"
           (click)="onSlotTimeSelect(slot.value)"
+          [attr.data-testid]="'booking-time-option-' + slot.value"
         >
           <span class="slot-chip-check" *ngIf="selectedTime === slot.value">
             <i class="bi bi-check-lg"></i>
@@ -335,6 +343,7 @@
           *ngFor="let table of availableTablesList"
           [class.table-card--selected]="selectedTableId === table.id"
           (click)="selectTable(table.id)"
+          [attr.data-testid]="'table-option-' + table.id"
         >
           <span class="table-icon">
             <svg
@@ -392,6 +401,7 @@
         (click)="bookTable()"
         [disabled]="bookingInProgress || !selectedTableId"
         *ngIf="availableTablesList.length > 0"
+        data-testid="confirm-booking"
       >
         <span class="btn-spinner" *ngIf="bookingInProgress"></span>
         {{ bookingInProgress ? "Booking..." : "Confirm Booking" }}
@@ -556,6 +566,7 @@
                 class="add-btn"
                 (click)="addToCart(item)"
                 [disabled]="!item.available"
+                [attr.data-testid]="'add-to-cart-' + item.id"
               >
                 <span class="add-main">Add to Cart</span>
               </button>
@@ -680,6 +691,7 @@
             paymentInProgress ||
             !bookingId
           "
+          data-testid="pay-and-place"
         >
           <ng-container *ngIf="placeAndPayInProgress || paymentInProgress">
             <span class="btn-spinner"></span>

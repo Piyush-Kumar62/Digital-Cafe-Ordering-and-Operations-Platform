@@ -13,6 +13,7 @@
     "serve:deployment": "ng serve --configuration deployment",
     "e2e": "cypress run",
     "e2e:api": "cypress run --browser chrome --headless --spec \"cypress/e2e/api/**/*.cy.ts\"",
+    "e2e:ui": "cypress run --browser chrome --headless --spec \"cypress/e2e/ui/**/*.cy.ts\"",
     "e2e:open": "cypress open"
   },
   "private": true,

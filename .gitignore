@@ -13,6 +13,10 @@ ehthumbs.db
 # IDE/editor
 .vscode/
 .idea/
+*.iml
+.m2-local/
+.m2repo/
+.settings/
 *.swp
 *.swo
 *~
@@ -93,6 +97,7 @@ digital-cafe-frontend/coverage/
 digital-cafe-frontend/cypress/screenshots/
 digital-cafe-frontend/cypress/videos/
 digital-cafe-backend/target/
+digital-cafe-backend/.idea/
 backend-e2e.log
 frontend-e2e.log
 *.pid
@@ -114,3 +119,7 @@ docs/JPA_ENTITY_STRUCTURE_BLUEPRINT.md
 
 .settings
 tmp_load_institutions.sql
+
+# Local commit-helper notes
+COMMIT_MESSAGES_10.txt
+COMMIT_COPY_PASTE_10.txt

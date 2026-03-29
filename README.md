@@ -21,6 +21,60 @@ Digital Café is an enterprise-grade platform that digitizes the entire café ex
 
 ---
 
+## Quick Start (IntelliJ IDEA + VS Code)
+
+### Prerequisites
+
+- Java 21
+- Maven 3.9+
+- Node.js 20+ and npm
+- MySQL 8
+
+### Environment setup
+
+1. Root `.env` is used for local project-level values.
+2. `digital-cafe-backend/.env` is used by backend runtime values.
+3. Keep `digital-cafe-backend/src/main/resources/application.yml` for dev.
+4. Keep `digital-cafe-backend/src/main/resources/application-deploy.yml` for deployment profile.
+
+### Run backend (local)
+
+1. Import `digital-cafe-backend` in IntelliJ IDEA as Maven project.
+2. Set JDK to 21.
+3. Run `DigitalCafeBackendApplication`.
+4. Or use terminal:
+
+```bash
+mvn -s maven-settings.xml -f digital-cafe-backend/pom.xml spring-boot:run
+```
+
+Backend default URL: `http://localhost:8080`
+
+### Run frontend (local)
+
+1. Open `digital-cafe-frontend` in VS Code.
+2. Install packages:
+
+```bash
+cd digital-cafe-frontend
+npm install
+```
+
+3. Start Angular app:
+
+```bash
+npm start
+```
+
+Frontend default URL: `http://localhost:4200`
+
+### Dev and deploy profiles
+
+- Dev: use `application.yml` and local `.env` values.
+- Deploy: activate Spring profile `deploy` so `application-deploy.yml` is used.
+
+---
+
 ## 📸 Screenshots
 
 ### Landing Page

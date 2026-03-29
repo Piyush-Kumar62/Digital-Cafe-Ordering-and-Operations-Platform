@@ -12,6 +12,7 @@
 
 html {
   scroll-behavior: smooth;
+  background-color: #0f172a;
 }
 
 html,
@@ -66,7 +67,7 @@ h6 {
 /* Custom Scrollbar — thin, always visible */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #64748b transparent;
+  scrollbar-color: #64748b #1e293b;
 }
 
 ::-webkit-scrollbar {
@@ -75,7 +76,7 @@ h6 {
 }
 
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: #1e293b;
 }
 
 ::-webkit-scrollbar-thumb {

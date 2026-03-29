@@ -1,10 +1,14 @@
 package com.digitalcafe.config;
 
+import com.digitalcafe.config.filter.CorrelationIdFilter;
+import com.digitalcafe.config.filter.RateLimitFilter;
+import com.digitalcafe.config.filter.RequestLoggingFilter;
 import com.digitalcafe.security.CustomUserDetailsService;
 import com.digitalcafe.security.JwtAuthenticationEntryPoint;
 import com.digitalcafe.security.JwtAuthenticationFilter;
 import com.digitalcafe.security.ProfileCompletionFilter;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -31,11 +35,15 @@ import java.util.List;
 @EnableWebSecurity
 @EnableMethodSecurity
 @RequiredArgsConstructor
+@Slf4j
 public class SecurityConfig {
 
     private final CustomUserDetailsService userDetailsService;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+    private final CorrelationIdFilter correlationIdFilter;
+    private final RequestLoggingFilter requestLoggingFilter;
+    private final RateLimitFilter rateLimitFilter;
 
     /**
      * ProfileCompletionFilter: runs after JWT auth to enforce email verification
@@ -86,6 +94,8 @@ public class SecurityConfig {
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint(jwtAuthenticationEntryPoint)
                         .accessDeniedHandler((request, response, ex) -> {
+                            log.warn("security_error=ACCESS_DENIED path={} method={} message={}",
+                                    request.getRequestURI(), request.getMethod(), ex.getMessage());
                             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
                             response.setContentType("application/json");
                             response.getWriter().write(
@@ -97,8 +107,12 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authenticationProvider(authenticationProvider())
-                // JWT filter runs first; ProfileCompletionFilter runs after JWT to use the authenticated principal
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                // Correlation + logging + rate limit first
+                .addFilterBefore(correlationIdFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(requestLoggingFilter, CorrelationIdFilter.class)
+                .addFilterAfter(rateLimitFilter, RequestLoggingFilter.class)
+                // JWT filter runs next; ProfileCompletionFilter runs after JWT to use the authenticated principal
+                .addFilterAfter(jwtAuthenticationFilter, RateLimitFilter.class)
                 .addFilterAfter(profileCompletionFilter, JwtAuthenticationFilter.class);
 
         return http.build();

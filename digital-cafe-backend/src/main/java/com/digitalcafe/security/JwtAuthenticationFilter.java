@@ -46,10 +46,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
                     SecurityContextHolder.getContext().setAuthentication(authentication);
+                    if (userDetails instanceof CustomUserPrincipal customUser) {
+                        org.slf4j.MDC.put(com.digitalcafe.config.filter.CorrelationIdFilter.MDC_USER_ID_KEY,
+                                String.valueOf(customUser.getId()));
+                        org.slf4j.MDC.put(com.digitalcafe.config.filter.CorrelationIdFilter.MDC_USERNAME_KEY,
+                                customUser.getUsername());
+                    }
                 }
+            } else if (StringUtils.hasText(jwt)) {
+                log.warn("security_error=INVALID_JWT path={} clientIp={}", request.getRequestURI(), resolveClientIp(request));
             }
         } catch (Exception ex) {
-            log.error("Could not set user authentication in security context", ex);
+            log.error("security_error=JWT_AUTH_FAILURE path={} clientIp={} message={}",
+                    request.getRequestURI(), resolveClientIp(request), ex.getMessage(), ex);
         }
 
         filterChain.doFilter(request, response);
@@ -61,6 +70,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return bearerToken.substring(7);
         }
         return null;
+    }
+
+    private String resolveClientIp(HttpServletRequest request) {
+        String ip = request.getHeader("CF-Connecting-IP");
+        if (!StringUtils.hasText(ip)) {
+            ip = request.getHeader("X-Forwarded-For");
+        }
+        if (!StringUtils.hasText(ip)) {
+            ip = request.getRemoteAddr();
+        }
+        return ip;
     }
 }
 

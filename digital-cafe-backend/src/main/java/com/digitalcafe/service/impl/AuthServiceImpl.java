@@ -13,7 +13,7 @@ import com.digitalcafe.service.AuthService;
 import com.digitalcafe.service.AdminProfileService;
 import com.digitalcafe.service.DocumentStorageService;
 import com.digitalcafe.service.EmailService;
-import com.digitalcafe.service.FileStorageService;
+import com.digitalcafe.storage.FileStorageService;
 import com.digitalcafe.util.PasswordGenerator;
 import com.digitalcafe.websocket.RealtimeNotification;
 import com.digitalcafe.websocket.WebSocketNotificationService;
@@ -161,15 +161,22 @@ public class AuthServiceImpl implements AuthService {
     User user = userRepository.findByEmail(request.getEmail())
         .orElseThrow(() -> new BadRequestException("Invalid credentials"));
     validateLoginEligibility(user);
-    Authentication authentication = authenticationManager.authenticate(
-        new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
-    );
+    Authentication authentication;
+    try {
+      authentication = authenticationManager.authenticate(
+          new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
+      );
+    } catch (Exception ex) {
+      log.warn("security_error=LOGIN_FAILED userId={} email={} message={}", user.getId(), user.getEmail(), ex.getMessage());
+      throw ex;
+    }
     SecurityContextHolder.getContext().setAuthentication(authentication);
     adminProfileService.markLastLoginAndBroadcast(user.getId());
     String displayName = resolveDisplayName(user);
     String loginTime = java.time.format.DateTimeFormatter.ofPattern("dd MMM yyyy, hh:mm a")
         .withZone(java.time.ZoneId.systemDefault()).format(java.time.Instant.now());
     emailService.sendLoginNotification(user.getEmail(), displayName, loginTime);
+    log.info("security_event=LOGIN_SUCCESS userId={} email={}", user.getId(), user.getEmail());
     return buildAuthResponse(user, jwtUtil.generateToken(authentication),
         jwtUtil.generateRefreshToken(authentication), "Login successful");
   }
@@ -329,15 +336,22 @@ public class AuthServiceImpl implements AuthService {
   }
 
   private void validateLoginEligibility(User user) {
-    if (!user.getIsActive()) throw new BadRequestException("Account is disabled. Awaiting admin approval");
-    if (user.getRegistrationStatus() != null && user.getRegistrationStatus() != User.RegistrationStatus.APPROVED)
+    if (!user.getIsActive()) {
+      log.warn("security_error=LOGIN_BLOCKED userId={} email={} reason=ACCOUNT_DISABLED", user.getId(), user.getEmail());
+      throw new BadRequestException("Account is disabled. Awaiting admin approval");
+    }
+    if (user.getRegistrationStatus() != null && user.getRegistrationStatus() != User.RegistrationStatus.APPROVED) {
+      log.warn("security_error=LOGIN_BLOCKED userId={} email={} reason=REGISTRATION_NOT_APPROVED", user.getId(), user.getEmail());
       throw new BadRequestException("Registration is not approved yet");
+    }
     if (userAccessPolicy.isSystemAdmin(user)) {
       user.setIsEmailVerified(true); user.setEmailVerified(true);
       user.setAccountStatus(User.AccountStatus.ACTIVE); user.setIsActive(true);
     }
-    if (userAccessPolicy.requiresEmailVerification(user) && !user.getIsEmailVerified())
+    if (userAccessPolicy.requiresEmailVerification(user) && !user.getIsEmailVerified()) {
+      log.warn("security_error=LOGIN_BLOCKED userId={} email={} reason=EMAIL_NOT_VERIFIED", user.getId(), user.getEmail());
       throw new BadRequestException("Please verify your email before logging in");
+    }
   }
 
   private AuthResponse buildAuthResponse(User user, String accessToken, String refreshToken, String message) {

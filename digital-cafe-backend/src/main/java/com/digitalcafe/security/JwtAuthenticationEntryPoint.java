@@ -21,7 +21,8 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
     public void commence(HttpServletRequest request,
                          HttpServletResponse response,
                          AuthenticationException authException) throws IOException, ServletException {
-        log.error("Unauthorized error: {}", authException.getMessage());
+        log.warn("security_error=UNAUTHORIZED path={} method={} clientIp={} message={}",
+                request.getRequestURI(), request.getMethod(), resolveClientIp(request), authException.getMessage());
 
         response.setContentType("application/json;charset=UTF-8");
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -35,5 +36,15 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
         ObjectMapper objectMapper = new ObjectMapper();
         response.getWriter().write(objectMapper.writeValueAsString(data));
     }
-}
 
+    private String resolveClientIp(HttpServletRequest request) {
+        String ip = request.getHeader("CF-Connecting-IP");
+        if (ip == null || ip.isBlank()) {
+            ip = request.getHeader("X-Forwarded-For");
+        }
+        if (ip == null || ip.isBlank()) {
+            ip = request.getRemoteAddr();
+        }
+        return ip;
+    }
+}

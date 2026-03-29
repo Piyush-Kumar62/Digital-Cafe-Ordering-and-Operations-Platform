@@ -28,7 +28,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleResourceNotFoundException(
             ResourceNotFoundException ex, WebRequest request) {
-        log.error("Resource not found: {}", ex.getMessage());
+        log.warn("error_tag=BUSINESS_ERROR type=RESOURCE_NOT_FOUND path={} message={}",
+                resolvePath(request), ex.getMessage());
 
         ErrorResponse errorResponse = new ErrorResponse(
                 LocalDateTime.now(),
@@ -43,7 +44,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BadRequestException.class)
     public ResponseEntity<ErrorResponse> handleBadRequestException(
             BadRequestException ex, WebRequest request) {
-        log.error("Bad request: {}", ex.getMessage());
+        log.warn("error_tag=VALIDATION_ERROR type=BAD_REQUEST path={} message={}",
+                resolvePath(request), ex.getMessage());
 
         ErrorResponse errorResponse = new ErrorResponse(
                 LocalDateTime.now(),
@@ -58,7 +60,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ValidationException.class)
     public ResponseEntity<ErrorResponse> handleValidationException(
             ValidationException ex, WebRequest request) {
-        log.error("Validation error: {}", ex.getMessage());
+        log.warn("error_tag=VALIDATION_ERROR type=VALIDATION_ERROR path={} message={}",
+                resolvePath(request), ex.getMessage());
 
         ErrorResponse errorResponse = new ErrorResponse(
                 LocalDateTime.now(),
@@ -73,7 +76,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ErrorResponse> handleBusinessException(
             BusinessException ex, WebRequest request) {
-        log.error("Business rule violation: {}", ex.getMessage());
+        log.warn("error_tag=BUSINESS_ERROR type=BUSINESS_RULE path={} message={}",
+                resolvePath(request), ex.getMessage());
 
         ErrorResponse errorResponse = new ErrorResponse(
                 LocalDateTime.now(),
@@ -88,7 +92,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BookingConflictException.class)
     public ResponseEntity<ErrorResponse> handleBookingConflictException(
             BookingConflictException ex, WebRequest request) {
-        log.warn("Booking conflict: {}", ex.getMessage());
+        log.warn("error_tag=BUSINESS_ERROR type=BOOKING_CONFLICT path={} message={}",
+                resolvePath(request), ex.getMessage());
 
         ErrorResponse errorResponse = new ErrorResponse(
                 LocalDateTime.now(),
@@ -103,7 +108,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<ErrorResponse> handleAuthenticationException(
             AuthenticationException ex, WebRequest request) {
-        log.error("Authentication failed: {}", ex.getMessage());
+        log.warn("error_tag=SECURITY_ERROR type=AUTHENTICATION_FAILED path={} message={}",
+                resolvePath(request), ex.getMessage());
 
         ErrorResponse errorResponse = new ErrorResponse(
                 LocalDateTime.now(),
@@ -118,7 +124,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ErrorResponse> handleBadCredentialsException(
             BadCredentialsException ex, WebRequest request) {
-        log.error("Bad credentials: {}", ex.getMessage());
+        log.warn("error_tag=SECURITY_ERROR type=INVALID_CREDENTIALS path={}", resolvePath(request));
 
         ErrorResponse errorResponse = new ErrorResponse(
                 LocalDateTime.now(),
@@ -133,7 +139,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ErrorResponse> handleAccessDeniedException(
             AccessDeniedException ex, WebRequest request) {
-        log.error("Access denied: {}", ex.getMessage());
+        log.warn("error_tag=SECURITY_ERROR type=ACCESS_DENIED path={} message={}",
+                resolvePath(request), ex.getMessage());
 
         ErrorResponse errorResponse = new ErrorResponse(
                 LocalDateTime.now(),
@@ -148,7 +155,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(com.digitalcafe.exception.AccessDeniedException.class)
     public ResponseEntity<ErrorResponse> handleCustomAccessDeniedException(
             com.digitalcafe.exception.AccessDeniedException ex, WebRequest request) {
-        log.error("Access denied: {}", ex.getMessage());
+        log.warn("error_tag=SECURITY_ERROR type=ACCESS_DENIED path={} message={}",
+                resolvePath(request), ex.getMessage());
 
         ErrorResponse errorResponse = new ErrorResponse(
                 LocalDateTime.now(),
@@ -163,7 +171,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidationExceptions(
             MethodArgumentNotValidException ex, WebRequest request) {
-        log.error("Validation failed for request");
+        log.warn("error_tag=VALIDATION_ERROR type=BEAN_VALIDATION path={}", resolvePath(request));
 
         Map<String, String> errors = new HashMap<>();
         ex.getBindingResult().getAllErrors().forEach((error) -> {
@@ -185,7 +193,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<ErrorResponse> handleTypeMismatchException(
             MethodArgumentTypeMismatchException ex, WebRequest request) {
-        log.error("Type mismatch error: {}", ex.getMessage());
+        log.warn("error_tag=VALIDATION_ERROR type=TYPE_MISMATCH path={} message={}",
+                resolvePath(request), ex.getMessage());
 
         String message = String.format("Invalid value '%s' for parameter '%s'. Expected type: %s",
                 ex.getValue(), ex.getName(), ex.getRequiredType() != null ? ex.getRequiredType().getSimpleName() : "unknown");
@@ -203,7 +212,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorResponse> handleIllegalArgumentException(
             IllegalArgumentException ex, WebRequest request) {
-        log.error("Illegal argument: {}", ex.getMessage());
+        log.warn("error_tag=VALIDATION_ERROR type=ILLEGAL_ARGUMENT path={} message={}",
+                resolvePath(request), ex.getMessage());
 
         ErrorResponse errorResponse = new ErrorResponse(
                 LocalDateTime.now(),
@@ -218,7 +228,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     public ResponseEntity<ErrorResponse> handleMaxUploadSizeExceededException(
             MaxUploadSizeExceededException ex, WebRequest request) {
-        log.warn("Upload rejected: file too large - {}", ex.getMessage());
+        log.warn("error_tag=VALIDATION_ERROR type=UPLOAD_TOO_LARGE path={} message={}",
+                resolvePath(request), ex.getMessage());
 
         ErrorResponse errorResponse = new ErrorResponse(
                 LocalDateTime.now(),
@@ -233,7 +244,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(FileTooLargeException.class)
     public ResponseEntity<ErrorResponse> handleFileTooLargeException(
             FileTooLargeException ex, WebRequest request) {
-        log.warn("File upload rejected – too large: {}", ex.getMessage());
+        log.warn("error_tag=VALIDATION_ERROR type=UPLOAD_TOO_LARGE path={} message={}",
+                resolvePath(request), ex.getMessage());
 
         ErrorResponse errorResponse = new ErrorResponse(
                 LocalDateTime.now(),
@@ -248,7 +260,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(InvalidFileTypeException.class)
     public ResponseEntity<ErrorResponse> handleInvalidFileTypeException(
             InvalidFileTypeException ex, WebRequest request) {
-        log.warn("File upload rejected – invalid type: {}", ex.getMessage());
+        log.warn("error_tag=VALIDATION_ERROR type=INVALID_FILE_TYPE path={} message={}",
+                resolvePath(request), ex.getMessage());
 
         ErrorResponse errorResponse = new ErrorResponse(
                 LocalDateTime.now(),
@@ -263,7 +276,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGlobalException(
             Exception ex, WebRequest request) {
-        log.error("Unexpected error occurred [{}]: {}", ex.getClass().getName(), ex.getMessage(), ex);
+        log.error("error_tag=SYSTEM_ERROR type={} path={} message={}",
+                ex.getClass().getName(), resolvePath(request), ex.getMessage(), ex);
 
         ErrorResponse errorResponse = new ErrorResponse(
                 LocalDateTime.now(),
@@ -273,5 +287,25 @@ public class GlobalExceptionHandler {
                 request.getDescription(false).replace("uri=", "")
         );
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler(org.springframework.dao.DataAccessException.class)
+    public ResponseEntity<ErrorResponse> handleDataAccessException(
+            org.springframework.dao.DataAccessException ex, WebRequest request) {
+        log.error("error_tag=DB_ERROR type=DATA_ACCESS path={} message={}",
+                resolvePath(request), ex.getMessage(), ex);
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                LocalDateTime.now(),
+                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                "Database Error",
+                "A database error occurred. Please try again later.",
+                resolvePath(request)
+        );
+        return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    private String resolvePath(WebRequest request) {
+        return request.getDescription(false).replace("uri=", "");
     }
 }

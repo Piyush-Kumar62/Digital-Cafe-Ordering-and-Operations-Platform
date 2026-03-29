@@ -8,15 +8,15 @@
 
 spring:
   profiles:
-    active: deployment
+    active: deploy
   application:
     name: digital-cafe-backend
 
   # ─── Database ──────────────────────────────────────────────────────────────────
   datasource:
-    url: ${DB_URL} # e.g. jdbc:mysql://your-rds-host:3306/digital_cafe_db?useSSL=true&serverTimezone=UTC
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+    url: ${DB_URL:jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:digital_cafe_db}?useSSL=true&serverTimezone=UTC}
+    username: ${DB_USERNAME:${DB_USER:}}
+    password: ${DB_PASSWORD:${DB_PASS:}}
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       maximum-pool-size: 20
@@ -28,15 +28,22 @@ spring:
   # ─── JPA / Hibernate ───────────────────────────────────────────────────────────
   jpa:
     hibernate:
-      ddl-auto: update # Keep schema managed by JPA for current deployment mode.
+      ddl-auto: validate # Avoid schema mutation in deployment.
     show-sql: false
     open-in-view: false
     properties:
       hibernate:
         format_sql: false
         dialect: org.hibernate.dialect.MySQLDialect
+        connection:
+          driver_class: com.mysql.cj.jdbc.Driver
         jdbc:
+          time_zone: UTC
           batch_size: 25
+        session:
+          events:
+            log:
+              LOG_QUERIES_SLOWER_THAN_MS: ${SLOW_QUERY_MS:800}
         order_inserts: true
         order_updates: true
 
@@ -90,19 +97,27 @@ app:
     provider: ${APP_STORAGE_PROVIDER:s3}
   upload:
     dir: ${APP_UPLOAD_DIR:/var/app/uploads} # On EC2 use EFS mount or S3 pre-signed URLs
+  rate-limit:
+    enabled: ${RATE_LIMIT_ENABLED:true}
+    capacity: ${RATE_LIMIT_CAPACITY:60}
+    refill-per-minute: ${RATE_LIMIT_REFILL_PER_MINUTE:60}
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:${FRONTEND_URL}}
 
 # ─── AWS S3 (for file uploads in deployment) ─────────────────────────────────────
 aws:
   s3:
-    bucket: ${S3_BUCKET}
+    bucket: ${S3_BUCKET:}
     region: ${AWS_REGION:ap-south-1}
   credentials:
-    access-key: ${AWS_ACCESS_KEY_ID} # Or use IAM instance role (preferred)
-    secret-key: ${AWS_SECRET_ACCESS_KEY}
+    # Keep blank to use IAM instance role (recommended on EC2)
+    access-key: ${AWS_ACCESS_KEY_ID:}
+    secret-key: ${AWS_SECRET_ACCESS_KEY:}
 
 # ─── Server ──────────────────────────────────────────────────────────────────────
 server:
   port: ${SERVER_PORT:8080}
+  forward-headers-strategy: framework
   error:
     include-message: never # Never expose internal messages in deployment error responses
     include-binding-errors: never
@@ -112,13 +127,11 @@ server:
 # ─── Logging ─────────────────────────────────────────────────────────────────────
 logging:
   level:
-    root: WARN
+    root: INFO
     org.springframework.web: INFO
     org.springframework.security: WARN
     com.digitalcafe: INFO # Structured logs from service layer
     org.hibernate.SQL: WARN # No SQL query logging in deployment
-  pattern:
-    console: "%d{yyyy-MM-dd'T'HH:mm:ssZ} [%thread] %-5level %logger{36} - %msg%n"
 
 # ─── Actuator ────────────────────────────────────────────────────────────────────
 management:

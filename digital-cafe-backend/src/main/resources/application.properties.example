@@ -11,7 +11,7 @@ spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
 spring.jpa.hibernate.ddl-auto=update
 spring.jpa.show-sql=true
 spring.jpa.properties.hibernate.format_sql=true
-spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQLDialect
+spring.jpa.properties .hibernate.dialect=org.hibernate.dialect.MySQLDialect
 
 # JWT Configuration
 # IMPORTANT: Change this secret for deployment! This is a base64 encoded secret
@@ -36,3 +36,8 @@ app.education.seed.enabled=true
 app.education.import.degrees.enabled=false
 app.education.import.branches.enabled=false
 logging.level.com.digitalcafe=DEBUG
+
+# Rate Limiting
+app.rate-limit.enabled=true
+app.rate-limit.capacity=120
+app.rate-limit.refill-per-minute=120

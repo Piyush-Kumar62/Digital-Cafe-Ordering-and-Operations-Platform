@@ -464,7 +464,9 @@
     </div>
 
     <div *ngIf="!loading && featuredCafes.length > 0" class="cafes-view-all">
-      <a routerLink="/cafes" class="view-all-btn">Browse All Cafés →</a>
+      <a [routerLink]="getCafeBrowseRoute()" class="view-all-btn"
+        >Browse All Cafés →</a
+      >
     </div>
   </div>
 </section>

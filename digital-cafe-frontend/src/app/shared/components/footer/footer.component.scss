@@ -15,9 +15,9 @@
 
       .footer-content {
         display: grid;
-        grid-template-columns: 1.7fr 1fr 1fr 1.35fr;
+        grid-template-columns: 1.5fr 1fr 1fr 1fr;
         align-items: stretch;
-        gap: 2rem;
+        gap: 1.5rem;
         margin-bottom: 0.5rem;
       }
 
@@ -250,16 +250,36 @@
       .link-group {
         display: flex;
         flex-direction: column;
+        min-height: 100%;
+        align-items: flex-start;
       }
 
       .link-group a {
         display: block;
-        width: fit-content;
+        width: auto;
+        max-width: 100%;
         color: #94a3b8;
         text-decoration: none;
         margin-bottom: 0.35rem;
         font-size: 0.95rem;
         line-height: 1.35;
+        overflow-wrap: break-word;
+      }
+
+      .link-group a.contact-link {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.35rem;
+        line-height: 1.4;
+      }
+
+      .link-group a.contact-link span:last-child {
+        word-break: break-word;
+      }
+
+      .link-group a.contact-link.email-link span:last-child {
+        white-space: nowrap;
+        font-size: 0.9rem;
       }
 
       .link-group a:hover {

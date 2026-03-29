@@ -13,15 +13,24 @@
           <h3 class="brand-name">Digital Café</h3>
         </div>
         <p class="brand-tagline">
-          Transform the way you experience café dining with seamless booking,
-          ordering, and operations management.
+          Discover top cafés, reserve your table in seconds, and enjoy seamless
+          ordering from one smart platform.
         </p>
         <div class="brand-quick-actions" aria-label="Brand quick actions">
-          <a class="brand-action action-owner" routerLink="/contact"
-            >Request Owner Account</a
+          <a
+            class="brand-action action-customer"
+            href="/cafes"
+            (click)="navigateExploreCafes($event)"
+            >Explore Cafes</a
           >
-          <a class="brand-action action-support" routerLink="/contact"
-            >Contact Support</a
+          <a
+            class="brand-action action-owner"
+            href="/customer/booking"
+            (click)="navigateBookTable($event)"
+            >Book a Table</a
+          >
+          <a class="brand-action action-support" href="/auth/register" (click)="navigateGetStarted($event)"
+            >Get Started</a
           >
         </div>
         <div class="social-icons">
@@ -81,48 +90,57 @@
 
       <div class="link-group">
         <h4>Quick Links</h4>
-        <a routerLink="/" fragment="features">Features</a>
-        <a routerLink="/" fragment="how-it-works">How It Works</a>
-        <a routerLink="/" fragment="role-matrix">Role Matrix</a>
-        <a routerLink="/" fragment="faq">FAQ</a>
-        <a routerLink="/about">About Us</a>
-        <a routerLink="/contact">Contact</a>
+        <a href="/#features" (click)="navigateLandingSection('features', $event)">Features</a>
+        <a href="/#how-it-works" (click)="navigateLandingSection('how-it-works', $event)">How It Works</a>
+        <a href="/about" (click)="navigateTopLink('/about', $event)">About</a>
       </div>
 
       <div class="link-group">
-        <h4>User Roles</h4>
-        <a routerLink="/auth/register">Customer</a>
-        <a routerLink="/contact" fragment="owner-onboarding">Café Owner</a>
-        <a routerLink="/contact" fragment="chef-onboarding">Chef</a>
-        <a routerLink="/contact" fragment="waiter-onboarding">Waiter</a>
-        <a routerLink="/auth/login">Admin</a>
-      </div>
-
-      <div class="link-group">
-        <h4>Support & Legal</h4>
+        <h4>Support</h4>
         <a routerLink="/" fragment="faq">Help Center</a>
         <a
-          href="mailto:piyushkumar30066@gmail.com?subject=Digital%20Cafe%20Support%20Request&body=Please%20describe%20your%20issue%20with%20steps%20to%20redeploymentuce."
+          href="mailto:piyushkumar30066@gmail.com?subject=Digital%20Cafe%20Support%20Request&body=Please%20describe%20your%20issue%20with%20steps%20to%20reproduce."
           >Report Issue</a
         >
         <a routerLink="/" fragment="workflow">System Status</a>
-        <a href="mailto:piyushkumar30066@gmail.com"
-          >📧 piyushkumar30066@gmail.com</a
+        <a class="contact-link email-link" href="mailto:piyushkumar30066@gmail.com"
+          ><span aria-hidden="true">📧</span><span>piyushkumar30066@gmail.com</span></a
         >
-        <a href="tel:+916202079747">📞 +91 6202079747</a>
+        <a class="contact-link" href="tel:+916202079747"
+          ><span aria-hidden="true">📞</span><span>Phone: +91 6202079747</span></a
+        >
         <a
+          class="contact-link"
           href="https://maps.google.com/?q=Bihar%2C%20India"
           target="_blank"
           rel="noopener noreferrer"
-          >📍 Bihar, India</a
+          ><span aria-hidden="true">📍</span><span>Location: Bihar, India</span></a
         >
-        <div class="legal-links">
-          <a routerLink="/privacy">Privacy Policy</a>
-          <a routerLink="/terms">Terms & Conditions</a>
-          <a routerLink="/cookie-policy">Cookie Policy</a>
-          <a routerLink="/refund-policy">Refund & Cancellation</a>
-          <a routerLink="/data-deletion">Data Deletion Request</a>
-        </div>
+      </div>
+
+      <div class="link-group">
+        <h4>Legal</h4>
+        <a href="/privacy" (click)="navigateLegal('/privacy', $event)"
+          >Privacy Policy</a
+        >
+        <a href="/terms" (click)="navigateLegal('/terms', $event)"
+          >Terms & Conditions</a
+        >
+        <a
+          href="/cookie-policy"
+          (click)="navigateLegal('/cookie-policy', $event)"
+          >Cookie Policy</a
+        >
+        <a
+          href="/refund-policy"
+          (click)="navigateLegal('/refund-policy', $event)"
+          >Refund & Cancellation</a
+        >
+        <a
+          href="/data-deletion"
+          (click)="navigateLegal('/data-deletion', $event)"
+          >Data Deletion Request</a
+        >
       </div>
     </div>
 

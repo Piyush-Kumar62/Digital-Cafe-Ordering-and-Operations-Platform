@@ -1,6 +1,6 @@
 import { Component, OnInit, AfterViewInit, OnDestroy } from "@angular/core";
 import { CommonModule } from "@angular/common";
-import { RouterModule, Router } from "@angular/router";
+import { RouterModule, Router, ActivatedRoute } from "@angular/router";
 import { NavbarComponent } from "@shared/components/navbar/navbar.component";
 import { FooterComponent } from "@shared/components/footer/footer.component";
 import { CtaComponent } from "@shared/components/cta/cta.component";
@@ -313,15 +313,23 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
     },
   ];
   activeFaqIndex: number | null = 0;
+  private pendingFragment: string | null = null;
 
   constructor(
     private apiService: ApiService,
     private cafeBrowseService: CafeBrowseService,
     private authService: AuthService,
     private router: Router,
+    private route: ActivatedRoute,
   ) {}
 
   ngOnInit(): void {
+    this.route.fragment.pipe(takeUntil(this.destroy$)).subscribe((fragment) => {
+      if (!fragment) return;
+      this.pendingFragment = fragment;
+      this.scrollToFragmentWhenReady(fragment);
+    });
+
     // Poll every 30s — public endpoint, no auth required
     interval(30_000)
       .pipe(
@@ -346,6 +354,9 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
   ngAfterViewInit(): void {
     // Set up intersection observer for scroll animations
     this.setupScrollAnimations();
+    if (this.pendingFragment) {
+      this.scrollToFragmentWhenReady(this.pendingFragment);
+    }
   }
 
   ngOnDestroy(): void {
@@ -416,13 +427,27 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
     return `${h}:${min} ${meridian}`;
   }
 
+  getCafeBrowseRoute(): string {
+    return this.authService.isAuthenticated && this.authService.isCustomer()
+      ? "/customer/browse-cafes"
+      : "/cafes";
+  }
+
+  private getCafeDetailRoute(cafeId: number): string[] {
+    return this.authService.isAuthenticated && this.authService.isCustomer()
+      ? ["/customer/browse-cafes", String(cafeId)]
+      : ["/cafes", String(cafeId)];
+  }
+
   navigateToCafe(cafeId: number): void {
-    this.router.navigate(["/cafes", cafeId]);
+    this.router.navigate(this.getCafeDetailRoute(cafeId));
   }
 
   viewCafeMenu(cafeId: number, event?: Event): void {
     event?.stopPropagation();
-    this.router.navigate(["/cafes", cafeId]);
+    this.router.navigate(this.getCafeDetailRoute(cafeId), {
+      fragment: "menu",
+    });
   }
 
   bookCafeTable(cafeId: number, event?: Event): void {
@@ -451,6 +476,24 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
     if (element) {
       element.scrollIntoView({ behavior: "smooth", block: "start" });
     }
+  }
+
+  private scrollToFragmentWhenReady(fragment: string, attempt = 0): void {
+    const target = document.getElementById(fragment);
+    if (target) {
+      const navbar = document.querySelector(".navbar") as HTMLElement | null;
+      const navbarHeight = navbar?.offsetHeight ?? 0;
+      const top =
+        target.getBoundingClientRect().top + window.scrollY - navbarHeight - 8;
+      window.scrollTo({ top: Math.max(0, top), behavior: "auto" });
+      return;
+    }
+
+    if (attempt >= 80) {
+      return;
+    }
+
+    setTimeout(() => this.scrollToFragmentWhenReady(fragment, attempt + 1), 50);
   }
 
   toggleFaq(index: number): void {

@@ -34,7 +34,7 @@ ehthumbs.db
 credentials.json
 secrets.json
 
-# Logs/temp
+# LogsComponent/temp
 *.log
 logs/
 *.tmp

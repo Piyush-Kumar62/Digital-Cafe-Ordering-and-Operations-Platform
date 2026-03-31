@@ -124,7 +124,7 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
       route: "/admin/settings",
     },
     {
-      label: "Logs",
+      label: "LogsComponent",
       icon: "journal-code",
       route: "/admin/logs",
     },

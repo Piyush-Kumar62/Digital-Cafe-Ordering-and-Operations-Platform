@@ -10,8 +10,10 @@
           [src]="panelImage"
           [alt]="panelImageAlt"
           class="register-role-image"
+          [class.is-fading]="!panelImageVisible"
           loading="eager"
           fetchpriority="high"
+          (error)="onPanelImageError()"
         />
         <div class="register-role-image-overlay">
           <div class="register-role-image-brand">
@@ -19,7 +21,8 @@
             <span>Digital Caf&eacute;</span>
           </div>
           <p class="register-role-image-tagline">
-            Choose your account type to begin the Digital Caf&eacute; experience.
+            Choose your account type to begin the Digital Caf&eacute;
+            experience.
           </p>
         </div>
       </div>

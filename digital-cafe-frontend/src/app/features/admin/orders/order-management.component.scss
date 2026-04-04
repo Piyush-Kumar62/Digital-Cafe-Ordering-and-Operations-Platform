@@ -6,7 +6,15 @@
   --om-border: #dbe4f0;
   --om-row-border: #e2e8f0;
   --om-primary: #0ea5e9;
-  padding: 0;
+  max-width: 1536px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+@media (min-width: 640px) {
+  .management-container {
+    padding: 1.5rem;
+  }
 }
 
 .toolbar {
@@ -48,7 +56,9 @@
   border-radius: 14px;
   padding: 0.75rem;
   box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .card:hover {
@@ -93,7 +103,9 @@ tbody tr:hover {
 }
 
 .mono-cell {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    "Courier New", monospace;
   white-space: nowrap;
   font-size: 0.93rem;
   letter-spacing: 0.01em;
@@ -157,7 +169,9 @@ tbody tr:hover {
 }
 
 .mono-inline {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    "Courier New", monospace;
   font-size: 0.8rem;
 }
 
@@ -184,7 +198,9 @@ button {
   color: #fff;
   font-size: 0.78rem;
   cursor: pointer;
-  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
 }
 
 button:hover {
@@ -213,32 +229,59 @@ button:hover {
 .pager-right {
   display: flex;
   align-items: center;
-  gap: 0.35rem;
-  flex-wrap: wrap;
+  gap: 0;
+  border: 1px solid #dfe3e8;
+  border-radius: 6px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  max-width: 100%;
+  white-space: nowrap;
+  background: #f9fafb;
 }
 
 .page-btn {
-  border: 1px solid #cbd5e1;
-  border-radius: 10px;
-  padding: 0.38rem 0.72rem;
-  font-size: 0.84rem;
-  font-weight: 700;
-  color: var(--om-text);
-  background: var(--om-bg);
+  border: none;
+  border-right: 1px solid #e7eaee;
+  border-radius: 0;
+  padding: 0.35rem 0.55rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #2563eb;
+  background: #ffffff;
   min-width: 38px;
-  line-height: 1.1;
+  line-height: 1;
+  box-shadow: none !important;
+  transform: none !important;
 }
 
 .page-btn.active {
   border-color: transparent;
   color: #fff;
-  background: linear-gradient(110deg, #2563eb, #3b82f6);
-  box-shadow: 0 8px 16px rgba(37, 99, 235, 0.25);
+  background: #1f6feb;
+  font-weight: 600;
+}
+
+.page-btn:last-child {
+  border-right: none;
 }
 
 .page-btn:disabled {
   opacity: 0.55;
   cursor: not-allowed;
+}
+
+.nav-btn {
+  background: #f1f3f5;
+  color: #4b5563;
+  min-width: 58px;
+}
+
+.page-btn:hover:not(:disabled) {
+  background: #f8fafc;
+}
+
+.page-btn.active:hover:not(:disabled) {
+  background: #1f6feb;
 }
 
 :host-context(.dark-theme) .management-container,

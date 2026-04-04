@@ -1,5 +1,11 @@
 import { CommonModule } from "@angular/common";
-import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from "@angular/core";
+import {
+  Component,
+  ElementRef,
+  OnDestroy,
+  OnInit,
+  ViewChild,
+} from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { Subject, takeUntil, finalize } from "rxjs";
 import { AuthService } from "@core/auth/auth.service";
@@ -22,7 +28,8 @@ import { AdminProfileService } from "./admin-profile.service";
   styleUrl: "./admin-profile.component.scss",
 })
 export class AdminProfileComponent implements OnInit, OnDestroy {
-  @ViewChild("profileFileInput") profileFileInput?: ElementRef<HTMLInputElement>;
+  @ViewChild("profileFileInput")
+  profileFileInput?: ElementRef<HTMLInputElement>;
 
   profile: AdminProfile | null = null;
   form: AdminProfileUpdateRequest = {
@@ -93,7 +100,8 @@ export class AdminProfileComponent implements OnInit, OnDestroy {
     if (display) {
       return display;
     }
-    const value = `${this.profile.firstName || ""} ${this.profile.lastName || ""}`.trim();
+    const value =
+      `${this.profile.firstName || ""} ${this.profile.lastName || ""}`.trim();
     return value || "Admin User";
   }
 
@@ -119,6 +127,18 @@ export class AdminProfileComponent implements OnInit, OnDestroy {
     return !!this.profile;
   }
 
+  get currentCompletionPercentage(): number {
+    const filled = [
+      String(this.form.firstName || "").trim().length > 0,
+      String(this.form.lastName || "").trim().length > 0,
+      String(this.form.displayName || "").trim().length > 0,
+      String(this.profile?.email || "").trim().length > 0,
+      !!(this.imagePreviewUrl || this.profile?.profileImageUrl),
+    ].filter(Boolean).length;
+
+    return Math.round((filled * 100) / 5);
+  }
+
   loadProfile(): void {
     this.loading = true;
     this.adminProfileService
@@ -133,7 +153,9 @@ export class AdminProfileComponent implements OnInit, OnDestroy {
           this.bindRealtimeProfileUpdates();
         },
         error: (error) => {
-          this.alertService.error(error?.message || "Failed to load admin profile");
+          this.alertService.error(
+            error?.message || "Failed to load admin profile",
+          );
         },
       });
   }
@@ -148,12 +170,17 @@ export class AdminProfileComponent implements OnInit, OnDestroy {
       lastName: (this.form.lastName || "").trim(),
       displayName: (this.form.displayName || "").trim(),
       theme: this.form.theme,
-      autoRefreshSeconds: Math.min(120, Math.max(5, Number(this.form.autoRefreshSeconds || 15))),
+      autoRefreshSeconds: Math.min(
+        120,
+        Math.max(5, Number(this.form.autoRefreshSeconds || 15)),
+      ),
       adminNotificationsEnabled: !!this.form.adminNotificationsEnabled,
     };
 
     if (!payload.firstName || !payload.lastName || !payload.displayName) {
-      this.alertService.error("First name, last name, and display name are required");
+      this.alertService.error(
+        "First name, last name, and display name are required",
+      );
       return;
     }
 
@@ -171,7 +198,8 @@ export class AdminProfileComponent implements OnInit, OnDestroy {
           this.alertService.success("Profile details saved successfully");
         },
         error: (error) => {
-          const errorMessage = error?.error?.message || error?.message || "Failed to save profile";
+          const errorMessage =
+            error?.error?.message || error?.message || "Failed to save profile";
           this.alertService.error(errorMessage);
         },
       });
@@ -243,7 +271,8 @@ export class AdminProfileComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (response) => {
           const uploadedImagePath = response?.profileImageUrl || "";
-          const uploadedImageUrl = this.resolveBackendImageUrl(uploadedImagePath);
+          const uploadedImageUrl =
+            this.resolveBackendImageUrl(uploadedImagePath);
 
           this.imagePreviewUrl = uploadedImageUrl || null;
           this.selectedImageFile = null;
@@ -264,7 +293,8 @@ export class AdminProfileComponent implements OnInit, OnDestroy {
           this.alertService.success("Profile image uploaded");
         },
         error: (error) => {
-          const errorMessage = error?.error?.message || error?.message || "Failed to upload image";
+          const errorMessage =
+            error?.error?.message || error?.message || "Failed to upload image";
           this.alertService.error(errorMessage);
         },
       });
@@ -293,7 +323,10 @@ export class AdminProfileComponent implements OnInit, OnDestroy {
           this.alertService.success("Profile photo deleted");
         },
         error: (error) => {
-          const errorMessage = error?.error?.message || error?.message || "Failed to delete profile photo";
+          const errorMessage =
+            error?.error?.message ||
+            error?.message ||
+            "Failed to delete profile photo";
           this.alertService.error(errorMessage);
         },
       });
@@ -390,7 +423,11 @@ export class AdminProfileComponent implements OnInit, OnDestroy {
   }
 
   onEditorPointerMove(event: PointerEvent): void {
-    if (!this.imageEditMode || !this.editorDragging || this.dragPointerId !== event.pointerId) {
+    if (
+      !this.imageEditMode ||
+      !this.editorDragging ||
+      this.dragPointerId !== event.pointerId
+    ) {
       return;
     }
 
@@ -404,12 +441,22 @@ export class AdminProfileComponent implements OnInit, OnDestroy {
 
     // Keep drag precise and controlled like LinkedIn editor.
     const sensitivity = 0.85 / Math.max(this.editorZoom, 1);
-    const deltaXPercent = ((event.clientX - this.dragStartX) / width) * 100 * sensitivity;
-    const deltaYPercent = ((event.clientY - this.dragStartY) / height) * 100 * sensitivity;
+    const deltaXPercent =
+      ((event.clientX - this.dragStartX) / width) * 100 * sensitivity;
+    const deltaYPercent =
+      ((event.clientY - this.dragStartY) / height) * 100 * sensitivity;
 
     const maxOffset = this.getMaxEditorOffset();
-    this.editorOffsetX = this.clamp(this.dragStartOffsetX + deltaXPercent, -maxOffset, maxOffset);
-    this.editorOffsetY = this.clamp(this.dragStartOffsetY + deltaYPercent, -maxOffset, maxOffset);
+    this.editorOffsetX = this.clamp(
+      this.dragStartOffsetX + deltaXPercent,
+      -maxOffset,
+      maxOffset,
+    );
+    this.editorOffsetY = this.clamp(
+      this.dragStartOffsetY + deltaYPercent,
+      -maxOffset,
+      maxOffset,
+    );
     event.preventDefault();
   }
 
@@ -439,7 +486,11 @@ export class AdminProfileComponent implements OnInit, OnDestroy {
 
     const direction = event.deltaY < 0 ? 1 : -1;
     const step = 0.02;
-    const nextZoom = this.clamp(this.editorZoom + direction * step, this.minEditorZoom, this.maxEditorZoom);
+    const nextZoom = this.clamp(
+      this.editorZoom + direction * step,
+      this.minEditorZoom,
+      this.maxEditorZoom,
+    );
     this.onEditorZoomChange(nextZoom);
     event.preventDefault();
   }
@@ -467,7 +518,8 @@ export class AdminProfileComponent implements OnInit, OnDestroy {
       displayName: profile.displayName || "",
       theme: profile.preferences?.theme || "LIGHT",
       autoRefreshSeconds: profile.preferences?.autoRefreshSeconds ?? 15,
-      adminNotificationsEnabled: profile.preferences?.adminNotificationsEnabled ?? true,
+      adminNotificationsEnabled:
+        profile.preferences?.adminNotificationsEnabled ?? true,
     };
 
     this.applyTheme(this.form.theme);
@@ -519,7 +571,10 @@ export class AdminProfileComponent implements OnInit, OnDestroy {
     );
   }
 
-  private renderEditedImage(): Promise<{ file: File; previewUrl: string } | null> {
+  private renderEditedImage(): Promise<{
+    file: File;
+    previewUrl: string;
+  } | null> {
     return new Promise((resolve) => {
       if (!this.editorImageSource) {
         resolve(null);
@@ -540,7 +595,10 @@ export class AdminProfileComponent implements OnInit, OnDestroy {
 
         const outputSize = canvas.width;
         // Preserve full image by default (no auto-cut). User can zoom/pan for tighter crop.
-        const baseScale = Math.min(outputSize / image.width, outputSize / image.height);
+        const baseScale = Math.min(
+          outputSize / image.width,
+          outputSize / image.height,
+        );
         const drawWidth = image.width * baseScale;
         const drawHeight = image.height * baseScale;
         const translateX = (this.editorOffsetX / 100) * outputSize;
@@ -557,7 +615,13 @@ export class AdminProfileComponent implements OnInit, OnDestroy {
         ctx.translate(translateX, translateY);
         ctx.scale(this.editorZoom, this.editorZoom);
         ctx.rotate(rotationRad);
-        ctx.drawImage(image, -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight);
+        ctx.drawImage(
+          image,
+          -drawWidth / 2,
+          -drawHeight / 2,
+          drawWidth,
+          drawHeight,
+        );
         ctx.restore();
 
         canvas.toBlob(
@@ -568,7 +632,9 @@ export class AdminProfileComponent implements OnInit, OnDestroy {
               return;
             }
             resolve({
-              file: new File([blob], "profile-image.jpg", { type: "image/jpeg" }),
+              file: new File([blob], "profile-image.jpg", {
+                type: "image/jpeg",
+              }),
               previewUrl: URL.createObjectURL(blob),
             });
           },
@@ -617,7 +683,9 @@ export class AdminProfileComponent implements OnInit, OnDestroy {
       return 16;
     }
 
-    const normalizedZoom = (zoom - this.minEditorZoom) / Math.max(this.maxEditorZoom - this.minEditorZoom, 1);
+    const normalizedZoom =
+      (zoom - this.minEditorZoom) /
+      Math.max(this.maxEditorZoom - this.minEditorZoom, 1);
     return this.clamp(16 + normalizedZoom * 24, 16, 40);
   }
 
@@ -632,5 +700,3 @@ export class AdminProfileComponent implements OnInit, OnDestroy {
     return `${backendBase}${value}`;
   }
 }
-
-

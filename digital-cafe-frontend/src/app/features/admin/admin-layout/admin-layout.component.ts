@@ -61,6 +61,8 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
   notificationDropdownOpen = false;
   adminProfileImage = "";
   notifications: AdminHeaderNotification[] = [];
+  readonly notificationPageSize = 10;
+  notificationCurrentPage = 1;
   isDashboardRoute = false;
   private routerEventsSub?: Subscription;
   private currentUserSub?: Subscription;
@@ -218,6 +220,7 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
     this.profileDropdownOpen = false;
     this.notificationDropdownOpen = !this.notificationDropdownOpen;
     if (this.notificationDropdownOpen) {
+      this.notificationCurrentPage = 1;
       this.notifications = this.notifications.map((item) => ({
         ...item,
         read: true,
@@ -235,7 +238,10 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
     );
     if (!ok) return;
     this.authService.logout();
-    this.alertService.success("Logged out", "You have been signed out successfully.");
+    this.alertService.success(
+      "Logged out",
+      "You have been signed out successfully.",
+    );
     this.router.navigate(["/auth/login"]).catch(() => {});
   }
   @HostListener("document:click", ["$event"])
@@ -326,6 +332,38 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
 
   get unreadNotifications(): number {
     return this.notifications.filter((item) => !item.read).length;
+  }
+
+  get totalNotificationPages(): number {
+    return Math.max(
+      1,
+      Math.ceil(this.notifications.length / this.notificationPageSize),
+    );
+  }
+
+  get pagedNotifications(): AdminHeaderNotification[] {
+    const start =
+      (this.notificationCurrentPage - 1) * this.notificationPageSize;
+    return this.notifications.slice(start, start + this.notificationPageSize);
+  }
+
+  prevNotificationPage(): void {
+    if (this.notificationCurrentPage > 1) {
+      this.notificationCurrentPage -= 1;
+    }
+  }
+
+  nextNotificationPage(): void {
+    if (this.notificationCurrentPage < this.totalNotificationPages) {
+      this.notificationCurrentPage += 1;
+    }
+  }
+
+  markAllRead(): void {
+    this.notifications = this.notifications.map((item) => ({
+      ...item,
+      read: true,
+    }));
   }
 
   getNotificationTime(timestamp: string): string {
@@ -490,5 +528,6 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
       return;
     }
     this.notifications = [normalized, ...this.notifications].slice(0, 20);
+    this.notificationCurrentPage = 1;
   }
 }

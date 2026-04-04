@@ -1,5 +1,8 @@
 <!-- Loading State -->
-<div *ngIf="loading" class="flex items-center justify-center min-h-screen">
+<div
+  *ngIf="loading && !dashboard"
+  class="flex items-center justify-center min-h-screen"
+>
   <div class="text-center">
     <div
       class="animate-spin rounded-full h-16 w-16 border-b-2 border-indigo-600 mx-auto mb-4"
@@ -11,47 +14,60 @@
 </div>
 
 <!-- Dashboard Content -->
-<div *ngIf="!loading && dashboard" class="p-4 sm:p-6 max-w-screen-2xl mx-auto">
-  <!-- Page Header -->
-  <div
-    class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 sm:mb-8"
-  >
-    <div>
-      <h1
-        class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2"
-      >
-        Admin Dashboard
+<div *ngIf="dashboard" class="p-4 sm:p-6 max-w-screen-2xl mx-auto">
+  <!-- Hero Header -->
+  <div class="admin-hero mb-6 sm:mb-8">
+    <div class="admin-hero__content">
+      <p class="admin-hero__greeting">☀ {{ greeting }}</p>
+      <h1 class="admin-hero__title">
+        Welcome back,
+        <span class="admin-hero__highlight">{{ displayName }}</span
+        >!
       </h1>
-      <p class="text-gray-600 dark:text-gray-300 text-base sm:text-lg">
-        Welcome back! Here's what's happening with your platform today.
-      </p>
-    </div>
-    <div class="mt-4 sm:mt-0">
-      <button
-        (click)="loadDashboard(); loadPendingApprovals()"
-        [disabled]="loading"
-        class="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-      >
-        <svg
-          class="w-4 h-4 mr-2"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
+      <p class="admin-hero__subtitle">{{ dateTimeFormatted }}</p>
+      <div class="admin-hero__actions">
+        <button
+          (click)="loadDashboard(true); loadPendingApprovals()"
+          [disabled]="loading || refreshing"
+          class="admin-hero__cta"
         >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-          />
-        </svg>
-        Refresh Data
-      </button>
+          <svg
+            class="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+            />
+          </svg>
+          {{ refreshing ? "Refreshing..." : "Refresh Data" }}
+        </button>
+      </div>
+    </div>
+
+    <div class="admin-hero__right">
+      <div class="admin-hero__avatar">
+        {{ displayName.charAt(0).toUpperCase() }}
+      </div>
+      <div class="admin-hero__mini">
+        <div class="admin-mini-stat">
+          <strong>{{ dashboard.totalUsers || 0 }}</strong>
+          <span>Users</span>
+        </div>
+        <div class="admin-mini-stat">
+          <strong>{{ dashboard.activeUsers || 0 }}</strong>
+          <span>Active</span>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- ===== PENDING APPROVALS BANNER ===== -->
-  <div
+  <!-- PENDING APPROVALS BANNER -->
+    <div
     *ngIf="pendingUsers && pendingUsers.length > 0"
     class="mb-6 bg-amber-50 border border-amber-300 rounded-xl p-5"
   >

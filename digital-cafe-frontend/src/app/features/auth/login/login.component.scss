@@ -340,8 +340,7 @@
   }
 }
 
-/* ── Two-column layout: image panel (left) + form card (right) ───── */
-
+/* Two-column layout: image panel (left) + form card (right) */
 .auth-layout-wrapper {
   display: flex;
   align-items: stretch;
@@ -395,7 +394,7 @@
 /* Left: Cinematic coffee image */
 .auth-image-panel {
   display: none; // hidden on mobile
-  flex: 0 0 42%;
+  flex: 0 0 47%;
   position: relative;
   overflow: hidden;
   min-height: 540px;
@@ -415,14 +414,21 @@
   height: 100%;
   object-fit: cover;
   object-position: center;
-  filter: brightness(0.5) saturate(1.15);
+  filter: brightness(0.84) saturate(1.08) contrast(1.03);
   will-change: transform;
   transform: translateZ(0);
-  transition: transform 8s ease;
+  opacity: 1;
+  transition:
+    opacity 0.7s ease,
+    filter 0.35s ease;
 
-  .auth-image-panel:hover & {
-    transform: scale(1.04);
+  &.is-fading {
+    opacity: 0;
   }
+}
+
+.auth-image-panel:hover .auth-panel-image {
+  filter: brightness(0.9) saturate(1.14) contrast(1.05);
 }
 
 .auth-panel-overlay {
@@ -434,8 +440,8 @@
   padding: 2rem;
   background: linear-gradient(
     to top,
-    rgba(6, 12, 30, 0.92) 0%,
-    rgba(6, 12, 30, 0.42) 55%,
+    rgba(6, 12, 30, 0.84) 0%,
+    rgba(6, 12, 30, 0.3) 55%,
     transparent 100%
   );
 }
@@ -458,23 +464,26 @@
   font-weight: 700;
   color: #f8fafc;
   letter-spacing: -0.02em;
+  text-shadow: 0 2px 10px rgba(2, 6, 23, 0.9);
 }
 
 .auth-panel-tagline {
   font-size: 0.88rem;
-  color: rgba(248, 250, 252, 0.8);
+  color: rgba(248, 250, 252, 0.93);
   line-height: 1.58;
   margin-bottom: 1.1rem;
+  text-shadow: 0 2px 10px rgba(2, 6, 23, 0.86);
 }
 
 .auth-panel-quote {
   font-size: 0.8rem;
-  color: rgba(248, 250, 252, 0.65);
+  color: rgba(248, 250, 252, 0.86);
   border-left: 2px solid #f59e0b;
   padding-left: 0.7rem;
   margin: 0;
   font-style: italic;
   line-height: 1.6;
+  text-shadow: 0 2px 10px rgba(2, 6, 23, 0.82);
 
   cite {
     display: block;

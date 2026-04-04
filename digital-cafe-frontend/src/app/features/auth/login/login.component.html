@@ -5,6 +5,8 @@
     <div class="auth-image-panel">
       <img
         [src]="loginHeroImage"
+        [class.is-fading]="!heroImageVisible"
+        (error)="onHeroImageError()"
         alt="Coffee brewing scene"
         class="auth-panel-image"
         loading="eager"
@@ -38,75 +40,73 @@
       </div>
 
       @if (loginForm) {
-        <form
-          [formGroup]="loginForm"
-          (ngSubmit)="onSubmit()"
-          class="auth-form"
-        >
-        <div class="form-group">
-          <label for="email" class="form-label">Email</label>
-          <input
-            type="email"
-            id="email"
-            formControlName="email"
-            class="form-input"
-            [class.error]="f['email']?.invalid && f['email']?.touched"
-            placeholder="example@gmail.com"
-          />
-          @if (f['email']?.invalid && f['email']?.touched) {
-            <div class="error-message">
-              @if (f['email']?.errors?.['required']) {
-                <span>Email is required</span>
-              }
-              @if (f['email']?.errors?.['email']) {
-                <span>Please enter a valid email address</span>
-              }
-            </div>
-          }
-        </div>
-
-        <div class="form-group">
-          <label for="password" class="form-label">Password</label>
-          <div class="password-input-wrapper">
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="auth-form">
+          <div class="form-group">
+            <label for="email" class="form-label">Email</label>
             <input
-              [type]="showPassword ? 'text' : 'password'"
-              id="password"
-              formControlName="password"
+              type="email"
+              id="email"
+              formControlName="email"
               class="form-input"
-              [class.error]="f['password']?.invalid && f['password']?.touched"
-              placeholder="Enter your password"
+              [class.error]="f['email']?.invalid && f['email']?.touched"
+              placeholder="example@gmail.com"
             />
-            <button
-              type="button"
-              class="password-toggle"
-              (click)="togglePasswordVisibility()"
-            >
-              {{ showPassword ? "👁️" : "👁️‍🗨️" }}
-            </button>
+            @if (f["email"]?.invalid && f["email"]?.touched) {
+              <div class="error-message">
+                @if (f["email"]?.errors?.["required"]) {
+                  <span>Email is required</span>
+                }
+                @if (f["email"]?.errors?.["email"]) {
+                  <span>Please enter a valid email address</span>
+                }
+              </div>
+            }
           </div>
-          @if (f['password']?.invalid && f['password']?.touched) {
-            <div class="error-message">
-              @if (f['password']?.errors?.['required']) {
-                <span>Password is required</span>
-              }
-              @if (f['password']?.errors?.['minlength']) {
-                <span>Password must be at least 8 characters</span>
-              }
-            </div>
-          }
-          <div class="forgot-password-row">
-            <a routerLink="/auth/forgot-password" class="auth-link">Forgot Password?</a>
-          </div>
-        </div>
 
-        <button type="submit" class="btn-submit" [disabled]="loading">
-          @if (!loading) {
-            <span>Sign In</span>
-          }
-          @if (loading) {
-            <span class="loading-spinner"></span>
-          }
-        </button>
+          <div class="form-group">
+            <label for="password" class="form-label">Password</label>
+            <div class="password-input-wrapper">
+              <input
+                [type]="showPassword ? 'text' : 'password'"
+                id="password"
+                formControlName="password"
+                class="form-input"
+                [class.error]="f['password']?.invalid && f['password']?.touched"
+                placeholder="Enter your password"
+              />
+              <button
+                type="button"
+                class="password-toggle"
+                (click)="togglePasswordVisibility()"
+              >
+                {{ showPassword ? "👁️" : "👁️‍🗨️" }}
+              </button>
+            </div>
+            @if (f["password"]?.invalid && f["password"]?.touched) {
+              <div class="error-message">
+                @if (f["password"]?.errors?.["required"]) {
+                  <span>Password is required</span>
+                }
+                @if (f["password"]?.errors?.["minlength"]) {
+                  <span>Password must be at least 8 characters</span>
+                }
+              </div>
+            }
+            <div class="forgot-password-row">
+              <a routerLink="/auth/forgot-password" class="auth-link"
+                >Forgot Password?</a
+              >
+            </div>
+          </div>
+
+          <button type="submit" class="btn-submit" [disabled]="loading">
+            @if (!loading) {
+              <span>Sign In</span>
+            }
+            @if (loading) {
+              <span class="loading-spinner"></span>
+            }
+          </button>
         </form>
       }
 

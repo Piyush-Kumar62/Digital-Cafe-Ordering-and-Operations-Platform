@@ -19,8 +19,8 @@
           <th>Location</th>
           <th>Contact</th>
           <th>Created</th>
-          <th>Status</th>
-          <th>Actions</th>
+          <th class="status-cell">Status</th>
+          <th class="actions-cell">Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -31,7 +31,7 @@
           <td>{{ cafe.city }}, {{ cafe.state }}</td>
           <td>{{ cafe.email }}</td>
           <td>{{ fmtDate(cafe.createdAt) }}</td>
-          <td>
+          <td class="status-cell">
             <span
               class="badge"
               [class.active]="cafe.isActive"
@@ -40,13 +40,15 @@
               {{ cafe.isActive ? "ACTIVE" : "INACTIVE" }}
             </span>
           </td>
-          <td class="actions">
-            <button class="btn-info" (click)="toggleStatus(cafe)">
-              {{ cafe.isActive ? "Deactivate" : "Activate" }}
-            </button>
-            <button class="btn-danger" (click)="deleteCafe(cafe)">
-              Delete
-            </button>
+          <td class="actions-cell">
+            <div class="actions">
+              <button class="btn-info" (click)="toggleStatus(cafe)">
+                {{ cafe.isActive ? "Deactivate" : "Activate" }}
+              </button>
+              <button class="btn-danger" (click)="deleteCafe(cafe)">
+                Delete
+              </button>
+            </div>
           </td>
         </tr>
       </tbody>
@@ -63,7 +65,8 @@
           [disabled]="pageIndex === 0"
           (click)="goToPage(pageIndex - 1)"
         >
-          ← Prev</button>
+          ← Prev
+        </button>
         <button
           class="page-btn"
           *ngFor="let p of allPages"
@@ -77,7 +80,8 @@
           [disabled]="pageIndex >= totalPages - 1"
           (click)="goToPage(pageIndex + 1)"
         >
-          Next →</button>
+          Next →
+        </button>
       </div>
     </div>
   </div>

@@ -18,6 +18,7 @@
         [src]="registerPanelImageSrc"
         [alt]="registerPanelImageAlt"
         class="register-panel-image"
+        [class.is-fading]="!panelImageVisible"
         [class.owner-panel-image]="isCafeOwnerMode"
         loading="eager"
         fetchpriority="high"
@@ -262,7 +263,11 @@
                   required
                 />
               </div>
-              <small *ngIf="firstNameCtrl.invalid && firstNameCtrl.touched" class="text-red-300 text-xs mt-1 block">First name is required</small>
+              <small
+                *ngIf="firstNameCtrl.invalid && firstNameCtrl.touched"
+                class="text-red-300 text-xs mt-1 block"
+                >First name is required</small
+              >
             </div>
             <div>
               <label for="lastName" class="form-label">Last Name *</label>
@@ -282,7 +287,11 @@
                   required
                 />
               </div>
-              <small *ngIf="lastNameCtrl.invalid && lastNameCtrl.touched" class="text-red-300 text-xs mt-1 block">Last name is required</small>
+              <small
+                *ngIf="lastNameCtrl.invalid && lastNameCtrl.touched"
+                class="text-red-300 text-xs mt-1 block"
+                >Last name is required</small
+              >
             </div>
             <div>
               <label for="email" class="form-label">Email Address *</label>
@@ -303,7 +312,11 @@
                   required
                 />
               </div>
-              <small *ngIf="emailCtrl.invalid && emailCtrl.touched" class="text-red-300 text-xs mt-1 block">Please enter a valid email address</small>
+              <small
+                *ngIf="emailCtrl.invalid && emailCtrl.touched"
+                class="text-red-300 text-xs mt-1 block"
+                >Please enter a valid email address</small
+              >
             </div>
             <div>
               <label for="phone" class="form-label">Phone Number *</label>
@@ -326,7 +339,11 @@
                   required
                 />
               </div>
-              <small *ngIf="phoneCtrl.invalid && phoneCtrl.touched" class="text-red-300 text-xs mt-1 block">Please enter a valid 10-digit mobile number</small>
+              <small
+                *ngIf="phoneCtrl.invalid && phoneCtrl.touched"
+                class="text-red-300 text-xs mt-1 block"
+                >Please enter a valid 10-digit mobile number</small
+              >
             </div>
             <div>
               <label for="dateOfBirth" class="form-label"
@@ -346,7 +363,11 @@
                   required
                 />
               </div>
-              <small *ngIf="dobCtrl.invalid && dobCtrl.touched" class="text-red-300 text-xs mt-1 block">Date of birth is required</small>
+              <small
+                *ngIf="dobCtrl.invalid && dobCtrl.touched"
+                class="text-red-300 text-xs mt-1 block"
+                >Date of birth is required</small
+              >
             </div>
             <div>
               <label for="gender" class="form-label">Gender *</label>
@@ -371,7 +392,11 @@
                   </option>
                 </select>
               </div>
-              <small *ngIf="genderCtrl.invalid && genderCtrl.touched" class="text-red-300 text-xs mt-1 block">Gender is required</small>
+              <small
+                *ngIf="genderCtrl.invalid && genderCtrl.touched"
+                class="text-red-300 text-xs mt-1 block"
+                >Gender is required</small
+              >
             </div>
             <div>
               <label for="maritalStatus" class="form-label"
@@ -856,8 +881,8 @@
               : cafeNextStep()
           "
         >
-          <!-- ── STEP 1: Owner Information ──────────────────────────── -->
-          <div *ngIf="cafeCurrentStep === 1" class="step-content">
+          <!-- STEP 1: Owner Information -->
+    <div *ngIf="cafeCurrentStep === 1" class="step-content">
             <h4 class="text-lg font-semibold mb-4 flex items-center">
               <i class="bi bi-person-circle me-3"></i>Owner Information
             </h4>
@@ -884,7 +909,13 @@
                     required
                   />
                 </div>
-                <small *ngIf="ownerFirstNameCtrl.invalid && ownerFirstNameCtrl.touched" class="text-red-300 text-xs mt-1 block">First name is required</small>
+                <small
+                  *ngIf="
+                    ownerFirstNameCtrl.invalid && ownerFirstNameCtrl.touched
+                  "
+                  class="text-red-300 text-xs mt-1 block"
+                  >First name is required</small
+                >
               </div>
               <div>
                 <label for="ownerLastName" class="form-label"
@@ -907,7 +938,11 @@
                     required
                   />
                 </div>
-                <small *ngIf="ownerLastNameCtrl.invalid && ownerLastNameCtrl.touched" class="text-red-300 text-xs mt-1 block">Last name is required</small>
+                <small
+                  *ngIf="ownerLastNameCtrl.invalid && ownerLastNameCtrl.touched"
+                  class="text-red-300 text-xs mt-1 block"
+                  >Last name is required</small
+                >
               </div>
               <div class="col-span-1 md:col-span-2">
                 <label for="ownerEmail" class="form-label"
@@ -931,7 +966,11 @@
                     required
                   />
                 </div>
-                <small *ngIf="ownerEmailCtrl.invalid && ownerEmailCtrl.touched" class="text-red-300 text-xs mt-1 block">Please enter a valid email address</small>
+                <small
+                  *ngIf="ownerEmailCtrl.invalid && ownerEmailCtrl.touched"
+                  class="text-red-300 text-xs mt-1 block"
+                  >Please enter a valid email address</small
+                >
               </div>
               <div class="col-span-1 md:col-span-2">
                 <label for="ownerPhoneNumber" class="form-label"
@@ -947,7 +986,9 @@
                     class="form-control"
                     id="ownerPhoneNumber"
                     [(ngModel)]="ownerInfo.ownerPhoneNumber"
-                    (ngModelChange)="onOwnerPhoneInput($event); errorMessage = ''"
+                    (ngModelChange)="
+                      onOwnerPhoneInput($event); errorMessage = ''
+                    "
                     name="ownerPhoneNumber"
                     #ownerPhoneCtrl="ngModel"
                     pattern="^[0-9]{10}$"
@@ -956,13 +997,17 @@
                     inputmode="numeric"
                   />
                 </div>
-                <small *ngIf="ownerPhoneCtrl.invalid && ownerPhoneCtrl.touched" class="text-red-300 text-xs mt-1 block">Please enter a valid 10-digit mobile number</small>
+                <small
+                  *ngIf="ownerPhoneCtrl.invalid && ownerPhoneCtrl.touched"
+                  class="text-red-300 text-xs mt-1 block"
+                  >Please enter a valid 10-digit mobile number</small
+                >
               </div>
             </div>
           </div>
 
-          <!-- ── STEP 2: Café Business Details ──────────────────────────── -->
-          <div *ngIf="cafeCurrentStep === 2" class="step-content">
+          <!-- STEP 2: Café Business Details -->
+    <div *ngIf="cafeCurrentStep === 2" class="step-content">
             <h4 class="text-lg font-semibold mb-4 flex items-center">
               <i class="bi bi-shop-window me-3"></i>Café Business Details
             </h4>
@@ -1195,8 +1240,8 @@
             </div>
           </div>
 
-          <!-- ── STEP 3: Legal & Compliance + Café Logo ───────────────── -->
-          <div *ngIf="cafeCurrentStep === 3" class="step-content">
+          <!-- STEP 3: Legal & Compliance + Café Logo -->
+    <div *ngIf="cafeCurrentStep === 3" class="step-content">
             <h4 class="text-lg font-semibold mb-1 flex items-center">
               <i class="bi bi-shield-check me-3"></i>Legal &amp; Compliance
             </h4>
@@ -1348,8 +1393,8 @@
                   />
                 </div>
                 <small class="text-slate-300 text-xs register-upload-hint"
-                  >Up to 8 images <span class="register-upload-dot">·</span>
-                  2 MB each</small
+                  >Up to 8 images <span class="register-upload-dot">·</span> 2
+                  MB each</small
                 >
               </div>
             </div>

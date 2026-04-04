@@ -1,12 +1,23 @@
 <section class="admin-profile-page">
-  <div class="admin-profile-card" *ngIf="!loading && profileReady; else loadingState">
+  <div
+    class="admin-profile-card"
+    *ngIf="!loading && profileReady; else loadingState"
+  >
     <header class="profile-header">
       <div class="profile-image-container">
         <button class="image-view-btn" type="button" (click)="openImageModal()">
-          <img *ngIf="imageUrl; else avatarFallback" [src]="imageUrl" alt="Profile" class="profile-image" />
+          <img
+            *ngIf="imageUrl; else avatarFallback"
+            [src]="imageUrl"
+            alt="Profile"
+            class="profile-image"
+          />
           <ng-template #avatarFallback>
             <div class="profile-fallback">{{ fullName.charAt(0) }}</div>
           </ng-template>
+          <span class="profile-completion-badge"
+            >{{ currentCompletionPercentage }}%</span
+          >
           <span class="image-hover-overlay">
             <i class="bi bi-pencil-square icon-edit" aria-hidden="true"></i>
             <span class="overlay-label">Change Photo</span>
@@ -19,14 +30,19 @@
         <p>{{ profile?.email }}</p>
         <div class="badges">
           <span class="badge role">{{ roleLabel }}</span>
-          <span class="badge status" [class.disabled]="profile?.accountStatus === 'DISABLED'">
+          <span
+            class="badge status"
+            [class.disabled]="profile?.accountStatus === 'DISABLED'"
+          >
             {{ profile?.accountStatus }}
           </span>
           <span class="badge verify">Email Verified</span>
         </div>
         <div class="last-login">
           Last login:
-          <strong>{{ profile?.lastLogin ? (profile?.lastLogin | date: 'medium') : "Never" }}</strong>
+          <strong>{{
+            profile?.lastLogin ? (profile?.lastLogin | date: "medium") : "Never"
+          }}</strong>
         </div>
       </div>
     </header>
@@ -40,20 +56,36 @@
         (change)="onImageSelected($event)"
       />
       <label class="upload-button">
-        <button type="button" class="link-btn" (click)="triggerFileSelection()">Change Photo</button>
+        <button type="button" class="link-btn" (click)="triggerFileSelection()">
+          Change Photo
+        </button>
       </label>
-      <button class="ghost-btn" type="button" [disabled]="!selectedImageFile || uploadingImage" (click)="uploadSelectedImage()">
+      <button
+        class="ghost-btn"
+        type="button"
+        [disabled]="!selectedImageFile || uploadingImage"
+        (click)="uploadSelectedImage()"
+      >
         {{ uploadingImage ? "Uploading..." : "Upload Photo" }}
       </button>
       <button
         class="ghost-btn danger"
         type="button"
-        [disabled]="(!profile?.profileImageUrl && !imagePreviewUrl) || deletingImage || uploadingImage"
+        [disabled]="
+          (!profile?.profileImageUrl && !imagePreviewUrl) ||
+          deletingImage ||
+          uploadingImage
+        "
         (click)="deleteProfileImage()"
       >
         {{ deletingImage ? "Deleting..." : "Delete Photo" }}
       </button>
-      <button class="ghost-btn danger" type="button" [disabled]="!selectedImageFile || uploadingImage" (click)="cancelImageSelection()">
+      <button
+        class="ghost-btn danger"
+        type="button"
+        [disabled]="!selectedImageFile || uploadingImage"
+        (click)="cancelImageSelection()"
+      >
         Cancel
       </button>
     </div>
@@ -87,15 +119,26 @@
         <h3>Preferences</h3>
         <div class="field">
           <label>Theme</label>
-          <select [(ngModel)]="form.theme" (ngModelChange)="onThemeChange($event)">
-            <option *ngFor="let theme of themeOptions; trackBy: trackByValue" [ngValue]="theme">
+          <select
+            [(ngModel)]="form.theme"
+            (ngModelChange)="onThemeChange($event)"
+          >
+            <option
+              *ngFor="let theme of themeOptions; trackBy: trackByValue"
+              [ngValue]="theme"
+            >
               {{ theme }}
             </option>
           </select>
         </div>
         <div class="field">
           <label>Auto Refresh (seconds)</label>
-          <input type="number" min="5" max="120" [(ngModel)]="form.autoRefreshSeconds" />
+          <input
+            type="number"
+            min="5"
+            max="120"
+            [(ngModel)]="form.autoRefreshSeconds"
+          />
         </div>
         <label class="toggle">
           <input type="checkbox" [(ngModel)]="form.adminNotificationsEnabled" />
@@ -105,7 +148,12 @@
     </div>
 
     <div class="actions">
-      <button class="save-btn" type="button" [disabled]="savingProfile || uploadingImage" (click)="saveProfile()">
+      <button
+        class="save-btn"
+        type="button"
+        [disabled]="savingProfile || uploadingImage"
+        (click)="saveProfile()"
+      >
         <span *ngIf="savingProfile" class="spinner"></span>
         {{ savingProfile ? "Saving..." : "Save Changes" }}
       </button>
@@ -120,15 +168,24 @@
   </ng-template>
 </section>
 
-<div class="image-modal-backdrop" *ngIf="imageModalOpen" (click)="closeImageModal()">
+<div
+  class="image-modal-backdrop"
+  *ngIf="imageModalOpen"
+  (click)="closeImageModal()"
+>
   <section class="image-modal" (click)="$event.stopPropagation()">
     <header class="image-modal-header">
       <h3>Edit image</h3>
-      <button type="button" class="modal-close" (click)="closeImageModal()">×</button>
+      <button type="button" class="modal-close" (click)="closeImageModal()">
+        ×
+      </button>
     </header>
 
     <div class="image-modal-body">
-      <div class="editor-layout crop-container" *ngIf="imageEditMode; else previewMode">
+      <div
+        class="editor-layout crop-container"
+        *ngIf="imageEditMode; else previewMode"
+      >
         <div class="image-preview-shell image-section">
           <div
             class="image-preview-canvas"
@@ -149,7 +206,10 @@
               [ngStyle]="getEditorImageStyle()"
               alt="Profile preview"
             />
-            <div class="crop-guide" *ngIf="imageEditMode && (editorImageSource || imageUrl)"></div>
+            <div
+              class="crop-guide"
+              *ngIf="imageEditMode && (editorImageSource || imageUrl)"
+            ></div>
             <ng-template #modalFallback>
               <div class="profile-fallback">{{ fullName.charAt(0) }}</div>
             </ng-template>
@@ -158,16 +218,49 @@
 
         <aside class="editor-sidebar control-section">
           <div class="editor-tabs">
-            <button type="button" class="tab" [class.active]="activeEditorTab === 'crop'" (click)="selectEditorTab('crop')">Crop</button>
-            <button type="button" class="tab" [class.active]="activeEditorTab === 'filter'" (click)="selectEditorTab('filter')">Filter</button>
-            <button type="button" class="tab" [class.active]="activeEditorTab === 'adjust'" (click)="selectEditorTab('adjust')">Adjust</button>
+            <button
+              type="button"
+              class="tab"
+              [class.active]="activeEditorTab === 'crop'"
+              (click)="selectEditorTab('crop')"
+            >
+              Crop
+            </button>
+            <button
+              type="button"
+              class="tab"
+              [class.active]="activeEditorTab === 'filter'"
+              (click)="selectEditorTab('filter')"
+            >
+              Filter
+            </button>
+            <button
+              type="button"
+              class="tab"
+              [class.active]="activeEditorTab === 'adjust'"
+              (click)="selectEditorTab('adjust')"
+            >
+              Adjust
+            </button>
           </div>
 
           <div class="editor-icons" *ngIf="activeEditorTab === 'crop'">
-            <button type="button" class="icon-btn" (click)="rotateLeft()" [disabled]="!imageEditMode" aria-label="Rotate left">
+            <button
+              type="button"
+              class="icon-btn"
+              (click)="rotateLeft()"
+              [disabled]="!imageEditMode"
+              aria-label="Rotate left"
+            >
               ↺
             </button>
-            <button type="button" class="icon-btn" (click)="rotateRight()" [disabled]="!imageEditMode" aria-label="Rotate right">
+            <button
+              type="button"
+              class="icon-btn"
+              (click)="rotateRight()"
+              [disabled]="!imageEditMode"
+              aria-label="Rotate right"
+            >
               ↻
             </button>
           </div>
@@ -187,25 +280,55 @@
             <small>Drag image to set position</small>
           </div>
 
-          <div class="image-editor-controls" *ngIf="activeEditorTab === 'filter'">
+          <div
+            class="image-editor-controls"
+            *ngIf="activeEditorTab === 'filter'"
+          >
             <label>
               Grayscale
-              <input type="range" min="0" max="100" step="1" [(ngModel)]="editorGrayscale" />
+              <input
+                type="range"
+                min="0"
+                max="100"
+                step="1"
+                [(ngModel)]="editorGrayscale"
+              />
             </label>
             <label>
               Saturation
-              <input type="range" min="0" max="200" step="1" [(ngModel)]="editorSaturate" />
+              <input
+                type="range"
+                min="0"
+                max="200"
+                step="1"
+                [(ngModel)]="editorSaturate"
+              />
             </label>
           </div>
 
-          <div class="image-editor-controls" *ngIf="activeEditorTab === 'adjust'">
+          <div
+            class="image-editor-controls"
+            *ngIf="activeEditorTab === 'adjust'"
+          >
             <label>
               Brightness
-              <input type="range" min="50" max="150" step="1" [(ngModel)]="editorBrightness" />
+              <input
+                type="range"
+                min="50"
+                max="150"
+                step="1"
+                [(ngModel)]="editorBrightness"
+              />
             </label>
             <label>
               Contrast
-              <input type="range" min="50" max="150" step="1" [(ngModel)]="editorContrast" />
+              <input
+                type="range"
+                min="50"
+                max="150"
+                step="1"
+                [(ngModel)]="editorContrast"
+              />
             </label>
           </div>
         </aside>
@@ -214,7 +337,11 @@
       <ng-template #previewMode>
         <div class="image-preview-shell preview-only">
           <div class="image-preview-canvas preview-only">
-            <img *ngIf="imageUrl; else modalFallbackOnly" [src]="imageUrl" alt="Profile preview" />
+            <img
+              *ngIf="imageUrl; else modalFallbackOnly"
+              [src]="imageUrl"
+              alt="Profile preview"
+            />
             <ng-template #modalFallbackOnly>
               <div class="profile-fallback">{{ fullName.charAt(0) }}</div>
             </ng-template>
@@ -224,20 +351,42 @@
     </div>
 
     <footer class="image-modal-footer modal-actions">
-      <button type="button" class="ghost-btn edit-action-btn" (click)="triggerFileSelection()">
+      <button
+        type="button"
+        class="ghost-btn edit-action-btn"
+        (click)="triggerFileSelection()"
+      >
         <i class="bi bi-pencil-square btn-icon" aria-hidden="true"></i>
         <span>Edit</span>
       </button>
-      <button type="button" class="ghost-btn" (click)="closeImageModal()">Cancel</button>
-      <button type="button" class="ghost-btn" [disabled]="!imageEditMode" (click)="applyImageEdit()">Apply</button>
-      <button type="button" class="ghost-btn" [disabled]="!selectedImageFile || uploadingImage" (click)="uploadSelectedImage()">
+      <button type="button" class="ghost-btn" (click)="closeImageModal()">
+        Cancel
+      </button>
+      <button
+        type="button"
+        class="ghost-btn"
+        [disabled]="!imageEditMode"
+        (click)="applyImageEdit()"
+      >
+        Apply
+      </button>
+      <button
+        type="button"
+        class="ghost-btn"
+        [disabled]="!selectedImageFile || uploadingImage"
+        (click)="uploadSelectedImage()"
+      >
         <span *ngIf="uploadingImage" class="spinner"></span>
         {{ uploadingImage ? "Updating..." : "Update" }}
       </button>
       <button
         type="button"
         class="ghost-btn danger"
-        [disabled]="(!profile?.profileImageUrl && !imagePreviewUrl) || deletingImage || uploadingImage"
+        [disabled]="
+          (!profile?.profileImageUrl && !imagePreviewUrl) ||
+          deletingImage ||
+          uploadingImage
+        "
         (click)="deleteProfileImage()"
       >
         {{ deletingImage ? "Deleting..." : "Delete" }}

@@ -35,6 +35,7 @@ export class BookingManagementComponent implements OnInit, OnDestroy {
   readonly pageSize = 10;
   totalElements = 0;
   totalPages = 0;
+  readonly maxVisiblePageButtons = 7;
 
   get rangeStart(): number {
     return this.totalElements === 0 ? 0 : this.pageIndex * this.pageSize + 1;
@@ -44,6 +45,28 @@ export class BookingManagementComponent implements OnInit, OnDestroy {
   }
   get allPages(): number[] {
     return Array.from({ length: Math.max(this.totalPages, 1) }, (_, i) => i);
+  }
+  get visiblePages(): number[] {
+    const safeTotal = Math.max(this.totalPages, 1);
+    const maxButtons = Math.max(3, this.maxVisiblePageButtons);
+
+    if (safeTotal <= maxButtons) {
+      return Array.from({ length: safeTotal }, (_, i) => i);
+    }
+
+    const halfWindow = Math.floor(maxButtons / 2);
+    let start = Math.max(0, this.pageIndex - halfWindow);
+    let end = Math.min(safeTotal - 1, start + maxButtons - 1);
+
+    if (end - start + 1 < maxButtons) {
+      start = Math.max(0, end - maxButtons + 1);
+    }
+
+    const pages: number[] = [];
+    for (let i = start; i <= end; i += 1) {
+      pages.push(i);
+    }
+    return pages;
   }
   goToPage(page: number): void {
     if (page < 0 || page >= this.totalPages) return;
@@ -61,7 +84,7 @@ export class BookingManagementComponent implements OnInit, OnDestroy {
     this.refreshSeconds = Number.isNaN(saved) ? 15 : Math.max(5, saved);
     this.loadCafes();
     this.refreshTimer = setInterval(
-      () => this.loadBookings(),
+      () => this.loadBookings(true),
       this.refreshSeconds * 1000,
     );
   }
@@ -85,7 +108,7 @@ export class BookingManagementComponent implements OnInit, OnDestroy {
     });
   }
 
-  loadBookings(): void {
+  loadBookings(silentLoading: boolean = false): void {
     if (!this.selectedCafeId) return;
     this.loading = true;
     this.apiService
@@ -93,6 +116,9 @@ export class BookingManagementComponent implements OnInit, OnDestroy {
         this.selectedCafeId,
         this.pageIndex,
         this.pageSize,
+        "bookingTime",
+        "DESC",
+        silentLoading,
       )
       .subscribe({
         next: (res) => {

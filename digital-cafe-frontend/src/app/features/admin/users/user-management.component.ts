@@ -76,21 +76,47 @@ export class UserManagementComponent implements OnInit {
   applyFilters(): void {
     this.pageIndex = 0;
     const query = this.searchText.trim().toLowerCase();
-    this.filteredUsers = this.users.filter((u) => {
-      const status = this.getStatus(u);
-      const normalizedRoles = (u.roles || []).map((r) =>
-        (r || "").replace("ROLE_", ""),
-      );
-      const roleOk =
-        this.roleFilter === "ALL" || normalizedRoles.includes(this.roleFilter);
-      const statusOk =
-        this.statusFilter === "ALL" || status === this.statusFilter;
-      const textOk =
-        !query ||
-        (u.username || "").toLowerCase().includes(query) ||
-        (u.email || "").toLowerCase().includes(query);
-      return roleOk && statusOk && textOk;
-    });
+    this.filteredUsers = this.users
+      .filter((u) => {
+        const status = this.getStatus(u);
+        const normalizedRoles = (u.roles || []).map((r) =>
+          (r || "").replace("ROLE_", ""),
+        );
+        const roleOk =
+          this.roleFilter === "ALL" ||
+          normalizedRoles.includes(this.roleFilter);
+        const statusOk =
+          this.statusFilter === "ALL" || status === this.statusFilter;
+        const textOk =
+          !query ||
+          (u.username || "").toLowerCase().includes(query) ||
+          (u.email || "").toLowerCase().includes(query);
+        return roleOk && statusOk && textOk;
+      })
+      .sort((a, b) => {
+        const pendingCompare =
+          this.getPendingPriority(b) - this.getPendingPriority(a);
+        if (pendingCompare !== 0) {
+          return pendingCompare;
+        }
+
+        const createdAtCompare =
+          this.getCreatedAtRank(b) - this.getCreatedAtRank(a);
+        if (createdAtCompare !== 0) {
+          return createdAtCompare;
+        }
+
+        return (b.id || 0) - (a.id || 0);
+      });
+  }
+
+  private getPendingPriority(user: User): number {
+    return this.getStatus(user) === "PENDING_APPROVAL" ? 1 : 0;
+  }
+
+  private getCreatedAtRank(user: User): number {
+    const ts = user.createdAt ? Date.parse(user.createdAt) : Number.NaN;
+    return Number.isFinite(ts) ? ts : 0;
   }
 
   async approve(user: User): Promise<void> {

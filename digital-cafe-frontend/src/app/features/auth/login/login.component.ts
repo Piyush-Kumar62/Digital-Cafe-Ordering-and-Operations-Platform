@@ -1,4 +1,4 @@
-import { Component, OnInit } from "@angular/core";
+import { Component, OnDestroy, OnInit } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import {
   AbstractControl,
@@ -19,12 +19,14 @@ import { NavbarComponent } from "@shared/components/navbar/navbar.component";
   templateUrl: "./login.component.html",
   styleUrls: ["./login.component.scss"],
 })
-export class LoginComponent implements OnInit {
-  readonly loginHeroImage = "/assets/coffee/coffee-scene-nathan-03.jpg";
+export class LoginComponent implements OnInit, OnDestroy {
+  loginHeroImage = "/assets/downloads/cafes/image.png";
+  heroImageVisible = true;
   loginForm!: FormGroup;
   loading = false;
   showPassword = false;
   returnUrl: string = "/";
+  private readonly fallbackHeroImage = "/assets/downloads/cafes/image.png";
 
   constructor(
     private fb: FormBuilder,
@@ -35,7 +37,8 @@ export class LoginComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.preloadImage(this.loginHeroImage);
+    this.loginHeroImage = this.fallbackHeroImage;
+    this.heroImageVisible = true;
 
     // Initialize the form first to prevent template errors
     this.loginForm = this.fb.group({
@@ -54,10 +57,13 @@ export class LoginComponent implements OnInit {
     }
   }
 
-  private preloadImage(src: string): void {
-    const img = new Image();
-    img.decoding = "async";
-    img.src = src;
+  ngOnDestroy(): void {
+    // no-op: fixed local hero image does not require timers
+  }
+
+  onHeroImageError(): void {
+    this.loginHeroImage = this.fallbackHeroImage;
+    this.heroImageVisible = true;
   }
 
   get f(): Record<string, AbstractControl> {
@@ -96,14 +102,20 @@ export class LoginComponent implements OnInit {
 
         // Email verification is not required for system admin.
         if (!this.authService.isSystemAdmin() && !response.isEmailVerified) {
-          this.alertService.warning("Email Verification Required", "Please verify your email to continue.");
+          this.alertService.warning(
+            "Email Verification Required",
+            "Please verify your email to continue.",
+          );
           this.router.navigate(["/auth/verify-email"]);
           return;
         }
 
         // Check if profile is complete (for customers)
         if (this.authService.isCustomer() && !response.isProfileComplete) {
-          this.alertService.warning("Complete Your Profile", "Please complete your profile before proceeding.");
+          this.alertService.warning(
+            "Complete Your Profile",
+            "Please complete your profile before proceeding.",
+          );
           this.router.navigate(["/customer/complete-profile"]);
           return;
         }
@@ -119,10 +131,11 @@ export class LoginComponent implements OnInit {
       error: (error) => {
         this.loading = false;
         this.alertService.close();
-        this.alertService.error("Login Failed", error.message || "Please check your credentials and try again.");
+        this.alertService.error(
+          "Login Failed",
+          error.message || "Please check your credentials and try again.",
+        );
       },
     });
   }
 }
-
-

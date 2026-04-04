@@ -1,5 +1,163 @@
 // Admin Dashboard Component Styles - Using Tailwind CSS
 
+.admin-hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.5rem;
+  padding: 1.75rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem;
+  background: linear-gradient(135deg, #5b5fe8 0%, #3b51d8 42%, #2c9ce6 100%);
+}
+
+.admin-hero::before,
+.admin-hero::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.16);
+  pointer-events: none;
+}
+
+.admin-hero::before {
+  width: 260px;
+  height: 260px;
+  right: -90px;
+  top: -100px;
+}
+
+.admin-hero::after {
+  width: 170px;
+  height: 170px;
+  left: 38%;
+  bottom: -80px;
+}
+
+.admin-hero__content,
+.admin-hero__right {
+  position: relative;
+  z-index: 1;
+}
+
+.admin-hero__greeting {
+  margin: 0 0 0.4rem;
+  color: #ffffff !important;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.admin-hero__title {
+  margin: 0;
+  color: #ffffff;
+  font-weight: 800;
+  line-height: 1.2;
+  font-size: clamp(1.55rem, 2.8vw, 2.2rem);
+}
+
+.admin-hero__highlight {
+  color: #fde68a;
+}
+
+.admin-hero__subtitle {
+  margin: 0.55rem 0 1.2rem;
+  color: #ffffff !important;
+  font-size: 0.95rem;
+}
+
+.admin-hero__actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.admin-hero__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: 0.8rem;
+  background: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+  padding: 0.55rem 1.1rem;
+  font-size: 0.88rem;
+  font-weight: 700;
+  transition: transform 0.18s ease;
+}
+
+.admin-hero__cta:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
+
+.admin-hero__cta:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.admin-hero__right {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.9rem;
+  flex-shrink: 0;
+}
+
+.admin-hero__avatar {
+  width: 78px;
+  height: 78px;
+  border-radius: 999px;
+  border: 3px solid rgba(255, 255, 255, 0.62);
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 1.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.admin-hero__mini {
+  display: flex;
+  gap: 0.65rem;
+}
+
+.admin-mini-stat {
+  min-width: 78px;
+  border-radius: 0.9rem;
+  padding: 0.5rem 0.65rem;
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.admin-mini-stat strong {
+  display: block;
+  color: #ffffff;
+  font-size: 1.1rem;
+  line-height: 1.1;
+  font-weight: 800;
+}
+
+.admin-mini-stat span {
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .admin-hero {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 1.35rem 1.1rem;
+  }
+
+  .admin-hero__right {
+    width: 100%;
+    align-items: flex-start;
+  }
+}
+
 .activity-role-badge {
   display: inline-flex;
   align-items: center;

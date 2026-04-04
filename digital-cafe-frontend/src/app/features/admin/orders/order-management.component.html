@@ -9,64 +9,107 @@
     <span class="meta">Auto refresh: {{ refreshSeconds }}s</span>
   </div>
 
-  <div class="card table-wrap" *ngIf="orders.length; else emptyState">
-    <table class="orders-table">
-      <thead>
-        <tr>
-          <th>Order</th>
-          <th>Cafe</th>
-          <th>Booking</th>
-          <th>Customer</th>
-          <th>Total</th>
-          <th>Status</th>
-          <th>Payment</th>
-          <th>Chef / Waiter</th>
-          <th>Timeline</th>
-          <th>Update</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let order of orders">
-          <td class="mono-cell">{{ order.orderNumber }}</td>
-          <td class="name-cell" [title]="order.cafeName || ('Cafe #' + order.cafeId)">
-            {{ order.cafeName || ("Cafe #" + order.cafeId) }}
-          </td>
-          <td class="mono-cell">{{ order.bookingNumber || ("#" + order.bookingId) }}</td>
-          <td class="name-cell" [title]="order.customerName || '-'">
-            {{ order.customerName || "-" }}
-          </td>
-          <td class="amount-cell">{{ order.totalAmount | currency: "INR" }}</td>
-          <td><span class="status-pill">{{ order.status }}</span></td>
-          <td class="single-line-cell payment-cell" [title]="'Status: ' + (order.payment?.status || '-') + ' | Txn: ' + (order.payment?.transactionId || '-')">
-            <span class="meta-label">Status:</span>
-            <span class="meta-value">{{ order.payment?.status || "-" }}</span>
-            <span class="meta-sep">|</span>
-            <span class="meta-label">Txn:</span>
-            <span class="meta-value mono-inline">{{ order.payment?.transactionId || "-" }}</span>
-          </td>
-          <td class="single-line-cell staff-cell" [title]="'Chef: ' + (order.preparingByChefName || '-') + ' | Waiter: ' + (order.servedByWaiterName || '-')">
-            <span class="meta-label">Chef:</span>
-            <span class="meta-value">{{ order.preparingByChefName || "-" }}</span>
-            <span class="meta-sep">|</span>
-            <span class="meta-label">Waiter:</span>
-            <span class="meta-value">{{ order.servedByWaiterName || "-" }}</span>
-          </td>
-          <td class="single-line-cell timeline-cell" [title]="'Placed: ' + fmtDate(getPlacedAt(order)) + ' | Ready: ' + fmtDate(order.readyAt)">
-            <span class="meta-label">Placed:</span>
-            <span class="meta-value">{{ fmtDate(getPlacedAt(order)) }}</span>
-            <span class="meta-sep">|</span>
-            <span class="meta-label">Ready:</span>
-            <span class="meta-value">{{ fmtDate(order.readyAt) }}</span>
-          </td>
-          <td class="actions">
-            <select [(ngModel)]="statusMap[order.id]">
-              <option *ngFor="let s of statuses" [value]="s">{{ s }}</option>
-            </select>
-            <button class="btn-info" (click)="updateStatus(order)">Save</button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+  <div class="card" *ngIf="orders.length; else emptyState">
+    <div class="table-wrap">
+      <table class="orders-table">
+        <thead>
+          <tr>
+            <th>Order</th>
+            <th>Cafe</th>
+            <th>Booking</th>
+            <th>Customer</th>
+            <th>Total</th>
+            <th>Status</th>
+            <th>Payment</th>
+            <th>Chef / Waiter</th>
+            <th>Timeline</th>
+            <th>Update</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let order of orders">
+            <td class="mono-cell">{{ order.orderNumber }}</td>
+            <td
+              class="name-cell"
+              [title]="order.cafeName || 'Cafe #' + order.cafeId"
+            >
+              {{ order.cafeName || "Cafe #" + order.cafeId }}
+            </td>
+            <td class="mono-cell">
+              {{ order.bookingNumber || "#" + order.bookingId }}
+            </td>
+            <td class="name-cell" [title]="order.customerName || '-'">
+              {{ order.customerName || "-" }}
+            </td>
+            <td class="amount-cell">
+              {{ order.totalAmount | currency: "INR" }}
+            </td>
+            <td>
+              <span class="status-pill">{{ order.status }}</span>
+            </td>
+            <td
+              class="single-line-cell payment-cell"
+              [title]="
+                'Status: ' +
+                (order.payment?.status || '-') +
+                ' | Txn: ' +
+                (order.payment?.transactionId || '-')
+              "
+            >
+              <span class="meta-label">Status:</span>
+              <span class="meta-value">{{ order.payment?.status || "-" }}</span>
+              <span class="meta-sep">|</span>
+              <span class="meta-label">Txn:</span>
+              <span class="meta-value mono-inline">{{
+                order.payment?.transactionId || "-"
+              }}</span>
+            </td>
+            <td
+              class="single-line-cell staff-cell"
+              [title]="
+                'Chef: ' +
+                (order.preparingByChefName || '-') +
+                ' | Waiter: ' +
+                (order.servedByWaiterName || '-')
+              "
+            >
+              <span class="meta-label">Chef:</span>
+              <span class="meta-value">{{
+                order.preparingByChefName || "-"
+              }}</span>
+              <span class="meta-sep">|</span>
+              <span class="meta-label">Waiter:</span>
+              <span class="meta-value">{{
+                order.servedByWaiterName || "-"
+              }}</span>
+            </td>
+            <td
+              class="single-line-cell timeline-cell"
+              [title]="
+                'Placed: ' +
+                fmtDate(getPlacedAt(order)) +
+                ' | Ready: ' +
+                fmtDate(order.readyAt)
+              "
+            >
+              <span class="meta-label">Placed:</span>
+              <span class="meta-value">{{ fmtDate(getPlacedAt(order)) }}</span>
+              <span class="meta-sep">|</span>
+              <span class="meta-label">Ready:</span>
+              <span class="meta-value">{{ fmtDate(order.readyAt) }}</span>
+            </td>
+            <td class="actions">
+              <select [(ngModel)]="statusMap[order.id]">
+                <option *ngFor="let s of statuses" [value]="s">{{ s }}</option>
+              </select>
+              <button class="btn-info" (click)="updateStatus(order)">
+                Save
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
     <div class="pager">
       <div class="pager-left">
         <span class="range-text"
@@ -79,10 +122,11 @@
           [disabled]="pageIndex === 0"
           (click)="goToPage(pageIndex - 1)"
         >
-          ← Prev</button>
+          ← Prev
+        </button>
         <button
           class="page-btn"
-          *ngFor="let p of allPages"
+          *ngFor="let p of visiblePages"
           [class.active]="p === pageIndex"
           (click)="goToPage(p)"
         >
@@ -93,7 +137,8 @@
           [disabled]="pageIndex >= totalPages - 1"
           (click)="goToPage(pageIndex + 1)"
         >
-          Next →</button>
+          Next →
+        </button>
       </div>
     </div>
   </div>

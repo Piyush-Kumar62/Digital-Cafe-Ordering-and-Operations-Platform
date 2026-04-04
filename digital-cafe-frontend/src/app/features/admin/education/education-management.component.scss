@@ -1,9 +1,26 @@
+.management-container {
+  max-width: 1536px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+@media (min-width: 640px) {
+  .management-container {
+    padding: 1.5rem;
+  }
+}
+
 .page-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   gap: 16px;
-  padding: 6px 4px 14px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  border-radius: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
 }
 
 .page-header h2 {
@@ -598,7 +615,6 @@
   font-size: 0.75rem;
   color: var(--muted);
 }
-
 
 :host-context(.dark) {
   .btn.primary {

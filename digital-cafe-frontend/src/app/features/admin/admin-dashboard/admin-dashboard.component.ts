@@ -4,6 +4,7 @@ import {
   ViewChild,
   ElementRef,
   AfterViewInit,
+  OnDestroy,
 } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { RouterModule } from "@angular/router";
@@ -11,6 +12,7 @@ import { ApiService } from "@core/services/api.service";
 import { AlertService } from "@core/services/alert.service";
 import { AdminDashboard } from "@shared/models/dashboard.model";
 import { User } from "@shared/models/auth.model";
+import { AuthService } from "@core/auth/auth.service";
 import { Chart, ChartConfiguration, registerables } from "chart.js";
 
 // Register Chart.js components
@@ -23,23 +25,32 @@ Chart.register(...registerables);
   templateUrl: "./admin-dashboard.component.html",
   styleUrls: ["./admin-dashboard.component.scss"],
 })
-export class AdminDashboardComponent implements OnInit, AfterViewInit {
+export class AdminDashboardComponent
+  implements OnInit, AfterViewInit, OnDestroy
+{
   @ViewChild("weeklyChart") weeklyChartRef!: ElementRef<HTMLCanvasElement>;
   @ViewChild("roleChart") roleChartRef!: ElementRef<HTMLCanvasElement>;
 
   dashboard: AdminDashboard | null = null;
   loading = true;
+  refreshing = false;
   pendingUsers: User[] = [];
   pendingLoading = false;
+  currentUser: User | null = null;
+  currentDateTime = new Date();
+  private clockTimerId?: ReturnType<typeof setInterval>;
   weeklyChart: Chart | null = null;
   roleChart: Chart | null = null;
 
   constructor(
     private apiService: ApiService,
     private alertService: AlertService,
+    private authService: AuthService,
   ) {}
 
   ngOnInit(): void {
+    this.authService.currentUser.subscribe((user) => (this.currentUser = user));
+    this.startClock();
     this.loadDashboard();
     this.loadPendingApprovals();
   }
@@ -48,12 +59,75 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
     // Charts will be initialized after data is loaded
   }
 
-  loadDashboard(): void {
-    this.loading = true;
+  ngOnDestroy(): void {
+    if (this.clockTimerId) {
+      clearInterval(this.clockTimerId);
+      this.clockTimerId = undefined;
+    }
+    if (this.weeklyChart) {
+      this.weeklyChart.destroy();
+      this.weeklyChart = null;
+    }
+    if (this.roleChart) {
+      this.roleChart.destroy();
+      this.roleChart = null;
+    }
+  }
+
+  private startClock(): void {
+    this.currentDateTime = new Date();
+    this.clockTimerId = setInterval(() => {
+      this.currentDateTime = new Date();
+    }, 1000);
+  }
+
+  get greeting(): string {
+    const h = this.currentDateTime.getHours();
+    if (h < 12) return "Good Morning";
+    if (h < 18) return "Good Afternoon";
+    return "Good Evening";
+  }
+
+  get dateTimeFormatted(): string {
+    const date = this.currentDateTime.toLocaleDateString("en-IN", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+    const time = this.currentDateTime.toLocaleTimeString("en-IN", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+    return `${date} | ${time}`;
+  }
+
+  get displayName(): string {
+    const first = this.currentUser?.firstName || "";
+    const last = this.currentUser?.lastName || "";
+    const full = `${first} ${last}`.trim();
+    return (
+      this.currentUser?.displayName ||
+      full ||
+      this.currentUser?.username ||
+      "Admin"
+    );
+  }
+
+  loadDashboard(isRefresh = false): void {
+    if (!this.dashboard) {
+      this.loading = true;
+    }
+    if (isRefresh && this.dashboard) {
+      this.refreshing = true;
+    }
+
     this.apiService.getAdminDashboard().subscribe({
       next: (data) => {
         this.dashboard = data;
         this.loading = false;
+        this.refreshing = false;
         // Initialize charts after data is loaded
         setTimeout(() => this.initializeCharts(), 100);
       },
@@ -63,6 +137,7 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
           "Unable to load admin dashboard.",
         );
         this.loading = false;
+        this.refreshing = false;
       },
     });
   }
@@ -368,15 +443,5 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit {
       day: "numeric",
       year: "numeric",
     });
-  }
-
-  ngOnDestroy(): void {
-    // Clean up charts on component destroy
-    if (this.weeklyChart) {
-      this.weeklyChart.destroy();
-    }
-    if (this.roleChart) {
-      this.roleChart.destroy();
-    }
   }
 }

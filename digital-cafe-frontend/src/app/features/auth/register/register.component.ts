@@ -66,8 +66,23 @@ interface TimeSlotOption {
 export class RegisterComponent implements OnInit, OnDestroy {
   private readonly registrationCacheKey = "dc_registration_cache_v1";
   private static readonly USERNAME_REGEX = /^[A-Za-z][A-Za-z0-9._]{2,29}$/;
-  readonly customerPanelImage = "assets/coffee/coffee-table-pexels.jpg";
-  readonly cafeOwnerPanelImage = "assets/cafe/cafe-ambience.jpg";
+  readonly customerPanelImage =
+    "/assets/downloads/cafes/pexels-leopold-biget-19679119-10282073.jpg";
+  readonly cafeOwnerPanelImage =
+    "https://images.unsplash.com/photo-1616091216791-a5360b5fc78a?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTZ8fGNhZmV8ZW58MHwxfDB8fHww";
+  currentCustomerPanelImage = this.customerPanelImage;
+  currentCafeOwnerPanelImage = this.cafeOwnerPanelImage;
+  panelImageVisible = true;
+  private panelRotationTimer: ReturnType<typeof setInterval> | null = null;
+  private panelSwapTimer: ReturnType<typeof setTimeout> | null = null;
+  private readonly rotateEveryMs = 60_000;
+  private readonly panelFadeMs = 700;
+  private readonly customerPanelImagePool: string[] = [
+    "/assets/downloads/cafes/pexels-leopold-biget-19679119-10282073.jpg",
+  ];
+  private readonly cafeOwnerPanelImagePool: string[] = [
+    "https://images.unsplash.com/photo-1616091216791-a5360b5fc78a?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTZ8fGNhZmV8ZW58MHwxfDB8fHww",
+  ];
 
   currentStep = 1;
   totalSteps = 5;
@@ -156,8 +171,7 @@ export class RegisterComponent implements OnInit, OnDestroy {
   currentYear = new Date().getFullYear();
   readonly timeSlotOptions: TimeSlotOption[] = this.buildTimeSlotOptions();
 
-  // ── Café Owner Registration ────────────────────────────────────────────────
-  // Only active when role === 'CAFE_OWNER'.  The 5-step customer form is hidden.
+  // Café Owner Registration  // Only active when role === 'CAFE_OWNER'.  The 5-step customer form is hidden.
 
   isCafeOwnerMode = false;
   isPanelImageLoaded = false;
@@ -222,8 +236,11 @@ export class RegisterComponent implements OnInit, OnDestroy {
       this.initializeAcademicGroup(this.academicItems.at(0) as FormGroup);
     }
     this.academicYearOptions = this.buildYearOptions(1950);
-    this.preloadImage(this.customerPanelImage);
-    this.preloadImage(this.cafeOwnerPanelImage);
+    this.currentCustomerPanelImage = this.customerPanelImage;
+    this.currentCafeOwnerPanelImage = this.cafeOwnerPanelImage;
+    this.panelImageVisible = true;
+    this.prefetchPanelPools();
+    this.startPanelRotation();
     this.usernameControl.valueChanges
       .pipe(
         debounceTime(400),
@@ -326,12 +343,20 @@ export class RegisterComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+    if (this.panelRotationTimer) {
+      clearInterval(this.panelRotationTimer);
+      this.panelRotationTimer = null;
+    }
+    if (this.panelSwapTimer) {
+      clearTimeout(this.panelSwapTimer);
+      this.panelSwapTimer = null;
+    }
   }
 
   get registerPanelImageSrc(): string {
     return this.isCafeOwnerMode
-      ? this.cafeOwnerPanelImage
-      : this.customerPanelImage;
+      ? this.currentCafeOwnerPanelImage
+      : this.currentCustomerPanelImage;
   }
 
   get registerPanelImageAlt(): string {
@@ -348,9 +373,11 @@ export class RegisterComponent implements OnInit, OnDestroy {
     this.cafeCurrentStep = 1;
     this.errorMessage = "";
     this.successMessage = "";
+    this.panelImageVisible = true;
+    this.setPanelImageForCurrentMinute();
   }
 
-  // ── Café owner step navigation ─────────────────────────────────────────────
+  // Cafe owner step navigation
   cafeNextStep() {
     if (this.validateCafeStep(this.cafeCurrentStep)) {
       this.cafeCurrentStep++;
@@ -457,8 +484,7 @@ export class RegisterComponent implements OnInit, OnDestroy {
     }
     return true;
   }
-  // ──────────────────────────────────────────────────────────────────────────
-
+  //
   onCafeLogoSelect(event: Event) {
     const input = event.currentTarget as HTMLInputElement;
     if (input.files && input.files[0]) {
@@ -1069,18 +1095,85 @@ export class RegisterComponent implements OnInit, OnDestroy {
     return step <= this.currentStep;
   }
 
-  private preloadImage(src: string): void {
-    const img = new Image();
-    img.decoding = "async";
-    img.src = src;
-  }
-
   onPanelImageLoad() {
     this.isPanelImageLoaded = true;
   }
 
   onPanelImageError() {
     this.isPanelImageLoaded = true;
+    this.panelImageVisible = true;
+    if (this.isCafeOwnerMode) {
+      this.currentCafeOwnerPanelImage = this.cafeOwnerPanelImage;
+      return;
+    }
+    this.currentCustomerPanelImage = this.customerPanelImage;
+  }
+
+  private startPanelRotation(): void {
+    this.panelRotationTimer = setInterval(() => {
+      this.setPanelImageForCurrentMinute();
+    }, this.rotateEveryMs);
+  }
+
+  private setPanelImageForCurrentMinute(): void {
+    const minuteBucket = Math.floor(Date.now() / this.rotateEveryMs);
+    const sourcePool = this.isCafeOwnerMode
+      ? this.cafeOwnerPanelImagePool
+      : this.customerPanelImagePool;
+    const fallback = this.isCafeOwnerMode
+      ? this.cafeOwnerPanelImage
+      : this.customerPanelImage;
+    const nextImage =
+      sourcePool[Math.floor(minuteBucket % sourcePool.length)] || fallback;
+    void this.swapPanelImage(nextImage, fallback);
+  }
+
+  private async swapPanelImage(
+    nextImage: string,
+    fallback: string,
+  ): Promise<void> {
+    const current = this.isCafeOwnerMode
+      ? this.currentCafeOwnerPanelImage
+      : this.currentCustomerPanelImage;
+    if (nextImage === current) {
+      return;
+    }
+
+    const ok = await this.preloadImage(nextImage);
+    const target = ok ? nextImage : fallback;
+    this.panelImageVisible = false;
+
+    if (this.panelSwapTimer) {
+      clearTimeout(this.panelSwapTimer);
+    }
+
+    this.panelSwapTimer = setTimeout(() => {
+      if (this.isCafeOwnerMode) {
+        this.currentCafeOwnerPanelImage = target;
+      } else {
+        this.currentCustomerPanelImage = target;
+      }
+      this.panelImageVisible = true;
+    }, this.panelFadeMs);
+  }
+
+  private prefetchPanelPools(): void {
+    this.customerPanelImagePool.forEach((url) => {
+      void this.preloadImage(url);
+    });
+    this.cafeOwnerPanelImagePool.forEach((url) => {
+      void this.preloadImage(url);
+    });
+  }
+
+  private preloadImage(src: string): Promise<boolean> {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.decoding = "async";
+      img.onload = () => resolve(true);
+      img.onerror = () => resolve(false);
+      img.src = src;
+    });
   }
 
   onGovtIdTypeChange() {

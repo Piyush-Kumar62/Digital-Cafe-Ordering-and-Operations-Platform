@@ -753,8 +753,7 @@ input[type="date"]:required:invalid::-webkit-datetime-edit {
   color: #cbd5e1 !important;
 }
 
-/* ── Café Owner form — logo preview ──────────────────────────────── */
-
+/* Café Owner form — logo preview */
 .cafe-logo-preview {
   max-width: 120px;
   max-height: 120px;
@@ -765,8 +764,7 @@ input[type="date"]:required:invalid::-webkit-datetime-edit {
   padding: 4px;
 }
 
-/* ── Two-column layout: image panel left, form right ─────────────── */
-
+/* Two-column layout: image panel left, form right */
 .register-auth-card.register-card-grid {
   display: grid;
   grid-template-columns: 1fr; // mobile: stacked (image hidden)
@@ -779,7 +777,7 @@ input[type="date"]:required:invalid::-webkit-datetime-edit {
      keeping this off lets the ::before gradient border render on all 4 sides */
 
   @media (min-width: 768px) {
-    grid-template-columns: 42% 58%; // desktop: image | form
+    grid-template-columns: 47% 53%; // desktop: image | form (aligned with login)
   }
 }
 
@@ -869,7 +867,6 @@ input[type="date"]:required:invalid::-webkit-datetime-edit {
   color: #94a3b8;
 }
 
-
 .register-upload-field .input-group {
   align-items: stretch;
 }
@@ -901,7 +898,8 @@ input[type="date"]:required:invalid::-webkit-datetime-edit {
   line-height: 44px;
 }
 
-.register-upload-field input[type="file"].form-control::-webkit-file-upload-button {
+.register-upload-field
+  input[type="file"].form-control::-webkit-file-upload-button {
   background: linear-gradient(180deg, #2f3f57 0%, #25354b 100%);
   color: #dbeafe;
   border: 1px solid #51657f;
@@ -1048,17 +1046,15 @@ input[type="date"]:required:invalid::-webkit-datetime-edit {
   height: 100%;
   object-fit: cover;
   object-position: center;
-  filter: brightness(0.55) saturate(1.1);
+  filter: brightness(0.84) saturate(1.08) contrast(1.03);
   will-change: transform;
   transform: translateZ(0);
   opacity: 0;
-  transition:
-    opacity 0.4s ease,
-    transform 8s ease;
+  transition: opacity 0.7s ease;
+}
 
-  .register-image-panel:hover & {
-    transform: scale(1.04);
-  }
+.register-panel-image.is-fading {
+  opacity: 0;
 }
 
 .register-image-panel.is-loaded .register-panel-image {
@@ -1071,9 +1067,9 @@ input[type="date"]:required:invalid::-webkit-datetime-edit {
 
 /* Cafe-owner panel image: keep focal subject visible and brighter */
 .register-panel-image.owner-panel-image {
-  object-fit: contain;
+  object-fit: cover;
   object-position: center;
-  filter: brightness(0.66) saturate(1.06);
+  filter: brightness(0.86) saturate(1.08) contrast(1.03);
 }
 
 .register-panel-overlay {
@@ -1085,8 +1081,8 @@ input[type="date"]:required:invalid::-webkit-datetime-edit {
   padding: 2.2rem;
   background: linear-gradient(
     to top,
-    rgba(6, 12, 30, 0.88) 0%,
-    rgba(6, 12, 30, 0.45) 55%,
+    rgba(6, 12, 30, 0.8) 0%,
+    rgba(6, 12, 30, 0.24) 55%,
     transparent 100%
   );
 }
@@ -1109,13 +1105,15 @@ input[type="date"]:required:invalid::-webkit-datetime-edit {
   font-weight: 700;
   color: #f8fafc;
   letter-spacing: -0.02em;
+  text-shadow: 0 2px 10px rgba(2, 6, 23, 0.88);
 }
 
 .register-panel-tagline {
   font-size: 0.9rem;
-  color: rgba(248, 250, 252, 0.82);
+  color: rgba(248, 250, 252, 0.95);
   line-height: 1.55;
   margin-bottom: 1.25rem;
+  text-shadow: 0 2px 10px rgba(2, 6, 23, 0.86);
 }
 
 .register-panel-quote {

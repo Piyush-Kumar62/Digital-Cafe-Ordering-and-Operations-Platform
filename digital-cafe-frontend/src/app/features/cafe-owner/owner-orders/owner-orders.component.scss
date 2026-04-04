@@ -1,14 +1,36 @@
-/* ===== PAGE WRAPPER ===== */
-.owner-page {
-  padding: 1.5rem;
+/* PAGE WRAPPER */.owner-page {
+  padding: 0 0 1.5rem;
   color: #0f172a;
   min-height: 100vh;
   background: linear-gradient(160deg, #f8fafc 0%, #eef2ff 100%);
 }
 
-/* ===== HEADER ===== */
-.page-header {
+/* HEADER */.page-header {
+  background:
+    radial-gradient(
+      circle at 10% 25%,
+      rgba(99, 102, 241, 0.16),
+      transparent 42%
+    ),
+    radial-gradient(
+      circle at 90% 0%,
+      rgba(14, 165, 233, 0.16),
+      transparent 38%
+    ),
+    linear-gradient(135deg, #ffffff 0%, #eef2ff 52%, #f0f9ff 100%);
+  border: 1px solid #dbeafe;
+  border-radius: 16px;
+  padding: 1rem 1.1rem;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
   margin-bottom: 1.5rem;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 12px 26px rgba(15, 23, 42, 0.11);
+  }
 }
 
 .page-header h1 {
@@ -24,8 +46,7 @@
   font-size: 0.95rem;
 }
 
-/* ===== STAT CARDS ===== */
-.stats {
+/* STAT CARDS */.stats {
   display: grid;
   gap: 1rem;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -75,26 +96,27 @@
   color: #0f172a;
 }
 
-/* ===== LOADING / EMPTY ===== */
-.loading {
+/* LOADING / EMPTY */.loading {
   text-align: center;
   color: #64748b;
   padding: 2rem;
 }
 
-/* ===== ORDERS GRID ===== */
-.grid {
+/* ORDERS GRID */.grid {
   display: grid;
   gap: 1rem;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-/* ===== ORDER CARD ===== */
-.item {
+/* ORDER CARD */.item {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   gap: 1rem;
+}
+
+.item__body {
+  width: 100%;
 }
 
 .item h3 {
@@ -111,8 +133,47 @@
   line-height: 1.5;
 }
 
-/* ===== STATUS BADGE ===== */
-.status {
+.kv-list {
+  margin-top: 0.35rem;
+}
+
+.kv-row {
+  display: grid;
+  grid-template-columns: 74px minmax(0, 1fr);
+  align-items: start;
+  gap: 8px;
+  margin-top: 0.34rem;
+}
+
+.kv-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.kv-value {
+  display: block;
+  min-width: 0;
+  font-size: 0.88rem;
+  color: #475569;
+  white-space: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  text-overflow: clip;
+  overflow-wrap: normal;
+  word-break: normal;
+  line-height: 1.4;
+  scrollbar-width: thin;
+}
+
+.kv-value--mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  letter-spacing: 0.01em;
+}
+
+/* STATUS BADGE */.status {
   flex-shrink: 0;
   font-size: 0.75rem;
   font-weight: 700;
@@ -130,6 +191,10 @@
 .status-placed {
   background: #fef9c3;
   color: #854d0e;
+}
+.status-pending-payment {
+  background: #ede9fe;
+  color: #5b21b6;
 }
 .status-confirmed {
   background: #dbeafe;
@@ -152,8 +217,7 @@
   color: #991b1b;
 }
 
-/* ===== RESPONSIVE ===== */
-@media (max-width: 900px) {
+/* RESPONSIVE */@media (max-width: 900px) {
   .stats {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -172,8 +236,13 @@
   }
 }
 
-/* ===== DARK MODE ===== */
-:host-context(.dark) {
+@media (max-width: 1120px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* DARK MODE */:host-context(.dark) {
   .owner-page {
     background: linear-gradient(160deg, #0f172a 0%, #1a1040 100%);
     color: #f1f5f9;
@@ -184,6 +253,22 @@
   }
   .page-header p {
     color: #94a3b8;
+  }
+
+  .page-header {
+    background:
+      radial-gradient(
+        circle at 10% 20%,
+        rgba(99, 102, 241, 0.2),
+        transparent 42%
+      ),
+      radial-gradient(
+        circle at 92% 0%,
+        rgba(14, 165, 233, 0.2),
+        transparent 35%
+      ),
+      linear-gradient(135deg, #111827 0%, #1f2937 52%, #0f172a 100%);
+    border-color: rgba(99, 102, 241, 0.35);
   }
 
   .card {
@@ -213,6 +298,14 @@
     color: #94a3b8;
   }
 
+  .kv-label {
+    color: #94a3b8;
+  }
+
+  .kv-value {
+    color: #e2e8f0;
+  }
+
   .status {
     background: rgba(14, 165, 233, 0.15);
     color: #38bdf8;
@@ -221,6 +314,10 @@
   .status-placed {
     background: rgba(234, 179, 8, 0.15);
     color: #fbbf24;
+  }
+  .status-pending-payment {
+    background: rgba(139, 92, 246, 0.18);
+    color: #c4b5fd;
   }
   .status-confirmed {
     background: rgba(59, 130, 246, 0.15);
@@ -241,5 +338,10 @@
   .status-cancelled {
     background: rgba(239, 68, 68, 0.15);
     color: #f87171;
+  }
+
+  .status-default {
+    background: rgba(59, 130, 246, 0.15);
+    color: #93c5fd;
   }
 }

@@ -1,24 +1,40 @@
 <section class="owner-page">
   <header class="page-header">
-    <div>
-      <h1>Menu Management</h1>
-      <p>Create categories, add menu items, and control item availability.</p>
+    <div class="header-card">
+      <div class="header-copy">
+        <h1>Menu Management</h1>
+        <p>Create categories, add menu items, and control item availability.</p>
+      </div>
+      <button class="btn-primary header-add-btn" (click)="openCreate()">
+        <i class="bi bi-plus-circle"></i> Add Item
+      </button>
     </div>
-    <button class="btn-primary" (click)="openCreate()">+ Add Item</button>
   </header>
 
   <section class="stats-grid">
-    <article class="stat-card">
-      <small>Total Items</small>
+    <article class="stat-card stat-total">
+      <div class="stat-top">
+        <span class="stat-icon"><i class="bi bi-grid-3x3-gap"></i></span>
+        <small>Total Items</small>
+      </div>
       <strong>{{ menuItems.length }}</strong>
+      <p>Complete menu catalog</p>
     </article>
-    <article class="stat-card">
-      <small>Available</small>
+    <article class="stat-card stat-available">
+      <div class="stat-top">
+        <span class="stat-icon"><i class="bi bi-check-circle"></i></span>
+        <small>Available</small>
+      </div>
       <strong>{{ availableCount }}</strong>
+      <p>Visible to customers</p>
     </article>
-    <article class="stat-card">
-      <small>Hidden</small>
+    <article class="stat-card stat-hidden">
+      <div class="stat-top">
+        <span class="stat-icon"><i class="bi bi-eye-slash"></i></span>
+        <small>Hidden</small>
+      </div>
       <strong>{{ hiddenCount }}</strong>
+      <p>Temporarily unavailable</p>
     </article>
   </section>
 
@@ -140,22 +156,27 @@
 
   <div class="grid" *ngIf="!loading && filteredItems.length > 0">
     <article class="card item" *ngFor="let item of pagedItems">
+      <div class="item-body">
+        <h3>{{ item.name }}</h3>
+        <p
+          class="category-tag"
+          [ngClass]="'cat-' + ((item.category || 'other') | lowercase)"
+        >
+          {{ categoryLabel(item.category) }}
+        </p>
+        <p class="price">{{ item.price | currency: "INR" }}</p>
+        <p class="subtext" *ngIf="item.description">{{ item.description }}</p>
+        <p class="subtext prep-line">
+          Prep:
+          {{ item.preparationTimeMinutes || item.preparationTime || 0 }} min
+        </p>
+      </div>
       <div class="item-img-wrap" *ngIf="item.imageUrl">
         <img
           [src]="getItemImage(item)"
           [alt]="item.name"
           (error)="$any($event.target).parentElement.style.display = 'none'"
         />
-      </div>
-      <div class="item-body">
-        <h3>{{ item.name }}</h3>
-        <p class="category-tag">{{ categoryLabel(item.category) }}</p>
-        <p class="price">{{ item.price | currency: "INR" }}</p>
-        <p class="subtext" *ngIf="item.description">{{ item.description }}</p>
-        <p class="subtext">
-          Prep:
-          {{ item.preparationTimeMinutes || item.preparationTime || 0 }} min
-        </p>
       </div>
       <div class="actions">
         <span
@@ -165,13 +186,15 @@
         >
           {{ item.isAvailable ? "Available" : "Hidden" }}
         </span>
-        <button class="btn-sm" (click)="openEdit(item)">Edit</button>
-        <button class="btn-sm" (click)="toggleAvailability(item)">
-          {{ item.isAvailable ? "Hide" : "Show" }}
-        </button>
-        <button class="btn-sm danger" (click)="deleteItem(item.id)">
-          Delete
-        </button>
+        <div class="action-btns">
+          <button class="btn-sm" (click)="openEdit(item)">Edit</button>
+          <button class="btn-sm" (click)="toggleAvailability(item)">
+            {{ item.isAvailable ? "Hide" : "Show" }}
+          </button>
+          <button class="btn-sm danger" (click)="deleteItem(item.id)">
+            Delete
+          </button>
+        </div>
       </div>
     </article>
   </div>

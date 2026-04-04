@@ -1,17 +1,39 @@
-/* ================= Page Layout ================= */
-
+/* Page Layout */
 .staff-page {
-  padding: 24px;
+  padding: 0 0 24px;
   background: #f1f5f9;
   min-height: 100vh;
 }
 
-/* ================= Header ================= */
-
+/* Header */
 .page-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  background:
+    radial-gradient(
+      circle at 10% 20%,
+      rgba(14, 165, 233, 0.18),
+      transparent 40%
+    ),
+    radial-gradient(
+      circle at 90% 0%,
+      rgba(16, 185, 129, 0.14),
+      transparent 35%
+    ),
+    linear-gradient(135deg, #ffffff 0%, #ecfeff 55%, #eff6ff 100%);
+  border: 1px solid #bae6fd;
+  border-radius: 16px;
+  padding: 1rem 1.1rem;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 12px 26px rgba(15, 23, 42, 0.11);
+  }
 }
 
 .page-header h1 {
@@ -26,8 +48,33 @@
   margin-top: 4px;
 }
 
-/* ================= Add Button ================= */
+:host-context(.dark) {
+  .page-header {
+    background:
+      radial-gradient(
+        circle at 10% 20%,
+        rgba(14, 165, 233, 0.2),
+        transparent 42%
+      ),
+      radial-gradient(
+        circle at 90% 0%,
+        rgba(16, 185, 129, 0.18),
+        transparent 35%
+      ),
+      linear-gradient(135deg, #111827 0%, #0f1f2f 55%, #0b1324 100%);
+    border-color: rgba(14, 165, 233, 0.32);
+  }
 
+  .page-header h1 {
+    color: #e2e8f0;
+  }
+
+  .page-header p {
+    color: #94a3b8;
+  }
+}
+
+/* Add Button */
 .primary-btn {
   background: #0ea5e9;
   color: white;
@@ -43,8 +90,7 @@
   background: #0284c7;
 }
 
-/* ================= Filters ================= */
-
+/* Filters */
 .filter-bar {
   margin-top: 22px;
   background: #ffffff;
@@ -83,8 +129,7 @@
   cursor: pointer;
 }
 
-/* ================= TABLE UI ================= */
-
+/* TABLE UI */
 .table-wrapper {
   margin-top: 28px;
   background: #ffffff;
@@ -236,8 +281,7 @@
   color: #64748b;
 }
 
-/* ================= PREMIUM MODAL DESIGN ================= */
-
+/* PREMIUM MODAL DESIGN */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -493,8 +537,7 @@
   }
 }
 
-/* ================= DARK MODE ================= */
-:host-context(.dark) {
+/* DARK MODE */:host-context(.dark) {
   .staff-page {
     background: #0f172a;
     color: #f1f5f9;

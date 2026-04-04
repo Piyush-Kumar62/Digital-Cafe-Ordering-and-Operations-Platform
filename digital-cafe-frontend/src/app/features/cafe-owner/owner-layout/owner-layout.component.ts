@@ -14,9 +14,12 @@ import { AuthService } from "@core/auth/auth.service";
 import { ApiService } from "@core/services/api.service";
 import { ThemeService } from "@core/services/theme.service";
 import { AlertService } from "@core/services/alert.service";
+import { getOwnerRegistrationCompletion } from "@core/utils/owner-profile-completion.util";
 import { CafeContextService } from "../services/cafe-context.service";
 import { Cafe } from "@shared/models/cafe.model";
 import { User } from "@shared/models/auth.model";
+import { WebSocketService } from "@core/websocket/websocket.service";
+import { NgZone } from "@angular/core";
 
 interface NavigationItem {
   label: string;
@@ -53,9 +56,19 @@ export class OwnerLayoutComponent implements OnInit, OnDestroy {
   lastLogin: Date | null = null;
   notifications: OwnerHeaderNotification[] = [];
   unreadNotifications = 0;
+  readonly notificationPageSize = 10;
+  notificationCurrentPage = 1;
   isDashboardRoute = false;
   private routerEventsSub?: Subscription;
   private userSub?: Subscription;
+  private ownerOrderSub?: Subscription;
+  private ownerTableSub?: Subscription;
+  private ownerUserNotifSub?: Subscription;
+  private ownerGlobalNotifSub?: Subscription;
+  private ownerOrderDest: string | null = null;
+  private ownerTableDest: string | null = null;
+  private ownerUserNotifDest: string | null = null;
+  private ownerGlobalNotifDest: string | null = null;
 
   // Multi-cafe support
   allCafes: Cafe[] = [];
@@ -85,6 +98,8 @@ export class OwnerLayoutComponent implements OnInit, OnDestroy {
     private router: Router,
     private cafeCtx: CafeContextService,
     private alertService: AlertService,
+    private webSocketService: WebSocketService,
+    private ngZone: NgZone,
   ) {
     this.themeService.syncFromStorage();
     this.isDarkMode = this.themeService.isDarkMode();
@@ -98,8 +113,9 @@ export class OwnerLayoutComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.userSub = this.authService.currentUser.subscribe((user) => {
       this.currentUser = user;
-      this.profileCompletion = user?.profileCompletionPercentage || 0;
+      this.profileCompletion = getOwnerRegistrationCompletion(user);
       this.lastLogin = user?.lastLogin ? new Date(user.lastLogin) : null;
+      this.rebindOwnerNotifications();
 
       const resolved = this.apiService.resolveImageUrl(
         user?.profileImageUrl || "",
@@ -124,8 +140,10 @@ export class OwnerLayoutComponent implements OnInit, OnDestroy {
         this.profileDropdownOpen = false;
       });
 
-    // Load cafes for multi-cafe switcher
-    this.cafeCtx.loadCafes().subscribe();
+    // Skip owner cafe context calls until profile completion is available.
+    if (getOwnerRegistrationCompletion(this.currentUser) >= 100) {
+      this.cafeCtx.loadCafes().subscribe();
+    }
     this.cafeContextSub = this.cafeCtx.allCafes$.subscribe((cafes) => {
       this.allCafes = cafes;
     });
@@ -151,6 +169,7 @@ export class OwnerLayoutComponent implements OnInit, OnDestroy {
     this.routerEventsSub?.unsubscribe();
     this.userSub?.unsubscribe();
     this.cafeContextSub?.unsubscribe();
+    this.unbindOwnerNotifications();
   }
 
   toggleSidebar(): void {
@@ -165,7 +184,10 @@ export class OwnerLayoutComponent implements OnInit, OnDestroy {
     if (!ok) return;
     this.cafeCtx.clear();
     this.authService.logout();
-    this.alertService.success("Logged out", "You have been signed out successfully.");
+    this.alertService.success(
+      "Logged out",
+      "You have been signed out successfully.",
+    );
     this.router.navigate(["/auth/login"]);
   }
 
@@ -204,6 +226,9 @@ export class OwnerLayoutComponent implements OnInit, OnDestroy {
   toggleNotifications(): void {
     this.profileDropdownOpen = false;
     this.showNotifications = !this.showNotifications;
+    if (this.showNotifications) {
+      this.notificationCurrentPage = 1;
+    }
   }
 
   markAllRead(): void {
@@ -317,6 +342,137 @@ export class OwnerLayoutComponent implements OnInit, OnDestroy {
     this.syncUnreadCount();
   }
 
+  private bindOwnerNotifications(): void {
+    const userId = this.currentUser?.id;
+    const cafeId = this.currentUser?.cafeId;
+
+    if (userId) {
+      this.ownerUserNotifDest = `/user/${userId}/queue/notifications`;
+      this.ownerUserNotifSub = this.webSocketService
+        .watchDestination<any>(this.ownerUserNotifDest)
+        .subscribe({
+          next: (payload) =>
+            this.ngZone.run(() => this.pushNotification(payload)),
+        });
+
+      this.ownerGlobalNotifDest = "/user/queue/notifications";
+      this.ownerGlobalNotifSub = this.webSocketService
+        .watchDestination<any>(this.ownerGlobalNotifDest)
+        .subscribe({
+          next: (payload) =>
+            this.ngZone.run(() => this.pushNotification(payload)),
+        });
+    }
+
+    if (cafeId) {
+      this.ownerOrderDest = `/topic/cafe/${cafeId}`;
+      this.ownerOrderSub = this.webSocketService
+        .watchDestination<any>(this.ownerOrderDest)
+        .subscribe({
+          next: (payload) =>
+            this.ngZone.run(() => this.pushNotification(payload)),
+        });
+
+      this.ownerTableDest = `/topic/cafe/${cafeId}/tables`;
+      this.ownerTableSub = this.webSocketService
+        .watchDestination<any>(this.ownerTableDest)
+        .subscribe({
+          next: (payload) =>
+            this.ngZone.run(() => this.pushNotification(payload)),
+        });
+    }
+  }
+
+  private rebindOwnerNotifications(): void {
+    this.unbindOwnerNotifications();
+    this.bindOwnerNotifications();
+  }
+
+  private unbindOwnerNotifications(): void {
+    this.ownerOrderSub?.unsubscribe();
+    this.ownerTableSub?.unsubscribe();
+    this.ownerUserNotifSub?.unsubscribe();
+    this.ownerGlobalNotifSub?.unsubscribe();
+    this.ownerOrderSub = undefined;
+    this.ownerTableSub = undefined;
+    this.ownerUserNotifSub = undefined;
+    this.ownerGlobalNotifSub = undefined;
+
+    if (this.ownerOrderDest) {
+      this.webSocketService.unsubscribe(this.ownerOrderDest);
+      this.ownerOrderDest = null;
+    }
+    if (this.ownerTableDest) {
+      this.webSocketService.unsubscribe(this.ownerTableDest);
+      this.ownerTableDest = null;
+    }
+    if (this.ownerUserNotifDest) {
+      this.webSocketService.unsubscribe(this.ownerUserNotifDest);
+      this.ownerUserNotifDest = null;
+    }
+    if (this.ownerGlobalNotifDest) {
+      this.webSocketService.unsubscribe(this.ownerGlobalNotifDest);
+      this.ownerGlobalNotifDest = null;
+    }
+  }
+
+  private pushNotification(payload: any): void {
+    const title = payload?.title || payload?.type || "Cafe Update";
+    const message =
+      payload?.message ||
+      payload?.description ||
+      "You have a new notification.";
+    const createdAt = payload?.timestamp
+      ? new Date(payload.timestamp).toLocaleString()
+      : new Date().toLocaleString();
+
+    const fingerprint = `${title}|${message}|${createdAt}`;
+    const duplicate = this.notifications.some(
+      (n) => `${n.title}|${n.message}|${n.createdAt}` === fingerprint,
+    );
+    if (duplicate) {
+      return;
+    }
+
+    this.notifications = [
+      {
+        id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        title,
+        message,
+        createdAt,
+        read: false,
+      },
+      ...this.notifications,
+    ].slice(0, 60);
+    this.notificationCurrentPage = 1;
+    this.syncUnreadCount();
+  }
+
+  get totalNotificationPages(): number {
+    return Math.max(
+      1,
+      Math.ceil(this.notifications.length / this.notificationPageSize),
+    );
+  }
+
+  get pagedNotifications(): OwnerHeaderNotification[] {
+    const start =
+      (this.notificationCurrentPage - 1) * this.notificationPageSize;
+    return this.notifications.slice(start, start + this.notificationPageSize);
+  }
+
+  prevNotificationPage(): void {
+    if (this.notificationCurrentPage > 1) {
+      this.notificationCurrentPage -= 1;
+    }
+  }
+
+  nextNotificationPage(): void {
+    if (this.notificationCurrentPage < this.totalNotificationPages) {
+      this.notificationCurrentPage += 1;
+    }
+  }
+
   private syncUnreadCount(): void {
     this.unreadNotifications = this.notifications.filter((n) => !n.read).length;
   }
@@ -340,12 +496,19 @@ export class OwnerLayoutComponent implements OnInit, OnDestroy {
           govtIdNumber: profile?.govtIdNumber || this.currentUser.govtIdNumber,
           profileImageUrl:
             profile?.profileImageUrl || this.currentUser.profileImageUrl,
-          profileCompletionPercentage:
-            profile?.profileCompletionPercentage ??
-            this.currentUser.profileCompletionPercentage,
+          profileCompletionPercentage: getOwnerRegistrationCompletion({
+            firstName,
+            lastName,
+            email: this.currentUser.email,
+            phoneNumber: profile?.phoneNumber || this.currentUser.phoneNumber,
+          }),
           isProfileComplete:
-            (profile?.profileCompletionPercentage ??
-              this.currentUser.profileCompletionPercentage) >= 100,
+            getOwnerRegistrationCompletion({
+              firstName,
+              lastName,
+              email: this.currentUser.email,
+              phoneNumber: profile?.phoneNumber || this.currentUser.phoneNumber,
+            }) >= 100,
           lastLogin: profile?.lastLogin || this.currentUser.lastLogin,
         };
         this.currentUser = updated;
@@ -358,8 +521,10 @@ export class OwnerLayoutComponent implements OnInit, OnDestroy {
           ? `${resolved}${resolved.includes("?") ? "&" : "?"}v=${this.profileImageVersion}`
           : "";
         this.profileImageVersion = Date.now();
-        this.profileCompletion = updated.profileCompletionPercentage || 0;
-        this.lastLogin = updated.lastLogin ? new Date(updated.lastLogin) : this.lastLogin;
+        this.profileCompletion = getOwnerRegistrationCompletion(updated);
+        this.lastLogin = updated.lastLogin
+          ? new Date(updated.lastLogin)
+          : this.lastLogin;
       },
     });
   }

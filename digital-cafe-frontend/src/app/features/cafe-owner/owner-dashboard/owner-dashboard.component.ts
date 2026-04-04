@@ -56,6 +56,7 @@ export class CafeOwnerDashboardComponent
 {
   loading = true;
   refreshing = false;
+  hasLoadedOnce = false;
   cafeId!: number;
   cafeName = "";
   lastRefreshed = new Date();
@@ -212,7 +213,7 @@ export class CafeOwnerDashboardComponent
   }
 
   loadDashboard(isRefresh = false): void {
-    if (isRefresh) {
+    if (isRefresh || this.hasLoadedOnce) {
       this.refreshing = true;
     } else {
       this.loading = true;
@@ -227,33 +228,22 @@ export class CafeOwnerDashboardComponent
       return;
     }
 
-    this.apiService.cafeExistsForOwner().subscribe({
-      next: (exists) => {
-        if (!exists) {
+    this.apiService.getMyCafe().subscribe({
+      next: (cafe) => {
+        // Skip if activeCafe$ subscription already resolved a cafe (race condition guard)
+        if (this.cafeId) {
           this.loading = false;
-          this.router.navigate(["/owner/setup"]);
+          this.refreshing = false;
           return;
         }
-        this.apiService.getMyCafe().subscribe({
-          next: (cafe) => {
-            // Skip if activeCafe$ subscription already resolved a cafe (race condition guard)
-            if (this.cafeId) {
-              this.loading = false;
-              return;
-            }
-            this.cafeId = cafe.id;
-            this.cafeName = cafe.name || "My Cafe";
-            this.fetchAllDashboardData();
-          },
-          error: () => {
-            this.loading = false;
-            this.alertService.error("Unable to load cafe info.");
-          },
-        });
+        this.cafeId = cafe.id;
+        this.cafeName = cafe.name || "My Cafe";
+        this.fetchAllDashboardData();
       },
       error: () => {
         this.loading = false;
-        this.alertService.error("Unable to validate cafe status.");
+        this.refreshing = false;
+        this.router.navigate(["/owner/cafes"]);
       },
     });
   }
@@ -288,6 +278,7 @@ export class CafeOwnerDashboardComponent
         this.processBookings(bookings as any[]);
         this.processMenu(menu as any[]);
 
+        this.hasLoadedOnce = true;
         this.loading = false;
         this.refreshing = false;
         this.lastRefreshed = new Date();
@@ -722,35 +713,35 @@ export class CafeOwnerDashboardComponent
 
   get greeting(): string {
     const h = this.currentDateTime.getHours();
-    if (h < 12) return 'Good Morning';
-    if (h < 18) return 'Good Afternoon';
-    return 'Good Evening';
+    if (h < 12) return "Good Morning";
+    if (h < 18) return "Good Afternoon";
+    return "Good Evening";
   }
 
   get greetingIcon(): string {
     const h = this.currentDateTime.getHours();
-    if (h < 12) return 'wb_sunny';
-    if (h < 18) return 'light_mode';
-    return 'nights_stay';
+    if (h < 12) return "wb_sunny";
+    if (h < 18) return "light_mode";
+    return "nights_stay";
   }
 
   get dateTimeFormatted(): string {
-    const date = this.currentDateTime.toLocaleDateString('en-IN', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
+    const date = this.currentDateTime.toLocaleDateString("en-IN", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     });
-    const time = this.currentDateTime.toLocaleTimeString('en-IN', {
-      hour: '2-digit',
-      minute: '2-digit',
+    const time = this.currentDateTime.toLocaleTimeString("en-IN", {
+      hour: "2-digit",
+      minute: "2-digit",
       hour12: true,
     });
     return `${date} | ${time}`;
   }
 
   get displayName(): string {
-    return this.user?.firstName || this.user?.username || 'there';
+    return this.user?.firstName || this.user?.username || "there";
   }
 
   get resolvedAvatarUrl(): string {

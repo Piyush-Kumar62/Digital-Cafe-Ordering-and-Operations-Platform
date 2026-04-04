@@ -202,6 +202,13 @@ export const routes: Routes = [
             (m) => m.LogsComponent,
           ),
       },
+      {
+        path: "notifications",
+        loadComponent: () =>
+          import("./shared/pages/notification-center/notification-center.component").then(
+            (m) => m.NotificationCenterComponent,
+          ),
+      },
       { path: "", redirectTo: "dashboard", pathMatch: "full" },
     ],
   },
@@ -216,10 +223,8 @@ export const routes: Routes = [
     children: [
       {
         path: "setup",
-        loadComponent: () =>
-          import("./features/cafe-owner/setup-cafe/setup-cafe.component").then(
-            (m) => m.SetupCafeComponent,
-          ),
+        redirectTo: "cafes",
+        pathMatch: "full",
       },
       {
         path: "cafes",
@@ -277,6 +282,13 @@ export const routes: Routes = [
             (m) => m.OwnerSettingsComponent,
           ),
       },
+      {
+        path: "notifications",
+        loadComponent: () =>
+          import("./shared/pages/notification-center/notification-center.component").then(
+            (m) => m.NotificationCenterComponent,
+          ),
+      },
       { path: "", redirectTo: "dashboard", pathMatch: "full" },
     ],
   },
@@ -317,6 +329,13 @@ export const routes: Routes = [
             (m) => m.ChefProfileComponent,
           ),
       },
+      {
+        path: "notifications",
+        loadComponent: () =>
+          import("./shared/pages/notification-center/notification-center.component").then(
+            (m) => m.NotificationCenterComponent,
+          ),
+      },
       { path: "", redirectTo: "dashboard", pathMatch: "full" },
     ],
   },
@@ -338,10 +357,31 @@ export const routes: Routes = [
           ),
       },
       {
+        path: "active-orders",
+        loadComponent: () =>
+          import("./features/waiter/waiter-active-orders/waiter-active-orders.component").then(
+            (m) => m.WaiterActiveOrdersComponent,
+          ),
+      },
+      {
+        path: "served-history",
+        loadComponent: () =>
+          import("./features/waiter/waiter-served-history/waiter-served-history.component").then(
+            (m) => m.WaiterServedHistoryComponent,
+          ),
+      },
+      {
         path: "profile",
         loadComponent: () =>
           import("./features/waiter/waiter-profile/waiter-profile.component").then(
             (m) => m.WaiterProfileComponent,
+          ),
+      },
+      {
+        path: "notifications",
+        loadComponent: () =>
+          import("./shared/pages/notification-center/notification-center.component").then(
+            (m) => m.NotificationCenterComponent,
           ),
       },
       { path: "", redirectTo: "dashboard", pathMatch: "full" },

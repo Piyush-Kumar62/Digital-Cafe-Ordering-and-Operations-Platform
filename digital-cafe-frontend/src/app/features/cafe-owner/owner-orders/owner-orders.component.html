@@ -32,27 +32,57 @@
 
   <div class="grid" *ngIf="!loading && orders.length > 0">
     <article class="card item" *ngFor="let order of pagedOrders">
-      <div>
+      <div class="item__body">
         <h3>Order #{{ order.orderNumber || order.id }}</h3>
-        <p>
-          Table {{ order.tableNumber || order.tableId || "-" }} •
-          {{ order.customerName || "#" + order.customerId }}
-        </p>
-        <p>
-          {{ order.items.length || 0 }} items •
-          {{ order.totalAmount | currency: "INR" }}
-        </p>
-        <p>
-          Payment: {{ order.payment?.status || "-" }} •
-          Txn: {{ order.payment?.transactionId || "-" }}
-        </p>
-        <p>
-          Chef: {{ order.preparingByChefName || "-" }} •
-          Waiter: {{ order.servedByWaiterName || "-" }}
-        </p>
+        <div class="kv-list">
+          <div class="kv-row">
+            <span class="kv-label">Table</span>
+            <span
+              class="kv-value"
+              [title]="
+                (order.tableNumber || order.tableId || '-') +
+                ' • ' +
+                (order.customerName || '#' + order.customerId)
+              "
+            >
+              {{ order.tableNumber || order.tableId || "-" }} •
+              {{ order.customerName || "#" + order.customerId }}
+            </span>
+          </div>
+          <div class="kv-row">
+            <span class="kv-label">Items</span>
+            <span class="kv-value">
+              {{ order.items.length || 0 }} items •
+              {{ order.totalAmount | currency: "INR" }}
+            </span>
+          </div>
+          <div class="kv-row">
+            <span class="kv-label">Payment</span>
+            <span class="kv-value">{{
+              formatStatus(order.payment?.status || "-")
+            }}</span>
+          </div>
+          <div class="kv-row">
+            <span class="kv-label">Txn</span>
+            <span
+              class="kv-value kv-value--mono"
+              [title]="order.payment?.transactionId || '-'"
+            >
+              {{ order.payment?.transactionId || "-" }}
+            </span>
+          </div>
+          <div class="kv-row">
+            <span class="kv-label">Chef</span>
+            <span class="kv-value">{{ order.preparingByChefName || "-" }}</span>
+          </div>
+          <div class="kv-row">
+            <span class="kv-label">Waiter</span>
+            <span class="kv-value">{{ order.servedByWaiterName || "-" }}</span>
+          </div>
+        </div>
       </div>
       <span class="status" [ngClass]="getStatusClass(order.status)">{{
-        order.status
+        formatStatus(order.status) | uppercase
       }}</span>
     </article>
   </div>
@@ -69,7 +99,8 @@
         [disabled]="pageIndex === 0"
         (click)="goToPage(pageIndex - 1)"
       >
-        ← Prev</button>
+        ← Prev
+      </button>
       <button
         class="page-btn"
         *ngFor="let p of allPages"
@@ -83,7 +114,8 @@
         [disabled]="pageIndex >= totalPages - 1"
         (click)="goToPage(pageIndex + 1)"
       >
-        Next →</button>
+        Next →
+      </button>
     </div>
   </div>
 </section>

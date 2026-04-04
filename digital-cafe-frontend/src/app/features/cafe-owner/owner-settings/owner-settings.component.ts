@@ -15,6 +15,10 @@ import {
 import { AuthService } from "@core/auth/auth.service";
 import { ApiService } from "@core/services/api.service";
 import { AlertService } from "@core/services/alert.service";
+import {
+  getOwnerMissingRegistrationFields,
+  getOwnerRegistrationCompletion,
+} from "@core/utils/owner-profile-completion.util";
 import { User, ChangePasswordRequest } from "@shared/models/auth.model";
 import { PostalPincodeService } from "@shared/services/postal-pincode.service";
 
@@ -91,6 +95,7 @@ export class OwnerSettingsComponent implements OnInit, OnDestroy {
     this.loadProfile();
     this.loadCafeDetails();
     this.setupCafePincodeLookup();
+    this.syncOwnerCompletionState();
   }
 
   ngOnDestroy(): void {
@@ -125,6 +130,31 @@ export class OwnerSettingsComponent implements OnInit, OnDestroy {
       .join(" ");
   }
 
+  get liveProfileCompletion(): number {
+    return getOwnerRegistrationCompletion({
+      firstName: this.profileForm.firstName,
+      lastName: this.profileForm.lastName,
+      email: this.user?.email,
+      phoneNumber: this.profileForm.phoneNumber,
+    });
+  }
+
+  get ownerMissingProfileFields(): string[] {
+    return getOwnerMissingRegistrationFields({
+      firstName: this.profileForm.firstName,
+      lastName: this.profileForm.lastName,
+      email: this.user?.email,
+      phoneNumber: this.profileForm.phoneNumber,
+    });
+  }
+
+  get shouldShowOwnerMissingWarning(): boolean {
+    return (
+      this.liveProfileCompletion < 100 &&
+      this.ownerMissingProfileFields.length > 0
+    );
+  }
+
   saveProfile(): void {
     const firstName = this.profileForm.firstName.trim();
     const lastName = this.profileForm.lastName.trim();
@@ -146,17 +176,19 @@ export class OwnerSettingsComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (res) => {
           if (this.user) {
+            const ownerCompletion = getOwnerRegistrationCompletion({
+              firstName: res.firstName || firstName,
+              lastName: res.lastName || lastName,
+              email: this.user.email,
+              phoneNumber: res.phoneNumber || this.profileForm.phoneNumber,
+            });
             this.user = {
               ...this.user,
               firstName: res.firstName || firstName,
               lastName: res.lastName || lastName,
               phoneNumber: res.phoneNumber || this.profileForm.phoneNumber,
-              profileCompletionPercentage:
-                res.profileCompletionPercentage ??
-                this.user.profileCompletionPercentage,
-              isProfileComplete:
-                (res.profileCompletionPercentage ??
-                  this.user.profileCompletionPercentage) >= 100,
+              profileCompletionPercentage: ownerCompletion,
+              isProfileComplete: ownerCompletion >= 100,
             };
             this.authService.updateUserData(this.user);
           }
@@ -208,7 +240,10 @@ export class OwnerSettingsComponent implements OnInit, OnDestroy {
     );
     if (!ok) return;
     this.authService.logout();
-    this.alertService.success("Logged out", "You have been signed out successfully.");
+    this.alertService.success(
+      "Logged out",
+      "You have been signed out successfully.",
+    );
     this.router.navigate(["/auth/login"]);
   }
 
@@ -310,13 +345,19 @@ export class OwnerSettingsComponent implements OnInit, OnDestroy {
         );
 
         if (this.user) {
+          const ownerCompletion = getOwnerRegistrationCompletion({
+            firstName: this.profileForm.firstName || this.user.firstName,
+            lastName: this.profileForm.lastName || this.user.lastName,
+            email: this.user.email,
+            phoneNumber: this.profileForm.phoneNumber || this.user.phoneNumber,
+          });
           this.user = {
             ...this.user,
             firstName: this.profileForm.firstName || this.user.firstName,
             lastName: this.profileForm.lastName || this.user.lastName,
-            profileCompletionPercentage:
-              profile?.profileCompletionPercentage ??
-              this.user.profileCompletionPercentage,
+            phoneNumber: this.profileForm.phoneNumber || this.user.phoneNumber,
+            profileCompletionPercentage: ownerCompletion,
+            isProfileComplete: ownerCompletion >= 100,
           };
           this.authService.updateUserData(this.user);
         }
@@ -334,6 +375,10 @@ export class OwnerSettingsComponent implements OnInit, OnDestroy {
   }
 
   private loadCafeDetails(): void {
+    if (this.liveProfileCompletion < 100) {
+      return;
+    }
+
     const cafeId = this.user?.cafeId;
     if (!cafeId) return;
     this.loadingCafe = true;
@@ -368,6 +413,17 @@ export class OwnerSettingsComponent implements OnInit, OnDestroy {
 
   onCafePincodeChange(value: string): void {
     this.cafePincode$.next(value);
+  }
+
+  syncOwnerCompletionState(): void {
+    if (!this.user) return;
+    const ownerCompletion = this.liveProfileCompletion;
+    this.user = {
+      ...this.user,
+      profileCompletionPercentage: ownerCompletion,
+      isProfileComplete: ownerCompletion >= 100,
+    };
+    this.authService.updateUserData(this.user);
   }
 
   private setupCafePincodeLookup(): void {

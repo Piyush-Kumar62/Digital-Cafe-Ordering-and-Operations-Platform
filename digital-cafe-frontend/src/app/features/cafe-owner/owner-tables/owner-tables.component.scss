@@ -1,6 +1,5 @@
-// ── Design Tokens ──────────────────────────────────────
-$surface-bg: #0f172a;
-$surface-card: #1e293b;
+// Design Tokens
+$surface-bg: #0f172a;$surface-card: #1e293b;
 $surface-hover: #263349;
 $border: rgba(255, 255, 255, 0.08);
 $text-primary: #f1f5f9;
@@ -14,18 +13,14 @@ $red: #ef4444;
 $red-light: rgba(239, 68, 68, 0.15);
 $amber: #f59e0b;
 
-// ── Wrapper ─────────────────────────────────────────────
-.tables-wrapper {
-  padding: 28px 20px;
+// Wrapper
+.tables-wrapper {  padding: 28px 0;
   min-height: 100vh;
   background: $surface-bg;
 }
 
-// ── Main Card ────────────────────────────────────────────
-.tables-card {
-  width: 100%;
-  max-width: 1140px;
-  margin: 0 auto;
+// Main Card
+.tables-card {  width: 100%;
   background: $surface-card;
   border-radius: 20px;
   padding: 28px;
@@ -33,9 +28,8 @@ $amber: #f59e0b;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
 }
 
-// ── Header ───────────────────────────────────────────────
-.card-header {
-  display: flex;
+// Header
+.card-header {  display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 24px;
@@ -88,9 +82,8 @@ $amber: #f59e0b;
   margin: 0;
 }
 
-// ── Add Button ───────────────────────────────────────────
-.add-btn {
-  display: inline-flex;
+// Add Button
+.add-btn {  display: inline-flex;
   align-items: center;
   gap: 7px;
   padding: 10px 20px;
@@ -111,9 +104,8 @@ $amber: #f59e0b;
   }
 }
 
-// ── Stats Bar ────────────────────────────────────────────
-.stats-bar {
-  display: flex;
+// Stats Bar
+.stats-bar {  display: flex;
   gap: 12px;
   margin-bottom: 24px;
   flex-wrap: wrap;
@@ -163,9 +155,8 @@ $amber: #f59e0b;
   }
 }
 
-// ── Loading Skeleton ─────────────────────────────────────
-.skeleton-grid {
-  display: grid;
+// Loading Skeleton
+.skeleton-grid {  display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 16px;
 }
@@ -215,9 +206,8 @@ $amber: #f59e0b;
   }
 }
 
-// ── Empty State ───────────────────────────────────────────
-.empty-state {
-  text-align: center;
+// Empty State
+.empty-state {  text-align: center;
   padding: 60px 20px;
   color: $text-secondary;
 
@@ -243,16 +233,14 @@ $amber: #f59e0b;
   }
 }
 
-// ── Tables Grid ───────────────────────────────────────────
-.tables-grid {
-  display: grid;
+// Tables Grid
+.tables-grid {  display: grid;
   grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
   gap: 16px;
 }
 
-// ── Table Card ────────────────────────────────────────────
-.table-card {
-  background: rgba(255, 255, 255, 0.06);
+// Table Card
+.table-card {  background: rgba(255, 255, 255, 0.06);
   border-radius: 16px;
   padding: 18px;
   border: 1px solid rgba(255, 255, 255, 0.12);
@@ -275,9 +263,8 @@ $amber: #f59e0b;
   }
 }
 
-// ── Card Top ─────────────────────────────────────────────
-.card-top {
-  display: flex;
+// Card Top
+.card-top {  display: flex;
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 14px;
@@ -309,9 +296,8 @@ $amber: #f59e0b;
   }
 }
 
-// ── Seats Row ─────────────────────────────────────────────
-.seats-row {
-  display: flex;
+// Seats Row
+.seats-row {  display: flex;
   align-items: center;
   gap: 7px;
   color: $text-secondary;
@@ -324,9 +310,8 @@ $amber: #f59e0b;
   }
 }
 
-// ── Card Actions ──────────────────────────────────────────
-.card-actions {
-  display: flex;
+// Card Actions
+.card-actions {  display: flex;
   gap: 6px;
 }
 
@@ -386,9 +371,8 @@ $amber: #f59e0b;
   }
 }
 
-// ── Modal Overlay ─────────────────────────────────────────
-.modal-overlay {
-  position: fixed;
+// Modal Overlay
+.modal-overlay {  position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.6);
   display: flex;
@@ -403,9 +387,8 @@ $amber: #f59e0b;
   background: rgba(0, 0, 0, 0.75);
 }
 
-// ── Modal ─────────────────────────────────────────────────
-.modal {
-  background: #1e293b;
+// Modal
+.modal {  background: #1e293b;
   width: 100%;
   max-width: 440px;
   border-radius: 18px;
@@ -619,9 +602,8 @@ $amber: #f59e0b;
   }
 }
 
-// ── Spinner ───────────────────────────────────────────────
-.spinner {
-  display: inline-block;
+// Spinner
+.spinner {  display: inline-block;
   width: 16px;
   height: 16px;
   border: 2px solid rgba(255, 255, 255, 0.3);
@@ -636,10 +618,9 @@ $amber: #f59e0b;
   }
 }
 
-// ── Responsive ────────────────────────────────────────────
-@media (max-width: 640px) {
-  .tables-wrapper {
-    padding: 14px 10px;
+// Responsive
+@media (max-width: 640px) {  .tables-wrapper {
+    padding: 14px 0;
   }
   .tables-card {
     padding: 18px;
@@ -676,8 +657,7 @@ $amber: #f59e0b;
   display: none;
 }
 
-/* ===== LIGHT MODE OVERRIDES ===== */
-/* Tables is dark by default — provide light-mode overrides */
+/* LIGHT MODE OVERRIDES *//* Tables is dark by default — provide light-mode overrides */
 :host-context(:not(.dark)) {
   .tables-wrapper {
     background: #f1f5f9;

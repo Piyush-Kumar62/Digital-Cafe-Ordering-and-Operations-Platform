@@ -2,155 +2,156 @@
   <div class="overlay"></div>
 
   <div class="owner-settings-content">
-    <div class="page-header page-header-inline">
-      <h1 class="page-title">Account Settings</h1>
-      <p class="page-subtitle">
-        Manage your personal account, profile photo, and security preferences
-      </p>
+    <div class="owner-profile-hero" *ngIf="user">
+      <div class="profile-upload-wrap">
+        <div class="avatar-circle" (click)="triggerProfileUpload()">
+          <img
+            [src]="profileImageUrl || defaultProfilePreviewUrl"
+            alt="Profile"
+          />
+          <div class="avatar-hover-overlay">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="18"
+              height="18"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2.2"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M3 8.25A2.25 2.25 0 015.25 6h2.379a1.5 1.5 0 001.06-.44l.88-.88A1.5 1.5 0 0110.63 4h2.74a1.5 1.5 0 011.06.44l.88.88a1.5 1.5 0 001.06.44h2.379A2.25 2.25 0 0121 8.25v9.5A2.25 2.25 0 0118.75 20h-13.5A2.25 2.25 0 013 17.75v-9.5z"
+              />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z"
+              />
+            </svg>
+            <span>{{ uploadingProfilePhoto ? "Uploading..." : "Change" }}</span>
+          </div>
+        </div>
+        <span class="avatar-completion-badge"
+          >{{ liveProfileCompletion }}%</span
+        >
+        <input
+          type="file"
+          accept="image/*"
+          id="profilePhotoInput"
+          hidden
+          (change)="onProfilePhotoChange($event)"
+        />
+      </div>
+
+      <div class="owner-hero-info">
+        <div class="owner-hero-title-row">
+          <h3>{{ userDisplayName }}</h3>
+        </div>
+        <p class="owner-hero-email">
+          <span class="material-icons">mail_outline</span>
+          {{ user.email }}
+        </p>
+
+        <div class="owner-hero-meta">
+          <span class="owner-meta-chip" *ngIf="profileForm.phoneNumber">
+            <span class="material-icons">phone</span>
+            +91 {{ profileForm.phoneNumber }}
+          </span>
+          <span class="owner-meta-chip" *ngIf="user.isEmailVerified">
+            <span class="material-icons">verified_user</span>
+            Email Verified
+          </span>
+        </div>
+
+        <div class="owner-hero-progress-row">
+          <div
+            class="owner-hero-progress"
+            role="progressbar"
+            [attr.aria-valuenow]="liveProfileCompletion"
+            aria-valuemin="0"
+            aria-valuemax="100"
+          >
+            <span
+              class="owner-hero-progress__fill"
+              [style.width.%]="liveProfileCompletion"
+            ></span>
+          </div>
+          <span class="owner-hero-progress-label"
+            >{{ liveProfileCompletion }}% complete</span
+          >
+        </div>
+
+        <div class="owner-hero-actions">
+          <button
+            class="owner-hero-btn owner-hero-btn--glass"
+            type="button"
+            [disabled]="savingProfile"
+            (click)="saveProfile()"
+          >
+            <span class="material-icons">check_circle</span>
+            {{ savingProfile ? "Saving..." : "Save Profile" }}
+          </button>
+          <button
+            type="button"
+            class="owner-hero-btn owner-hero-btn--ghost"
+            [disabled]="uploadingProfilePhoto || !profileImageUrl"
+            (click)="removeProfileImage()"
+          >
+            <span class="material-icons">no_photography</span>
+            Remove Photo
+          </button>
+        </div>
+      </div>
     </div>
 
     <div class="settings-grid">
       <div class="settings-main-column">
-        <!-- Profile Card -->
-        <div class="settings-card profile-card" *ngIf="user">
-          <div class="profile-content">
-            <div class="profile-top">
-              <!-- Profile image upload -->
-              <div class="profile-upload-wrap">
-                <div class="avatar-circle" (click)="triggerProfileUpload()">
-                  <img
-                    [src]="profileImageUrl || defaultProfilePreviewUrl"
-                    alt="Profile"
-                  />
-                </div>
-                <div class="avatar-edit-overlay">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="13"
-                    height="13"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    stroke-width="2.5"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 112.828 2.828L11.828 15.828a2 2 0 01-.707.464l-3.121 1.04 1.04-3.121A2 2 0 019 13z"
-                    />
-                  </svg>
-                </div>
-                <input
-                  type="file"
-                  accept="image/*"
-                  id="profilePhotoInput"
-                  hidden
-                  (change)="onProfilePhotoChange($event)"
-                />
-              </div>
-              <div class="avatar-actions">
-                <button
-                  type="button"
-                  class="btn-secondary btn-xs"
-                  [disabled]="uploadingProfilePhoto"
-                  (click)="triggerProfileUpload()"
-                >
-                  {{ uploadingProfilePhoto ? "Uploading..." : "Change Photo" }}
-                </button>
-                <button
-                  *ngIf="profileImageUrl"
-                  type="button"
-                  class="btn-danger btn-xs"
-                  [disabled]="uploadingProfilePhoto"
-                  (click)="removeProfileImage()"
-                >
-                  Remove Photo
-                </button>
-              </div>
-              <div class="profile-identity">
-                <h3>{{ userDisplayName }}</h3>
-                <p>{{ user.email }}</p>
-              </div>
+        <div class="settings-card owner-basic-card" *ngIf="user">
+          <div class="card-header">
+            <h2>Basic Details</h2>
+            <p class="card-subtitle">
+              Your personal information shown across owner workflows.
+            </p>
+          </div>
+
+          <div class="profile-fields">
+            <div class="field-row field-row-input">
+              <label class="field-label" for="ownerFirstName">First Name</label>
+              <input
+                id="ownerFirstName"
+                type="text"
+                [(ngModel)]="profileForm.firstName"
+                (ngModelChange)="syncOwnerCompletionState()"
+                name="ownerFirstName"
+              />
             </div>
-            <div class="profile-fields">
-              <div class="field-row">
-                <span class="field-label">Full Name</span>
-                <span class="field-value">{{ userDisplayName }}</span>
-              </div>
-              <div class="field-row field-row-input">
-                <label class="field-label" for="ownerFirstName"
-                  >First Name</label
-                >
-                <input
-                  id="ownerFirstName"
-                  type="text"
-                  [(ngModel)]="profileForm.firstName"
-                  name="ownerFirstName"
-                />
-              </div>
-              <div class="field-row field-row-input">
-                <label class="field-label" for="ownerLastName">Last Name</label>
-                <input
-                  id="ownerLastName"
-                  type="text"
-                  [(ngModel)]="profileForm.lastName"
-                  name="ownerLastName"
-                />
-              </div>
-              <div class="field-row field-row-input">
-                <span class="field-label">Username</span>
-                <span class="field-value">@{{ user.username }}</span>
-              </div>
-              <div class="field-row">
-                <span class="field-label">Email</span>
-                <span class="field-value">{{ user.email }}</span>
-              </div>
-              <div class="field-row">
-                <span class="field-label">Role</span>
-                <span class="field-value role-badge">{{ primaryRole }}</span>
-              </div>
-              <div class="field-row">
-                <span class="field-label">Email Verified</span>
-                <span
-                  class="field-value"
-                  [class.verified]="user.isEmailVerified"
-                  [class.unverified]="!user.isEmailVerified"
-                >
-                  <i
-                    class="bi"
-                    [class.bi-patch-check-fill]="user.isEmailVerified"
-                    [class.bi-exclamation-circle-fill]="!user.isEmailVerified"
-                  ></i>
-                  {{ user.isEmailVerified ? "Verified" : "Not Verified" }}
-                </span>
-              </div>
-              <div class="field-row">
-                <span class="field-label">Profile Completion</span>
-                <span class="field-value"
-                  >{{ user.profileCompletionPercentage }}%</span
-                >
-              </div>
-              <div class="field-row field-row-input">
-                <label class="field-label" for="ownerPhoneNumber"
-                  >Phone Number</label
-                >
-                <input
-                  id="ownerPhoneNumber"
-                  type="text"
-                  [(ngModel)]="profileForm.phoneNumber"
-                  name="ownerPhoneNumber"
-                />
-              </div>
-              <div class="field-row field-row-actions">
-                <button
-                  class="btn-primary"
-                  type="button"
-                  [disabled]="savingProfile"
-                  (click)="saveProfile()"
-                >
-                  {{ savingProfile ? "Saving..." : "Save Profile Details" }}
-                </button>
-              </div>
+            <div class="field-row field-row-input">
+              <label class="field-label" for="ownerLastName">Last Name</label>
+              <input
+                id="ownerLastName"
+                type="text"
+                [(ngModel)]="profileForm.lastName"
+                (ngModelChange)="syncOwnerCompletionState()"
+                name="ownerLastName"
+              />
+            </div>
+            <div class="field-row field-row-input">
+              <span class="field-label">Email</span>
+              <span class="field-value">{{ user.email }}</span>
+            </div>
+            <div class="field-row field-row-input">
+              <label class="field-label" for="ownerPhoneNumber"
+                >Phone Number</label
+              >
+              <input
+                id="ownerPhoneNumber"
+                type="text"
+                [(ngModel)]="profileForm.phoneNumber"
+                (ngModelChange)="syncOwnerCompletionState()"
+                name="ownerPhoneNumber"
+              />
             </div>
           </div>
         </div>
@@ -339,6 +340,19 @@
       </div>
 
       <div class="settings-side-column">
+        <div
+          class="settings-card warning-card"
+          *ngIf="shouldShowOwnerMissingWarning"
+        >
+          <div class="card-header">
+            <h2>Missing Profile Details</h2>
+            <p class="card-subtitle">
+              Profile is {{ liveProfileCompletion }}% complete. Please update:
+              {{ ownerMissingProfileFields.join(", ") }}
+            </p>
+          </div>
+        </div>
+
         <!-- Change Password -->
         <div class="settings-card password-card">
           <div class="card-header">

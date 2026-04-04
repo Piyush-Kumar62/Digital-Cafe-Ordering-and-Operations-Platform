@@ -24,6 +24,8 @@ import { environment } from "@environments/environment";
 })
 export class OwnerCafesComponent implements OnInit {
   cafes: Cafe[] = [];
+  pageIndex = 0;
+  readonly pageSize = 20;
   editingCafe: Cafe | null = null;
   loading = true;
   readonly timeSlotOptions = this.buildTimeSlotOptions();
@@ -34,6 +36,36 @@ export class OwnerCafesComponent implements OnInit {
   // Keep single `cafe` accessor for backward compat (first/primary cafe)
   get cafe(): Cafe | null {
     return this.cafes[0] || null;
+  }
+
+  get pagedCafes(): Cafe[] {
+    const start = this.pageIndex * this.pageSize;
+    return this.cafes.slice(start, start + this.pageSize);
+  }
+
+  get totalElements(): number {
+    return this.cafes.length;
+  }
+
+  get totalPages(): number {
+    return Math.max(1, Math.ceil(this.totalElements / this.pageSize));
+  }
+
+  get rangeStart(): number {
+    return this.totalElements === 0 ? 0 : this.pageIndex * this.pageSize + 1;
+  }
+
+  get rangeEnd(): number {
+    return Math.min((this.pageIndex + 1) * this.pageSize, this.totalElements);
+  }
+
+  get allPages(): number[] {
+    return Array.from({ length: this.totalPages }, (_, i) => i);
+  }
+
+  goToPage(page: number): void {
+    if (page < 0 || page >= this.totalPages) return;
+    this.pageIndex = page;
   }
 
   // Quick-edit modal (owner's real cafés)
@@ -150,6 +182,9 @@ export class OwnerCafesComponent implements OnInit {
     this.apiService.getMyCafes().subscribe({
       next: (cafes) => {
         this.cafes = cafes || [];
+        if (this.pageIndex >= this.totalPages) {
+          this.pageIndex = 0;
+        }
         this.loading = false;
         // Refresh context with latest cafe list
         this.cafeCtx.loadCafes().subscribe();
@@ -196,8 +231,7 @@ export class OwnerCafesComponent implements OnInit {
     return isNaN(n) ? "–" : n.toFixed(1);
   }
 
-  // ======================== FORM HELPERS ========================
-
+  // FORM HELPERS
   openCreate(): void {
     this.isEditMode = false;
     this.cafeForm.reset();
@@ -437,8 +471,7 @@ export class OwnerCafesComponent implements OnInit {
     });
   }
 
-  // ======================== UTILS ========================
-
+  // UTILS
   private normalizeDigits(val: string): string {
     return String(val || "").replace(/\D/g, "");
   }

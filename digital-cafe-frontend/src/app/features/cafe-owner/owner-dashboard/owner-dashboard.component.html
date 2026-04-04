@@ -1,11 +1,11 @@
 <!-- LOADING -->
-<div *ngIf="loading" class="loading-screen">
+<div *ngIf="loading && !hasLoadedOnce" class="loading-screen">
   <div class="loader-ring"></div>
   <p>Loading your dashboard&hellip;</p>
 </div>
 
 <!-- DASHBOARD -->
-<div *ngIf="!loading" class="dashboard">
+<div *ngIf="hasLoadedOnce" class="dashboard">
   <!-- Hero Header (matches customer dashboard style) -->
   <div class="db-hero">
     <!-- left: greeting + cafe name + CTA -->
@@ -14,12 +14,26 @@
         <span class="material-icons">{{ greetingIcon }}</span>
         {{ greeting }}
       </p>
-      <h1 class="db-hero__name">{{ cafeName }}</h1>
-      <p class="db-hero__date">Live overview of tables, staff, orders &amp; reservations</p>
+      <h1 class="db-hero__name">
+        Welcome back,
+        <span class="db-hero__name-accent">{{ displayName }}!</span>
+      </h1>
       <p class="db-hero__date">{{ dateTimeFormatted }}</p>
       <div class="db-hero__btns">
         <div class="live-badge">
-          <span class="live-dot" style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: #fde047; animation: pulse-dot 1.5s infinite; margin-right: 6px;"></span>Live &mdash; auto-refreshes
+          <span
+            class="live-dot"
+            style="
+              display: inline-block;
+              width: 8px;
+              height: 8px;
+              border-radius: 50%;
+              background-color: #fde047;
+              animation: pulse-dot 1.5s infinite;
+              margin-right: 6px;
+            "
+          ></span
+          >Live &mdash; auto-refreshes
         </div>
         <button
           class="db-hero__cta db-hero__cta--ghost btn-refresh"
@@ -28,19 +42,22 @@
           type="button"
         >
           <span class="spin-icon">&#8635;</span>
-          {{ refreshing ? 'Refreshing&hellip;' : 'Refresh' }}
+          {{ refreshing ? "Refreshing&hellip;" : "Refresh" }}
         </button>
       </div>
     </div>
     <!-- right: avatar + mini-stats -->
     <div class="db-hero__right">
       <div class="db-hero__avatar">
-        <img *ngIf="resolvedAvatarUrl" [src]="resolvedAvatarUrl" alt="Profile" />
+        <img
+          *ngIf="resolvedAvatarUrl"
+          [src]="resolvedAvatarUrl"
+          alt="Profile"
+        />
         <span *ngIf="!resolvedAvatarUrl" class="material-icons">person</span>
       </div>
       <div class="db-hero__meta">
-        <p class="db-hero__owner-name">{{ displayName }}</p>
-        <p class="db-hero__owner-role">Café Owner</p>
+        <p class="db-hero__owner-name">{{ cafeName }}</p>
       </div>
       <div class="db-hero__mini-stats">
         <div class="db-mini-stat">

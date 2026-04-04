@@ -79,22 +79,13 @@ export class OwnerBookingsComponent implements OnInit, OnDestroy {
       this.fetchBookings();
       return;
     }
-    // Fallback: load via API
-    this.apiService.cafeExistsForOwner().subscribe({
-      next: (exists) => {
-        if (!exists) {
-          this.router.navigate(["/owner/setup"]);
-          return;
-        }
-        this.apiService.getMyCafe().subscribe({
-          next: (cafe) => {
-            this.cafeId = cafe.id;
-            this.fetchBookings();
-          },
-          error: () => this.router.navigate(["/owner/setup"]),
-        });
+    // Fallback: load owner's primary cafe
+    this.apiService.getMyCafe().subscribe({
+      next: (cafe) => {
+        this.cafeId = cafe.id;
+        this.fetchBookings();
       },
-      error: () => this.router.navigate(["/owner/setup"]),
+      error: () => this.router.navigate(["/owner/cafes"]),
     });
   }
 
@@ -131,5 +122,15 @@ export class OwnerBookingsComponent implements OnInit, OnDestroy {
       NO_SHOW: "status-noshow",
     };
     return map[status?.toUpperCase()] || "status-default";
+  }
+
+  formatStatus(status: string): string {
+    const value = String(status || "-").trim();
+    if (!value || value === "-") return "-";
+    return value
+      .toLowerCase()
+      .split("_")
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(" ");
   }
 }

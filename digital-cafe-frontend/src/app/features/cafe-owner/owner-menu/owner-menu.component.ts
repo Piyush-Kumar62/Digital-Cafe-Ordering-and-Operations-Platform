@@ -29,7 +29,7 @@ export class OwnerMenuComponent implements OnInit, OnDestroy {
   categoryFilter = "";
 
   pageIndex = 0;
-  readonly pageSize = 10;
+  readonly pageSize = 12;
 
   get pagedItems(): MenuItem[] {
     return this.filteredItems.slice(
@@ -102,22 +102,13 @@ export class OwnerMenuComponent implements OnInit, OnDestroy {
       this.loadItems();
       return;
     }
-    // Fallback: load via API
-    this.apiService.cafeExistsForOwner().subscribe({
-      next: (exists) => {
-        if (!exists) {
-          this.router.navigate(["/owner/setup"]);
-          return;
-        }
-        this.apiService.getMyCafe().subscribe({
-          next: (cafe) => {
-            this.cafeId = cafe.id;
-            this.loadItems();
-          },
-          error: () => this.alertService.error("Unable to load cafe."),
-        });
+    // Fallback: load owner's primary cafe
+    this.apiService.getMyCafe().subscribe({
+      next: (cafe) => {
+        this.cafeId = cafe.id;
+        this.loadItems();
       },
-      error: () => this.alertService.error("Unable to validate cafe status."),
+      error: () => this.alertService.error("Unable to load cafe."),
     });
   }
 

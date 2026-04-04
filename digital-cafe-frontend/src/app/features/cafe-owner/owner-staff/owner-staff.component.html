@@ -33,8 +33,7 @@
     <button (click)="resetFilters()">Reset</button>
   </div>
 
-  <!-- ================= STAFF TABLE ================= -->
-
+  <!-- STAFF TABLE -->
   <div class="table-wrapper">
     <div *ngIf="loading" class="loading-state">Loading staff...</div>
     <table class="staff-table">
@@ -151,8 +150,7 @@
   </div>
 </section>
 
-<!-- ================= MODERN MODAL ================= -->
-
+<!-- MODERN MODAL -->
 <div class="modal-overlay" *ngIf="showModal">
   <div class="modal modern-modal">
     <!-- Header -->
@@ -168,8 +166,8 @@
     <!-- Scrollable Body -->
     <div class="modal-body">
       <form (ngSubmit)="submitStaff()">
-        <!-- ================= BASIC ================= -->
-        <div class="form-section">
+        <!-- BASIC -->
+    <div class="form-section">
           <h3>Basic Information</h3>
 
           <div class="form-grid">
@@ -193,19 +191,19 @@
           </div>
         </div>
 
-        <!-- ================= PERSONAL ================= -->
-        <div class="form-section">
+        <!-- PERSONAL -->
+    <div class="form-section">
           <h3>Personal Details</h3>
 
           <div class="form-grid">
             <div class="form-group">
-              <label>First Name</label>
-              <input [(ngModel)]="firstName" name="firstName" />
+              <label>First Name *</label>
+              <input [(ngModel)]="firstName" name="firstName" required />
             </div>
 
             <div class="form-group">
-              <label>Last Name</label>
-              <input [(ngModel)]="lastName" name="lastName" />
+              <label>Last Name *</label>
+              <input [(ngModel)]="lastName" name="lastName" required />
             </div>
 
             <div class="form-group">
@@ -229,8 +227,8 @@
           </div>
         </div>
 
-        <!-- ================= WORK ================= -->
-        <div class="form-section">
+        <!-- WORK -->
+    <div class="form-section">
           <h3>Work Information</h3>
 
           <div class="form-grid">
@@ -265,7 +263,7 @@
     <div class="modal-footer">
       <button class="secondary-btn" (click)="closeModal()">Cancel</button>
 
-      <button class="primary-btn" (click)="submitStaff()">
+      <button class="primary-btn" (click)="submitStaff()" [disabled]="loading || !cafeId">
         {{ isEditMode ? "Update Staff" : "Create Staff" }}
       </button>
     </div>

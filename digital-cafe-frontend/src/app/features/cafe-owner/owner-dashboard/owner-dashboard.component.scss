@@ -1,4 +1,4 @@
-// ─── Variables ────────────────────────────────────────────────────────────────
+// Variables
 $surface-bg: #0f172a;
 $surface-card: #1e293b;
 $surface-card2: #263348;
@@ -10,7 +10,7 @@ $text-secondary: #94a3b8;
 $text-muted: #64748b;
 $font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
 
-// ─── Loading Screen ───────────────────────────────────────────────────────────
+// Loading Screen
 .loading-screen {
   display: flex;
   flex-direction: column;
@@ -39,11 +39,10 @@ $font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
   }
 }
 
-// ─── Dashboard Wrapper ────────────────────────────────────────────────────────
+// Dashboard Wrapper
 .dashboard {
-  padding: 24px;
-  max-width: 1440px;
-  margin: 0 auto;
+  padding: 0 0 24px;
+  width: 100%;
   font-family: $font;
   display: flex;
   flex-direction: column;
@@ -52,7 +51,7 @@ $font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
   min-height: 100vh;
 }
 
-// ─── Hero Header (matches customer dashboard pattern) ─────────────────────────
+// Hero Header (matches customer dashboard pattern)
 .db-hero {
   display: flex;
   align-items: center;
@@ -113,10 +112,18 @@ $font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
   line-height: 1.2;
   letter-spacing: -0.3px;
 }
+
+.db-hero__name-accent {
+  color: #fde68a;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
+}
 .db-hero__date {
   margin: 0 0 0.25rem;
-  font-size: 0.82rem;
-  color: rgba(255, 255, 255, 0.72);
+  font-size: 1rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.95);
+  letter-spacing: 0.01em;
+  text-shadow: 0 1px 8px rgba(15, 23, 42, 0.35);
 }
 .db-hero__btns {
   display: flex;
@@ -136,7 +143,10 @@ $font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
   text-decoration: none;
   cursor: pointer;
   border: none;
-  transition: transform 0.18s, box-shadow 0.18s, background 0.2s;
+  transition:
+    transform 0.18s,
+    box-shadow 0.18s,
+    background 0.2s;
   background: #fff;
   color: #4338ca;
 
@@ -195,9 +205,11 @@ $font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
   text-align: center;
   .db-hero__owner-name {
     margin: 0;
-    font-size: 0.9rem;
+    font-size: clamp(1.2rem, 2vw, 1.6rem);
     font-weight: 700;
     color: #fff;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
   }
   .db-hero__owner-role {
     margin: 0;
@@ -240,8 +252,15 @@ $font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
 
 // live-badge already exists below; keep pulse-dot animation here
 @keyframes pulse-dot {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.4; transform: scale(1.4); }
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(1.4);
+  }
 }
 
 @media (max-width: 860px) {
@@ -260,9 +279,7 @@ $font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
   }
 }
 
-
-
-// ─── KPI Grid ─────────────────────────────────────────────────────────────────
+// KPI Grid
 .kpi-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -441,7 +458,7 @@ $font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
   }
 }
 
-// ─── Badges ───────────────────────────────────────────────────────────────────
+// Badges
 .badge {
   display: inline-block;
   padding: 2px 9px;
@@ -497,7 +514,7 @@ $font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
   }
 }
 
-// ─── Chart Cards ──────────────────────────────────────────────────────────────
+// Chart Cards
 .charts-row {
   display: grid;
   grid-template-columns: 3fr 2fr;
@@ -583,7 +600,7 @@ $font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
   text-align: center;
 }
 
-// ─── Chart HTML Legend ────────────────────────────────────────────────────────
+// Chart HTML Legend
 .chart-legend {
   list-style: none;
   margin: 0;
@@ -639,7 +656,7 @@ $font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
   }
 }
 
-// ─── Lists Row ────────────────────────────────────────────────────────────────
+// Lists Row
 .lists-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -752,7 +769,7 @@ $font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
   padding: 20px;
 }
 
-// ─── Status Badges ────────────────────────────────────────────────────────────
+// Status Badges
 .status-badge {
   flex-shrink: 0;
   font-size: 10px;
@@ -804,7 +821,7 @@ $font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
   border: 1px solid rgba(148, 163, 184, 0.2);
 }
 
-// ─── Popular Items Table ──────────────────────────────────────────────────────
+// Popular Items Table
 .popular-section {
   background: $surface-card;
   border-radius: 18px;
@@ -909,50 +926,63 @@ $font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
   min-width: 4px;
 }
 
-// ─── Quick Actions ────────────────────────────────────────────────────────────
+// Quick Actions
 .qa-title {
   font-size: 16px;
   font-weight: 700;
   color: $text-primary;
-  margin: 0 0 14px;
+  margin: 0 0 12px;
+}
+.quick-actions {
+  background: $surface-card;
+  border: 1px solid $border;
+  border-radius: 18px;
+  padding: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
 }
 .qa-grid {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 12px;
-  @media (max-width: 1100px) {
-    grid-template-columns: repeat(3, 1fr);
-  }
-  @media (max-width: 600px) {
-    grid-template-columns: repeat(2, 1fr);
-  }
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 14px;
+  align-items: stretch;
 }
 .qa-tile {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 18px 12px;
-  border-radius: 16px;
+  justify-content: flex-start;
+  gap: 12px;
+  min-height: 74px;
+  padding: 8px 10px;
+  border-radius: 14px;
   text-decoration: none;
   transition:
     transform 0.2s,
-    box-shadow 0.2s;
+    box-shadow 0.2s,
+    border-color 0.2s;
   border: 1px solid rgba(148, 163, 184, 0.1);
   cursor: pointer;
   &:hover {
-    transform: translateY(-3px);
+    transform: translateY(-2px);
   }
   .qa-icon {
-    font-size: 24px;
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.5);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+    font-size: 22px;
     line-height: 1;
+    flex-shrink: 0;
   }
   .qa-label {
-    font-size: 12px;
+    font-size: 0.82rem;
     font-weight: 700;
-    text-align: center;
-    line-height: 1.3;
+    text-align: left;
+    line-height: 1.25;
+    white-space: nowrap;
   }
 
   &.color-blue {
@@ -1003,10 +1033,23 @@ $font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
       box-shadow: 0 8px 24px rgba(148, 163, 184, 0.2);
     }
   }
+
+  @media (max-width: 640px) {
+    min-height: 82px;
+    padding: 10px 12px;
+    .qa-icon {
+      width: 38px;
+      height: 38px;
+      font-size: 20px;
+    }
+    .qa-label {
+      font-size: 0.9rem;
+    }
+  }
 }
 
-// ─── Light Mode Overrides ─────────────────────────────────────────────────────
-:host-context(:not(.dark)) {
+// L
+ight Mode Overrides:host-context(:not(.dark)) {
   .loading-screen {
     background: #f8fafc;
     p {
@@ -1121,6 +1164,11 @@ $font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
 
   .qa-title {
     color: #0f172a;
+  }
+  .quick-actions {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
   }
   .qa-tile {
     background: #f8fafc;

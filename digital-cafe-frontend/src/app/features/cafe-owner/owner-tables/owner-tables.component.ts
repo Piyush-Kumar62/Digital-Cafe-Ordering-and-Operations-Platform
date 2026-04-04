@@ -97,16 +97,7 @@ export class OwnerTablesComponent implements OnInit, OnDestroy {
       this.loadTables();
       return;
     }
-    this.apiService.cafeExistsForOwner().subscribe({
-      next: (exists) => {
-        if (!exists) {
-          this.router.navigate(["/owner/setup"]);
-          return;
-        }
-        this.loadTables();
-      },
-      error: () => this.router.navigate(["/owner/setup"]),
-    });
+    this.loadTables();
   }
 
   ngOnDestroy(): void {
@@ -142,7 +133,7 @@ export class OwnerTablesComponent implements OnInit, OnDestroy {
           err?.status === 400 ||
           msg.includes("not found")
         ) {
-          this.router.navigate(["/owner/setup"]);
+          this.router.navigate(["/owner/cafes"]);
         }
       },
     });

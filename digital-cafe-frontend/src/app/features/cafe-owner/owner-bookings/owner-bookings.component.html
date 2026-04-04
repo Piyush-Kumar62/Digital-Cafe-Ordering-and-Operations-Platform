@@ -26,20 +26,62 @@
 
   <div class="grid" *ngIf="!loading && bookings.length > 0">
     <article class="card item" *ngFor="let booking of pagedBookings">
-      <div>
+      <div class="item__body">
         <h3>Booking #{{ booking.bookingNumber || booking.id }}</h3>
-        <p>Customer: {{ booking.customerName || "#" + booking.customerId }}</p>
-        <p>Email: {{ booking.customerEmail || "-" }}</p>
-        <p>
-          Table {{ booking.tableNumber || booking.tableId }} •
-          {{ booking.numberOfGuests }} guests
-        </p>
-        <p>{{ booking.bookingDate }} {{ booking.bookingTime }}</p>
-        <p>Created: {{ booking.createdAt || "-" }}</p>
-        <p>Can Order: {{ booking.canOrder ? "Yes" : "No" }} • Has Order: {{ booking.hasOrder ? "Yes" : "No" }}</p>
+        <div class="kv-list">
+          <div class="kv-row">
+            <span class="kv-label">Customer</span>
+            <span
+              class="kv-value"
+              [title]="booking.customerName || '#' + booking.customerId"
+            >
+              {{ booking.customerName || "#" + booking.customerId }}
+            </span>
+          </div>
+          <div class="kv-row">
+            <span class="kv-label">Email</span>
+            <span class="kv-value" [title]="booking.customerEmail || '-'">
+              {{ booking.customerEmail || "-" }}
+            </span>
+          </div>
+          <div class="kv-row">
+            <span class="kv-label">Table</span>
+            <span class="kv-value">
+              {{ booking.tableNumber || booking.tableId || "-" }} •
+              {{ booking.numberOfGuests || 0 }} guests
+            </span>
+          </div>
+          <div class="kv-row">
+            <span class="kv-label">Slot</span>
+            <span
+              class="kv-value"
+              [title]="
+                (booking.bookingDate || '-') + ' ' + (booking.bookingTime || '')
+              "
+            >
+              {{ booking.bookingDate || "-" }} {{ booking.bookingTime || "" }}
+            </span>
+          </div>
+          <div class="kv-row">
+            <span class="kv-label">Created</span>
+            <span
+              class="kv-value kv-value--mono"
+              [title]="booking.createdAt || '-'"
+            >
+              {{ booking.createdAt || "-" }}
+            </span>
+          </div>
+          <div class="kv-row">
+            <span class="kv-label">Order</span>
+            <span class="kv-value">
+              Can Order: {{ booking.canOrder ? "Yes" : "No" }} • Has Order:
+              {{ booking.hasOrder ? "Yes" : "No" }}
+            </span>
+          </div>
+        </div>
       </div>
       <span class="status" [ngClass]="getStatusClass(booking.status)">{{
-        booking.status
+        formatStatus(booking.status) | uppercase
       }}</span>
     </article>
   </div>
@@ -56,7 +98,8 @@
         [disabled]="pageIndex === 0"
         (click)="goToPage(pageIndex - 1)"
       >
-        ← Prev</button>
+        ← Prev
+      </button>
       <button
         class="page-btn"
         *ngFor="let p of allPages"
@@ -70,7 +113,8 @@
         [disabled]="pageIndex >= totalPages - 1"
         (click)="goToPage(pageIndex + 1)"
       >
-        Next →</button>
+        Next →
+      </button>
     </div>
   </div>
 </section>

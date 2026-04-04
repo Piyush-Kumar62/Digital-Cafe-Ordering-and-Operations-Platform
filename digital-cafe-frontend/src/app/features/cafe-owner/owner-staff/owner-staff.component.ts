@@ -118,22 +118,12 @@ export class OwnerStaffComponent implements OnInit, OnDestroy {
   }
 
   private loadMyCafe(): void {
-    this.apiService.cafeExistsForOwner().subscribe({
-      next: (exists) => {
-        if (!exists) {
-          this.router.navigate(["/owner/setup"]);
-          return;
-        }
-
-        this.apiService.getMyCafe().subscribe({
-          next: (cafe) => {
-            this.cafeId = cafe.id;
-            this.loadStaff();
-          },
-          error: () => this.alertService.error("Unable to load cafe."),
-        });
+    this.apiService.getMyCafe().subscribe({
+      next: (cafe) => {
+        this.cafeId = cafe.id;
+        this.loadStaff();
       },
-      error: () => this.alertService.error("Unable to validate cafe status."),
+      error: () => this.alertService.error("Unable to load cafe."),
     });
   }
 
@@ -216,22 +206,59 @@ export class OwnerStaffComponent implements OnInit, OnDestroy {
     this.govtIdNumber = user.govtIdNumber || "";
   }
   submitStaff(): void {
+    if (!this.cafeId) {
+      this.alertService.error("Cafe not loaded. Please refresh and try again.");
+      return;
+    }
+
+    const normalizedRole = this.normalizeRole(this.role) as "CHEF" | "WAITER";
+    const normalizedEmail = this.normalizeEmail(this.email);
+    const normalizedUsername = this.buildStaffUsername(
+      this.username,
+      normalizedEmail,
+    );
+    const normalizedFirstName = this.normalizeText(this.firstName);
+    const normalizedLastName = this.normalizeText(this.lastName);
+
+    if (normalizedRole !== "CHEF" && normalizedRole !== "WAITER") {
+      this.alertService.error(
+        "Invalid staff role. Allowed roles: CHEF, WAITER.",
+      );
+      return;
+    }
+    if (!normalizedEmail) {
+      this.alertService.error("Email is required.");
+      return;
+    }
+    if (!normalizedUsername || normalizedUsername.length < 3) {
+      this.alertService.error("Username is required (minimum 3 characters).");
+      return;
+    }
+    if (!normalizedFirstName) {
+      this.alertService.error("First name is required.");
+      return;
+    }
+    if (!normalizedLastName) {
+      this.alertService.error("Last name is required.");
+      return;
+    }
+
     const payload = {
-      role: this.role,
+      role: normalizedRole,
       cafeId: this.cafeId,
 
-      username: this.username?.trim(),
-      email: this.email?.trim(),
+      username: normalizedUsername,
+      email: normalizedEmail,
 
-      firstName: this.firstName?.trim(),
-      lastName: this.lastName?.trim(),
+      firstName: normalizedFirstName,
+      lastName: normalizedLastName,
 
-      govtIdType: this.govtIdType,
-      govtIdNumber: this.govtIdNumber,
+      govtIdType: this.normalizeText(this.govtIdType),
+      govtIdNumber: this.normalizeText(this.govtIdNumber),
 
       joiningDate: this.joiningDate,
       experienceYears: this.experienceYears,
-      shift: this.shift,
+      shift: this.normalizeText(this.shift),
     };
 
     if (this.isEditMode && this.editingStaffId) {
@@ -241,16 +268,20 @@ export class OwnerStaffComponent implements OnInit, OnDestroy {
           this.closeModal();
           this.loadStaff();
         },
-        error: () => this.alertService.error("Update failed"),
+        error: (err) =>
+          this.alertService.error(this.extractApiError(err, "Update failed")),
       });
     } else {
       this.apiService.createStaff(payload).subscribe({
         next: () => {
-          this.alertService.success(`${this.role} created`);
+          this.alertService.success(
+            `${normalizedRole} created. Welcome email sent.`,
+          );
           this.closeModal();
           this.loadStaff();
         },
-        error: () => this.alertService.error("Creation failed"),
+        error: (err) =>
+          this.alertService.error(this.extractApiError(err, "Creation failed")),
       });
     }
   }
@@ -289,5 +320,34 @@ export class OwnerStaffComponent implements OnInit, OnDestroy {
     return String(role || "")
       .replace("ROLE_", "")
       .toUpperCase();
+  }
+
+  private normalizeText(value: string | null | undefined): string {
+    return String(value || "").trim();
+  }
+
+  private normalizeEmail(value: string | null | undefined): string {
+    return this.normalizeText(value).toLowerCase();
+  }
+
+  private buildStaffUsername(
+    username: string | null | undefined,
+    email: string,
+  ): string {
+    const direct = this.normalizeText(username);
+    if (direct) return direct;
+    if (!email) return "";
+    return email.split("@")[0]?.trim() || "";
+  }
+
+  private extractApiError(error: any, fallback: string): string {
+    const err = error?.error;
+    if (err?.message) return err.message;
+    if (err?.error) return err.error;
+    if (err?.errors && typeof err.errors === "object") {
+      const first = Object.values(err.errors)[0];
+      if (typeof first === "string" && first.trim()) return first;
+    }
+    return fallback;
   }
 }

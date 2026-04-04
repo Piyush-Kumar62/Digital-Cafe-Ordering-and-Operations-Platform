@@ -150,11 +150,21 @@
           item.label
         }}</span>
       </a>
-    </nav>
 
-    <div class="sidebar-footer" *ngIf="!isSidebarCollapsed">
-      <p class="owner-portal-label">Café Owner Portal</p>
-    </div>
+      <a
+        routerLink="/owner/notifications"
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{ exact: true }"
+        class="nav-item"
+        [class.collapsed-item]="isSidebarCollapsed"
+        [title]="isSidebarCollapsed ? 'Notifications' : ''"
+      >
+        <span class="nav-icon">
+          <i class="bi bi-bell"></i>
+        </span>
+        <span *ngIf="!isSidebarCollapsed" class="nav-label">Notifications</span>
+      </a>
+    </nav>
   </aside>
 
   <!-- Right side -->
@@ -179,7 +189,7 @@
           </svg>
         </button>
         <div class="header-welcome">
-          <h2 class="welcome-title">Welcome, {{ getWelcomeName() }}!</h2>
+          <h2 class="welcome-title">Café Owner Portal</h2>
           <p class="welcome-subtitle">Last login: {{ getLastLoginText() }}</p>
         </div>
       </div>
@@ -354,16 +364,55 @@
             class="panel-list"
             *ngIf="notifications.length > 0; else noOwnerNotifications"
           >
-            <article class="notification-item" *ngFor="let n of notifications">
+            <article
+              class="notification-item"
+              *ngFor="let n of pagedNotifications"
+            >
               <h5>{{ n.title }}</h5>
               <p>{{ n.message }}</p>
               <small>{{ n.createdAt }}</small>
             </article>
           </div>
 
+          <div
+            class="panel-header"
+            *ngIf="notifications.length > notificationPageSize"
+          >
+            <button
+              class="link-btn"
+              (click)="prevNotificationPage()"
+              [disabled]="notificationCurrentPage === 1"
+            >
+              Prev
+            </button>
+            <h4>
+              {{ notificationCurrentPage }} / {{ totalNotificationPages }}
+            </h4>
+            <button
+              class="link-btn"
+              (click)="nextNotificationPage()"
+              [disabled]="notificationCurrentPage === totalNotificationPages"
+            >
+              Next
+            </button>
+          </div>
+
           <ng-template #noOwnerNotifications>
             <div class="empty-panel">No notifications yet.</div>
           </ng-template>
+
+          <a
+            class="link-btn"
+            routerLink="/owner/notifications"
+            (click)="showNotifications = false"
+            style="
+              display: block;
+              padding: 0.7rem 0.95rem;
+              border-top: 1px solid rgba(148, 163, 184, 0.25);
+            "
+          >
+            View all notifications
+          </a>
         </div>
       </div>
     </header>

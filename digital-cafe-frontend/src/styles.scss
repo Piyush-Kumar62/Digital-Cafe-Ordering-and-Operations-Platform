@@ -459,8 +459,7 @@ html.dark {
   backdrop-filter: blur(3px) !important;
 }
 
-/* ── Base popup ─────────────────────────────────────────────── */
-.dc-swal2-popup.swal2-popup {
+/* Base popup */.dc-swal2-popup.swal2-popup {
   width: 440px !important;
   max-width: calc(100vw - 2rem) !important;
   border-radius: 20px !important;
@@ -473,8 +472,7 @@ html.dark {
   overflow: hidden;
 }
 
-/* ── Icon ───────────────────────────────────────────────────── */
-.dc-swal2-popup .swal2-icon {
+/* Icon */.dc-swal2-popup .swal2-icon {
   width: 76px !important;
   height: 76px !important;
   margin: 0 auto 1.4rem !important;
@@ -516,8 +514,7 @@ html.dark {
   color: #3b82f6 !important;
 }
 
-/* ── Title ──────────────────────────────────────────────────── */
-.dc-swal2-title {
+/* Title */.dc-swal2-title {
   font-family: "Poppins", sans-serif !important;
   font-size: 1.3rem !important;
   font-weight: 700 !important;
@@ -527,8 +524,7 @@ html.dark {
   margin: 0 !important;
 }
 
-/* ── Body text ──────────────────────────────────────────────── */
-.dc-swal2-body {
+/* Body text */.dc-swal2-body {
   font-family: "Inter", sans-serif !important;
   font-size: 0.925rem !important;
   line-height: 1.65 !important;
@@ -537,16 +533,14 @@ html.dark {
   margin: 0 !important;
 }
 
-/* ── Actions row ────────────────────────────────────────────── */
-.dc-swal2-actions {
+/* Actions row */.dc-swal2-actions {
   margin-top: 1.75rem !important;
   gap: 0.75rem !important;
   padding: 0 !important;
   justify-content: center !important;
 }
 
-/* ── Buttons (buttonsStyling: false gives us full control) ──── */
-.dc-swal2-btn-confirm,
+/* Buttons (buttonsStyling: false gives us full control) */.dc-swal2-btn-confirm,
 .dc-swal2-btn-cancel {
   border: none !important;
   border-radius: 12px !important;
@@ -581,8 +575,7 @@ html.dark {
   color: #475569 !important;
 }
 
-/* ── Per-type confirm button gradients ──────────────────────── */
-.dc-type-success .dc-swal2-btn-confirm {
+/* Per-type confirm button gradients */.dc-type-success .dc-swal2-btn-confirm {
   background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%) !important;
   color: #ffffff !important;
   box-shadow: 0 4px 14px rgba(79, 70, 229, 0.38) !important;
@@ -617,23 +610,20 @@ html.dark {
   color: #ffffff !important;
 }
 
-/* ── Loading spinner ────────────────────────────────────────── */
-.dc-swal2-popup .swal2-loader {
+/* Loading spinner */.dc-swal2-popup .swal2-loader {
   border-color: #4f46e5 transparent #4f46e5 transparent !important;
   width: 56px !important;
   height: 56px !important;
   margin: 0.5rem auto 1rem !important;
 }
 
-/* ── Timer progress bar ─────────────────────────────────────── */
-.swal2-timer-progress-bar {
+/* Timer progress bar */.swal2-timer-progress-bar {
   background: linear-gradient(90deg, #4f46e5, #818cf8) !important;
   height: 4px !important;
   border-radius: 2px !important;
 }
 
-/* ── Dark mode ──────────────────────────────────────────────── */
-.dc-swal2-dark.swal2-popup,
+/* Dark mode */.dc-swal2-dark.swal2-popup,
 html.dark .dc-swal2-popup.swal2-popup,
 html.dark-mode .dc-swal2-popup.swal2-popup,
 body.dark-theme .dc-swal2-popup.swal2-popup {
@@ -689,8 +679,7 @@ body.dark-theme {
   color: #e2e8f0;
 }
 
-/* ── Global Paginator ─────────────────────────────────────────── */
-.pager {
+/* Global Paginator */.pager {
   display: flex;
   justify-content: space-between;
   align-items: center;

@@ -1,27 +1,9 @@
-<div *ngIf="isLoading" class="loading-overlay" role="status" aria-live="polite" aria-label="Loading">
-  <div class="loading-shell">
-    <div class="loader">
-      <div class="box">
-        <div class="logo">
-          <span class="coffee-icon" aria-hidden="true">
-            <svg
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-              class="coffee-svg"
-            >
-              <path d="M3 8h13v5a5 5 0 0 1-5 5H8a5 5 0 0 1-5-5V8z" />
-              <path d="M16 10h1.5a3.5 3.5 0 1 1 0 7H16" />
-              <path d="M6.2 3.5c0 1.1-.7 1.7-1.1 2.2-.4.4-.7.8-.7 1.6" />
-              <path d="M10.4 3.2c0 1-.6 1.6-1 2.1-.4.4-.7.8-.7 1.6" />
-              <path d="M5 21h13" />
-            </svg>
-          </span>
-        </div>
-      </div>
-      <div class="box"></div>
-      <div class="box"></div>
-      <div class="box"></div>
-      <div class="box"></div>
-    </div>
-  </div>
+<div
+  *ngIf="isLoading"
+  class="silent-loading"
+  role="status"
+  aria-live="polite"
+  aria-label="Loading"
+>
+  <div class="silent-loading__bar"></div>
 </div>

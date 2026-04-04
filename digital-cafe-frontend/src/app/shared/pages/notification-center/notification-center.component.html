@@ -1,0 +1,56 @@
+<section class="notification-center-page">
+  <div class="notification-center-card">
+    <div class="notification-center-header">
+      <div class="header-copy">
+        <h2>Notifications</h2>
+        <p>{{ notifications.length }} total</p>
+      </div>
+      <button
+        class="link-btn"
+        (click)="markAllRead()"
+        [disabled]="unreadCount === 0"
+      >
+        Mark all read
+      </button>
+    </div>
+
+    @if (notifications.length > 0) {
+      <div class="notification-center-list">
+        @for (item of pagedNotifications; track item.id) {
+          <article class="notification-item" [class.unread]="!item.read">
+            <div class="notification-item-top">
+              <h5>{{ item.title }}</h5>
+              <small>{{ item.createdAt }}</small>
+            </div>
+            <p>{{ item.message }}</p>
+          </article>
+        }
+      </div>
+    } @else {
+      <div class="empty-panel">
+        <h4>No notifications yet</h4>
+        <p>New updates will appear here.</p>
+      </div>
+    }
+
+    @if (notifications.length > pageSize) {
+      <div class="notification-center-footer">
+        <button
+          class="link-btn"
+          (click)="prevPage()"
+          [disabled]="currentPage === 1"
+        >
+          Prev
+        </button>
+        <span>Page {{ currentPage }} / {{ totalPages }}</span>
+        <button
+          class="link-btn"
+          (click)="nextPage()"
+          [disabled]="currentPage === totalPages"
+        >
+          Next
+        </button>
+      </div>
+    }
+  </div>
+</section>

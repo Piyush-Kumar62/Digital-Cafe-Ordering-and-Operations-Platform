@@ -1,5 +1,10 @@
 import { Injectable } from "@angular/core";
-import { HttpClient, HttpEvent, HttpParams } from "@angular/common/http";
+import {
+  HttpClient,
+  HttpEvent,
+  HttpHeaders,
+  HttpParams,
+} from "@angular/common/http";
 import { Observable } from "rxjs";
 import { map } from "rxjs/operators";
 import { environment } from "@environments/environment";
@@ -68,9 +73,7 @@ export class ApiService {
       .get<any>(`${this.baseUrl}/cafes/${id}`)
       .pipe(
         map((res: any) =>
-          this.resolveCafeImages(
-            this.unwrapApiData<Cafe>(res, res as Cafe),
-          ),
+          this.resolveCafeImages(this.unwrapApiData<Cafe>(res, res as Cafe)),
         ),
       );
   }
@@ -101,7 +104,9 @@ export class ApiService {
   getBranches(
     degreeId?: number,
     degree?: string,
-  ): Observable<{ id?: number; name: string; degreeId?: number; degreeName?: string }[]> {
+  ): Observable<
+    { id?: number; name: string; degreeId?: number; degreeName?: string }[]
+  > {
     let params = new HttpParams();
     if (degreeId) params = params.set("degreeId", String(degreeId));
     if (degree) params = params.set("degree", degree);
@@ -123,7 +128,9 @@ export class ApiService {
     isFirst?: boolean;
     isLast?: boolean;
   }> {
-    let params = new HttpParams().set("page", String(page)).set("size", String(size));
+    let params = new HttpParams()
+      .set("page", String(page))
+      .set("size", String(size));
     if (search) params = params.set("search", search);
     return this.http
       .get<any>(`${this.baseUrl}/admin/education/institutions`, { params })
@@ -139,13 +146,14 @@ export class ApiService {
     const formData = new FormData();
     formData.append("file", file);
     return this.http
-      .post<any>(`${this.baseUrl}/admin/education/institutions/import`, formData)
+      .post<any>(
+        `${this.baseUrl}/admin/education/institutions/import`,
+        formData,
+      )
       .pipe(map((res) => res?.data || res || {}));
   }
 
-  importInstitutionsAdminProgress(
-    file: File,
-  ): Observable<HttpEvent<any>> {
+  importInstitutionsAdminProgress(file: File): Observable<HttpEvent<any>> {
     const formData = new FormData();
     formData.append("file", file);
     return this.http.post<any>(
@@ -155,9 +163,7 @@ export class ApiService {
     );
   }
 
-  getImportJobStatus(
-    id: number,
-  ): Observable<{
+  getImportJobStatus(id: number): Observable<{
     id: number;
     importType: string;
     status: string;
@@ -203,17 +209,19 @@ export class ApiService {
     degreesMissingBranches: number;
     degreeNamesMissingBranches: string[];
   }> {
-    return this.http
-      .get<any>(`${this.baseUrl}/admin/education/health`)
-      .pipe(
-        map((res) => res?.data || res || {
-          institutionCount: 0,
-          degreeCount: 0,
-          branchCount: 0,
-          degreesMissingBranches: 0,
-          degreeNamesMissingBranches: [],
-        }),
-      );
+    return this.http.get<any>(`${this.baseUrl}/admin/education/health`).pipe(
+      map(
+        (res) =>
+          res?.data ||
+          res || {
+            institutionCount: 0,
+            degreeCount: 0,
+            branchCount: 0,
+            degreesMissingBranches: 0,
+            degreeNamesMissingBranches: [],
+          },
+      ),
+    );
   }
 
   importLocalEducationFile(
@@ -227,7 +235,9 @@ export class ApiService {
   }> {
     const params = new HttpParams().set("filename", filename).set("type", type);
     return this.http
-      .post<any>(`${this.baseUrl}/admin/education/imports/local`, null, { params })
+      .post<any>(`${this.baseUrl}/admin/education/imports/local`, null, {
+        params,
+      })
       .pipe(map((res) => res?.data || res || {}));
   }
 
@@ -242,14 +252,18 @@ export class ApiService {
     return this.http
       .get<any>(`${this.baseUrl}/admin/education/duplicates`)
       .pipe(
-        map((res) => res?.data || res || {
-          institutionDuplicateGroups: 0,
-          degreeDuplicateGroups: 0,
-          branchDuplicateGroups: 0,
-          institutionSamples: [],
-          degreeSamples: [],
-          branchSamples: [],
-        }),
+        map(
+          (res) =>
+            res?.data ||
+            res || {
+              institutionDuplicateGroups: 0,
+              degreeDuplicateGroups: 0,
+              branchDuplicateGroups: 0,
+              institutionSamples: [],
+              degreeSamples: [],
+              branchSamples: [],
+            },
+        ),
       );
   }
 
@@ -268,7 +282,9 @@ export class ApiService {
       phoneNumber: String(request?.phoneNumber || "").trim(),
       email: String(request?.email || "").trim(),
       openTime: String(request?.openTime || request?.openingTime || "").trim(),
-      closeTime: String(request?.closeTime || request?.closingTime || "").trim(),
+      closeTime: String(
+        request?.closeTime || request?.closingTime || "",
+      ).trim(),
       fssaiNumber: String(request?.fssaiNumber || "").trim(),
       gstNumber: String(request?.gstNumber || "").trim(),
       msmeNumber: String(request?.msmeNumber || "").trim(),
@@ -284,9 +300,7 @@ export class ApiService {
       .put<any>(`${this.baseUrl}/cafes/${id}`, formData)
       .pipe(
         map((res: any) =>
-          this.resolveCafeImages(
-            this.unwrapApiData<Cafe>(res, res as Cafe),
-          ),
+          this.resolveCafeImages(this.unwrapApiData<Cafe>(res, res as Cafe)),
         ),
       );
   }
@@ -298,7 +312,9 @@ export class ApiService {
   private resolveCafeImages(cafe: any): Cafe {
     if (!cafe) return cafe;
     const galleryImages = Array.isArray(cafe.galleryImages)
-      ? cafe.galleryImages.map((img: string) => this.resolveImageUrl(img)).filter(Boolean)
+      ? cafe.galleryImages
+          .map((img: string) => this.resolveImageUrl(img))
+          .filter(Boolean)
       : [];
     return {
       ...cafe,
@@ -958,6 +974,7 @@ export class ApiService {
     size: number = 100,
     sortBy: string = "createdAt",
     sortDirection: "ASC" | "DESC" = "DESC",
+    silentLoading: boolean = false,
   ): Observable<{
     content: Order[];
     totalElements: number;
@@ -970,8 +987,14 @@ export class ApiService {
       .set("size", size.toString())
       .set("sortBy", sortBy)
       .set("sortDirection", sortDirection);
+    const headers = silentLoading
+      ? new HttpHeaders({ "x-silent-loading": "true" })
+      : undefined;
     return this.http
-      .get<{ data?: any }>(`${this.baseUrl}/orders/cafe/${cafeId}`, { params })
+      .get<{ data?: any }>(`${this.baseUrl}/orders/cafe/${cafeId}`, {
+        params,
+        headers,
+      })
       .pipe(
         map(
           (res: any) =>
@@ -992,6 +1015,7 @@ export class ApiService {
     size: number = 100,
     sortBy: string = "bookingTime",
     sortDirection: "ASC" | "DESC" = "DESC",
+    silentLoading: boolean = false,
   ): Observable<{
     content: Booking[];
     totalElements: number;
@@ -1004,10 +1028,13 @@ export class ApiService {
       .set("size", size.toString())
       .set("sortBy", sortBy)
       .set("sortDirection", sortDirection);
+    const headers = silentLoading
+      ? new HttpHeaders({ "x-silent-loading": "true" })
+      : undefined;
     return this.http
       .get<{
         data?: any;
-      }>(`${this.baseUrl}/bookings/cafe/${cafeId}`, { params })
+      }>(`${this.baseUrl}/bookings/cafe/${cafeId}`, { params, headers })
       .pipe(
         map(
           (res: any) =>
@@ -1193,6 +1220,7 @@ export class ApiService {
   getAdminActivities(
     page: number = 0,
     size: number = 10,
+    silentLoading: boolean = false,
   ): Observable<{
     content: Array<{
       timestamp: string;
@@ -1209,9 +1237,12 @@ export class ApiService {
     const params = new HttpParams()
       .set("page", page.toString())
       .set("size", size.toString());
+    const headers = silentLoading
+      ? new HttpHeaders({ "x-silent-loading": "true" })
+      : undefined;
 
     return this.http
-      .get<any>(`${this.baseUrl}/admin/activities`, { params })
+      .get<any>(`${this.baseUrl}/admin/activities`, { params, headers })
       .pipe(
         map((res: any) =>
           this.unwrapApiData(res, {
@@ -1228,6 +1259,7 @@ export class ApiService {
   getAdminPaymentWebhookEvents(
     page: number = 0,
     size: number = 10,
+    silentLoading: boolean = false,
   ): Observable<{
     content: Array<{
       id: number;
@@ -1253,9 +1285,12 @@ export class ApiService {
     const params = new HttpParams()
       .set("page", page.toString())
       .set("size", size.toString());
+    const headers = silentLoading
+      ? new HttpHeaders({ "x-silent-loading": "true" })
+      : undefined;
 
     return this.http
-      .get<any>(`${this.baseUrl}/admin/payment-webhooks`, { params })
+      .get<any>(`${this.baseUrl}/admin/payment-webhooks`, { params, headers })
       .pipe(
         map((res: any) =>
           this.unwrapApiData(res, {

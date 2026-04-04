@@ -8,7 +8,7 @@ RUN --mount=type=cache,target=/root/.npm npm ci
 
 COPY . .
 
-ARG BUILD_CONFIGURATION=deployment
+ARG BUILD_CONFIGURATION=prod
 ARG ANGULAR_BASE_HREF=/
 RUN npm run build -- --configuration=${BUILD_CONFIGURATION} --base-href=${ANGULAR_BASE_HREF}
 

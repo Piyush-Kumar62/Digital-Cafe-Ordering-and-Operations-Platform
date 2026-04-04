@@ -1,0 +1,141 @@
+.notification-center-page {
+  padding: 0.85rem 0.75rem 1.25rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.notification-center-card {
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  border-radius: 14px;
+  background: var(--surface-bg, #ffffff);
+  color: var(--surface-fg, #0f172a);
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+}
+
+.notification-center-header,
+.notification-center-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.9rem 1rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.header-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.header-copy h2 {
+  margin: 0;
+  font-size: 1.45rem;
+  font-weight: 800;
+}
+
+.header-copy p {
+  margin: 0;
+  font-size: 0.78rem;
+  color: rgba(100, 116, 139, 0.95);
+  font-weight: 600;
+}
+
+.notification-center-footer {
+  border-top: 1px solid rgba(148, 163, 184, 0.2);
+  border-bottom: 0;
+  background: rgba(248, 250, 252, 0.75);
+}
+
+.notification-center-list {
+  padding: 0.4rem 0;
+}
+
+.notification-item {
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+  display: grid;
+  gap: 0.25rem;
+}
+
+.notification-item.unread {
+  background: rgba(37, 99, 235, 0.05);
+}
+
+.notification-item-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.notification-item h5 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.notification-item p {
+  margin: 0;
+  font-size: 0.88rem;
+  opacity: 0.92;
+  line-height: 1.35;
+}
+
+.notification-item small {
+  opacity: 0.68;
+  font-size: 0.74rem;
+  white-space: nowrap;
+}
+
+.link-btn {
+  border: none;
+  background: rgba(37, 99, 235, 0.1);
+  color: #1d4ed8;
+  border-radius: 9px;
+  padding: 0.38rem 0.68rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.link-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.empty-panel {
+  padding: 1.5rem 1rem;
+  text-align: center;
+}
+
+.empty-panel h4 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.empty-panel p {
+  margin: 0.35rem 0 0;
+  opacity: 0.75;
+  font-size: 0.86rem;
+}
+
+@media (max-width: 640px) {
+  .notification-center-header,
+  .notification-center-footer {
+    padding: 0.75rem 0.8rem;
+  }
+
+  .header-copy h2 {
+    font-size: 1.15rem;
+  }
+
+  .notification-item {
+    padding: 0.75rem 0.8rem;
+  }
+
+  .notification-item-top {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+}

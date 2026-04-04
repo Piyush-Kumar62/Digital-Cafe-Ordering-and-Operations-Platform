@@ -11,10 +11,14 @@ import com.digitalcafe.repository.CafeTableRepository;
 import com.digitalcafe.service.TableService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -26,6 +30,7 @@ public class TableServiceImpl implements TableService {
     private final CafeTableRepository tableRepository;
     private final CafeRepository cafeRepository;
     private final TableMapper tableMapper;
+    private final SimpMessagingTemplate messagingTemplate;
 
 
     private Cafe getCafeByOwner(Long ownerId) {
@@ -55,6 +60,7 @@ public class TableServiceImpl implements TableService {
         table.setIsAvailable(true);
 
         CafeTable saved = tableRepository.save(table);
+        publishTableEvent(saved, "TABLE_CREATED");
 
         log.info("Table created successfully with ID: {}", saved.getId());
         return tableMapper.toResponse(saved);
@@ -100,6 +106,7 @@ public class TableServiceImpl implements TableService {
         tableMapper.updateTableFromRequest(request, table);
 
         CafeTable updated = tableRepository.save(table);
+        publishTableEvent(updated, "TABLE_UPDATED");
 
         log.info("Table updated successfully");
         return tableMapper.toResponse(updated);
@@ -109,12 +116,10 @@ public class TableServiceImpl implements TableService {
     @Override
     public void deleteTable(Long tableId) {
         log.info("Deleting table with ID: {}", tableId);
-
-        if (!tableRepository.existsById(tableId)) {
-            throw new ResourceNotFoundException("Table not found with ID: " + tableId);
-        }
-
+        CafeTable table = tableRepository.findById(tableId)
+                .orElseThrow(() -> new ResourceNotFoundException("Table not found with ID: " + tableId));
         tableRepository.deleteById(tableId);
+        publishTableEvent(table, "TABLE_DELETED");
         log.info("Table deleted successfully");
     }
 
@@ -130,6 +135,7 @@ public class TableServiceImpl implements TableService {
         table.setIsAvailable(isAvailable);
 
         CafeTable updated = tableRepository.save(table);
+        publishTableEvent(updated, "TABLE_AVAILABILITY_CHANGED");
 
         log.info("Availability updated successfully");
         return tableMapper.toResponse(updated);
@@ -183,6 +189,29 @@ public class TableServiceImpl implements TableService {
             table.setTableNumber(request.getTableNumber().trim());
         }
         CafeTable saved = tableRepository.save(table);
+        publishTableEvent(saved, "TABLE_CREATED");
         return tableMapper.toResponse(saved);
+    }
+
+    private void publishTableEvent(CafeTable table, String eventType) {
+        try {
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("eventType", eventType);
+            payload.put("type", eventType);
+            payload.put("title", "Table Update");
+            payload.put("message", "Table " + table.getTableNumber() + " has event: " + eventType + ".");
+            payload.put("tableId", table.getId());
+            payload.put("cafeId", table.getCafe() != null ? table.getCafe().getId() : null);
+            payload.put("tableNumber", table.getTableNumber());
+            payload.put("capacity", table.getCapacity());
+            payload.put("isAvailable", table.getIsAvailable());
+            payload.put("timestamp", LocalDateTime.now().toString());
+
+            if (table.getCafe() != null && table.getCafe().getId() != null) {
+                messagingTemplate.convertAndSend("/topic/cafe/" + table.getCafe().getId() + "/tables", payload);
+            }
+        } catch (Exception ex) {
+            log.warn("Failed to publish table event {} for tableId={}: {}", eventType, table.getId(), ex.getMessage());
+        }
     }
 }

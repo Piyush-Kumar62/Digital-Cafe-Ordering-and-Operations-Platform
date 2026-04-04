@@ -103,10 +103,12 @@ public class PaymentService {
             Payment existing = existingOpt.get();
             if (EnumSet.of(
                     Payment.PaymentStatus.CAPTURED,
+                    Payment.PaymentStatus.SUCCESS,
                     Payment.PaymentStatus.COMPLETED,
                     Payment.PaymentStatus.AUTHORIZED,
                     Payment.PaymentStatus.CREATED,
                     Payment.PaymentStatus.PENDING,
+                        Payment.PaymentStatus.INITIATED,
                     Payment.PaymentStatus.PROCESSING
             ).contains(existing.getStatus())) {
                 if (normalizedMethod != null && existing.getPaymentMethod() != normalizedMethod) {
@@ -209,8 +211,7 @@ public class PaymentService {
         Payment payment = paymentRepository.findById(paymentId)
                 .orElseThrow(() -> new BusinessException("Payment not found"));
 
-        if (payment.getStatus() == Payment.PaymentStatus.COMPLETED
-                || payment.getStatus() == Payment.PaymentStatus.CAPTURED) {
+        if (payment.isSuccessful()) {
             throw new BusinessException("Payment already completed");
         }
 

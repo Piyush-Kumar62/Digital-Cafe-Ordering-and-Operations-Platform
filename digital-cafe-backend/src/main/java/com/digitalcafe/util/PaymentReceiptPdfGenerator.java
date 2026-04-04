@@ -20,8 +20,7 @@ public final class PaymentReceiptPdfGenerator {
 
     private PaymentReceiptPdfGenerator() {}
 
-    // ── Public API (signature unchanged for backward compatibility) ───────────
-
+    // Public API (signature unchanged for backward compatibility)
     public static byte[] generate(String receiptNumber, String customerName, String details) {
         Map<String, String> fields = new LinkedHashMap<>();
         List<String>        items  = new ArrayList<>();
@@ -45,8 +44,7 @@ public final class PaymentReceiptPdfGenerator {
         return buildPdf(safe(receiptNumber), safe(customerName), fields, items);
     }
 
-    // ── PDF binary assembly ───────────────────────────────────────────────────
-
+    // PDF binary assembly
     private static byte[] buildPdf(String receiptNumber, String customerName,
                                     Map<String, String> fields, List<String> items) {
         try {
@@ -102,14 +100,12 @@ public final class PaymentReceiptPdfGenerator {
         }
     }
 
-    // ── PDF content stream ────────────────────────────────────────────────────
-
+    // PDF content stream
     private static String buildContentStream(String receiptNumber, String customerName,
                                               Map<String, String> fields, List<String> items) {
         StringBuilder s = new StringBuilder(2048);
 
-        // ── Header band (dark indigo, y 770–842) ──────────────────────────────
-        s.append("0.09 0.14 0.38 rg\n");
+        // Header band (dark indigo, y 770–842)        s.append("0.09 0.14 0.38 rg\n");
         s.append("0 770 595 72 re f\n");
 
         // Accent strip at very top
@@ -130,16 +126,14 @@ public final class PaymentReceiptPdfGenerator {
         s.append("BT /F2 9 Tf 0.93 0.94 0.98 rg 1 0 0 1 400 787 Tm ("
                 + sanitize(receiptNumber) + ") Tj ET\n");
 
-        // ── Bill-to block ─────────────────────────────────────────────────────
-        s.append("BT /F1 8 Tf 0.50 0.50 0.56 rg 1 0 0 1 22 745 Tm (BILLED TO) Tj ET\n");
+        // Bill-to block        s.append("BT /F1 8 Tf 0.50 0.50 0.56 rg 1 0 0 1 22 745 Tm (BILLED TO) Tj ET\n");
         s.append("BT /F2 13 Tf 0.09 0.14 0.38 rg 1 0 0 1 22 728 Tm ("
                 + sanitize(customerName) + ") Tj ET\n");
 
         // Divider below customer name
         s.append("0.82 0.82 0.87 RG 0.5 w 22 718 m 573 718 l S\n");
 
-        // ── Two-column detail fields ──────────────────────────────────────────
-        //  Layout: KEY_L=22  VAL_L=140   KEY_R=305  VAL_R=430
+        // Two-column detail fields        //  Layout: KEY_L=22  VAL_L=140   KEY_R=305  VAL_R=430
         final int KL = 22, VL = 140, KR = 305, VR = 430;
         String[][] rows = {
             {"Order",            "Booking"},
@@ -169,8 +163,7 @@ public final class PaymentReceiptPdfGenerator {
             fy -= 22;
         }
 
-        // ── Items section ─────────────────────────────────────────────────────
-        fy -= 6;
+        // Items section        fy -= 6;
         s.append("0.82 0.82 0.87 RG 0.5 w 22 " + fy + " m 573 " + fy + " l S\n");
         fy -= 16;
 
@@ -206,8 +199,7 @@ public final class PaymentReceiptPdfGenerator {
             if (fy < 130) break; // guard against page overflow
         }
 
-        // ── Total row ─────────────────────────────────────────────────────────
-        fy -= 4;
+        // Total row        fy -= 4;
         s.append("0.52 0.52 0.60 RG 1 w 22 " + fy + " m 573 " + fy + " l S\n");
         fy -= 16;
 
@@ -217,8 +209,7 @@ public final class PaymentReceiptPdfGenerator {
         s.append("BT /F2 11 Tf 0.09 0.14 0.38 rg 1 0 0 1 490 " + fy
                 + " Tm (" + sanitize(totalAmt) + ") Tj ET\n");
 
-        // ── Footer band ───────────────────────────────────────────────────────
-        s.append("0.94 0.94 0.96 rg 0 0 595 50 re f\n");
+        // Footer band        s.append("0.94 0.94 0.96 rg 0 0 595 50 re f\n");
         s.append("0.82 0.82 0.87 RG 0.5 w 0 50 m 595 50 l S\n");
 
         s.append("BT /F1 8 Tf 0.50 0.50 0.56 rg 1 0 0 1 22 30 Tm "
@@ -230,8 +221,7 @@ public final class PaymentReceiptPdfGenerator {
         return s.toString();
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
-
+    // Helpers
     /** Escape a string for use as a PDF literal string (inside parentheses). */
     private static String sanitize(String text) {
         if (text == null) return "";

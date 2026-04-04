@@ -16,37 +16,35 @@ package com.digitalcafe.email;
  */
 public enum EmailTemplateType {
 
-    // ── Identity & Auth ──────────────────────────────────────────────────────
+    // Identity and authentication templates
     VERIFY_EMAIL("verify-email"),
     RESET_PASSWORD("reset-password"),
     PASSWORD_CHANGED("password-changed"),
     LOGIN_NOTIFICATION("login-notification"),
 
-    // ── Onboarding ──────────────────────────────────────────────────────────
+    // Onboarding templates
     WELCOME("welcome"),
     REGISTRATION_SUCCESS("registration-success"),
     ACCOUNT_ACTIVATED("account-activated"),
 
-    // ── Admin decisions ──────────────────────────────────────────────────────
+    // Admin decision templates
     REGISTRATION_APPROVED("registration-approved"),
     REGISTRATION_REJECTED("registration-rejected"),
     ACCOUNT_DEACTIVATED("account-deactivated"),
     ACCOUNT_REACTIVATED("account-reactivated"),
 
-    // ── Orders ───────────────────────────────────────────────────────────────
+    // Order lifecycle templates
     ORDER_CONFIRMATION("order-confirmation"),
     PAYMENT_RECEIPT("payment-receipt"),
     ORDER_READY("order-ready"),
     ORDER_SERVED("order-served"),
 
-    // ── Bookings ─────────────────────────────────────────────────────────────
+    // Booking templates
     BOOKING_CONFIRMATION("booking-confirmation"),
     BOOKING_CANCELLED("booking-cancelled"),
 
-    // ── Cancellations ────────────────────────────────────────────────────────
+    // Cancellation templates
     ORDER_CANCELLED("order-cancelled");
-
-    // ─────────────────────────────────────────────────────────────────────────
 
     private final String templateName;
 

@@ -16,6 +16,9 @@ public class UserAccessPolicy {
     }
 
     public boolean requiresProfileCompletion(User user) {
-        return !isSystemAdmin(user);
+        if (isSystemAdmin(user)) {
+            return false;
+        }
+        return user == null || !user.hasRole(Role.RoleName.CAFE_OWNER);
     }
 }

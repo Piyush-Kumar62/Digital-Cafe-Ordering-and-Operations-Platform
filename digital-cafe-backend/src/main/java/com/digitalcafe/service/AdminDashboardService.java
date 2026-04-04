@@ -357,6 +357,6 @@ public class AdminDashboardService {
     }
 
     private Collection<Payment.PaymentStatus> revenueStatuses() {
-        return EnumSet.of(Payment.PaymentStatus.CAPTURED, Payment.PaymentStatus.COMPLETED);
+                return EnumSet.of(Payment.PaymentStatus.CAPTURED, Payment.PaymentStatus.COMPLETED, Payment.PaymentStatus.SUCCESS);
     }
 }

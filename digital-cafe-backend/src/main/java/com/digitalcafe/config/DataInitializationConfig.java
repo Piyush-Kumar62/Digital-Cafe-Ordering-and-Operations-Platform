@@ -36,11 +36,13 @@ public class DataInitializationConfig {
             log.info("Starting database initialization...");
 
             // Create roles if they don't exist
-            createRoleIfNotExists(Role.RoleName.ADMIN, "System Administrator");
-            createRoleIfNotExists(Role.RoleName.CAFE_OWNER, "Cafe Owner");
-            createRoleIfNotExists(Role.RoleName.CHEF, "Chef");
-            createRoleIfNotExists(Role.RoleName.WAITER, "Waiter");
-            createRoleIfNotExists(Role.RoleName.CUSTOMER, "Customer");
+            int rolesCreated = 0;
+            rolesCreated += createRoleIfNotExists(Role.RoleName.ADMIN, "System Administrator") ? 1 : 0;
+            rolesCreated += createRoleIfNotExists(Role.RoleName.CAFE_OWNER, "Cafe Owner") ? 1 : 0;
+            rolesCreated += createRoleIfNotExists(Role.RoleName.CHEF, "Chef") ? 1 : 0;
+            rolesCreated += createRoleIfNotExists(Role.RoleName.WAITER, "Waiter") ? 1 : 0;
+            rolesCreated += createRoleIfNotExists(Role.RoleName.CUSTOMER, "Customer") ? 1 : 0;
+            log.info("Role initialization summary: created={}, existing={}", rolesCreated, 5 - rolesCreated);
 
             // Create default admin user if not exists
             createAdminUserIfNotExists();
@@ -49,7 +51,7 @@ public class DataInitializationConfig {
         };
     }
 
-    private void createRoleIfNotExists(Role.RoleName roleName, String description) {
+    private boolean createRoleIfNotExists(Role.RoleName roleName, String description) {
         if (!roleRepository.existsByName(roleName)) {
             Role role = Role.builder()
                     .name(roleName)
@@ -57,8 +59,9 @@ public class DataInitializationConfig {
                     .build();
             roleRepository.save(role);
             log.info("Created role: {}", roleName);
+            return true;
         } else {
-            log.info("Role already exists: {}", roleName);
+            return false;
         }
     }
 

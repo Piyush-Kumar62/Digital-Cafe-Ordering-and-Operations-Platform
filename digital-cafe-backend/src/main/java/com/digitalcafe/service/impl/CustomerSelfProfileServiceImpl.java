@@ -30,6 +30,7 @@ public class CustomerSelfProfileServiceImpl implements CustomerSelfProfileServic
     @Transactional(readOnly = true)
     public CustomerSelfProfileResponseDTO getProfile(Authentication authentication) {
         User user = getAuthenticatedUser(authentication);
+        syncProfileCompletion(user);
         return toResponse(user);
     }
 
@@ -75,7 +76,7 @@ public class CustomerSelfProfileServiceImpl implements CustomerSelfProfileServic
             profile.setDateOfBirth(request.getDateOfBirth());
         }
         if (StringUtils.hasText(request.getGender())) {
-            profile.setGender(Profile.Gender.valueOf(request.getGender().trim().toUpperCase()));
+            profile.setGender(parseGenderOrThrow(request.getGender()));
         }
         if (StringUtils.hasText(request.getGovtIdType())) {
             String govtIdType = request.getGovtIdType().trim();
@@ -91,12 +92,14 @@ public class CustomerSelfProfileServiceImpl implements CustomerSelfProfileServic
         if (request.getAddress() != null) {
             Address address = profile.getAddress() != null ? profile.getAddress() : new Address();
             address.setProfile(profile);
-            if (request.getAddress().getStreet() != null) address.setStreet(request.getAddress().getStreet());
-            if (request.getAddress().getPlotNumber() != null) address.setPlotNumber(request.getAddress().getPlotNumber());
-            if (request.getAddress().getCity() != null) address.setCity(request.getAddress().getCity());
-            if (request.getAddress().getState() != null) address.setState(request.getAddress().getState());
-            if (request.getAddress().getCountry() != null) address.setCountry(request.getAddress().getCountry());
-            if (request.getAddress().getPincode() != null) address.setPincode(request.getAddress().getPincode());
+            if (request.getAddress().getStreet() != null) address.setStreet(request.getAddress().getStreet().trim());
+            if (request.getAddress().getPlotNumber() != null) address.setPlotNumber(request.getAddress().getPlotNumber().trim());
+            if (request.getAddress().getCity() != null) address.setCity(request.getAddress().getCity().trim());
+            if (request.getAddress().getState() != null) address.setState(request.getAddress().getState().trim());
+            if (request.getAddress().getCountry() != null) address.setCountry(request.getAddress().getCountry().trim());
+            if (StringUtils.hasText(request.getAddress().getPincode())) {
+                address.setPincode(request.getAddress().getPincode().trim());
+            }
             profile.setAddress(address);
         }
 
@@ -112,9 +115,9 @@ public class CustomerSelfProfileServiceImpl implements CustomerSelfProfileServic
 
         profileRepository.save(profile);
         user.setProfile(profile);
-        // Customer self profile update is the required completion checkpoint.
-        user.setIsProfileComplete(true);
-        user.setProfileCompletionPercentage(100);
+        int completionPercentage = profile.calculateCompletionPercentage();
+        user.setIsProfileComplete(completionPercentage == 100);
+        user.setProfileCompletionPercentage(completionPercentage);
         User saved = userRepository.save(user);
         return toResponse(saved);
     }
@@ -144,6 +147,48 @@ public class CustomerSelfProfileServiceImpl implements CustomerSelfProfileServic
 
         return userRepository.findByEmail(authentication.getName())
                 .orElseThrow(() -> new ResourceNotFoundException("User", "email", authentication.getName()));
+    }
+
+    private Profile.Gender parseGenderOrThrow(String value) {
+        String normalized = value == null ? null : value.trim();
+        if (!StringUtils.hasText(normalized)) {
+            return null;
+        }
+        try {
+            return Profile.Gender.valueOf(normalized.toUpperCase());
+        } catch (IllegalArgumentException ex) {
+            throw new BadRequestException("Invalid gender value: " + value);
+        }
+    }
+
+    @Transactional
+    protected void syncProfileCompletion(User user) {
+        if (user == null || user.getId() == null) {
+            return;
+        }
+
+        Profile profile = profileRepository.findByUserId(user.getId()).orElse(null);
+        if (profile == null) {
+            if (user.getProfileCompletionPercentage() != null && user.getProfileCompletionPercentage() != 0) {
+                user.setProfileCompletionPercentage(0);
+                user.setIsProfileComplete(false);
+                userRepository.save(user);
+            }
+            return;
+        }
+
+        int completionPercentage = profile.calculateCompletionPercentage();
+        boolean isComplete = completionPercentage == 100;
+        Integer currentCompletion = user.getProfileCompletionPercentage();
+        boolean needsUpdate = currentCompletion == null
+                || currentCompletion != completionPercentage
+                || !Boolean.valueOf(isComplete).equals(user.getIsProfileComplete());
+
+        if (needsUpdate) {
+            user.setProfileCompletionPercentage(completionPercentage);
+            user.setIsProfileComplete(isComplete);
+            userRepository.save(user);
+        }
     }
 
     private CustomerSelfProfileResponseDTO toResponse(User user) {

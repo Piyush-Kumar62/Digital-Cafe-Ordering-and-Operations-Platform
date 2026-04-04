@@ -55,7 +55,7 @@ public class S3FileStorageService implements FileStorageService {
             @Value("${aws.credentials.secret-key:}") String secretKey,
             @Value("${aws.s3.base-url:}") String baseUrl) {
         if (bucket == null || bucket.isBlank()) {
-            throw new IllegalStateException("S3 bucket is not configured. Set S3_BUCKET for deploy profile.");
+            throw new IllegalStateException("S3 bucket is not configured. Set S3_BUCKET for prod profile.");
         }
         this.bucket = bucket;
         this.baseUrl = (baseUrl == null || baseUrl.isBlank())

@@ -3,9 +3,11 @@ package com.digitalcafe.service.impl;
 import com.digitalcafe.dto.request.ProfileRequest;
 import com.digitalcafe.dto.response.ProfileResponse;
 import com.digitalcafe.entity.AcademicInfo;
+import com.digitalcafe.entity.Address;
 import com.digitalcafe.entity.Profile;
 import com.digitalcafe.entity.User;
 import com.digitalcafe.entity.WorkExperience;
+import com.digitalcafe.exception.BadRequestException;
 import com.digitalcafe.exception.ResourceNotFoundException;
 import com.digitalcafe.mapper.ProfileMapper;
 import com.digitalcafe.repository.AcademicInfoRepository;
@@ -51,7 +53,7 @@ public class ProfileServiceImpl implements ProfileService {
 
 
         if (request.getGender() != null) {
-            profile.setGender(Profile.Gender.valueOf(request.getGender().toUpperCase()));
+            profile.setGender(parseGenderOrThrow(request.getGender()));
         }
 
         profile.setPhoneNumber(request.getPhoneNumber());
@@ -61,8 +63,17 @@ public class ProfileServiceImpl implements ProfileService {
 
 
         if (request.getAddress() != null) {
-            var address = profileMapper.toAddressEntity(request.getAddress());
+            Address address = profile.getAddress() != null ? profile.getAddress() : new Address();
             address.setProfile(profile);
+            address.setStreet(normalize(request.getAddress().getStreet()));
+            address.setPlotNumber(normalize(request.getAddress().getPlotNumber()));
+            address.setCity(normalize(request.getAddress().getCity()));
+            address.setState(normalize(request.getAddress().getState()));
+            address.setCountry(normalize(request.getAddress().getCountry()));
+            String incomingPincode = normalize(request.getAddress().getPincode());
+            if (incomingPincode != null) {
+                address.setPincode(incomingPincode);
+            }
             profile.setAddress(address);
         }
 
@@ -187,5 +198,17 @@ public class ProfileServiceImpl implements ProfileService {
         }
         String trimmed = value.trim();
         return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    private Profile.Gender parseGenderOrThrow(String value) {
+        String normalized = normalize(value);
+        if (normalized == null) {
+            return null;
+        }
+        try {
+            return Profile.Gender.valueOf(normalized.toUpperCase());
+        } catch (IllegalArgumentException ex) {
+            throw new BadRequestException("Invalid gender value: " + value);
+        }
     }
 }

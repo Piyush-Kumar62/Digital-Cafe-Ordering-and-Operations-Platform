@@ -26,7 +26,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
-// Deployment-grade Order service with strict status transitions, mapped domain violations, and complete audit trails via OrderStatusHistory.
+// Handles order lifecycle with strict status transitions and audit history.
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -64,11 +64,7 @@ public class OrderServiceImpl implements OrderService {
         validateBookingOwnership(booking, customerId);
         validateBookingIsConfirmed(booking);
 
-        // ── Idempotent order creation: handle existing orders for this booking ──────────
-        // If a confirmed/active order exists → block (customer already has a live order).
-        // If an unpaid order exists (PENDING_PAYMENT) → reuse it, updating items & total
-        //   so cart changes between retry attempts are captured.
-        // If only CANCELLED orders exist → fall through and create a fresh order.
+        // Reuse pending-payment orders for retry flows; block duplicate active orders.
         List<Order> existingOrders = orderRepository.findByBookingId(booking.getId());
         if (!existingOrders.isEmpty()) {
             for (Order existing : existingOrders) {
@@ -80,7 +76,7 @@ public class OrderServiceImpl implements OrderService {
                             + " Cancel it before placing a new order.");
                 }
             }
-            // No confirmed order — look for a re-usable PENDING_PAYMENT order
+            // Reuse a pending-payment order if it already exists.
             Optional<Order> pendingOpt = existingOrders.stream()
                     .filter(o -> o.getStatus() == Order.OrderStatus.PENDING_PAYMENT)
                     .findFirst();
@@ -88,7 +84,7 @@ public class OrderServiceImpl implements OrderService {
                 Order existing = pendingOpt.get();
                 log.info("Reusing PENDING_PAYMENT order for payment retry: orderId={}, bookingId={}",
                         existing.getId(), booking.getId());
-                // Refresh items in case the customer changed their cart
+                // Refresh items so latest cart changes are applied.
                 existing.getOrderItems().clear();
                 List<OrderItem> freshItems = buildOrderItems(
                         request.getItems(), existing, booking.getCafe().getId());
@@ -104,7 +100,7 @@ public class OrderServiceImpl implements OrderService {
                 existing = orderRepository.save(existing);
                 return orderMapper.toResponse(existing);
             }
-            // Only CANCELLED orders exist — create a brand-new order below
+            // Only cancelled orders exist, so a new order can be created.
         }
 
         Order order = buildOrder(request, booking);
@@ -112,8 +108,7 @@ public class OrderServiceImpl implements OrderService {
 
         log.info("Order created (PENDING_PAYMENT): orderId={}, orderNumber={}, customerId={}, cafeId={}",
                 order.getId(), order.getOrderNumber(), customerId, booking.getCafe().getId());
-        // ⚠️ Do NOT notify chef here — order is not paid yet.
-        // Chef notification fires in activateOrderAfterPayment() after payment is verified.
+        // Notify kitchen only after payment is verified.
         return orderMapper.toResponse(order);
     }
 
@@ -218,6 +213,8 @@ public class OrderServiceImpl implements OrderService {
 
         notificationService.pushOrderEvent(order, "ORDER_CANCELLED", "/topic/customer/" + order.getCustomer().getId());
         notificationService.pushOrderEvent(order, "ORDER_CANCELLED", "/topic/chef/" + order.getCafe().getId());
+        notificationService.pushOrderEvent(order, "ORDER_CANCELLED", "/topic/waiter/" + order.getCafe().getId());
+        notificationService.pushOrderEvent(order, "ORDER_CANCELLED", "/topic/cafe/" + order.getCafe().getId());
         return orderMapper.toResponse(order);
     }
 
@@ -227,7 +224,7 @@ public class OrderServiceImpl implements OrderService {
     public OrderResponse activateOrderAfterPayment(Long orderId) {
         Order order = fetchOrder(orderId);
 
-        // Idempotency: if already PLACED or beyond, payment was already processed
+        // Keep this operation idempotent for repeated payment callbacks.
         if (order.getStatus() != Order.OrderStatus.PENDING_PAYMENT) {
             log.warn("activateOrderAfterPayment: order {} already in status {}, returning idempotent response",
                     order.getOrderNumber(), order.getStatus());
@@ -244,7 +241,7 @@ public class OrderServiceImpl implements OrderService {
                     ". Only COMPLETED payments can activate kitchen flow.");
         }
 
-        // Transition: PENDING_PAYMENT → PLACED
+        // Activate the order once payment is confirmed.
         order.setStatus(Order.OrderStatus.PLACED);
         order.setPlacedAt(LocalDateTime.now());
         order = orderRepository.save(order);
@@ -255,13 +252,12 @@ public class OrderServiceImpl implements OrderService {
         log.info("Payment verified, order PLACED in kitchen queue: orderId={}, paymentId={}, gatewayPaymentId={}",
                 orderId, payment.getId(), payment.getPaymentGatewayPaymentId());
 
-        // Now it is safe to notify the chef
+        // Notify all relevant channels after activation.
         notificationService.pushOrderEvent(order, "ORDER_PLACED", "/topic/chef/" + order.getCafe().getId());
-        // Also notify the customer that their order is confirmed
+        notificationService.pushOrderEvent(order, "ORDER_PLACED", "/topic/cafe/" + order.getCafe().getId());
         notificationService.pushOrderEvent(order, "ORDER_CONFIRMED", "/topic/customer/" + order.getCustomer().getId());
-        // Payment captured notification (explicit requirement)
         notificationService.pushOrderEvent(order, "PAYMENT_CAPTURED", "/topic/customer/" + order.getCustomer().getId());
-        // Send order confirmation email to customer
+        // Send confirmation email to customer.
         emailService.sendOrderConfirmation(
                 order.getCustomer().getEmail(),
                 buildOrderConfirmationDetails(order));
@@ -394,19 +390,26 @@ public class OrderServiceImpl implements OrderService {
         switch (newStatus) {
             case PENDING_PAYMENT -> { /* no external notification — awaiting payment */ }
             case PLACED     -> notificationService.pushOrderEvent(order, "ORDER_PLACED",    "/topic/cafe/"     + order.getCafe().getId());
-            case PREPARING  -> notificationService.pushOrderEvent(order, "ORDER_PREPARING", "/topic/customer/" + order.getCustomer().getId());
+            case PREPARING  -> {
+                notificationService.pushOrderEvent(order, "ORDER_PREPARING", "/topic/customer/" + order.getCustomer().getId());
+                notificationService.pushOrderEvent(order, "ORDER_PREPARING", "/topic/cafe/"     + order.getCafe().getId());
+            }
             case READY      -> {
                 notificationService.pushOrderEvent(order, "ORDER_READY", "/topic/waiter/"   + order.getCafe().getId());
                 notificationService.pushOrderEvent(order, "ORDER_READY", "/topic/customer/" + order.getCustomer().getId());
+                notificationService.pushOrderEvent(order, "ORDER_READY", "/topic/cafe/"     + order.getCafe().getId());
                 emailService.sendOrderReadyNotification(order.getCustomer().getEmail(), order.getOrderNumber());
             }
             case SERVED     -> {
                 notificationService.pushOrderEvent(order, "ORDER_SERVED", "/topic/customer/" + order.getCustomer().getId());
+                notificationService.pushOrderEvent(order, "ORDER_SERVED", "/topic/cafe/"     + order.getCafe().getId());
                 emailService.sendOrderServedNotification(order.getCustomer().getEmail(), order.getOrderNumber());
             }
             case CANCELLED  -> {
                 notificationService.pushOrderEvent(order, "ORDER_CANCELLED", "/topic/customer/" + order.getCustomer().getId());
                 notificationService.pushOrderEvent(order, "ORDER_CANCELLED", "/topic/chef/"     + order.getCafe().getId());
+                notificationService.pushOrderEvent(order, "ORDER_CANCELLED", "/topic/waiter/"   + order.getCafe().getId());
+                notificationService.pushOrderEvent(order, "ORDER_CANCELLED", "/topic/cafe/"     + order.getCafe().getId());
                 emailService.sendOrderCancelledNotification(order.getCustomer().getEmail(), order.getOrderNumber());
             }
         }

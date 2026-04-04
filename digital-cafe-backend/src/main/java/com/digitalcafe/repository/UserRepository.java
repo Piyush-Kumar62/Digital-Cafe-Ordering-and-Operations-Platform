@@ -40,7 +40,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     boolean existsByEmail(String email);
     boolean existsByUsername(String username);
 
-    // Dashboard queries
+    // Dashboard aggregate queries
     Long countByIsActive(Boolean isActive);
     Long countByIsEmailVerified(Boolean isEmailVerified);
     Long countByIsProfileComplete(Boolean isProfileComplete);
@@ -56,16 +56,14 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<User> findTop10ByOrderByCreatedAtDesc();
     List<User> findTop5ByOrderByCreatedAtDesc();
     
-    // Additional dashboard queries
-    // Additional dashboard queries
+    // Additional dashboard query
     Long countByMustResetPassword(Boolean mustResetPassword);
     
     @Query("SELECT COUNT(u) > 0 FROM User u JOIN u.roles r WHERE r.name = :roleName")
     boolean existsByRoleName(Role.RoleName roleName);
     Page<User> findAllByOrderByCreatedAtDesc(Pageable pageable);
 
-    // ================= Owner Dashboard Correct Counts =================
-
+    // Owner dashboard count queries
     Long countByCafeId(Long cafeId);
 
     Long countByCafeIdAndIsActiveTrue(Long cafeId);

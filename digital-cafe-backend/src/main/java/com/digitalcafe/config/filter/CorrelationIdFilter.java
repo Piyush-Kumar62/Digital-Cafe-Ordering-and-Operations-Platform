@@ -24,6 +24,7 @@ public class CorrelationIdFilter extends OncePerRequestFilter {
     public static final String MDC_REQUEST_ID_KEY = "requestId";
     public static final String MDC_USER_ID_KEY = "userId";
     public static final String MDC_USERNAME_KEY = "username";
+    private static final String[] NOISY_PREFIXES = {"/ws", "/actuator/health", "/actuator/prometheus"};
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -41,7 +42,7 @@ public class CorrelationIdFilter extends OncePerRequestFilter {
         MDC.put(MDC_USER_ID_KEY, "anonymous");
         MDC.put(MDC_USERNAME_KEY, "anonymous");
         response.setHeader(REQUEST_ID_HEADER, requestId);
-        if (log.isDebugEnabled()) {
+        if (log.isDebugEnabled() && !isNoisyPath(request.getRequestURI())) {
             log.debug("request_id_assigned path={} requestId={} correlationId={}",
                     request.getRequestURI(), requestId, correlationId);
         }
@@ -65,5 +66,17 @@ public class CorrelationIdFilter extends OncePerRequestFilter {
             return requestId;
         }
         return null;
+    }
+
+    private boolean isNoisyPath(String path) {
+        if (!StringUtils.hasText(path)) {
+            return false;
+        }
+        for (String prefix : NOISY_PREFIXES) {
+            if (path.startsWith(prefix)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

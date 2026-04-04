@@ -7,7 +7,7 @@
     <property name="SHORT_LOG_PATTERN"
               value="%clr(%d{yyyy-MM-dd HH:mm:ss.SSSXXX}){faint} %clr(%-5level){ERROR=boldRed, WARN=yellow, INFO=green, DEBUG=blue, TRACE=cyan} %replace([%X{requestId}]){'\\[\\]',''}%clr(%logger{24}){blue} - %msg%n%wex"/>
 
-    <springProfile name="prod, deployment">
+    <springProfile name="prod">
         <appender name="JSON_CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
             <encoder class="net.logstash.logback.encoder.LogstashEncoder">
                 <timeZone>UTC</timeZone>
@@ -29,7 +29,7 @@
         </root>
     </springProfile>
 
-    <springProfile name="dev, e2e">
+    <springProfile name="dev">
         <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
             <encoder>
                 <pattern>${SHORT_LOG_PATTERN}</pattern>
@@ -40,7 +40,7 @@
         </root>
     </springProfile>
 
-    <springProfile name="!prod &amp; !deployment &amp; !dev &amp; !e2e">
+    <springProfile name="!prod &amp; !dev">
         <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
             <encoder>
                 <pattern>${LOG_PATTERN}</pattern>

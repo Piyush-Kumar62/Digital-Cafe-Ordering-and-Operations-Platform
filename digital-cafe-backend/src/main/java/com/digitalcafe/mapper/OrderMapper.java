@@ -19,6 +19,8 @@ public interface OrderMapper {
     @Mapping(target = "customerName", expression = "java(getCustomerName(order))")
     @Mapping(target = "cafeId", source = "cafe.id")
     @Mapping(target = "cafeName", source = "cafe.name")
+    @Mapping(target = "tableId", source = "booking.table.id")
+    @Mapping(target = "tableNumber", source = "booking.table.tableNumber")
     @Mapping(target = "items", source = "orderItems")
     @Mapping(target = "preparingByChefName", expression = "java(getChefName(order))")
     @Mapping(target = "servedByWaiterName", expression = "java(getWaiterName(order))")

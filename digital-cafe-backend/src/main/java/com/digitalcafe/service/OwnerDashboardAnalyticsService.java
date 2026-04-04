@@ -31,7 +31,7 @@ public class OwnerDashboardAnalyticsService {
         long totalOrders = orderRepository.countByCafeId(cafeId);
         BigDecimal revenue = paymentRepository.sumAmountByCafeAndStatusIn(
                 cafeId,
-                EnumSet.of(Payment.PaymentStatus.CAPTURED, Payment.PaymentStatus.COMPLETED)
+            EnumSet.of(Payment.PaymentStatus.CAPTURED, Payment.PaymentStatus.COMPLETED, Payment.PaymentStatus.SUCCESS)
         );
         Long activeTables = cafeTableRepository.countByCafeIdAndIsAvailable(cafeId, true);
 

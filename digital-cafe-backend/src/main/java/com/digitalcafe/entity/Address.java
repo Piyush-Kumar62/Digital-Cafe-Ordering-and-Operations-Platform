@@ -48,7 +48,6 @@ public class Address extends BaseEntity {
      */
     public boolean isComplete() {
         return street != null && !street.isBlank() &&
-                plotNumber != null && !plotNumber.isBlank() &&
                 city != null && !city.isBlank() &&
                 pincode != null && !pincode.isBlank();
     }

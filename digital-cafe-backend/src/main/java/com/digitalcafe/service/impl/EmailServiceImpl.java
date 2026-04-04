@@ -104,8 +104,7 @@ public class EmailServiceImpl implements EmailService {
         }
     }
 
-    // ── EmailService implementation ──────────────────────────────────────────
-
+    // EmailService implementation
     @Async("emailTaskExecutor")
     @Override
     public void sendVerificationEmail(String to, String token, String tempPassword) {
@@ -316,8 +315,7 @@ public class EmailServiceImpl implements EmailService {
         internalSend(to, "Your Digital Cafe booking has been cancelled", EmailTemplateType.BOOKING_CANCELLED, vars);
     }
 
-    // ── Internal helpers ─────────────────────────────────────────────────────
-
+    // Internal helpers
     private void internalSend(
             String to,
             String subject,

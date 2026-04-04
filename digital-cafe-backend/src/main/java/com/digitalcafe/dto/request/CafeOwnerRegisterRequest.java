@@ -5,15 +5,12 @@ import lombok.Data;
 
 /**
  * DTO for café owner self-registration.
- * Unlike staff registration (which requires academic/work info),
- * café owners do NOT supply a password — a secure temporary password is
- * auto-generated and emailed to them so they can log in and reset it.
- * A Café entity is created alongside the User in a single registration call.
+ * Cafe owners register without a password; the system sends a temporary password by email.
  */
 @Data
 public class CafeOwnerRegisterRequest {
 
-    // ── Owner personal information ─────────────────────────────────────────
+    // Owner details
 
     @NotBlank(message = "First name is required")
     private String firstName;
@@ -31,7 +28,7 @@ public class CafeOwnerRegisterRequest {
     @Pattern(regexp = "^[6-9][0-9]{9}$", message = "Please provide a valid 10-digit Indian mobile number")
     private String ownerPhoneNumber;
 
-    // ── Café details ───────────────────────────────────────────────────────
+    // Cafe details
 
     @NotBlank(message = "Café name is required")
     private String cafeName;
@@ -54,13 +51,13 @@ public class CafeOwnerRegisterRequest {
     @Pattern(regexp = "^[6-9][0-9]{9}$", message = "Please provide a valid 10-digit Indian mobile number")
     private String phoneNumber;
 
-    // ── Operating hours (optional) ─────────────────────────────────────────
+    // Optional operating hours
 
     private String openTime;
 
     private String closeTime;
 
-    // ── Legal / compliance numbers (all optional) ──────────────────────────
+    // Optional legal details
 
         @Pattern(regexp = "^$|^[0-9]{14}$", message = "FSSAI number must be exactly 14 digits")
         private String fssaiNumber;

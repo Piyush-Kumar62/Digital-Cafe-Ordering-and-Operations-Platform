@@ -15,7 +15,6 @@ public class AddressRequest {
     @Size(max = 200, message = "Street must not exceed 200 characters")
     private String street;
 
-    @NotBlank(message = "Plot number is required")
     @Size(max = 50, message = "Plot number must not exceed 50 characters")
     private String plotNumber;
 

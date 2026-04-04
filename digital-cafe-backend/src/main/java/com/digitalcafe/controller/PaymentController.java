@@ -57,8 +57,7 @@ public class PaymentController {
 
         // In TEST mode, auto-complete and activate order immediately so local/demo checkout works end-to-end.
         if ("TEST".equalsIgnoreCase(payment.getPaymentGateway())) {
-            if (payment.getStatus() != Payment.PaymentStatus.COMPLETED
-                    && payment.getStatus() != Payment.PaymentStatus.CAPTURED) {
+            if (!payment.isSuccessful()) {
                 payment = paymentService.verifyAndCompletePayment(
                         payment.getId(),
                         "SIM-" + payment.getId() + "-" + System.currentTimeMillis(),
@@ -152,8 +151,7 @@ public class PaymentController {
 
         Payment existingPayment = paymentService.findById(paymentId);
         validateCustomerPaymentAccess(existingPayment);
-        if (existingPayment.getStatus() == Payment.PaymentStatus.COMPLETED
-                || existingPayment.getStatus() == Payment.PaymentStatus.CAPTURED) {
+        if (existingPayment.isSuccessful()) {
             PaymentResponse alreadyCompleted = paymentMapper.toResponse(paymentService.findByIdWithOrder(paymentId));
             return ResponseEntity.ok(ApiResponse.success("Payment already verified", alreadyCompleted));
         }
@@ -189,8 +187,7 @@ public class PaymentController {
         Payment payment = paymentService.findByIdWithOrder(paymentId);
         validateCustomerPaymentAccess(payment);
 
-        if (payment.getStatus() != Payment.PaymentStatus.COMPLETED
-                && payment.getStatus() != Payment.PaymentStatus.CAPTURED) {
+        if (!payment.isSuccessful()) {
             throw new IllegalArgumentException("Receipt email can only be sent for completed payments");
         }
 

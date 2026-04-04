@@ -1,6 +1,7 @@
 package com.digitalcafe.config;
 
 import lombok.extern.slf4j.Slf4j;
+import jakarta.annotation.PostConstruct;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
@@ -8,25 +9,45 @@ import org.springframework.stereotype.Component;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
 @Component
 public class StartupDatabaseLogger {
 
     private final DataSource dataSource;
+    private final AtomicBoolean loggedOnce = new AtomicBoolean(false);
 
     public StartupDatabaseLogger(DataSource dataSource) {
         this.dataSource = dataSource;
     }
 
+    @PostConstruct
+    public void logDatabaseInfoAtInit() {
+        logDatabaseInfoOnce("init");
+    }
+
     @EventListener(ApplicationReadyEvent.class)
     public void logDatabaseInfo() {
+        logDatabaseInfoOnce("ready");
+    }
+
+    private void logDatabaseInfoOnce(String phase) {
+        if (!loggedOnce.compareAndSet(false, true)) {
+            return;
+        }
+
         try (Connection connection = dataSource.getConnection()) {
             DatabaseMetaData meta = connection.getMetaData();
-            log.info("db_connected url={} driver={} db={} version={}",
-                    meta.getURL(), meta.getDriverName(), meta.getDatabaseProductName(), meta.getDatabaseProductVersion());
+            log.info("[DB CONNECTED] phase={} url={} user={} db={} driver={} version={}",
+                    phase,
+                    meta.getURL(),
+                    meta.getUserName(),
+                    meta.getDatabaseProductName(),
+                    meta.getDriverName(),
+                    meta.getDatabaseProductVersion());
         } catch (Exception ex) {
-            log.warn("db_connection_check_failed message={}", ex.getMessage());
+            log.warn("[DB CONNECTION FAILED] phase={} message={}", phase, ex.getMessage());
         }
     }
 }

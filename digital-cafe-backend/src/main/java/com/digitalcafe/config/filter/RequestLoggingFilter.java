@@ -22,6 +22,7 @@ import java.util.concurrent.TimeUnit;
 public class RequestLoggingFilter extends OncePerRequestFilter {
 
     private static final String[] SENSITIVE_KEYS = {"password", "token", "authorization", "secret"};
+    private static final String[] NOISY_PREFIXES = {"/ws", "/actuator/health", "/actuator/prometheus"};
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -29,6 +30,10 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
         long start = System.nanoTime();
         String method = request.getMethod();
         String path = request.getRequestURI();
+        if (isNoisyPath(path)) {
+            filterChain.doFilter(request, response);
+            return;
+        }
         String clientIp = resolveClientIp(request);
         if (log.isDebugEnabled()) {
             log.debug("request_started method={} path={} queryParams={} clientIp={}",
@@ -101,5 +106,17 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
     private boolean isSensitiveKey(String key) {
         String lowered = key.toLowerCase(Locale.ROOT);
         return Arrays.stream(SENSITIVE_KEYS).anyMatch(lowered::contains);
+    }
+
+    private boolean isNoisyPath(String path) {
+        if (path == null || path.isBlank()) {
+            return false;
+        }
+        for (String prefix : NOISY_PREFIXES) {
+            if (path.startsWith(prefix)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

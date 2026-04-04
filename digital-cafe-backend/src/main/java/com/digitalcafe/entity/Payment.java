@@ -82,9 +82,11 @@ public class Payment extends BaseEntity {
         CREATED,     // Payment created locally (before gateway confirmation)
         AUTHORIZED,  // Payment authorized at gateway
         CAPTURED,    // Payment captured at gateway (final success)
+        SUCCESS,     // Legacy: older databases may store successful payments as SUCCESS
         FAILED,      // Payment failed
         REFUNDED,    // Payment refunded
         PENDING,     // Legacy: Payment initiated but not completed
+        INITIATED,   // Legacy: Older records may use INITIATED before completion/failure
         PROCESSING,  // Legacy: Payment is being processed
         COMPLETED,   // Legacy: Payment successful
         CANCELLED    // Payment cancelled
@@ -149,10 +151,12 @@ public class Payment extends BaseEntity {
      * Checks if payment is successful.
      */
     public boolean isSuccessful() {
-        return status == PaymentStatus.CAPTURED || status == PaymentStatus.COMPLETED;
+        return status == PaymentStatus.CAPTURED
+                || status == PaymentStatus.COMPLETED
+                || status == PaymentStatus.SUCCESS;
     }
 
     public boolean isCapturedOrCompleted() {
-        return status == PaymentStatus.CAPTURED || status == PaymentStatus.COMPLETED;
+        return isSuccessful();
     }
 }

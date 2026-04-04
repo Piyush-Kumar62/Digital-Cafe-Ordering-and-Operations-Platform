@@ -27,6 +27,8 @@ public class OrderResponse {
     private String customerName;
     private Long cafeId;
     private String cafeName;
+    private Long tableId;
+    private String tableNumber;
     private List<OrderItemResponse> items;
     private BigDecimal subtotal;
     private BigDecimal tax;

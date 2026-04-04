@@ -19,6 +19,8 @@ import com.digitalcafe.repository.CafeTableRepository;
 import com.digitalcafe.repository.UserRepository;
 import com.digitalcafe.service.BookingService;
 import com.digitalcafe.service.EmailService;
+import com.digitalcafe.websocket.RealtimeNotification;
+import com.digitalcafe.websocket.WebSocketNotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -37,14 +39,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
- * Deployment-grade Booking service implementation.
- *
- * Key design decisions:
- * - Overlap detection uses DB-level interval query (start_time < end AND end_time > start).
- *   No more hardcoded +2h Java arithmetic — the query respects actual booking durations.
- * - BusinessException / BookingConflictException used instead of RuntimeException.
- * - Transactional write methods, readOnly on queries.
- * - SLF4J structured logs in service layer only.
+ * Booking service implementation with overlap validation and transactional safety.
  */
 @Slf4j
 @Service
@@ -60,6 +55,7 @@ public class BookingServiceImpl implements BookingService {
     private final BookingMapper bookingMapper;
     private final SimpMessagingTemplate messagingTemplate;
     private final EmailService emailService;
+    private final WebSocketNotificationService webSocketNotificationService;
 
 
     @Override
@@ -98,6 +94,9 @@ public class BookingServiceImpl implements BookingService {
 
         emailService.sendBookingConfirmation(customer.getEmail(), buildBookingDetails(booking));
         notifyTableAvailabilityChanged(booking, "BOOKING_CREATED");
+        notifyBookingParties(booking, "BOOKING_CONFIRMED", "Booking Confirmed",
+            "Your table booking is confirmed for " + booking.getBookingDate() + " at " + booking.getBookingTime() + ".",
+            "success");
         return bookingMapper.toResponse(booking);
     }
 
@@ -118,7 +117,7 @@ public class BookingServiceImpl implements BookingService {
         LocalTime startTime = request.getTimeSlot();
         LocalTime endTime = startTime.plusHours(DEFAULT_BOOKING_DURATION_HOURS);
 
-        // Find one available table that fits the guests and has no overlap
+        // Pick the first table that fits capacity and has no time-slot conflict.
         CafeTable table = tableRepository
                 .findByCafeIdAndCapacityGreaterThanEqual(cafe.getId(), request.getNumberOfGuests())
                 .stream()
@@ -136,6 +135,9 @@ public class BookingServiceImpl implements BookingService {
         log.info("Auto-allocation booking created: bookingId={}, tableId={}", booking.getId(), table.getId());
         emailService.sendBookingConfirmation(customer.getEmail(), buildBookingDetails(booking));
         notifyTableAvailabilityChanged(booking, "BOOKING_CREATED");
+        notifyBookingParties(booking, "BOOKING_CONFIRMED", "Booking Confirmed",
+            "Your table booking is confirmed for " + booking.getBookingDate() + " at " + booking.getBookingTime() + ".",
+            "success");
         return bookingMapper.toResponse(booking);
     }
 
@@ -214,6 +216,8 @@ public class BookingServiceImpl implements BookingService {
         log.info("Booking cancelled: bookingId={}, bookingNumber={}", booking.getId(), booking.getBookingNumber());
         emailService.sendBookingCancelledEmail(booking.getCustomer().getEmail(), buildBookingDetails(booking));
         notifyTableAvailabilityChanged(booking, "BOOKING_CANCELLED");
+        notifyBookingParties(booking, "BOOKING_CANCELLED", "Booking Cancelled",
+            "Booking " + booking.getBookingNumber() + " has been cancelled.", "warning");
         return bookingMapper.toResponse(booking);
     }
 
@@ -221,17 +225,24 @@ public class BookingServiceImpl implements BookingService {
     @Transactional
     public BookingResponse updateBookingStatus(Long bookingId, Booking.BookingStatus status) {
         Booking booking = fetchBooking(bookingId);
+        Booking.BookingStatus previousStatus = booking.getStatus();
+        if (previousStatus == status) {
+            log.info("Booking status unchanged; skipping notification email: bookingId={}, status={}", booking.getId(), status);
+            return bookingMapper.toResponse(booking);
+        }
+
         booking.setStatus(status);
         if (status == Booking.BookingStatus.CANCELLED) {
             booking.setCancelledAt(LocalDateTime.now());
-            emailService.sendBookingCancelledEmail(booking.getCustomer().getEmail(), buildBookingDetails(booking));
-        } else {
-            emailService.sendBookingConfirmation(booking.getCustomer().getEmail(), buildBookingDetails(booking));
         }
         booking = bookingRepository.save(booking);
+        sendStatusEmailIfActionable(booking, status);
         log.info("Booking status updated: bookingId={}, bookingNumber={}, newStatus={}",
                 booking.getId(), booking.getBookingNumber(), status);
         notifyTableAvailabilityChanged(booking, "BOOKING_STATUS_UPDATED");
+        notifyBookingParties(booking, "BOOKING_STATUS_UPDATED", "Booking Status Updated",
+            "Booking " + booking.getBookingNumber() + " status changed to " + status + ".",
+            status == Booking.BookingStatus.CANCELLED ? "warning" : "info");
         return bookingMapper.toResponse(booking);
     }
 
@@ -322,6 +333,9 @@ public class BookingServiceImpl implements BookingService {
         try {
             Map<String, Object> payload = new HashMap<>();
             payload.put("eventType", eventType);
+            payload.put("type", eventType);
+            payload.put("title", "Table Availability Updated");
+            payload.put("message", "Booking " + booking.getBookingNumber() + " is now " + booking.getStatus() + ".");
             payload.put("bookingId", booking.getId());
             payload.put("cafeId", booking.getCafe().getId());
             payload.put("tableId", booking.getTable().getId());
@@ -332,6 +346,45 @@ public class BookingServiceImpl implements BookingService {
             messagingTemplate.convertAndSend("/topic/cafe/" + booking.getCafe().getId() + "/tables", payload);
         } catch (Exception e) {
             log.warn("Failed to publish table availability update for bookingId={}: {}", booking.getId(), e.getMessage());
+        }
+    }
+
+    private void notifyBookingParties(Booking booking, String type, String title, String message, String severity) {
+        LocalDateTime now = LocalDateTime.now();
+
+        try {
+            if (booking.getCustomer() != null) {
+                webSocketNotificationService.notifyUser(
+                        booking.getCustomer().getId(),
+                        RealtimeNotification.builder()
+                                .type(type)
+                                .title(title)
+                                .message(message)
+                                .severity(severity)
+                                .entityType("BOOKING")
+                                .entityId(booking.getId())
+                                .timestamp(now)
+                                .build()
+                );
+            }
+
+            if (booking.getCafe() != null && booking.getCafe().getOwner() != null) {
+                webSocketNotificationService.notifyUser(
+                        booking.getCafe().getOwner().getId(),
+                        RealtimeNotification.builder()
+                                .type(type)
+                                .title("Cafe Booking Update")
+                                .message("Booking " + booking.getBookingNumber() + " for " + booking.getNumberOfGuests() +
+                                        " guests is now " + booking.getStatus() + ".")
+                                .severity(severity)
+                                .entityType("BOOKING")
+                                .entityId(booking.getId())
+                                .timestamp(now)
+                                .build()
+                );
+            }
+        } catch (Exception ex) {
+            log.warn("Failed to notify booking parties for bookingId={}: {}", booking.getId(), ex.getMessage());
         }
     }
 
@@ -348,5 +401,20 @@ public class BookingServiceImpl implements BookingService {
                 booking.getStartTime(),
                 booking.getEndTime(),
                 booking.getNumberOfGuests());
+    }
+
+    private void sendStatusEmailIfActionable(Booking booking, Booking.BookingStatus status) {
+        String customerEmail = booking.getCustomer() != null ? booking.getCustomer().getEmail() : null;
+        if (customerEmail == null || customerEmail.isBlank()) {
+            return;
+        }
+
+        switch (status) {
+            case CANCELLED -> emailService.sendBookingCancelledEmail(customerEmail, buildBookingDetails(booking));
+            case CONFIRMED, BOOKED -> emailService.sendBookingConfirmation(customerEmail, buildBookingDetails(booking));
+            default -> {
+                // Keep silent for PENDING/CHECKED_IN/COMPLETED/NO_SHOW.
+            }
+        }
     }
 }

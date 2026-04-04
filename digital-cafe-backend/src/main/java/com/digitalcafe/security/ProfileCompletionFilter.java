@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.lang.NonNull;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -51,11 +52,12 @@ public class ProfileCompletionFilter extends OncePerRequestFilter {
 
     private final UserRepository userRepository;
     private final ObjectMapper objectMapper;
+    private final UserAccessPolicy userAccessPolicy;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(@NonNull HttpServletRequest request,
+                                    @NonNull HttpServletResponse response,
+                                    @NonNull FilterChain filterChain) throws ServletException, IOException {
 
         if (isWhitelisted(request.getRequestURI())) {
             filterChain.doFilter(request, response);
@@ -76,14 +78,16 @@ public class ProfileCompletionFilter extends OncePerRequestFilter {
             return;
         }
 
-        if (!Boolean.TRUE.equals(user.getIsEmailVerified())) {
+        if (userAccessPolicy.requiresEmailVerification(user)
+            && !Boolean.TRUE.equals(user.getIsEmailVerified())) {
             log.warn("Blocked unverified non-admin user: email={}, uri={}", email, request.getRequestURI());
             writeError(response, HttpStatus.FORBIDDEN, "EMAIL_NOT_VERIFIED",
                     "Please verify your email before accessing this resource.");
             return;
         }
 
-        if (!Boolean.TRUE.equals(user.getIsProfileComplete())) {
+        if (userAccessPolicy.requiresProfileCompletion(user)
+            && !Boolean.TRUE.equals(user.getIsProfileComplete())) {
             log.warn("Blocked incomplete-profile non-admin user: email={}, uri={}", email, request.getRequestURI());
             writeError(response, HttpStatus.FORBIDDEN, "PROFILE_INCOMPLETE",
                     "Please complete your profile before accessing this resource.");

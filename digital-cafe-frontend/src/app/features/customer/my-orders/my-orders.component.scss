@@ -1,13 +1,64 @@
-.page { padding: 1rem; }
-    header h1 { margin: 0; }
-    header p { color: #64748b; margin: .4rem 0 1rem; }
-    .list { display: grid; gap: .8rem; }
-    .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: .9rem; display: flex; align-items: center; justify-content: space-between; gap: .8rem; }
-    .card h3 { margin: 0 0 .35rem; }
-    .card p { margin: .2rem 0; color: #475569; }
-    .card a { color: #2563eb; font-weight: 600; }
-    .pagination { margin-top: 1rem; display: flex; align-items: center; justify-content: center; gap: .8rem; }
-    .pagination button { border: 1px solid #cbd5e1; background: #fff; border-radius: 8px; padding: .45rem .7rem; }
-    .empty { background: #fff; border: 1px dashed #cbd5e1; border-radius: 12px; padding: 1rem; }
-    .empty a { margin-left: .5rem; color: #2563eb; }
-    @media (max-width: 640px) { .card { flex-direction: column; align-items: flex-start; } }
+.page {
+  padding: 0.35rem 0.5rem 1rem;
+}
+header h1 {
+  margin: 0;
+}
+header p {
+  color: #64748b;
+  margin: 0.4rem 0 1rem;
+}
+.list {
+  display: grid;
+  gap: 0.8rem;
+}
+.card {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+.card h3 {
+  margin: 0 0 0.35rem;
+}
+.card p {
+  margin: 0.2rem 0;
+  color: #475569;
+}
+.card a {
+  color: #2563eb;
+  font-weight: 600;
+}
+.pagination {
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem;
+}
+.pagination button {
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  border-radius: 8px;
+  padding: 0.45rem 0.7rem;
+}
+.empty {
+  background: #fff;
+  border: 1px dashed #cbd5e1;
+  border-radius: 12px;
+  padding: 1rem;
+}
+.empty a {
+  margin-left: 0.5rem;
+  color: #2563eb;
+}
+@media (max-width: 640px) {
+  .card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

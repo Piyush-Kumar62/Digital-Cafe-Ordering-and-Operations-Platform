@@ -1,10 +1,10 @@
-// ─── Host ─────────────────────────────────────────────────────────────────────
+// Host
 :host {
   display: block;
   width: 100%;
 }
 
-// ─── Top Header ───────────────────────────────────────────────────────────────
+// Top Header
 .top-header {
   position: relative;
   display: flex;
@@ -23,7 +23,7 @@
   z-index: 15;
 }
 
-// ─── Left: Welcome ────────────────────────────────────────────────────────────
+// Left: Welcome
 .header-left {
   min-width: 0;
   flex-shrink: 1;
@@ -51,7 +51,7 @@
   }
 }
 
-// ─── Right: Controls ──────────────────────────────────────────────────────────
+// Right: Controls
 .header-right {
   display: flex;
   align-items: center;
@@ -59,7 +59,7 @@
   flex-shrink: 0;
 }
 
-// ─── Vertical Divider ─────────────────────────────────────────────────────────
+// Vertical Divider
 .h-divider {
   display: block;
   width: 1px;
@@ -75,7 +75,7 @@
   margin: 0 2px;
 }
 
-// ─── Profile Completion Chip ──────────────────────────────────────────────────
+// Profile Completion Chip
 .profile-completion {
   display: flex;
   align-items: center;
@@ -115,7 +115,7 @@
   }
 }
 
-// ─── Icon Button (Notifications etc.) ─────────────────────────────────────────
+// Icon Button (Notifications etc.)
 .icon-button {
   position: relative;
   width: 40px;
@@ -169,7 +169,7 @@
   }
 }
 
-// ─── User Menu Pill ───────────────────────────────────────────────────────────
+// User Menu Pill
 .user-menu {
   display: flex;
   align-items: center;
@@ -250,7 +250,7 @@
   }
 }
 
-// ─── Theme Toggle (always at far right) ───────────────────────────────────────
+// Theme Toggle (always at far right)
 .theme-toggle {
   appearance: none;
   border: 1.5px solid #c9d3e0;
@@ -358,8 +358,7 @@
   color: #ffffff; // white on indigo thumb = high contrast
 }
 
-// ─── Floating Panels ──────────────────────────────────────────────────────────
-.notifications-panel,
+// Floating Panels.notifications-panel,
 .profile-panel {
   position: absolute;
   top: calc(100% + 10px);
@@ -471,7 +470,7 @@
   text-align: center;
 }
 
-// ─── Profile Panel Internals ──────────────────────────────────────────────────
+// Profile Panel Internals
 .profile-image-edit {
   display: flex;
   align-items: center;
@@ -681,7 +680,7 @@
   }
 }
 
-// ─── Dark Mode ────────────────────────────────────────────────────────────────
+// Dark Mode
 :host-context(body.dark-theme) {
   .top-header {
     background: rgba(10, 14, 26, 0.97);
@@ -892,7 +891,7 @@
   }
 }
 
-// ─── Responsive ───────────────────────────────────────────────────────────────
+// Responsive
 @media (max-width: 1024px) {
   .top-header {
     padding: 0 18px;

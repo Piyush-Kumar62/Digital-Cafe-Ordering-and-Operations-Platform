@@ -1,11 +1,40 @@
 <div class="pay-page">
   <!-- ══ Page header ══════════════════════════════════════════════════════════ -->
-  <div class="pay-heading">
-    <div class="pay-heading__left">
-      <span class="pay-heading__icon material-icons">receipt_long</span>
-      <div>
-        <h1 class="pay-heading__title">Payment History</h1>
-        <p class="pay-heading__sub">All your transactions in one place</p>
+  <div class="pay-heading-card">
+    <div class="pay-heading">
+      <div class="pay-heading__left">
+        <span class="pay-heading__icon material-icons">receipt_long</span>
+        <div>
+          <h1 class="pay-heading__title">Payment History</h1>
+          <p class="pay-heading__sub">All your transactions in one place</p>
+        </div>
+      </div>
+      <div class="pay-filters" aria-label="Payment filters">
+        <label class="pay-filters__group">
+          <span>Day</span>
+          <select
+            class="pay-filter-select"
+            [value]="selectedDayFilter"
+            (change)="onDayFilterChange($any($event.target).value)"
+          >
+            <option value="ALL_DAYS">All Days</option>
+            <option value="TODAY">Today</option>
+            <option value="YESTERDAY">Yesterday</option>
+          </select>
+        </label>
+        <label class="pay-filters__group">
+          <span>Period</span>
+          <select
+            class="pay-filter-select"
+            [value]="selectedPeriodFilter"
+            (change)="onPeriodFilterChange($any($event.target).value)"
+          >
+            <option value="ALL_PERIODS">All Periods</option>
+            <option value="THIS_WEEK">This Week</option>
+            <option value="LAST_WEEK">Last Week</option>
+            <option value="THIS_MONTH">This Month</option>
+          </select>
+        </label>
       </div>
     </div>
   </div>
@@ -33,7 +62,7 @@
         <span class="material-icons psc__icon">receipt</span>
         <div>
           <p class="psc__lbl">Total Payments</p>
-          <p class="psc__val">{{ payments.length }}</p>
+          <p class="psc__val">{{ filteredPayments.length }}</p>
         </div>
       </div>
       <div class="pay-stat-card pay-stat-card--green">

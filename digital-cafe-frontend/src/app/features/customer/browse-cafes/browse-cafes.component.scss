@@ -1,9 +1,10 @@
 .browse-cafes-page {
-  max-width: 1200px;
-  margin: 0 auto;
+  width: 100%;
+  max-width: none;
+  margin: 0;
 }
 
-// ── Page Header ─────────────────────────────────────────────────────
+// Page Header
 .page-header {
   display: flex;
   align-items: flex-start;
@@ -98,7 +99,7 @@
   }
 }
 
-// ── Search ───────────────────────────────────────────────────────────
+// Search
 .search-wrap {
   position: relative;
   flex: 1 1 420px;
@@ -191,7 +192,7 @@
   }
 }
 
-// ── Live indicator ───────────────────────────────────────────────────
+// Live indicator
 .live-dot {
   width: 8px;
   height: 8px;
@@ -211,7 +212,7 @@
   }
 }
 
-// ── Skeleton loading ─────────────────────────────────────────────────
+// Skeleton loading
 .skeleton-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -264,7 +265,7 @@
   }
 }
 
-// ── State boxes (error / empty) ──────────────────────────────────────
+// State boxes (error / empty)
 .state-box {
   display: flex;
   flex-direction: column;
@@ -324,14 +325,14 @@
   }
 }
 
-// ── Cafe grid ────────────────────────────────────────────────────────
+// Cafe grid
 .cafe-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 1.6rem;
 }
 
-// ── Cafe card ────────────────────────────────────────────────────────
+// Cafe card
 .cafe-card {
   position: relative;
   border-radius: 20px;
@@ -354,7 +355,7 @@
   }
 }
 
-// ── Card image ───────────────────────────────────────────────────────
+// Card image
 .cafe-card-img-wrap {
   position: relative;
   height: 200px;
@@ -444,7 +445,7 @@
   }
 }
 
-// ── Card body ────────────────────────────────────────────────────────
+// Card body
 .cafe-card-body {
   padding: 1.25rem 1.3rem 1.35rem;
 }
@@ -483,7 +484,7 @@
   overflow: hidden;
 }
 
-// ── Card footer ──────────────────────────────────────────────────────
+// Card footer
 .cafe-card-footer {
   display: flex;
   flex-direction: column;
@@ -557,7 +558,7 @@
   filter: brightness(1.05);
 }
 
-// ── Responsive ───────────────────────────────────────────────────────
+// Responsive
 @media (max-width: 768px) {
   .page-header {
     flex-direction: column;

@@ -5,8 +5,11 @@ import {
   FormBuilder,
   FormGroup,
   ReactiveFormsModule,
+  AbstractControl,
+  ValidationErrors,
   Validators,
 } from "@angular/forms";
+import { OnInit } from "@angular/core";
 import { Router } from "@angular/router";
 import { HttpClient } from "@angular/common/http";
 import { environment } from "@environments/environment";
@@ -19,7 +22,12 @@ import { MatAutocompleteModule } from "@angular/material/autocomplete";
 import { MatInputModule } from "@angular/material/input";
 import { EducationDataService } from "@shared/services/education-data.service";
 import { Institution } from "@shared/models/education.model";
-import { debounceTime, distinctUntilChanged, switchMap, catchError } from "rxjs/operators";
+import {
+  debounceTime,
+  distinctUntilChanged,
+  switchMap,
+  catchError,
+} from "rxjs/operators";
 import { forkJoin, of } from "rxjs";
 
 interface WorkExperienceFormValue {
@@ -46,10 +54,13 @@ interface WorkExperienceFormValue {
   templateUrl: "./complete-profile.component.html",
   styleUrls: ["./complete-profile.component.scss"],
 })
-export class CompleteProfileComponent {
+export class CompleteProfileComponent implements OnInit {
   loading = false;
   submitted = false;
   form: FormGroup;
+  completionPercentage = 0;
+  missingRequiredFields: string[] = [];
+  readonly maxDob = this.getMaxDob();
   addressFormSubmitted = false;
   degreeOptions: string[] = [];
   branchOptions: string[] = [];
@@ -75,7 +86,7 @@ export class CompleteProfileComponent {
       firstName: ["", [Validators.required, Validators.maxLength(50)]],
       lastName: ["", [Validators.required, Validators.maxLength(50)]],
       email: [{ value: "", disabled: true }],
-      dateOfBirth: ["", Validators.required],
+      dateOfBirth: ["", [Validators.required, this.pastDateValidator]],
       gender: ["", Validators.required],
       phoneNumber: [
         "",
@@ -124,7 +135,10 @@ export class CompleteProfileComponent {
         this.educationData.getBranchOptions(degree).subscribe((branches) => {
           this.branchOptions = branches || [];
           this.branchLoading = false;
-          if (!this.branchOptions.length && this.branchNoticeDegree !== degree) {
+          if (
+            !this.branchOptions.length &&
+            this.branchNoticeDegree !== degree
+          ) {
             this.branchNoticeDegree = degree;
             this.alertService.info(
               "Branch list unavailable",
@@ -157,20 +171,35 @@ export class CompleteProfileComponent {
             return of([]);
           }
 
-          return this.educationData.searchInstitutions(normalized).pipe(
-            switchMap((results) => of(results)),
-          );
+          return this.educationData
+            .searchInstitutions(normalized)
+            .pipe(switchMap((results) => of(results)));
         }),
       )
       .subscribe((results) => {
         this.institutionLoading = false;
         this.institutionOptions = results || [];
         const raw = this.form.get("institutionName")?.value;
-        const query = String(typeof raw === "string" ? raw : raw?.name || "").trim();
-        this.institutionNoResults = query.length >= 2 && (results || []).length === 0;
+        const query = String(
+          typeof raw === "string" ? raw : raw?.name || "",
+        ).trim();
+        this.institutionNoResults =
+          query.length >= 2 && (results || []).length === 0;
       });
 
+    this.form.valueChanges.pipe(debounceTime(120)).subscribe(() => {
+      this.updateCompletionPreview();
+    });
+  }
+
+  ngOnInit(): void {
+    const user = this.authService.currentUserValue;
+    if (user?.isProfileComplete) {
+      this.router.navigate(["/customer/dashboard"]);
+      return;
+    }
     this.prefillFromExistingProfile();
+    this.updateCompletionPreview();
   }
 
   displayInstitution(value: Institution | string): string {
@@ -180,12 +209,16 @@ export class CompleteProfileComponent {
 
   onInstitutionSelected(inst: Institution): void {
     this.form.get("institutionName")?.setValue(inst.name, { emitEvent: false });
-    this.form.get("institutionId")?.setValue(inst.id ?? null, { emitEvent: false });
+    this.form
+      .get("institutionId")
+      ?.setValue(inst.id ?? null, { emitEvent: false });
   }
 
   useTypedInstitution(): void {
     const raw = this.form.get("institutionName")?.value;
-    const value = String(typeof raw === "string" ? raw : raw?.name || "").trim();
+    const value = String(
+      typeof raw === "string" ? raw : raw?.name || "",
+    ).trim();
     this.form.get("institutionName")?.setValue(value, { emitEvent: false });
     this.form.get("institutionId")?.setValue(null, { emitEvent: false });
     this.institutionNoResults = false;
@@ -205,7 +238,9 @@ export class CompleteProfileComponent {
   }
 
   addWorkExperience(): void {
-    this.workExperienceList.push(this.createWorkGroup());
+    const group = this.createWorkGroup();
+    this.workExperienceList.push(group);
+    this.syncWorkGroupState(group);
   }
 
   removeWorkExperience(index: number): void {
@@ -221,11 +256,26 @@ export class CompleteProfileComponent {
       group.get("endDate")?.setValue("");
       group.get("reasonForLeaving")?.setValue("");
     }
+    this.syncWorkGroupState(group);
   }
 
   isInvalid(controlName: string): boolean {
     const control = this.form.get(controlName);
     return !!control && control.invalid && (control.touched || this.submitted);
+  }
+
+  getDobError(): string {
+    const control = this.form.get("dateOfBirth");
+    if (!control || !(control.touched || this.submitted)) {
+      return "";
+    }
+    if (control.hasError("required")) {
+      return "Date of birth is required.";
+    }
+    if (control.hasError("notPastDate")) {
+      return "Date of birth must be in the past.";
+    }
+    return "Invalid date of birth.";
   }
 
   submit(): void {
@@ -242,9 +292,9 @@ export class CompleteProfileComponent {
     const payload = {
       firstName: v.firstName,
       lastName: v.lastName,
-      dateOfBirth: v.dateOfBirth,
+      dateOfBirth: this.normalizeDateForApi(v.dateOfBirth),
       gender: v.gender,
-      phoneNumber: v.phoneNumber,
+      phoneNumber: this.normalizePhone(v.phoneNumber),
       govtIdType: v.govtIdType || null,
       govtIdNumber: v.govtIdNumber || null,
       profilePictureUrl: null,
@@ -255,34 +305,57 @@ export class CompleteProfileComponent {
         state: v.state,
         pincode: v.pincode,
       },
-      academicInformation: [
-        this.buildAcademicPayload(v),
-      ],
+      academicInformation: [this.buildAcademicPayload(v)],
       workExperiences: this.buildWorkExperiencePayload(),
     };
 
     this.http
-      .post<{ data?: { completionPercentage?: number } }>(`${environment.apiUrl}/profiles`, payload)
+      .post<{
+        data?: { completionPercentage?: number };
+      }>(`${environment.apiUrl}/profiles`, payload)
       .subscribe({
         next: (res) => {
-          const completionPercentage = res?.data?.completionPercentage ?? 0;
-          const isProfileComplete = completionPercentage >= 100;
-          const currentUser = this.authService.currentUserValue;
-          if (currentUser) {
-            this.authService.updateUserData({
-              ...currentUser,
-              firstName: v.firstName,
-              lastName: v.lastName,
-              isProfileComplete,
-              profileCompletionPercentage: completionPercentage,
-            });
-          }
+          const completionPercentage =
+            res?.data?.completionPercentage ??
+            this.authService.currentUserValue?.profileCompletionPercentage ??
+            0;
+          this.apiService
+            .getCustomerProfile()
+            .pipe(catchError(() => of(null)))
+            .subscribe((selfProfile) => {
+              const refreshedCompletion =
+                selfProfile?.profileCompletionPercentage ??
+                completionPercentage;
+              const refreshedComplete = refreshedCompletion >= 100;
+              const currentUser = this.authService.currentUserValue;
 
-          this.alertService.success("Profile completed successfully.");
-          this.router.navigate([isProfileComplete ? "/customer/cafe" : "/customer/complete-profile"]);
+              if (currentUser) {
+                this.authService.updateUserData({
+                  ...currentUser,
+                  firstName: v.firstName,
+                  lastName: v.lastName,
+                  phoneNumber: this.normalizePhone(v.phoneNumber),
+                  govtIdType: v.govtIdType || currentUser.govtIdType,
+                  govtIdNumber: v.govtIdNumber || currentUser.govtIdNumber,
+                  isProfileComplete: refreshedComplete,
+                  profileCompletionPercentage: refreshedCompletion,
+                });
+              }
+
+              this.completionPercentage = refreshedCompletion;
+              this.updateCompletionPreview();
+
+              this.alertService.success("Profile completed successfully.");
+              this.router.navigate([
+                refreshedComplete
+                  ? "/customer/dashboard"
+                  : "/customer/complete-profile",
+              ]);
+            });
         },
         error: (error) => {
-          const message = error?.error?.message || "Failed to complete profile.";
+          const message =
+            error?.error?.message || "Failed to complete profile.";
           this.alertService.error(message);
           this.loading = false;
         },
@@ -294,7 +367,9 @@ export class CompleteProfileComponent {
 
   private prefillFromExistingProfile(): void {
     forkJoin({
-      basic: this.apiService.getCustomerProfile().pipe(catchError(() => of(null))),
+      basic: this.apiService
+        .getCustomerProfile()
+        .pipe(catchError(() => of(null))),
       full: this.apiService.getMyFullProfile().pipe(catchError(() => of(null))),
     }).subscribe({
       next: ({ basic, full }) => {
@@ -320,77 +395,144 @@ export class CompleteProfileComponent {
             this.authService.currentUserValue?.email ||
             "",
           dateOfBirth:
-            full?.dateOfBirth ||
-            basic?.dateOfBirth ||
+            this.normalizeDateForInput(full?.dateOfBirth) ||
+            this.normalizeDateForInput(basic?.dateOfBirth) ||
             "",
-          gender:
-            full?.gender ||
-            basic?.gender ||
-            "",
+          gender: full?.gender || basic?.gender || "",
           phoneNumber:
-            full?.phoneNumber ||
-            basic?.phoneNumber ||
+            this.normalizePhone(full?.phoneNumber) ||
+            this.normalizePhone(basic?.phoneNumber) ||
+            this.normalizePhone(
+              this.authService.currentUserValue?.phoneNumber,
+            ) ||
             "",
           govtIdType:
             full?.govtIdType ||
             basic?.govtIdType ||
+            this.authService.currentUserValue?.govtIdType ||
             "",
           govtIdNumber:
             full?.govtIdNumber ||
             basic?.govtIdNumber ||
+            this.authService.currentUserValue?.govtIdNumber ||
             "",
           street: address?.street || "",
           plotNumber: address?.plotNumber || "",
           city: address?.city || "",
           state: address?.state || "",
           pincode: address?.pincode || address?.zipCode || "",
-          institutionId:
-            academic?.institutionId ?? null,
-          institutionName:
-            academic?.institutionName || "",
+          institutionId: academic?.institutionId ?? null,
+          institutionName: academic?.institutionName || "",
           degree: academic?.degree || "",
-          branch:
-            academic?.fieldOfStudy ||
-            "",
+          branch: academic?.fieldOfStudy || "",
           passingYear:
-            (academic?.endDate ? new Date(academic.endDate).getFullYear() : "") ||
-            "",
-          gradingType:
-            this.inferGradingTypeFromProfile(academic?.grade),
-          score:
-            this.parseGradeFromProfile(academic?.grade) ||
-            "",
+            (academic?.endDate
+              ? new Date(academic.endDate).getFullYear()
+              : "") || "",
+          gradingType: this.inferGradingTypeFromProfile(academic?.grade),
+          score: this.parseGradeFromProfile(academic?.grade) || "",
           currentlyStudying: !!(
-            academic?.isCurrent ||
-            academic?.isCurrentlyStudying
+            academic?.isCurrent || academic?.isCurrentlyStudying
           ),
         });
 
         const workList = this.extractWorkFromSources(full, {});
         this.replaceWorkArray(workList);
         this.onAcademicCurrentlyStudyingChange();
+        this.completionPercentage =
+          full?.completionPercentage ??
+          full?.profileCompletionPercentage ??
+          basic?.profileCompletionPercentage ??
+          this.authService.currentUserValue?.profileCompletionPercentage ??
+          0;
+        this.updateCompletionPreview();
       },
       error: () => {
         this.form.patchValue({
-          firstName:
-            this.authService.currentUserValue?.firstName ||
-            "",
-          lastName:
-            this.authService.currentUserValue?.lastName ||
-            "",
-          email:
-            this.authService.currentUserValue?.email ||
-            "",
+          firstName: this.authService.currentUserValue?.firstName || "",
+          lastName: this.authService.currentUserValue?.lastName || "",
+          email: this.authService.currentUserValue?.email || "",
         });
 
         const workList = this.extractWorkFromSources(null, {});
         this.replaceWorkArray(workList);
         this.onAcademicCurrentlyStudyingChange();
+        this.updateCompletionPreview();
       },
     });
   }
 
-  private createWorkGroup(initial?: Partial<WorkExperienceFormValue>): FormGroup {
+  private calculateCompletionFromForm(): number {
+    const v = this.form.getRawValue();
+    let filled = 0;
+    const total = 9;
+
+    if (String(v.firstName || "").trim()) filled++;
+    if (String(v.lastName || "").trim()) filled++;
+    if (v.dateOfBirth) filled++;
+    if (String(v.gender || "").trim()) filled++;
+    if (this.normalizePhone(v.phoneNumber)) filled++;
+    if (String(v.govtIdType || "").trim()) filled++;
+    if (String(v.govtIdNumber || "").trim()) filled++;
+
+    const addressComplete =
+      String(v.street || "").trim() &&
+      String(v.city || "").trim() &&
+      String(v.state || "").trim() &&
+      String(v.pincode || "").trim();
+    if (addressComplete) filled++;
+
+    const hasAcademic =
+      String(v.institutionName || "").trim() &&
+      String(v.degree || "").trim() &&
+      String(v.branch || "").trim();
+    if (hasAcademic) filled++;
+
+    return Math.round((filled * 100) / total);
+  }
+
+  private collectMissingRequiredFields(): string[] {
+    const v = this.form.getRawValue();
+    const missing: string[] = [];
+
+    if (!String(v.firstName || "").trim()) missing.push("First Name");
+    if (!String(v.lastName || "").trim()) missing.push("Last Name");
+    if (!v.dateOfBirth) missing.push("Date of Birth");
+    if (!String(v.gender || "").trim()) missing.push("Gender");
+    if (!this.normalizePhone(v.phoneNumber)) missing.push("Phone Number");
+    if (!String(v.govtIdType || "").trim()) missing.push("Government ID Type");
+    if (!String(v.govtIdNumber || "").trim())
+      missing.push("Government ID Number");
+
+    const addressFields = [
+      ["street", "Street"],
+      ["city", "City"],
+      ["state", "State"],
+      ["pincode", "Pincode"],
+    ] as const;
+
+    addressFields.forEach(([key, label]) => {
+      if (!String((v as any)[key] || "").trim()) {
+        missing.push(label);
+      }
+    });
+
+    if (!String(v.institutionName || "").trim())
+      missing.push("Institution Name");
+    if (!String(v.degree || "").trim()) missing.push("Degree");
+    if (!String(v.branch || "").trim()) missing.push("Branch");
+
+    return missing;
+  }
+
+  private updateCompletionPreview(): void {
+    this.completionPercentage = this.calculateCompletionFromForm();
+    this.missingRequiredFields = this.collectMissingRequiredFields();
+  }
+
+  private createWorkGroup(
+    initial?: Partial<WorkExperienceFormValue>,
+  ): FormGroup {
     return this.fb.group({
       companyName: [initial?.companyName || ""],
       designation: [initial?.designation || ""],
@@ -406,28 +548,42 @@ export class CompleteProfileComponent {
   private replaceWorkArray(items: any[]): void {
     this.workExperienceList.clear();
     if (!items?.length) {
-      this.workExperienceList.push(this.createWorkGroup());
+      const group = this.createWorkGroup();
+      this.workExperienceList.push(group);
+      this.syncWorkGroupState(group);
       return;
     }
     items.forEach((item) => {
-      this.workExperienceList.push(
-        this.createWorkGroup({
-          companyName: item?.companyName || "",
-          designation: item?.designation || item?.position || "",
-          startDate: item?.startDate || "",
-          endDate: item?.endDate || "",
-          currentlyWorking:
-            item?.currentlyWorking ||
-            item?.isCurrent ||
-            item?.isCurrentlyWorking ||
-            false,
-          ctcAmount: item?.ctc?.amount || "",
-          ctcCurrency: item?.ctc?.currency || "LPA",
-          reasonForLeaving:
-            item?.reasonForLeaving || item?.responsibilities || "",
-        }),
-      );
+      const group = this.createWorkGroup({
+        companyName: item?.companyName || "",
+        designation: item?.designation || item?.position || "",
+        startDate: item?.startDate || "",
+        endDate: item?.endDate || "",
+        currentlyWorking:
+          item?.currentlyWorking ||
+          item?.isCurrent ||
+          item?.isCurrentlyWorking ||
+          false,
+        ctcAmount: item?.ctc?.amount || "",
+        ctcCurrency: item?.ctc?.currency || "LPA",
+        reasonForLeaving:
+          item?.reasonForLeaving || item?.responsibilities || "",
+      });
+      this.workExperienceList.push(group);
+      this.syncWorkGroupState(group);
     });
+  }
+
+  private syncWorkGroupState(group: FormGroup): void {
+    const isCurrent = !!group.get("currentlyWorking")?.value;
+    const endDate = group.get("endDate");
+    if (!endDate) return;
+    if (isCurrent) {
+      endDate.disable({ emitEvent: false });
+      endDate.setValue("", { emitEvent: false });
+    } else {
+      endDate.enable({ emitEvent: false });
+    }
   }
 
   private buildWorkExperiencePayload(): any[] {
@@ -469,8 +625,7 @@ export class CompleteProfileComponent {
       grade = score ? `${score}%` : "PERCENTAGE";
     }
 
-    const endDate =
-      v.passingYear ? `${v.passingYear}-01-01` : null;
+    const endDate = v.passingYear ? `${v.passingYear}-01-01` : null;
 
     return {
       institutionId: v.institutionId || null,
@@ -492,7 +647,9 @@ export class CompleteProfileComponent {
     return raw.trim();
   }
 
-  private inferGradingTypeFromProfile(raw?: string): "CGPA" | "PERCENTAGE" | "GRADE" {
+  private inferGradingTypeFromProfile(
+    raw?: string,
+  ): "CGPA" | "PERCENTAGE" | "GRADE" {
     if (!raw) return "CGPA";
     if (raw.startsWith("CGPA")) return "CGPA";
     if (raw.endsWith("%")) return "PERCENTAGE";
@@ -511,10 +668,71 @@ export class CompleteProfileComponent {
     if (Array.isArray(full?.workExperiences)) return full.workExperiences;
     if (Array.isArray(full?.workExperience)) return full.workExperience;
     if (Array.isArray(full?.workExperienceList)) return full.workExperienceList;
-    if (Array.isArray(cachedPayload?.workExperienceList)) return cachedPayload.workExperienceList;
+    if (Array.isArray(cachedPayload?.workExperienceList))
+      return cachedPayload.workExperienceList;
     return [];
   }
 
+  private readonly pastDateValidator = (
+    control: AbstractControl,
+  ): ValidationErrors | null => {
+    const normalized = this.normalizeDateForInput(control.value);
+    if (!normalized) {
+      return null;
+    }
+    const valueDate = new Date(`${normalized}T00:00:00`);
+    if (Number.isNaN(valueDate.getTime())) {
+      return { notPastDate: true };
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (valueDate >= today) {
+      return { notPastDate: true };
+    }
+    return null;
+  };
+
+  private normalizePhone(value: unknown): string {
+    const digits = String(value || "").replace(/\D/g, "");
+    if (!digits) return "";
+    return digits.length > 10 ? digits.slice(-10) : digits;
+  }
+
+  private normalizeDateForInput(value: unknown): string {
+    const raw = String(value || "").trim();
+    if (!raw) return "";
+    if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+      return raw;
+    }
+    const ddmmyyyy = raw.match(/^(\d{2})[-/](\d{2})[-/](\d{4})$/);
+    if (ddmmyyyy) {
+      const [, dd, mm, yyyy] = ddmmyyyy;
+      return `${yyyy}-${mm}-${dd}`;
+    }
+    const parsed = new Date(raw);
+    if (Number.isNaN(parsed.getTime())) {
+      return "";
+    }
+    const yyyy = parsed.getFullYear();
+    const mm = String(parsed.getMonth() + 1).padStart(2, "0");
+    const dd = String(parsed.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
+  private normalizeDateForApi(value: unknown): string | null {
+    const normalized = this.normalizeDateForInput(value);
+    return normalized || null;
+  }
+
+  private getMaxDob(): string {
+    const d = new Date();
+    d.setDate(d.getDate() - 1);
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  }
 
   get workExperienceList(): FormArray<FormGroup> {
     return this.form.get("workExperienceList") as FormArray<FormGroup>;

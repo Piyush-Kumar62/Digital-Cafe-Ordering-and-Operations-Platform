@@ -4,23 +4,48 @@
       <div class="identity-main">
         <div class="identity-text">
           <h1>{{ data.cafeDetails.name || "Cafe" }}</h1>
-          <p class="category-line" *ngIf="getTopCategories().length">
-            {{ getTopCategories().join(", ") }}
-          </p>
+          <div class="category-line" *ngIf="getTopCategories().length">
+            <span
+              class="category-chip"
+              *ngFor="let category of getTopCategories()"
+              [ngClass]="getCategoryClass(category)"
+            >
+              {{ formatCategoryLabel(category) }}
+            </span>
+          </div>
           <p class="location" *ngIf="data.cafeDetails.location">
             {{ data.cafeDetails.location }}
           </p>
-          <p class="desc" *ngIf="data.cafeDetails.description">
-            {{ data.cafeDetails.description }}
+          <p
+            class="desc"
+            *ngIf="
+              getEnhancedDescription(
+                data.cafeDetails.name,
+                data.cafeDetails.description
+              )
+            "
+          >
+            {{
+              getEnhancedDescription(
+                data.cafeDetails.name,
+                data.cafeDetails.description
+              )
+            }}
           </p>
           <div class="meta-row">
             <span
               class="status-chip"
               [class.status-chip--closed]="!isCafeOpenNow()"
             >
+              <i
+                class="bi"
+                [class.bi-unlock-fill]="isCafeOpenNow()"
+                [class.bi-lock-fill]="!isCafeOpenNow()"
+              ></i>
               {{ isCafeOpenNow() ? "Open now" : "Closed now" }}
             </span>
             <span class="timing-text">
+              <i class="bi bi-clock-history"></i>
               {{ fmt12h(data.cafeDetails.openTime) || "Hours TBD" }}
               <ng-container *ngIf="fmt12h(data.cafeDetails.closeTime)">
                 – {{ fmt12h(data.cafeDetails.closeTime) }}
@@ -51,10 +76,18 @@
 
         <div class="rating-cards">
           <div class="rating-card">
-            <span class="rating-pill">{{
-              data.cafeDetails.rating || 0 | number: "1.1-1"
-            }}</span>
-            <span class="rating-label">Dining Rating</span>
+            <span class="rating-pill-wrap">
+              <span class="rating-pill">{{
+                data.cafeDetails.rating || 0 | number: "1.1-1"
+              }}</span>
+              <span class="rating-pill-icon">
+                <i class="bi bi-star-fill"></i>
+              </span>
+            </span>
+            <span class="rating-copy">
+              <span class="rating-label">Dining Rating</span>
+              <span class="rating-subtext">Guest favorite</span>
+            </span>
           </div>
         </div>
       </div>
@@ -529,6 +562,7 @@
                 "
                 [alt]="item.name"
                 loading="lazy"
+                (error)="onMenuItemImageError($event)"
               />
               <div class="unavailable-overlay" *ngIf="!item.available">
                 <span>Unavailable</span>

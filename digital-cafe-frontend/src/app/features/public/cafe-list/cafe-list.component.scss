@@ -1,18 +1,15 @@
-// ─── Global host ────────────────────────────────────────────────────────────
-:host {
-  display: block;
+// Global host
+:host {  display: block;
 }
 
-// ─── Page wrapper ────────────────────────────────────────────────────────────
-.cafe-page {
-  min-height: 100vh;
+// Page wrapper
+.cafe-page {  min-height: 100vh;
   background: linear-gradient(160deg, #0b1220 0%, #111827 60%, #1a1005 100%);
   color: #f1f5f9;
 }
 
-// ─── Hero ────────────────────────────────────────────────────────────────────
-.cafe-hero {
-  position: relative;
+// Hero
+.cafe-hero {  position: relative;
   min-height: 520px;
   display: flex;
   align-items: center;
@@ -103,9 +100,8 @@
   white-space: nowrap;
 }
 
-// ─── Search bar ──────────────────────────────────────────────────────────────
-.cafe-search-bar {
-  position: relative;
+// Search bar
+.cafe-search-bar {  position: relative;
   max-width: 540px;
   margin: 0 auto 2rem;
   display: flex;
@@ -156,9 +152,8 @@
   white-space: nowrap;
 }
 
-// ─── Hero Stats ──────────────────────────────────────────────────────────────
-.cafe-hero-stats {
-  display: flex;
+// Hero Stats
+.cafe-hero-stats {  display: flex;
   justify-content: center;
   gap: 2.5rem;
   flex-wrap: wrap;
@@ -177,16 +172,14 @@
   }
 }
 
-// ─── Grid Section ────────────────────────────────────────────────────────────
-.cafe-grid-section {
-  padding: 2.5rem 2rem 4rem;
+// Grid Section
+.cafe-grid-section {  padding: 2.5rem 2rem 4rem;
   max-width: 1280px;
   margin: 0 auto;
 }
 
-// ─── Loading state ───────────────────────────────────────────────────────────
-.cafe-state {
-  text-align: center;
+// Loading state
+.cafe-state {  text-align: center;
   padding: 5rem 1rem;
   color: #94a3b8;
 
@@ -212,9 +205,8 @@
   animation: spin 0.75s linear infinite;
 }
 
-// ─── Empty state ─────────────────────────────────────────────────────────────
-.cafe-empty {
-  text-align: center;
+// Empty state
+.cafe-empty {  text-align: center;
   padding: 5rem 1rem;
   color: #94a3b8;
 
@@ -236,16 +228,14 @@
   opacity: 0.6;
 }
 
-// ─── Card Grid ───────────────────────────────────────────────────────────────
-.cafe-grid {
-  display: grid;
+// Card Grid
+.cafe-grid {  display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 1.6rem;
 }
 
-// ─── Cafe Card ───────────────────────────────────────────────────────────────
-.cafe-card {
-  position: relative;
+// Cafe Card
+.cafe-card {  position: relative;
   border-radius: 20px;
   overflow: hidden;
   background: linear-gradient(160deg, #1e293b, #162032);
@@ -266,9 +256,8 @@
   }
 }
 
-// ─── Card Image ──────────────────────────────────────────────────────────────
-.cafe-card-img-wrap {
-  position: relative;
+// Card Image
+.cafe-card-img-wrap {  position: relative;
   height: 200px;
   overflow: hidden;
 }
@@ -294,9 +283,8 @@
   );
 }
 
-// ─── Rating badge ────────────────────────────────────────────────────────────
-.cafe-rating {
-  position: absolute;
+// Rating badge
+.cafe-rating {  position: absolute;
   top: 0.75rem;
   right: 0.75rem;
   display: inline-flex;
@@ -326,9 +314,8 @@
   }
 }
 
-// ─── Card Body ───────────────────────────────────────────────────────────────
-.cafe-card-body {
-  padding: 1.25rem 1.3rem 1.35rem;
+// Card Body
+.cafe-card-body {  padding: 1.25rem 1.3rem 1.35rem;
 }
 
 .cafe-card-name {
@@ -438,9 +425,8 @@
   filter: brightness(1.05);
 }
 
-// ─── Pagination ──────────────────────────────────────────────────────────────
-.cafe-pager {
-  display: flex;
+// Pagination
+.cafe-pager {  display: flex;
   align-items: center;
   justify-content: center;
   gap: 1.5rem;
@@ -502,9 +488,8 @@
   }
 }
 
-// ─── Responsive ──────────────────────────────────────────────────────────────
-@media (max-width: 768px) {
-  .cafe-hero-content {
+// Responsive
+@media (max-width: 768px) {  .cafe-hero-content {
     padding: 90px 1.25rem 2.5rem;
   }
 

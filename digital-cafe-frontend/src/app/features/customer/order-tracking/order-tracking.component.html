@@ -1,6 +1,6 @@
 <div class="ot-wrap">
-  <!-- ── Initial loading ──────────────────────────────────────────────────── -->
-  <div *ngIf="loading" class="ot-skeleton">
+  <!-- Initial loading -->
+    <div *ngIf="loading" class="ot-skeleton">
     <div class="ot-skeleton__hero"></div>
     <div class="ot-skeleton__meta">
       <div class="ot-skeleton__chip"></div>
@@ -12,8 +12,8 @@
     <div class="ot-skeleton__card"></div>
   </div>
 
-  <!-- ── Error state ───────────────────────────────────────────────────────── -->
-  <div *ngIf="!loading && error" class="ot-error-state">
+  <!-- Error state -->
+    <div *ngIf="!loading && error" class="ot-error-state">
     <span class="material-icons">wifi_off</span>
     <h3>Couldn't load order</h3>
     <p>{{ error }}</p>
@@ -22,8 +22,8 @@
     >
   </div>
 
-  <!-- ── Order detail ──────────────────────────────────────────────────────── -->
-  <ng-container *ngIf="!loading && order as o">
+  <!-- Order detail -->
+    <ng-container *ngIf="!loading && order as o">
     <!-- Hero header -->
     <div class="ot-hero">
       <div class="ot-hero__top">
@@ -143,14 +143,39 @@
     <!-- Footer actions -->
     <div class="ot-actions">
       <button
-        *ngIf="canDownloadReceipt(o)"
         type="button"
         class="ot-btn ot-btn--receipt"
+        [disabled]="isDownloadingReceipt(o.id)"
         (click)="downloadReceipt(o, $event)"
+        title="Download PDF receipt"
+        aria-label="Download PDF receipt"
       >
-        <span class="material-icons">download</span>
-        Download payment receipt
+        <span class="material-icons">{{
+          isDownloadingReceipt(o.id) ? "hourglass_top" : "download"
+        }}</span>
+        {{
+          isDownloadingReceipt(o.id)
+            ? "Downloading PDF receipt..."
+            : "Download PDF receipt"
+        }}
       </button>
+
+      <button
+        type="button"
+        class="ot-btn ot-btn--email"
+        [disabled]="isSendingReceiptEmail(o.id)"
+        (click)="sendReceiptEmail(o, $event)"
+        title="Resend by email"
+        aria-label="Resend by email"
+      >
+        <span class="material-icons">{{
+          isSendingReceiptEmail(o.id) ? "hourglass_top" : "mail"
+        }}</span>
+        {{
+          isSendingReceiptEmail(o.id) ? "Sending email..." : "Resend by email"
+        }}
+      </button>
+
       <a routerLink="/customer/browse-cafes" class="ot-btn ot-btn--primary">
         <span class="material-icons">add_shopping_cart</span>
         Place another order
@@ -162,15 +187,61 @@
     </div>
   </ng-container>
 
-  <!-- ── Recent orders (no specific order selected) ────────────────────────── -->
-  <ng-container *ngIf="!loading && !order && recentOrders.length > 0">
+  <!-- Recent orders (no specific order selected) -->
+    <ng-container *ngIf="!loading && !order && recentOrders.length > 0">
     <div class="ot-hero ot-hero--plain">
-      <h1 class="ot-hero__order-num">Your Recent Orders</h1>
-      <p class="ot-hero__sub">Select an order to track its live status</p>
+      <div class="ot-hero__topbar">
+        <div>
+          <h1 class="ot-hero__order-num">Your Recent Orders</h1>
+          <p class="ot-hero__sub">Select an order to track its live status</p>
+        </div>
+        <div class="ot-filters" aria-label="Order filters">
+          <label class="ot-filters__group">
+            <span>Day</span>
+            <select
+              class="ot-filter-select"
+              [value]="selectedDayFilter"
+              (change)="onDayFilterChange($any($event.target).value)"
+            >
+              <option value="ALL_DAYS">All Days</option>
+              <option value="TODAY">Today</option>
+              <option value="YESTERDAY">Yesterday</option>
+            </select>
+          </label>
+          <label class="ot-filters__group">
+            <span>Period</span>
+            <select
+              class="ot-filter-select"
+              [value]="selectedPeriodFilter"
+              (change)="onPeriodFilterChange($any($event.target).value)"
+            >
+              <option value="ALL_PERIODS">All Periods</option>
+              <option value="THIS_WEEK">This Week</option>
+              <option value="LAST_WEEK">Last Week</option>
+              <option value="THIS_MONTH">This Month</option>
+            </select>
+          </label>
+        </div>
+      </div>
     </div>
+
+    <div class="ot-list-meta">
+      <label class="ot-list-meta__size">
+        Rows
+        <select
+          [value]="pageSize"
+          (change)="onPageSizeChange($any($event.target).value)"
+        >
+          <option *ngFor="let size of pageSizeOptions" [value]="size">
+            {{ size }}
+          </option>
+        </select>
+      </label>
+    </div>
+
     <div class="ot-recent-list">
       <a
-        *ngFor="let item of recentOrders"
+        *ngFor="let item of pagedRecentOrders"
         [routerLink]="['/customer/order-tracking', item.id]"
         class="ot-recent-card"
       >
@@ -186,23 +257,82 @@
         <span class="ot-status-badge" [ngClass]="getStatusClass(item.status)">
           {{ formatStatus(item.status) }}
         </span>
-        <button
-          *ngIf="canDownloadReceipt(item)"
-          type="button"
-          class="ot-recent-card__receipt"
-          title="Download payment receipt"
-          aria-label="Download payment receipt"
-          (click)="downloadReceipt(item, $event)"
-        >
-          <span class="material-icons">download</span>
-        </button>
+        <div class="ot-recent-card__actions">
+          <button
+            type="button"
+            class="ot-recent-card__action ot-recent-card__action--receipt"
+            [disabled]="isDownloadingReceipt(item.id)"
+            title="Download PDF receipt"
+            aria-label="Download PDF receipt"
+            (click)="downloadReceipt(item, $event)"
+          >
+            <span class="material-icons">{{
+              isDownloadingReceipt(item.id) ? "hourglass_top" : "download"
+            }}</span>
+            <span class="ot-recent-card__action-text">Receipt</span>
+          </button>
+          <button
+            type="button"
+            class="ot-recent-card__action ot-recent-card__action--mail"
+            [disabled]="isSendingReceiptEmail(item.id)"
+            title="Resend by email"
+            aria-label="Resend by email"
+            (click)="sendReceiptEmail(item, $event)"
+          >
+            <span class="material-icons">{{
+              isSendingReceiptEmail(item.id) ? "hourglass_top" : "mail"
+            }}</span>
+            <span class="ot-recent-card__action-text">Email</span>
+          </button>
+        </div>
         <span class="material-icons ot-recent-card__arrow">chevron_right</span>
       </a>
+
+      <div *ngIf="filteredRecentOrders.length === 0" class="ot-filter-empty">
+        No orders found for selected filters.
+      </div>
+    </div>
+
+    <div class="ot-pagination" *ngIf="filteredRecentOrders.length > 0">
+      <div class="ot-pagination__left">
+        Showing {{ pageRangeStart }}–{{ pageRangeEnd }} of
+        {{ filteredRecentOrders.length }}
+      </div>
+
+      <div class="ot-pagination__right">
+        <button
+          type="button"
+          class="ot-pagination__btn"
+          [disabled]="currentPage <= 1"
+          (click)="prevPage()"
+        >
+          Prev
+        </button>
+
+        <button
+          type="button"
+          class="ot-pagination__page"
+          *ngFor="let page of visiblePages"
+          [class.active]="page === currentPage"
+          (click)="goToPage(page)"
+        >
+          {{ page }}
+        </button>
+
+        <button
+          type="button"
+          class="ot-pagination__btn"
+          [disabled]="currentPage >= totalPages"
+          (click)="nextPage()"
+        >
+          Next
+        </button>
+      </div>
     </div>
   </ng-container>
 
-  <!-- ── Empty state ───────────────────────────────────────────────────────── -->
-  <div
+  <!-- Empty state -->
+    <div
     *ngIf="!loading && !order && recentOrders.length === 0 && !error"
     class="ot-empty"
   >

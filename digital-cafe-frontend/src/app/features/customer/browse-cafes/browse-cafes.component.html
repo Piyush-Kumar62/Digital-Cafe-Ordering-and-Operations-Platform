@@ -8,12 +8,16 @@
       </h1>
       <p class="page-subtitle">
         Find the perfect café, explore the menu, and book your table.
-        {{ cafes.length > 0 ? cafes.length + " cafés available" : "" }}
+        {{
+          (totalElements || cafes.length) > 0
+            ? (totalElements || cafes.length) + " cafés available"
+            : ""
+        }}
       </p>
       <div class="header-meta" *ngIf="cafes.length > 0">
         <span class="meta-pill">
           <span class="material-icons">local_cafe</span>
-          {{ cafes.length }} total
+          {{ totalElements || cafes.length }} total
         </span>
         <span class="meta-pill" *ngIf="filteredCafes.length !== cafes.length">
           <span class="material-icons">tune</span>

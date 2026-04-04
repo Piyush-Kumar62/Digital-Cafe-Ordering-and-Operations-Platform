@@ -1,6 +1,6 @@
 <header class="top-header" (click)="closePopovers()">
-  <!-- ── Left: Welcome greeting ─────────────────────────────────────────── -->
-  <div class="header-left">
+  <!-- Left: Welcome greeting -->
+    <div class="header-left">
     <h1 class="welcome-message">
       Welcome, {{ user?.firstName || profileForm.displayName || user?.username
       || 'Guest' }}!
@@ -8,8 +8,8 @@
     <div class="last-login">Last login: {{ lastLogin | date:'short' }}</div>
   </div>
 
-  <!-- ── Right: Controls ────────────────────────────────────────────────── -->
-  <div class="header-right">
+  <!-- Right: Controls -->
+    <div class="header-right">
     <!-- Profile completion chip -->
     <div class="profile-completion">
       <span class="pc-label">Profile</span>
@@ -92,8 +92,7 @@
       </span>
     </button>
 
-    <!-- ── Floating panels (position: absolute, anchored to header) ─────── -->
-
+    <!-- Floating panels (position: absolute, anchored to header) -->
     <div
       class="notifications-panel"
       *ngIf="showNotifications"
@@ -107,11 +106,31 @@
         class="panel-list"
         *ngIf="notifications.length > 0; else noNotifications"
       >
-        <article class="notification-item" *ngFor="let n of notifications">
+        <article class="notification-item" *ngFor="let n of pagedNotifications">
           <h5>{{ n.title }}</h5>
           <p>{{ n.message }}</p>
           <small>{{ n.createdAt }}</small>
         </article>
+      </div>
+      <div
+        class="panel-header"
+        *ngIf="notifications.length > notificationPageSize"
+      >
+        <button
+          class="link-btn"
+          (click)="prevNotificationPage()"
+          [disabled]="notificationCurrentPage === 1"
+        >
+          Prev
+        </button>
+        <h4>{{ notificationCurrentPage }} / {{ totalNotificationPages }}</h4>
+        <button
+          class="link-btn"
+          (click)="nextNotificationPage()"
+          [disabled]="notificationCurrentPage === totalNotificationPages"
+        >
+          Next
+        </button>
       </div>
       <ng-template #noNotifications>
         <div class="empty-panel">No notifications yet.</div>
@@ -190,7 +209,9 @@
         >
       </div>
       <button class="logout-action" (click)="logout()">
-        <span class="logout-icon material-icons" aria-hidden="true">logout</span>
+        <span class="logout-icon material-icons" aria-hidden="true"
+          >logout</span
+        >
         <span class="logout-text">
           <span class="logout-title">Logout</span>
         </span>

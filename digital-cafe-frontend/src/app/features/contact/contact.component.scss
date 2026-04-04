@@ -1,10 +1,7 @@
-// ─────────────────────────────────────────────────────────────────────────────
-// Contact Page — Adaptive Coffee Theme (Dark + Light Mode)
-// ─────────────────────────────────────────────────────────────────────────────
-
-// ── CSS Custom Properties ─────────────────────────────────────────────────────
-:host {
-  display: block;
+// // Contact Page — Adaptive Coffee Theme (Dark + Light Mode)
+// 
+// CSS Custom Properties
+:host {  display: block;
 
   // Dark mode defaults
   --page-bg-start:   #0b1220;
@@ -39,9 +36,8 @@
   --map-section-b:   #162032;
 }
 
-// ── Light Mode Overrides ───────────────────────────────────────────────────────
-@media (prefers-color-scheme: light) {
-  :host {
+// Light Mode Overrides
+@media (prefers-color-scheme: light) {  :host {
     --page-bg-start:   #faf8f5;
     --page-bg-mid:     #f5f0e8;
     --page-bg-end:     #fef9f0;
@@ -75,8 +71,7 @@
   }
 }
 
-// ─── HERO ─────────────────────────────────────────────────────────────────────
-// Hero is always image-based (dark overlay) — seamlessly blends into page body
+// HERO// Hero is always image-based (dark overlay) — seamlessly blends into page body
 .contact-hero {
   position: relative;
   min-height: 480px;
@@ -200,9 +195,8 @@
   }
 }
 
-// ─── PAGE BODY ────────────────────────────────────────────────────────────────
-.contact-page {
-  background: linear-gradient(
+// PAGE BODY
+.contact-page {  background: linear-gradient(
     160deg,
     var(--page-bg-start) 0%,
     var(--page-bg-mid) 60%,
@@ -212,9 +206,8 @@
   margin-top: 0;  // gap fix: no margin at top of page body
 }
 
-// ─── STATS BAR ────────────────────────────────────────────────────────────────
-.contact-stats-bar {
-  display: flex;
+// STATS BAR
+.contact-stats-bar {  display: flex;
   align-items: center;
   justify-content: center;
   flex-wrap: wrap;
@@ -262,9 +255,8 @@
   flex-shrink: 0;
 }
 
-// ─── CONTENT WRAPPER ──────────────────────────────────────────────────────────
-.contact-content {
-  max-width: 1200px;
+// CONTENT WRAPPER
+.contact-content {  max-width: 1200px;
   margin: 0 auto;
   padding: 2.5rem 1.5rem 4rem;
 }
@@ -280,16 +272,14 @@
   }
 }
 
-// ─── GRID ─────────────────────────────────────────────────────────────────────
-.content-wrapper {
-  display: grid;
+// GRID
+.content-wrapper {  display: grid;
   grid-template-columns: 1fr 1.55fr;
   gap: 2rem;
   margin-bottom: 2rem;
 }
 
-// ─── PANEL SHARED ─────────────────────────────────────────────────────────────
-.contact-info,
+// PANEL SHARED.contact-info,
 .contact-form-section {
   border-radius: 22px;
   padding: 2.5rem;
@@ -307,9 +297,8 @@
   animation-delay: 0.08s;
 }
 
-// ─── PANEL HEADER ─────────────────────────────────────────────────────────────
-.panel-header {
-  display: flex;
+// PANEL HEADER
+.panel-header {  display: flex;
   align-items: center;
   gap: 0.85rem;
   margin-bottom: 1.75rem;
@@ -335,9 +324,8 @@
   flex-shrink: 0;
 }
 
-// ─── INFO CARDS ───────────────────────────────────────────────────────────────
-.info-card {
-  display: flex;
+// INFO CARDS
+.info-card {  display: flex;
   align-items: flex-start;
   gap: 1rem;
   padding: 1.25rem 1.3rem;
@@ -393,9 +381,8 @@
   }
 }
 
-// ─── INFO IMAGE CARD ──────────────────────────────────────────────────────────
-.info-image-card {
-  position: relative;
+// INFO IMAGE CARD
+.info-image-card {  position: relative;
   border-radius: 14px;
   overflow: hidden;
   margin-bottom: 1rem;
@@ -427,9 +414,8 @@
   gap: 0.4rem;
 }
 
-// ─── SOCIAL LINKS ─────────────────────────────────────────────────────────────
-.social-links {
-  margin-top: 1.25rem;
+// SOCIAL LINKS
+.social-links {  margin-top: 1.25rem;
   padding-top: 1.5rem;
   border-top: 1px solid var(--accent-border);
 
@@ -484,17 +470,15 @@
   &:hover { box-shadow: 0 10px 20px rgba(24, 119, 242, 0.4); }
 }
 
-// ─── FORM CAPTION ─────────────────────────────────────────────────────────────
-.form-caption {
-  color: var(--text-muted);
+// FORM CAPTION
+.form-caption {  color: var(--text-muted);
   margin: -0.5rem 0 1.75rem;
   font-size: 0.9rem;
   line-height: 1.5;
 }
 
-// ─── FORM ROW ─────────────────────────────────────────────────────────────────
-.contact-form {
-  display: flex;
+// FORM ROW
+.contact-form {  display: flex;
   flex-direction: column;
   gap: 1.3rem;
 }
@@ -505,9 +489,8 @@
   gap: 1.3rem;
 }
 
-// ─── FORM GROUP ───────────────────────────────────────────────────────────────
-.form-group {
-  display: flex;
+// FORM GROUP
+.form-group {  display: flex;
   flex-direction: column;
   gap: 0.45rem;
 
@@ -529,9 +512,8 @@
   font-weight: 800;
 }
 
-// ─── FORM INPUT ───────────────────────────────────────────────────────────────
-.form-input {
-  padding: 0.85rem 1rem;
+// FORM INPUT
+.form-input {  padding: 0.85rem 1rem;
   border: 1.5px solid var(--input-border);
   border-radius: 10px;
   font-size: 0.95rem;
@@ -588,9 +570,8 @@ textarea.form-input {
   min-height: 140px;
 }
 
-// ─── SUBMIT BUTTON ────────────────────────────────────────────────────────────
-.submit-button {
-  display: inline-flex;
+// SUBMIT BUTTON
+.submit-button {  display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.55rem;
@@ -619,9 +600,8 @@ textarea.form-input {
   }
 }
 
-// ─── MAP SECTION ──────────────────────────────────────────────────────────────
-.map-section {
-  position: relative;
+// MAP SECTION
+.map-section {  position: relative;
   border-radius: 22px;
   background: linear-gradient(160deg, var(--map-section-a), var(--map-section-b));
   border: 1px solid var(--section-border);
@@ -896,9 +876,8 @@ textarea.form-input {
   }
 }
 
-// ─── RESPONSIVE ───────────────────────────────────────────────────────────────
-@media (max-width: 1024px) {
-  .content-wrapper {
+// RESPONSIVE
+@media (max-width: 1024px) {  .content-wrapper {
     grid-template-columns: 1fr;
   }
 

@@ -6,6 +6,7 @@ import {
   FormBuilder,
   FormGroup,
   ReactiveFormsModule,
+  ValidationErrors,
   Validators,
 } from "@angular/forms";
 import { RouterModule } from "@angular/router";
@@ -83,6 +84,7 @@ export class MyProfileComponent implements OnInit, OnDestroy {
   degreeOptions: string[] = [];
   academicYearOptions: number[] = [];
   currentYear = new Date().getFullYear();
+  readonly maxDob = this.getMaxDob();
   academicBranchOptions: string[][] = [];
   academicBranchLoading: boolean[] = [];
   academicBranchNoticeDegree: string[] = [];
@@ -104,7 +106,7 @@ export class MyProfileComponent implements OnInit, OnDestroy {
       firstName: ["", [Validators.required, Validators.maxLength(50)]],
       lastName: ["", [Validators.required, Validators.maxLength(50)]],
       email: [{ value: "", disabled: true }],
-      dateOfBirth: ["", Validators.required],
+      dateOfBirth: ["", [Validators.required, this.pastDateValidator]],
       gender: ["", Validators.required],
       phoneNumber: [
         "",
@@ -144,18 +146,10 @@ export class MyProfileComponent implements OnInit, OnDestroy {
     this.form.valueChanges
       .pipe(debounceTime(150), takeUntil(this.destroy$))
       .subscribe(() => {
-      if (this.suppressCompletionWatch) return;
-      this.profileCompletion = this.calculateCompletionFromForm();
-      if (this.user) {
-        const updatedUser = {
-          ...this.user,
-          profileCompletionPercentage: this.profileCompletion,
-          isProfileComplete: this.profileCompletion >= 100,
-        };
-        this.user = updatedUser;
-        this.authService.updateUserData(updatedUser);
-      }
-    });
+        if (this.suppressCompletionWatch) return;
+        if (!this.form.dirty) return;
+        this.profileCompletion = this.calculateCompletionFromForm();
+      });
   }
 
   ngOnDestroy(): void {
@@ -225,7 +219,9 @@ export class MyProfileComponent implements OnInit, OnDestroy {
     if (!type && !number) return "—";
     if (!number) return type;
     const masked =
-      number.length > 4 ? `${"*".repeat(Math.max(0, number.length - 4))}${number.slice(-4)}` : number;
+      number.length > 4
+        ? `${"*".repeat(Math.max(0, number.length - 4))}${number.slice(-4)}`
+        : number;
     return type ? `${type} · ${masked}` : masked;
   }
 
@@ -394,9 +390,9 @@ export class MyProfileComponent implements OnInit, OnDestroy {
     const fullPayload = {
       firstName: v.firstName,
       lastName: v.lastName,
-      dateOfBirth: v.dateOfBirth,
+      dateOfBirth: this.normalizeDateForApi(v.dateOfBirth),
       gender: v.gender,
-      phoneNumber: v.phoneNumber,
+      phoneNumber: this.normalizePhone(v.phoneNumber),
       govtIdType: v.govtIdType || null,
       govtIdNumber: v.govtIdNumber || null,
       profilePictureUrl:
@@ -439,9 +435,9 @@ export class MyProfileComponent implements OnInit, OnDestroy {
         firstName: v.firstName,
         lastName: v.lastName,
         displayName,
-        dateOfBirth: v.dateOfBirth,
+        dateOfBirth: this.normalizeDateForApi(v.dateOfBirth) || undefined,
         gender: v.gender,
-        phoneNumber: v.phoneNumber,
+        phoneNumber: this.normalizePhone(v.phoneNumber),
         govtIdType: v.govtIdType || null,
         govtIdNumber: v.govtIdNumber || null,
         address: {
@@ -489,7 +485,7 @@ export class MyProfileComponent implements OnInit, OnDestroy {
                   lastName: v.lastName,
                   email: this.profileEmail || this.user?.email || "",
                   phoneNumber: v.phoneNumber,
-                  dateOfBirth: v.dateOfBirth,
+                  dateOfBirth: this.normalizeDateForApi(v.dateOfBirth),
                   gender: v.gender,
                   govtIdType: v.govtIdType,
                   govtIdNumber: v.govtIdNumber,
@@ -534,9 +530,49 @@ export class MyProfileComponent implements OnInit, OnDestroy {
       return "";
     }
     if (control.errors["required"]) return `${label} is required`;
+    if (control.errors["notPastDate"]) return `${label} must be in the past`;
     if (control.errors["maxlength"]) return `${label} is too long`;
     if (control.errors["pattern"]) return `Invalid ${label.toLowerCase()}`;
     return `Invalid ${label.toLowerCase()}`;
+  }
+
+  get profileMissingFields(): string[] {
+    const v = this.form.getRawValue();
+    const missing: string[] = [];
+
+    if (!String(v.firstName || "").trim()) missing.push("First Name");
+    if (!String(v.lastName || "").trim()) missing.push("Last Name");
+    if (!v.dateOfBirth) missing.push("Date of Birth");
+    if (!String(v.gender || "").trim()) missing.push("Gender");
+    if (!this.normalizePhone(v.phoneNumber)) missing.push("Phone Number");
+    if (!String(v.govtIdType || "").trim()) missing.push("Government ID Type");
+    if (!String(v.govtIdNumber || "").trim())
+      missing.push("Government ID Number");
+
+    if (!String(v.street || "").trim()) missing.push("Street");
+    if (!String(v.city || "").trim()) missing.push("City");
+    if (!String(v.state || "").trim()) missing.push("State");
+    if (!String(v.pincode || "").trim()) missing.push("Pincode");
+
+    const academics = (v.academicInformation || []) as AcademicFormValue[];
+    if (
+      !academics.length ||
+      !String(academics[0]?.institutionName || "").trim()
+    ) {
+      missing.push("Institution Name");
+    }
+    if (!academics.length || !String(academics[0]?.degree || "").trim()) {
+      missing.push("Degree");
+    }
+    if (!academics.length || !String(academics[0]?.branch || "").trim()) {
+      missing.push("Branch");
+    }
+
+    return missing;
+  }
+
+  get shouldShowMissingProfileWarning(): boolean {
+    return this.profileCompletion < 100 && this.profileMissingFields.length > 0;
   }
 
   getInstitutionOptions(index: number): Institution[] {
@@ -575,7 +611,9 @@ export class MyProfileComponent implements OnInit, OnDestroy {
     const group = this.academicInformation.at(index);
     if (!group) return;
     const raw = group.get("institutionName")?.value;
-    const value = String(typeof raw === "string" ? raw : raw?.name || "").trim();
+    const value = String(
+      typeof raw === "string" ? raw : raw?.name || "",
+    ).trim();
     group.get("institutionName")?.setValue(value, { emitEvent: false });
     group.get("institutionId")?.setValue(null, { emitEvent: false });
     this.academicInstitutionNoResults[index] = false;
@@ -618,8 +656,7 @@ export class MyProfileComponent implements OnInit, OnDestroy {
         switchMap((value) => {
           const idx = this.getAcademicIndex(group);
           if (idx >= 0) {
-            const query =
-              typeof value === "string" ? value : value?.name || "";
+            const query = typeof value === "string" ? value : value?.name || "";
             const normalized = String(query || "").trim();
             this.academicInstitutionLoading[idx] = normalized.length >= 2;
             this.academicInstitutionNoResults[idx] = false;
@@ -629,9 +666,9 @@ export class MyProfileComponent implements OnInit, OnDestroy {
               this.academicInstitutionLoading[idx] = false;
               return of([]);
             }
-            return this.educationData.searchInstitutions(normalized).pipe(
-              catchError(() => of([])),
-            );
+            return this.educationData
+              .searchInstitutions(normalized)
+              .pipe(catchError(() => of([])));
           }
           return of([]);
         }),
@@ -739,16 +776,17 @@ export class MyProfileComponent implements OnInit, OnDestroy {
             this.user?.email ||
             "";
           const phoneNumber =
-            full?.phoneNumber ||
-            full?.personalDetails?.phone ||
-            basic?.phoneNumber ||
-            cached?.phoneNumber ||
+            this.normalizePhone(full?.phoneNumber) ||
+            this.normalizePhone(full?.personalDetails?.phone) ||
+            this.normalizePhone(basic?.phoneNumber) ||
+            this.normalizePhone(cached?.phoneNumber) ||
+            this.normalizePhone(this.user?.phoneNumber) ||
             "";
           const dateOfBirth =
-            full?.dateOfBirth ||
-            full?.personalDetails?.dateOfBirth ||
-            basic?.dateOfBirth ||
-            cached?.dateOfBirth ||
+            this.normalizeDateForInput(full?.dateOfBirth) ||
+            this.normalizeDateForInput(full?.personalDetails?.dateOfBirth) ||
+            this.normalizeDateForInput(basic?.dateOfBirth) ||
+            this.normalizeDateForInput(cached?.dateOfBirth) ||
             "";
           const gender =
             full?.gender ||
@@ -761,12 +799,14 @@ export class MyProfileComponent implements OnInit, OnDestroy {
             full?.personalDetails?.govtIdType ||
             basic?.govtIdType ||
             cached?.govtIdType ||
+            this.user?.govtIdType ||
             "";
           const govtIdNumber =
             full?.govtIdNumber ||
             full?.personalDetails?.govtIdNumber ||
             basic?.govtIdNumber ||
             cached?.govtIdNumber ||
+            this.user?.govtIdNumber ||
             "";
           const address = {
             street:
@@ -793,7 +833,9 @@ export class MyProfileComponent implements OnInit, OnDestroy {
               full?.address?.pincode ||
               full?.address?.zipCode ||
               basic?.address?.pincode ||
+              (basic?.address as any)?.zipCode ||
               cached?.address?.pincode ||
+              cached?.address?.zipCode ||
               "",
           };
 
@@ -869,8 +911,12 @@ export class MyProfileComponent implements OnInit, OnDestroy {
           this.profileCompletion =
             full?.completionPercentage ??
             full?.profileCompletionPercentage ??
-            this.calculateCompletionFromForm() ??
-            this.profileCompletion;
+            basic?.profileCompletionPercentage ??
+            this.user?.profileCompletionPercentage ??
+            cached?.profileCompletionPercentage ??
+            this.calculateCompletionFromForm();
+          this.form.markAsPristine();
+          this.form.markAsUntouched();
           this.writeProfileCache({
             firstName,
             lastName,
@@ -917,20 +963,17 @@ export class MyProfileComponent implements OnInit, OnDestroy {
         (item as any)?.currentlyStudying ??
         false;
       const normalizedGrade =
-        (item as any)?.grade ||
-        (item as any)?.gradeInPercentage ||
-        "";
+        (item as any)?.grade || (item as any)?.gradeInPercentage || "";
       const normalizedPassingYear =
         (item as any)?.passingYear ||
         ((item as any)?.endDate
           ? new Date((item as any).endDate).getFullYear()
           : "");
-      const gradingType =
-        (item as any)?.grade
-          ? "GRADE"
-          : (item as any)?.gradeInPercentage
-            ? "PERCENTAGE"
-            : this.inferGradingTypeFromProfile((item as any)?.grade);
+      const gradingType = (item as any)?.grade
+        ? "GRADE"
+        : (item as any)?.gradeInPercentage
+          ? "PERCENTAGE"
+          : this.inferGradingTypeFromProfile((item as any)?.grade);
       const score = this.parseGradeFromProfile(normalizedGrade);
       const group = this.createAcademicGroup({
         institutionId: (item as any)?.institutionId ?? null,
@@ -991,7 +1034,10 @@ export class MyProfileComponent implements OnInit, OnDestroy {
         [Validators.required, Validators.maxLength(100)],
       ],
       passingYear: [(initial as any)?.passingYear || "", Validators.required],
-      gradingType: [(initial as any)?.gradingType || "CGPA", Validators.required],
+      gradingType: [
+        (initial as any)?.gradingType || "CGPA",
+        Validators.required,
+      ],
       score: [(initial as any)?.score || ""],
       currentlyStudying: [(initial as any)?.currentlyStudying || false],
     });
@@ -1031,7 +1077,6 @@ export class MyProfileComponent implements OnInit, OnDestroy {
 
     const addressComplete =
       (v.street || "").trim() &&
-      (v.plotNumber || "").trim() &&
       (v.city || "").trim() &&
       (v.state || "").trim() &&
       (v.pincode || "").trim();
@@ -1047,7 +1092,10 @@ export class MyProfileComponent implements OnInit, OnDestroy {
     return Math.round((filled * 100) / total);
   }
 
-  private buildAcademicGrade(gradingType: string, score: string): string | null {
+  private buildAcademicGrade(
+    gradingType: string,
+    score: string,
+  ): string | null {
     const type = String(gradingType || "").trim();
     const val = String(score || "").trim();
     if (!type && !val) return null;
@@ -1103,5 +1151,66 @@ export class MyProfileComponent implements OnInit, OnDestroy {
     } catch {
       // ignore storage errors
     }
+  }
+
+  private readonly pastDateValidator = (
+    control: AbstractControl,
+  ): ValidationErrors | null => {
+    const normalized = this.normalizeDateForInput(control.value);
+    if (!normalized) {
+      return null;
+    }
+    const valueDate = new Date(`${normalized}T00:00:00`);
+    if (Number.isNaN(valueDate.getTime())) {
+      return { notPastDate: true };
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (valueDate >= today) {
+      return { notPastDate: true };
+    }
+    return null;
+  };
+
+  private normalizePhone(value: unknown): string {
+    const digits = String(value || "").replace(/\D/g, "");
+    if (!digits) return "";
+    return digits.length > 10 ? digits.slice(-10) : digits;
+  }
+
+  private normalizeDateForInput(value: unknown): string {
+    const raw = String(value || "").trim();
+    if (!raw) return "";
+    if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+      return raw;
+    }
+    const ddmmyyyy = raw.match(/^(\d{2})[-/](\d{2})[-/](\d{4})$/);
+    if (ddmmyyyy) {
+      const [, dd, mm, yyyy] = ddmmyyyy;
+      return `${yyyy}-${mm}-${dd}`;
+    }
+    const parsed = new Date(raw);
+    if (Number.isNaN(parsed.getTime())) {
+      return "";
+    }
+    const yyyy = parsed.getFullYear();
+    const mm = String(parsed.getMonth() + 1).padStart(2, "0");
+    const dd = String(parsed.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
+  private normalizeDateForApi(value: unknown): string | null {
+    const normalized = this.normalizeDateForInput(value);
+    return normalized || null;
+  }
+
+  private getMaxDob(): string {
+    const d = new Date();
+    d.setDate(d.getDate() - 1);
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
   }
 }

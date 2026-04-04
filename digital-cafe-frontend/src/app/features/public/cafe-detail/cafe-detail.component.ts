@@ -325,8 +325,7 @@ export class CafeDetailComponent implements OnInit {
             return;
           }
 
-          // ── Fast-retry path ────────────────────────────────────────────────
-          // If an orderId is already held from a prior cancelled/failed payment
+          // Fast-retry path          // If an orderId is already held from a prior cancelled/failed payment
           // attempt, skip createOrder (backend would reuse it anyway) and go
           // straight to payment — avoids an unnecessary round-trip.
           if (this.orderId) {
@@ -354,7 +353,7 @@ export class CafeDetailComponent implements OnInit {
             return;
           }
 
-          // ── Normal path: create order then pay ─────────────────────────────
+          // Normal path: create order then pay
           this.cafeBrowseService
             .createOrder({
               bookingId: this.bookingId as number,
@@ -709,6 +708,24 @@ export class CafeDetailComponent implements OnInit {
     return Array.from(new Set(categories)).slice(0, limit);
   }
 
+  formatCategoryLabel(category: string | null | undefined): string {
+    return String(category || "")
+      .replace(/_/g, " ")
+      .toLowerCase()
+      .replace(/\b\w/g, (ch) => ch.toUpperCase())
+      .trim();
+  }
+
+  getEnhancedDescription(
+    cafeName: string | null | undefined,
+    description: string | null | undefined,
+  ): string {
+    if ((cafeName || "").trim().toLowerCase() === "ember & oak") {
+      return "A rustic wood-fired retreat with signature drip coffees, stone-baked pizzas, and oven-warm desserts, perfect for comfort-food lovers.";
+    }
+    return String(description || "").trim();
+  }
+
   isCafeOpenNow(): boolean {
     const open = this.cafe?.cafeDetails?.openTime;
     const close = this.cafe?.cafeDetails?.closeTime;
@@ -789,6 +806,19 @@ export class CafeDetailComponent implements OnInit {
   onImageError(event: Event): void {
     const el = event.target as HTMLImageElement | null;
     if (!el) return;
+    el.style.display = "none";
+  }
+
+  onMenuItemImageError(event: Event): void {
+    const el = event.target as HTMLImageElement | null;
+    if (!el) return;
+
+    const fallback = "assets/downloads/unsplash/cafe-detail-item-default.jpg";
+    if (!el.src.includes("cafe-detail-item-default.jpg")) {
+      el.src = fallback;
+      return;
+    }
+
     el.style.display = "none";
   }
 
@@ -1048,12 +1078,12 @@ export class CafeDetailComponent implements OnInit {
       });
   }
 
-  private requireAuthenticatedCustomer(
-    fragment?: "booking" | "menu",
-  ): boolean {
+  private requireAuthenticatedCustomer(fragment?: "booking" | "menu"): boolean {
     if (!this.authService.isAuthenticated) {
       this.router.navigate(["/auth/login"], {
-        queryParams: { returnUrl: this.withFragment(this.router.url, fragment) },
+        queryParams: {
+          returnUrl: this.withFragment(this.router.url, fragment),
+        },
       });
       return false;
     }

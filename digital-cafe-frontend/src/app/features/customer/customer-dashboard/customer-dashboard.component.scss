@@ -2,8 +2,7 @@
    CUSTOMER DASHBOARD — light/dark design tokens + full UI
    ═══════════════════════════════════════════════════════════════ */
 :host {
-  /* ── light defaults ── */
-  --db-bg: #f1f5f9;
+  /* light defaults */  --db-bg: #f1f5f9;
   --db-card-bg: #ffffff;
   --db-card-bd: #e2e8f0;
   --db-head: #0f172a;
@@ -36,8 +35,7 @@
   transition: background 0.3s;
 }
 
-/* ── dark mode overrides ────────────────────────────────────────── */
-:host-context(body.dark-theme) {
+/* dark mode overrides */:host-context(body.dark-theme) {
   --db-bg: #0f172a;
   --db-card-bg: #1e293b;
   --db-card-bd: #334155;
@@ -65,10 +63,10 @@
 
 /* ═══════════════════════════════ PAGE ═══════════════════════════════════ */
 .db-page {
-  padding: 1.75rem 1.5rem 3rem;
+  padding: 0.35rem 0.5rem 2.5rem;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1.25rem;
 }
 
 /* ═══════════════════════════════ HERO ═══════════════════════════════════ */
@@ -447,8 +445,7 @@
   align-items: stretch;
 }
 
-/* ── Quick Actions ──────────────────────────────────────────────────────── */
-.db-qa-card::before {
+/* Quick Actions */.db-qa-card::before {
   background: linear-gradient(90deg, #0f766e, #14b8a6, #22c55e);
 }
 
@@ -583,8 +580,7 @@
   }
 }
 
-/* ── Recent Activity ────────────────────────────────────────────────────── */
-.db-recent-card::before {
+/* Recent Activity */.db-recent-card::before {
   background: linear-gradient(90deg, #e11d48, #f43f5e, #fb7185);
 }
 
@@ -623,8 +619,7 @@
   }
 }
 
-/* ── Tables ── */
-.db-table-wrap {
+/* Tables */.db-table-wrap {
   overflow-x: auto;
   border-radius: 0.75rem;
   border: 1px solid var(--db-card-bd);
@@ -690,8 +685,7 @@
   }
 }
 
-/* ── Status badges ── */
-.db-badge {
+/* Status badges */.db-badge {
   display: inline-block;
   padding: 0.22rem 0.65rem;
   border-radius: 99px;

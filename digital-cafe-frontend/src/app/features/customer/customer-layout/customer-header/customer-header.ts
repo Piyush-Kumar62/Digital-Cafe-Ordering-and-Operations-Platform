@@ -36,6 +36,8 @@ export class CustomerHeaderComponent implements OnInit {
   showNotifications = false;
   showProfileMenu = false;
   notifications: HeaderNotification[] = [];
+  readonly notificationPageSize = 10;
+  notificationCurrentPage = 1;
   isSavingProfile = false;
   uploadingImage = false;
   imageVersion = Date.now();
@@ -47,6 +49,8 @@ export class CustomerHeaderComponent implements OnInit {
     displayName: "",
   };
   private userSubscription: Subscription | undefined;
+  private customerOrderSub?: Subscription;
+  private customerOrderDest: string | null = null;
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -66,6 +70,7 @@ export class CustomerHeaderComponent implements OnInit {
         this.profileCompletion = user.profileCompletionPercentage || 0;
         this.lastLogin = new Date(user.lastLogin || Date.now());
       }
+      this.rebindCustomerOrderStream();
     });
     this.loadProfile();
     this.setupNotificationStream();
@@ -79,6 +84,10 @@ export class CustomerHeaderComponent implements OnInit {
     if (this.userSubscription) {
       this.userSubscription.unsubscribe();
     }
+    this.customerOrderSub?.unsubscribe();
+    if (this.customerOrderDest) {
+      this.webSocketService.unsubscribe(this.customerOrderDest);
+    }
   }
 
   toggleNotifications(event: MouseEvent): void {
@@ -86,6 +95,7 @@ export class CustomerHeaderComponent implements OnInit {
     this.showNotifications = !this.showNotifications;
     if (this.showNotifications) {
       this.showProfileMenu = false;
+      this.notificationCurrentPage = 1;
     }
   }
 
@@ -267,18 +277,83 @@ export class CustomerHeaderComponent implements OnInit {
       .watchDestination<any>("/user/queue/notifications")
       .pipe(takeUntil(this.destroy$))
       .subscribe((payload) => {
-        const item: HeaderNotification = {
-          id: `${Date.now()}-${Math.random()}`,
-          title: payload?.title || payload?.type || "Notification",
-          message: payload?.message || "You have a new update.",
-          createdAt: new Date().toLocaleString(),
-          read: false,
-        };
-        this.notifications = [item, ...this.notifications].slice(0, 25);
-        this.syncUnreadCount();
+        this.pushNotification(payload);
       });
   }
 
+  private bindCustomerOrderStream(): void {
+    const customerId = this.user?.id;
+    if (!customerId) {
+      return;
+    }
+
+    this.customerOrderDest = `/topic/customer/${customerId}`;
+    this.customerOrderSub = this.webSocketService
+      .watchDestination<any>(this.customerOrderDest)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((payload) => this.pushNotification(payload));
+  }
+
+  private rebindCustomerOrderStream(): void {
+    this.customerOrderSub?.unsubscribe();
+    if (this.customerOrderDest) {
+      this.webSocketService.unsubscribe(this.customerOrderDest);
+      this.customerOrderDest = null;
+    }
+    this.bindCustomerOrderStream();
+  }
+
+  private pushNotification(payload: any): void {
+    const title = payload?.title || payload?.type || "Notification";
+    const message = payload?.message || "You have a new update.";
+    const createdAt = payload?.timestamp
+      ? new Date(payload.timestamp).toLocaleString()
+      : new Date().toLocaleString();
+
+    const fingerprint = `${title}|${message}|${createdAt}`;
+    const duplicate = this.notifications.some(
+      (n) => `${n.title}|${n.message}|${n.createdAt}` === fingerprint,
+    );
+    if (duplicate) {
+      return;
+    }
+
+    const item: HeaderNotification = {
+      id: `${Date.now()}-${Math.random()}`,
+      title,
+      message,
+      createdAt,
+      read: false,
+    };
+    this.notifications = [item, ...this.notifications].slice(0, 25);
+    this.notificationCurrentPage = 1;
+    this.syncUnreadCount();
+  }
+
+  get totalNotificationPages(): number {
+    return Math.max(
+      1,
+      Math.ceil(this.notifications.length / this.notificationPageSize),
+    );
+  }
+
+  get pagedNotifications(): HeaderNotification[] {
+    const start =
+      (this.notificationCurrentPage - 1) * this.notificationPageSize;
+    return this.notifications.slice(start, start + this.notificationPageSize);
+  }
+
+  prevNotificationPage(): void {
+    if (this.notificationCurrentPage > 1) {
+      this.notificationCurrentPage -= 1;
+    }
+  }
+
+  nextNotificationPage(): void {
+    if (this.notificationCurrentPage < this.totalNotificationPages) {
+      this.notificationCurrentPage += 1;
+    }
+  }
 
   private syncUnreadCount(): void {
     this.unreadNotifications = this.notifications.filter((n) => !n.read).length;
@@ -295,7 +370,10 @@ export class CustomerHeaderComponent implements OnInit {
     );
     if (!ok) return;
     this.authService.logout();
-    this.alertService.success("Logged out", "You have been signed out successfully.");
+    this.alertService.success(
+      "Logged out",
+      "You have been signed out successfully.",
+    );
     this.router.navigate(["/auth/login"]);
   }
 

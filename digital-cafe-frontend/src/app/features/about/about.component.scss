@@ -1,10 +1,7 @@
-// ─────────────────────────────────────────────────────────────────────────────
-// About Page — Adaptive Coffee Theme (Dark + Light Mode)
-// ─────────────────────────────────────────────────────────────────────────────
-
-// ── CSS Custom Properties ─────────────────────────────────────────────────────
-:host {
-  display: block;
+// // About Page — Adaptive Coffee Theme (Dark + Light Mode)
+// 
+// CSS Custom Properties
+:host {  display: block;
 
   // Dark mode defaults
   --page-bg-start: #0b1220;
@@ -66,9 +63,8 @@
   --cta-text: #d97706;
 }
 
-// ── Light Mode Overrides ───────────────────────────────────────────────────────
-@media (prefers-color-scheme: light) {
-  :host {
+// Light Mode Overrides
+@media (prefers-color-scheme: light) {  :host {
     --page-bg-start: #faf8f5;
     --page-bg-mid: #f5f0e8;
     --page-bg-end: #fef9f0;
@@ -129,8 +125,7 @@
   }
 }
 
-// ─── Hero ─────────────────────────────────────────────────────────────────────
-// Hero always stays dark (image underneath)
+// Hero// Hero always stays dark (image underneath)
 .about-hero {
   position: relative;
   min-height: 460px;
@@ -227,9 +222,8 @@
   white-space: nowrap;
 }
 
-// ─── Main container ───────────────────────────────────────────────────────────
-.about-container {
-  background: linear-gradient(
+// Main container
+.about-container {  background: linear-gradient(
     160deg,
     var(--page-bg-start) 0%,
     var(--page-bg-mid) 60%,
@@ -246,9 +240,8 @@
   gap: 2rem;
 }
 
-// ─── Section card base ────────────────────────────────────────────────────────
-.about-section {
-  border-radius: 20px;
+// Section card base
+.about-section {  border-radius: 20px;
   padding: 2.5rem;
   border: 1px solid var(--section-border);
   box-shadow: var(--section-shadow);
@@ -284,9 +277,9 @@
   flex-shrink: 0;
 }
 
-// ─── Mission section ──────────────────────────────────────────────────────────
-.about-section.mission-section {
-  background: linear-gradient(
+// M
+ission section.about-section
+.mission-section {  background: linear-gradient(
     140deg,
     var(--mission-bg-a) 0%,
     var(--mission-bg-b) 100%
@@ -306,9 +299,9 @@
   }
 }
 
-// ─── Features section ─────────────────────────────────────────────────────────
-.about-section.features-section {
-  background: linear-gradient(
+// F
+eatures section.about-section
+.features-section {  background: linear-gradient(
     140deg,
     var(--features-bg-a),
     var(--features-bg-b)
@@ -360,9 +353,9 @@
   line-height: 1;
 }
 
-// ─── Tech section ─────────────────────────────────────────────────────────────
-.about-section.tech-section {
-  background: linear-gradient(140deg, var(--tech-bg-a), var(--tech-bg-b));
+// T
+ech section.about-section
+.tech-section {  background: linear-gradient(140deg, var(--tech-bg-a), var(--tech-bg-b));
   border-color: var(--tech-border);
 
   h2 {
@@ -422,9 +415,9 @@
   }
 }
 
-// ─── Serve section ────────────────────────────────────────────────────────────
-.about-section.serve-section {
-  background: linear-gradient(140deg, var(--serve-bg-a), var(--serve-bg-b));
+// S
+erve section.about-section
+.serve-section {  background: linear-gradient(140deg, var(--serve-bg-a), var(--serve-bg-b));
   border-color: var(--serve-border);
 
   h2 {
@@ -476,9 +469,9 @@
   }
 }
 
-// ─── CTA section ──────────────────────────────────────────────────────────────
-.about-section.cta-section {
-  background: linear-gradient(135deg, var(--cta-bg-a) 0%, var(--cta-bg-b) 100%);
+// C
+TA section.about-section
+.cta-section {  background: linear-gradient(135deg, var(--cta-bg-a) 0%, var(--cta-bg-b) 100%);
   border-color: var(--cta-border);
   text-align: center;
 
@@ -543,9 +536,8 @@
   }
 }
 
-// ─── Responsive ───────────────────────────────────────────────────────────────
-@media (max-width: 640px) {
-  .about-hero-content {
+// Responsive
+@media (max-width: 640px) {  .about-hero-content {
     padding: 90px 1.25rem 2.5rem;
   }
 

@@ -3,44 +3,104 @@
     <h1>Complete Your Profile</h1>
     <p>Add your details once to continue to menu and booking.</p>
 
+    <div class="completion-preview">
+      <div class="completion-preview__top">
+        <span>Profile Completion</span>
+        <strong>{{ completionPercentage }}%</strong>
+      </div>
+      <div
+        class="completion-preview__bar"
+        role="progressbar"
+        [attr.aria-valuenow]="completionPercentage"
+        aria-valuemin="0"
+        aria-valuemax="100"
+      >
+        <span
+          class="completion-preview__fill"
+          [style.width.%]="completionPercentage"
+        ></span>
+      </div>
+      <div class="completion-warning" *ngIf="missingRequiredFields.length > 0">
+        <p>
+          <strong>Complete missing details:</strong>
+          {{ missingRequiredFields.join(", ") }}
+        </p>
+      </div>
+    </div>
+
     <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
       <div class="grid two">
         <label>
           First Name
-          <input type="text" formControlName="firstName" [class.invalid]="isInvalid('firstName')" data-testid="profile-first-name" />
-          <small class="error" *ngIf="isInvalid('firstName')">First name is required.</small>
+          <input
+            type="text"
+            formControlName="firstName"
+            [class.invalid]="isInvalid('firstName')"
+            data-testid="profile-first-name"
+          />
+          <small class="error" *ngIf="isInvalid('firstName')"
+            >First name is required.</small
+          >
         </label>
         <label>
           Last Name
-          <input type="text" formControlName="lastName" [class.invalid]="isInvalid('lastName')" data-testid="profile-last-name" />
-          <small class="error" *ngIf="isInvalid('lastName')">Last name is required.</small>
+          <input
+            type="text"
+            formControlName="lastName"
+            [class.invalid]="isInvalid('lastName')"
+            data-testid="profile-last-name"
+          />
+          <small class="error" *ngIf="isInvalid('lastName')"
+            >Last name is required.</small
+          >
         </label>
       </div>
 
       <div class="grid one">
         <label>
           Email
-          <input type="email" formControlName="email" readonly data-testid="profile-email" />
-          <small class="hint">Email can be updated from account settings.</small>
+          <input
+            type="email"
+            formControlName="email"
+            readonly
+            data-testid="profile-email"
+          />
+          <small class="hint"
+            >Email can be updated from account settings.</small
+          >
         </label>
       </div>
 
       <div class="grid three">
         <label>
           Date of Birth
-          <input type="date" formControlName="dateOfBirth" [class.invalid]="isInvalid('dateOfBirth')" data-testid="profile-dob" />
-          <small class="error" *ngIf="isInvalid('dateOfBirth')">Date of birth is required.</small>
+          <input
+            type="date"
+            formControlName="dateOfBirth"
+            [attr.max]="maxDob"
+            [class.invalid]="isInvalid('dateOfBirth')"
+            data-testid="profile-dob"
+          />
+          <small class="error" *ngIf="isInvalid('dateOfBirth')">{{
+            getDobError()
+          }}</small>
         </label>
         <label>
           Gender
-          <select formControlName="gender" [class.invalid]="isInvalid('gender')" data-testid="profile-gender">
+          <select
+            formControlName="gender"
+            [class.invalid]="isInvalid('gender')"
+            data-testid="profile-gender"
+          >
             <option value="">Select</option>
             <option value="MALE">Male</option>
             <option value="FEMALE">Female</option>
             <option value="OTHER">Other</option>
             <option value="PREFER_NOT_TO_SAY">Prefer not to say</option>
           </select>
-          <small class="error" *ngIf="isInvalid('gender')">Gender is required.</small>
+          <small class="error" *ngIf="isInvalid('gender')"
+            >Gender is required.</small
+          >
         </label>
         <label>
           Phone Number
@@ -55,14 +115,19 @@
               data-testid="profile-phone"
             />
           </div>
-          <small class="error" *ngIf="isInvalid('phoneNumber')">Enter a valid 10-digit number.</small>
+          <small class="error" *ngIf="isInvalid('phoneNumber')"
+            >Enter a valid 10-digit number.</small
+          >
         </label>
       </div>
 
       <div class="grid two">
         <label>
           Government ID Type
-          <select formControlName="govtIdType" data-testid="profile-govt-id-type">
+          <select
+            formControlName="govtIdType"
+            data-testid="profile-govt-id-type"
+          >
             <option value="">Select ID Type</option>
             <option *ngFor="let idType of govtIdTypes" [value]="idType">
               {{ idType }}
@@ -71,7 +136,12 @@
         </label>
         <label>
           Government ID Number
-          <input type="text" formControlName="govtIdNumber" placeholder="Enter ID number" data-testid="profile-govt-id-number" />
+          <input
+            type="text"
+            formControlName="govtIdNumber"
+            placeholder="Enter ID number"
+            data-testid="profile-govt-id-number"
+          />
         </label>
       </div>
 
@@ -105,13 +175,18 @@
               <div class="academic-option">
                 <span class="academic-option__title">{{ inst.name }}</span>
                 <span class="academic-option__meta">
-                  {{ inst.city || "India" }}{{ inst.state ? ", " + inst.state : "" }}
+                  {{ inst.city || "India"
+                  }}{{ inst.state ? ", " + inst.state : "" }}
                 </span>
               </div>
             </mat-option>
           </mat-autocomplete>
-          <small class="hint" *ngIf="institutionLoading">Searching institutions…</small>
-          <small class="hint" *ngIf="institutionNoResults">No results. Keep typing to use manual entry.</small>
+          <small class="hint" *ngIf="institutionLoading"
+            >Searching institutions…</small
+          >
+          <small class="hint" *ngIf="institutionNoResults"
+            >No results. Keep typing to use manual entry.</small
+          >
           <button
             type="button"
             class="link-btn"
@@ -121,17 +196,25 @@
           >
             Use typed institution
           </button>
-          <small class="error" *ngIf="isInvalid('institutionName')">Institution is required.</small>
+          <small class="error" *ngIf="isInvalid('institutionName')"
+            >Institution is required.</small
+          >
         </label>
         <label>
           Degree
-          <select formControlName="degree" [class.invalid]="isInvalid('degree')" data-testid="profile-degree">
+          <select
+            formControlName="degree"
+            [class.invalid]="isInvalid('degree')"
+            data-testid="profile-degree"
+          >
             <option value="">Select degree</option>
             <option *ngFor="let degree of degreeOptions" [value]="degree">
               {{ degree }}
             </option>
           </select>
-          <small class="error" *ngIf="isInvalid('degree')">Degree is required.</small>
+          <small class="error" *ngIf="isInvalid('degree')"
+            >Degree is required.</small
+          >
         </label>
       </div>
 
@@ -140,12 +223,20 @@
           Branch / Stream
           <span
             class="badge"
-            *ngIf="!branchLoading && branchOptions.length === 0 && form.get('degree')?.value"
+            *ngIf="
+              !branchLoading &&
+              branchOptions.length === 0 &&
+              form.get('degree')?.value
+            "
           >
             No branches yet
           </span>
           <ng-container *ngIf="branchOptions.length > 0; else branchInput">
-            <select formControlName="branch" [class.invalid]="isInvalid('branch')" data-testid="profile-branch">
+            <select
+              formControlName="branch"
+              [class.invalid]="isInvalid('branch')"
+              data-testid="profile-branch"
+            >
               <option value="">Select branch</option>
               <option *ngFor="let branch of branchOptions" [value]="branch">
                 {{ branch }}
@@ -162,19 +253,32 @@
             />
           </ng-template>
           <small class="hint" *ngIf="branchLoading">Loading branches…</small>
-          <small class="error" *ngIf="isInvalid('branch')">Branch / stream is required.</small>
+          <small class="error" *ngIf="isInvalid('branch')"
+            >Branch / stream is required.</small
+          >
         </label>
         <label>
           Passing Year
-          <select formControlName="passingYear" [class.invalid]="isInvalid('passingYear')" data-testid="profile-passing-year">
+          <select
+            formControlName="passingYear"
+            [class.invalid]="isInvalid('passingYear')"
+            data-testid="profile-passing-year"
+          >
             <option value="">Select year</option>
-            <option *ngFor="let y of academicYearOptions" [value]="y">{{ y }}</option>
+            <option *ngFor="let y of academicYearOptions" [value]="y">
+              {{ y }}
+            </option>
           </select>
-          <small class="error" *ngIf="isInvalid('passingYear')">Passing year is required.</small>
+          <small class="error" *ngIf="isInvalid('passingYear')"
+            >Passing year is required.</small
+          >
         </label>
         <label>
           Grading Type
-          <select formControlName="gradingType" data-testid="profile-grading-type">
+          <select
+            formControlName="gradingType"
+            data-testid="profile-grading-type"
+          >
             <option value="CGPA">CGPA</option>
             <option value="PERCENTAGE">Percentage</option>
             <option value="GRADE">Grade</option>
@@ -185,10 +289,19 @@
       <div class="grid two">
         <label>
           Score
-          <input type="text" formControlName="score" placeholder="e.g. 8.5 / 75%" data-testid="profile-score" />
+          <input
+            type="text"
+            formControlName="score"
+            placeholder="e.g. 8.5 / 75%"
+            data-testid="profile-score"
+          />
         </label>
         <label class="checkbox">
-          <input type="checkbox" formControlName="currentlyStudying" (change)="onAcademicCurrentlyStudyingChange()" />
+          <input
+            type="checkbox"
+            formControlName="currentlyStudying"
+            (change)="onAcademicCurrentlyStudyingChange()"
+          />
           Currently studying here
         </label>
       </div>
@@ -202,16 +315,30 @@
         >
           <div class="work-header">
             <span>Experience {{ i + 1 }}</span>
-            <button type="button" class="btn-ghost" (click)="removeWorkExperience(i)">Remove</button>
+            <button
+              type="button"
+              class="btn-ghost"
+              (click)="removeWorkExperience(i)"
+            >
+              Remove
+            </button>
           </div>
           <div class="grid two">
             <label>
               Company
-              <input type="text" formControlName="companyName" placeholder="Company" />
+              <input
+                type="text"
+                formControlName="companyName"
+                placeholder="Company"
+              />
             </label>
             <label>
               Designation
-              <input type="text" formControlName="designation" placeholder="Designation" />
+              <input
+                type="text"
+                formControlName="designation"
+                placeholder="Designation"
+              />
             </label>
           </div>
           <div class="grid three">
@@ -221,7 +348,7 @@
             </label>
             <label>
               End Date
-              <input type="date" formControlName="endDate" [disabled]="work.get('currentlyWorking')?.value" />
+              <input type="date" formControlName="endDate" />
             </label>
             <label class="checkbox">
               <input
@@ -235,7 +362,11 @@
           <div class="grid two">
             <label>
               CTC Amount
-              <input type="number" formControlName="ctcAmount" placeholder="Amount" />
+              <input
+                type="number"
+                formControlName="ctcAmount"
+                placeholder="Amount"
+              />
             </label>
             <label>
               CTC Currency
@@ -248,11 +379,17 @@
           <div class="grid one">
             <label *ngIf="!work.get('currentlyWorking')?.value">
               Reason for Leaving
-              <input type="text" formControlName="reasonForLeaving" placeholder="Reason" />
+              <input
+                type="text"
+                formControlName="reasonForLeaving"
+                placeholder="Reason"
+              />
             </label>
           </div>
         </div>
-        <button type="button" class="btn-add" (click)="addWorkExperience()">Add Experience</button>
+        <button type="button" class="btn-add" (click)="addWorkExperience()">
+          Add Experience
+        </button>
       </div>
 
       <button type="submit" [disabled]="loading" data-testid="profile-submit">

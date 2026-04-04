@@ -1944,8 +1944,7 @@
   }
 }
 
-/* ===== Single-layer card cleanup (remove multi-layer clutter) ===== */
-:host {
+/* Single-layer card cleanup (remove multi-layer clutter) */:host {
   --single-card-bg: rgba(255, 255, 255, 0.12);
   --single-card-bg-hover: rgba(255, 255, 255, 0.17);
   --single-card-border: rgba(226, 232, 255, 0.24);
@@ -2019,8 +2018,7 @@
   box-shadow: 0 12px 24px rgba(21, 11, 46, 0.3) !important;
 }
 
-/* ===== CLEAN FORMAT RESET (TRUE FINAL) ===== */
-:host {
+/* CLEAN FORMAT RESET (TRUE FINAL) */:host {
   --clean-surface: rgba(255, 255, 255, 0.12);
   --clean-surface-hover: rgba(255, 255, 255, 0.16);
   --clean-border: rgba(226, 232, 255, 0.22);
@@ -2109,8 +2107,7 @@
   filter: none !important;
 }
 
-/* ===== Disable hover on section headers (all landing sections) ===== */
-.section-header,
+/* Disable hover on section headers (all landing sections) */.section-header,
 .section-header:hover {
   transform: none !important;
   filter: none !important;
@@ -2211,8 +2208,7 @@
 @media (max-width: 760px) {
 }
 
-/* ===== INDUSTRY STANDARD LANDING SYSTEM (FINAL AUTHORITATIVE) ===== */
-:host {
+/* INDUSTRY STANDARD LANDING SYSTEM (FINAL AUTHORITATIVE) */:host {
   --ui-card-bg: linear-gradient(
     155deg,
     rgba(255, 255, 255, 0.14),
@@ -3154,8 +3150,7 @@
   }
 }
 
-/* ===== FINAL END-OF-FILE GLASS THEME OVERRIDES ===== */
-:host {
+/* FINAL END-OF-FILE GLASS THEME OVERRIDES */:host {
   --landing-glass-bg-1: rgba(59, 50, 142, 0.22);
   --landing-glass-bg-2: rgba(122, 40, 138, 0.2);
   --landing-glass-card: rgba(22, 22, 50, 0.55);
@@ -3271,8 +3266,7 @@
   color: #ffffff !important;
 }
 
-/* ===== Hero section visibility + glass style ===== */
-.hero-section {
+/* Hero section visibility + glass style */.hero-section {
   background:
     radial-gradient(
       720px 360px at 12% 2%,
@@ -3368,8 +3362,7 @@
   filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.3));
 }
 
-/* ===== Final glass overrides (must stay at end) ===== */
-:host {
+/* Final glass overrides (must stay at end) */:host {
   --landing-glass-bg-1: rgba(59, 50, 142, 0.22);
   --landing-glass-bg-2: rgba(122, 40, 138, 0.2);
   --landing-glass-card: rgba(22, 22, 50, 0.55);
@@ -3501,8 +3494,7 @@
   box-shadow: 0 14px 28px rgba(147, 51, 234, 0.46) !important;
 }
 
-/* ===== Landing-wide glassmorphism theme alignment ===== */
-:host {
+/* Landing-wide glassmorphism theme alignment */:host {
   --landing-glass-bg-1: rgba(59, 50, 142, 0.22);
   --landing-glass-bg-2: rgba(122, 40, 138, 0.2);
   --landing-glass-card: rgba(22, 22, 50, 0.55);
@@ -3919,8 +3911,7 @@
   }
 }
 
-/* ===== FINAL END-OF-FILE GLASS THEME OVERRIDES ===== */
-:host {
+/* FINAL END-OF-FILE GLASS THEME OVERRIDES */:host {
   --landing-glass-bg-1: rgba(59, 50, 142, 0.22);
   --landing-glass-bg-2: rgba(122, 40, 138, 0.2);
   --landing-glass-card: rgba(22, 22, 50, 0.55);
@@ -4036,8 +4027,7 @@
   color: #ffffff !important;
 }
 
-/* ===== TRUE EOF HERO GLASS OVERRIDES ===== */
-.hero-section {
+/* TRUE EOF HERO GLASS OVERRIDES */.hero-section {
   background:
     radial-gradient(
       720px 360px at 12% 2%,
@@ -4133,8 +4123,7 @@
   filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.3));
 }
 
-/* ===== FINAL PREMIUM GLASS SYSTEM (HIGHEST PRIORITY) ===== */
-:host {
+/* FINAL PREMIUM GLASS SYSTEM (HIGHEST PRIORITY) */:host {
   font-family:
     Inter,
     system-ui,
@@ -4299,8 +4288,7 @@
   animation: pulse 6s ease-in-out infinite;
 }
 
-/* ===== UI RESCUE PASS (final authority for visibility + premium polish) ===== */
-:host {
+/* UI RESCUE PASS (final authority for visibility + premium polish) */:host {
   --rescue-surface: rgba(255, 255, 255, 0.12);
   --rescue-surface-hover: rgba(255, 255, 255, 0.18);
   --rescue-border: rgba(255, 255, 255, 0.24);
@@ -4433,8 +4421,7 @@
   border: 1px solid rgba(255, 255, 255, 0.24) !important;
 }
 
-/* ===== GLOBAL LANDING UNIFIED THEME (FINAL) ===== */
-:host {
+/* GLOBAL LANDING UNIFIED THEME (FINAL) */:host {
   --unified-bg: linear-gradient(135deg, #312e81 0%, #581c87 52%, #831843 100%);
   --unified-surface: rgba(255, 255, 255, 0.12);
   --unified-surface-strong: rgba(255, 255, 255, 0.16);
@@ -4568,8 +4555,7 @@ section li,
   border: 1px solid rgba(255, 255, 255, 0.24) !important;
 }
 
-/* ===== Horizontal scroll fix ===== */
-:host {
+/* Horizontal scroll fix */:host {
   width: 100%;
   max-width: 100%;
   overflow-x: hidden !important;
@@ -4599,8 +4585,7 @@ section li,
   }
 }
 
-/* ===== Clean click fill-slide effect for hero buttons ===== */
-@keyframes heroBtnFillSlide {
+/* Clean click fill-slide effect for hero buttons */@keyframes heroBtnFillSlide {
   0% {
     transform: scaleX(0);
     opacity: 0.2;
@@ -4667,8 +4652,7 @@ section li,
   animation: heroBtnFillSlide 520ms cubic-bezier(0.22, 1, 0.36, 1) forwards !important;
 }
 
-/* ===== Global card hover color enhancement ===== */
-:host {
+/* Global card hover color enhancement */:host {
   --card-hover-border: rgba(196, 181, 253, 0.56);
   --card-hover-bg:
     radial-gradient(
@@ -4731,8 +4715,7 @@ section li,
   filter: saturate(1.06) brightness(1.03);
 }
 
-/* ===== Security section premium enhancement ===== */
-.security-section .section-header {
+/* Security section premium enhancement */.security-section .section-header {
   max-width: 1120px;
   margin: 0 auto 2.1rem auto !important;
   padding: 1.75rem 1.45rem !important;
@@ -4886,8 +4869,7 @@ section li,
   }
 }
 
-/* ===== Workflow section premium enhancement ===== */
-.workflow-section .section-header {
+/* Workflow section premium enhancement */.workflow-section .section-header {
   max-width: 1120px;
   margin: 0 auto 2.1rem auto !important;
   padding: 1.75rem 1.45rem !important;
@@ -5073,8 +5055,7 @@ section li,
 @media (max-width: 900px) {
 }
 
-/* ===== Windows-style transparent liquid glassmorphism ===== */
-:host {
+/* Windows-style transparent liquid glassmorphism */:host {
   --liquid-glass-bg: linear-gradient(
     135deg,
     rgba(255, 255, 255, 0.16),
@@ -5104,8 +5085,7 @@ section li,
   -webkit-backdrop-filter: blur(18px) saturate(150%) !important;
 }
 
-/* ===== FINAL WORKFLOW ARROW ENHANCEMENT ===== */
-.workflow-section .workflow-arrow {
+/* FINAL WORKFLOW ARROW ENHANCEMENT */.workflow-section .workflow-arrow {
   position: relative !important;
   display: inline-flex !important;
   align-items: center !important;
@@ -5195,8 +5175,7 @@ section li,
 @media (max-width: 900px) {
 }
 
-/* ===== Roles section formatting fix (clean structure) ===== */
-.roles-section .roles-grid {
+/* Roles section formatting fix (clean structure) */.roles-section .roles-grid {
   grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
   grid-auto-rows: 1fr;
   gap: 1.15rem !important;
@@ -5299,8 +5278,7 @@ section li,
   }
 }
 
-/* ===== How-it-works premium enhancement ===== */
-.how-it-works-section .section-header {
+/* How-it-works premium enhancement */.how-it-works-section .section-header {
   max-width: 1120px;
   margin: 0 auto 2.1rem auto !important;
   padding: 1.75rem 1.45rem !important;
@@ -5434,8 +5412,7 @@ section li,
   }
 }
 
-/* ===== Roles section premium enhancement ===== */
-.roles-section .section-header {
+/* Roles section premium enhancement */.roles-section .section-header {
   max-width: 1120px;
   margin: 0 auto 2.1rem auto !important;
   padding: 1.75rem 1.45rem !important;
@@ -5593,8 +5570,7 @@ section li,
   }
 }
 
-/* ===== Features section premium enhancement ===== */
-.features-section .section-header {
+/* Features section premium enhancement */.features-section .section-header {
   max-width: 1080px;
   margin: 0 auto 2rem auto !important;
   padding: 1.7rem 1.35rem !important;
@@ -5748,8 +5724,7 @@ section li,
 @media (max-width: 740px) {
 }
 
-/* ===== Final section color unification + seam removal ===== */
-:host {
+/* Final section color unification + seam removal */:host {
   --landing-unified-bg: linear-gradient(
     135deg,
     #312e81 0%,
@@ -5793,8 +5768,7 @@ section::after,
   border: 0 !important;
 }
 
-/* ===== Absolute single-tone page background (override all section color drift) ===== */
-:host {
+/* Absolute single-tone page background (override all section color drift) */:host {
   background: var(--landing-unified-bg) !important;
   background-attachment: fixed;
 }
@@ -5842,8 +5816,7 @@ section::after,
   border: 0 !important;
 }
 
-/* ===== Unified feel from Hero to CTA ===== */
-:host {
+/* Unified feel from Hero to CTA */:host {
   --landing-feel-bg: linear-gradient(
     135deg,
     #312e81 0%,
@@ -5972,8 +5945,7 @@ section::after,
   color: #fbbf24 !important;
 }
 
-/* ===== HEADER-SYNCED COLOR SYSTEM (FINAL) ===== */
-:host {
+/* HEADER-SYNCED COLOR SYSTEM (FINAL) */:host {
   --header-sync-bg: linear-gradient(
     120deg,
     rgba(79, 70, 229, 0.32) 0%,
@@ -6016,8 +5988,7 @@ section,
   border: 1px solid rgba(255, 255, 255, 0.24) !important;
 }
 
-/* ===== FINAL LANDING HOVER SYSTEM (AUTHORITATIVE) ===== */
-:host {
+/* FINAL LANDING HOVER SYSTEM (AUTHORITATIVE) */:host {
   --landing-hover-border: rgba(196, 181, 253, 0.56);
   --landing-hover-bg:
     radial-gradient(
@@ -6160,8 +6131,7 @@ section,
   }
 }
 
-/* ===== CLEAN END BLOCK (single source of truth) ===== */
-:host {
+/* CLEAN END BLOCK (single source of truth) */:host {
   --single-surface-bg: rgba(255, 255, 255, 0.1);
   --single-surface-border: rgba(255, 255, 255, 0.24);
   --single-surface-shadow:
@@ -6642,8 +6612,7 @@ section,
   }
 }
 
-/* ===== Cafe Card — Cool Purple Hover (final override) ===== */
-.cafe-card {
+/* Cafe Card — Cool Purple Hover (final override) */.cafe-card {
   transition:
     transform 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275),
     box-shadow 0.45s ease,
@@ -6667,8 +6636,7 @@ section,
   background-clip: text !important;
 }
 
-/* ===== Dark-Mode Only Final Override (keep last) ===== */
-:host-context(html.dark),
+/* Dark-Mode Only Final Override (keep last) */:host-context(html.dark),
 :host-context(html.dark-mode),
 :host-context(body.dark-theme),
 :host-context(.dark),
@@ -6708,8 +6676,7 @@ section,
   box-shadow: 0 14px 30px rgba(2, 6, 23, 0.58) !important;
 }
 
-/* ===== Roles cards final size alignment ===== */
-.roles-section .roles-grid {
+/* Roles cards final size alignment */.roles-section .roles-grid {
   grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
   gap: 1.45rem !important;
   align-items: stretch !important;
@@ -6762,8 +6729,7 @@ section,
   }
 }
 
-/* ===== Featured Cafes Badge Visibility (final override) ===== */
-.cafes-section .cafe-rating {
+/* Featured Cafes Badge Visibility (final override) */.cafes-section .cafe-rating {
   background: linear-gradient(135deg, #f59e0b, #d97706) !important;
   color: #ffffff !important;
   border: 1px solid rgba(255, 255, 255, 0.3) !important;

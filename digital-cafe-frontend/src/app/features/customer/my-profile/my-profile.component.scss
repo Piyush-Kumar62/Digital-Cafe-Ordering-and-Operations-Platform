@@ -1,6 +1,5 @@
-// ── CSS Custom Properties ─────────────────────────────────────────────────────
-:host {
-  --pp-bg: #f1f5f9;
+// CSS Custom Properties
+:host {  --pp-bg: #f1f5f9;
   --pp-surface: #ffffff;
   --pp-border: #e2e8f0;
   --pp-text: #1e293b;
@@ -10,7 +9,7 @@
   --pp-danger: #ef4444;
   --pp-radius: 14px;
   --pp-shadow: 0 1px 6px rgba(0, 0, 0, 0.06), 0 4px 18px rgba(0, 0, 0, 0.04);
-  --pp-content-max: 1100px;
+  --pp-content-max: 100%;
   display: block;
 }
 
@@ -25,11 +24,10 @@
   --pp-shadow: 0 2px 14px rgba(0, 0, 0, 0.3);
 }
 
-// ── Root wrapper ──────────────────────────────────────────────────────────────
-.pp {
-  background: var(--pp-bg);
+// Root wrapper
+.pp {  background: var(--pp-bg);
   min-height: 100vh;
-  padding: 20px 16px 70px;
+  padding: 6px 10px 40px;
 }
 
 ::ng-deep .academic-autocomplete-panel {
@@ -53,7 +51,10 @@
   padding-bottom: 8px;
 }
 
-::ng-deep .academic-autocomplete-panel .mat-mdc-option .mdc-list-item__primary-text {
+::ng-deep
+  .academic-autocomplete-panel
+  .mat-mdc-option
+  .mdc-list-item__primary-text {
   white-space: normal;
   line-height: 1.25;
 }
@@ -107,9 +108,8 @@
   font-weight: 600;
 }
 
-// ── Shimmer animation ─────────────────────────────────────────────────────────
-@keyframes pp-shimmer {
-  0% {
+// Shimmer animation
+@keyframes pp-shimmer {  0% {
     background-position: -900px 0;
   }
   100% {
@@ -130,9 +130,9 @@
 
 .pp-skel-circle {
   @extend %shimmer;
-  width: 112px;
-  height: 112px;
-  min-width: 112px;
+  width: 168px;
+  height: 168px;
+  min-width: 168px;
   border-radius: 50%;
 }
 
@@ -177,9 +177,8 @@
   border-radius: var(--pp-radius);
 }
 
-// ── Error state ───────────────────────────────────────────────────────────────
-.pp-error {
-  max-width: 380px;
+// Error state
+.pp-error {  max-width: 380px;
   margin: 60px auto 0;
   text-align: center;
   color: var(--pp-sub);
@@ -203,9 +202,8 @@
   }
 }
 
-// ── Hero banner ───────────────────────────────────────────────────────────────
-.pp-hero {
-  max-width: var(--pp-content-max);
+// Hero banner
+.pp-hero {  max-width: var(--pp-content-max);
   width: 100%;
   margin: 0 auto 14px;
   background: linear-gradient(
@@ -265,22 +263,16 @@
   }
 }
 
-// ── Avatar + SVG ring ──────────────────────────────────────────────────────────
-.pp-avatar-wrap {
-  position: relative;
-  width: 112px;
-  height: 112px;
+// A
+vatar + SVG ring
+.pp-avatar-wrap {  position: relative;
+  width: 168px;
+  height: 168px;
   flex-shrink: 0;
 }
 
 .pp-ring {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 112px;
-  height: 112px;
-  transform: rotate(-90deg);
-  pointer-events: none;
+  display: none;
 
   &__track {
     fill: none;
@@ -301,13 +293,13 @@
 
 .pp-avatar {
   position: absolute;
-  top: 8px;
-  left: 8px;
-  width: 96px;
-  height: 96px;
+  top: 4px;
+  left: 4px;
+  width: 160px;
+  height: 160px;
   border-radius: 50%;
   object-fit: cover;
-  border: 3px solid rgba(255, 255, 255, 0.3);
+  border: 6px solid rgba(255, 255, 255, 0.92);
   background: #1e1b4b;
 
   &--icon {
@@ -317,7 +309,7 @@
     background: linear-gradient(135deg, #312e81, #4338ca);
 
     .material-icons {
-      font-size: 42px;
+      font-size: 62px;
       color: #e0e7ff;
     }
   }
@@ -325,9 +317,9 @@
 
 .pp-cam {
   position: absolute;
-  inset: 8px;
-  width: 96px;
-  height: 96px;
+  inset: 4px;
+  width: 160px;
+  height: 160px;
   border-radius: 50%;
   background: rgba(0, 0, 0, 0.52);
   display: flex;
@@ -339,7 +331,7 @@
 
   .material-icons {
     color: #fff;
-    font-size: 26px;
+    font-size: 34px;
   }
 
   &:hover,
@@ -365,9 +357,8 @@
   z-index: 2;
 }
 
-// ── Hero body ─────────────────────────────────────────────────────────────────
-.pp-hero__body {
-  flex: 1;
+// Hero body
+.pp-hero__body {  flex: 1;
   min-width: 180px;
   color: #fff;
   z-index: 1;
@@ -478,9 +469,45 @@
   flex-wrap: wrap;
 }
 
-// ── Buttons ───────────────────────────────────────────────────────────────────
-.pp-btn {
+.pp-missing-card {
+  max-width: var(--pp-content-max);
+  width: 100%;
+  margin: 0 auto 14px;
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+
+.pp-missing-card__title {
   display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #b91c1c;
+  font-size: 0.82rem;
+  font-weight: 700;
+  margin-bottom: 3px;
+
+  .material-icons {
+    font-size: 16px;
+  }
+}
+
+.pp-missing-card__text {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #991b1b;
+  line-height: 1.4;
+}
+
+.pp-meta-chip--verified {
+  background: rgba(16, 185, 129, 0.14);
+  border-color: rgba(16, 185, 129, 0.32);
+  color: #065f46;
+}
+
+// Buttons
+.pp-btn {  display: inline-flex;
   align-items: center;
   gap: 6px;
   padding: 9px 18px;
@@ -544,9 +571,8 @@
   }
 }
 
-// ── Tab strip ─────────────────────────────────────────────────────────────────
-.pp-tabs {
-  max-width: var(--pp-content-max);
+// Tab strip
+.pp-tabs {  max-width: var(--pp-content-max);
   width: 100%;
   margin: 0 auto 14px;
   background: var(--pp-surface);
@@ -596,9 +622,8 @@
   }
 }
 
-// ── Panels ─────────────────────────────────────────────────────────────────────
-.pp-panel {
-  display: none;
+// Panels
+.pp-panel {  display: none;
   max-width: var(--pp-content-max);
   width: 100%;
   margin: 0 auto;
@@ -608,9 +633,8 @@
   }
 }
 
-// ── Cards ──────────────────────────────────────────────────────────────────────
-.pp-card {
-  background: var(--pp-surface);
+// Cards
+.pp-card {  background: var(--pp-surface);
   border: 1px solid var(--pp-border);
   border-radius: var(--pp-radius);
   padding: 22px 24px;
@@ -654,9 +678,8 @@
   margin: 0;
 }
 
-// ── Grids ──────────────────────────────────────────────────────────────────────
-.pp-g {
-  display: grid;
+// Grids
+.pp-g {  display: grid;
   gap: 14px;
   margin-bottom: 14px;
   align-items: start;
@@ -672,9 +695,8 @@
   }
 }
 
-// ── Form fields ────────────────────────────────────────────────────────────────
-.pp-f {
-  --pp-label-track: 22px;
+// Form fields
+.pp-f {  --pp-label-track: 22px;
 
   // 3-row grid: label | input | error-space
   // The 3rd row is always at least 1rem so every cell is the same height
@@ -905,9 +927,8 @@ select.pp-inp:required:invalid {
   // already reserves consistent space for every field.
 }
 
-// ── Add button ─────────────────────────────────────────────────────────────────
-.pp-add-btn {
-  display: inline-flex;
+// Add button
+.pp-add-btn {  display: inline-flex;
   align-items: center;
   gap: 4px;
   margin-left: auto;
@@ -934,9 +955,8 @@ select.pp-inp:required:invalid {
   }
 }
 
-// ── Nested record card ─────────────────────────────────────────────────────────
-.pp-nested {
-  background: var(--pp-surface);
+// Nested record card
+.pp-nested {  background: var(--pp-surface);
   border: 1px solid var(--pp-border);
   border-radius: 12px;
   padding: 18px 20px;
@@ -972,9 +992,8 @@ select.pp-inp:required:invalid {
   flex-shrink: 0;
 }
 
-// ── Remove button ──────────────────────────────────────────────────────────────
-.pp-rm-btn {
-  width: 28px;
+// Remove button
+.pp-rm-btn {  width: 28px;
   height: 28px;
   border-radius: 7px;
   border: 1px solid rgba(239, 68, 68, 0.3);
@@ -1001,9 +1020,8 @@ select.pp-inp:required:invalid {
   }
 }
 
-// ── Custom checkbox ────────────────────────────────────────────────────────────
-.pp-chk {
-  display: inline-flex;
+// Custom checkbox
+.pp-chk {  display: inline-flex;
   align-items: center;
   gap: 12px;
   cursor: pointer;
@@ -1086,9 +1104,8 @@ select.pp-inp:required:invalid {
   }
 }
 
-// ── Empty state ────────────────────────────────────────────────────────────────
-.pp-empty {
-  text-align: center;
+// Empty state
+.pp-empty {  text-align: center;
   padding: 40px 20px;
   color: var(--pp-sub);
   background: var(--pp-surface);
@@ -1108,18 +1125,16 @@ select.pp-inp:required:invalid {
   }
 }
 
-// ── Bottom save bar ────────────────────────────────────────────────────────────
-.pp-bottombar {
-  max-width: var(--pp-content-max);
+// Bottom save bar
+.pp-bottombar {  max-width: var(--pp-content-max);
   width: 100%;
   margin: 6px auto 0;
   display: flex;
   justify-content: flex-end;
 }
 
-// ── Responsive ─────────────────────────────────────────────────────────────────
-@media (max-width: 768px) {
-  .pp-hero {
+// Responsive
+@media (max-width: 768px) {  .pp-hero {
     padding: 20px 16px;
     gap: 16px;
   }

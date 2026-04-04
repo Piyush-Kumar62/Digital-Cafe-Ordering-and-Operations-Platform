@@ -20,6 +20,16 @@ export class MyPaymentsComponent implements OnInit {
   payments: Payment[] = [];
   loading = true;
   error = false;
+  readonly dayFilterOptions = ["ALL_DAYS", "TODAY", "YESTERDAY"] as const;
+  readonly periodFilterOptions = [
+    "ALL_PERIODS",
+    "THIS_WEEK",
+    "LAST_WEEK",
+    "THIS_MONTH",
+  ] as const;
+  selectedDayFilter: (typeof this.dayFilterOptions)[number] = "ALL_DAYS";
+  selectedPeriodFilter: (typeof this.periodFilterOptions)[number] =
+    "ALL_PERIODS";
   pageIndex = 0;
   readonly pageSize = 10;
   readonly PaymentStatus = PaymentStatus;
@@ -44,13 +54,21 @@ export class MyPaymentsComponent implements OnInit {
   }
 
   get pagedPayments(): Payment[] {
-    return this.payments.slice(
+    return this.filteredPayments.slice(
       this.pageIndex * this.pageSize,
       (this.pageIndex + 1) * this.pageSize,
     );
   }
+
+  get filteredPayments(): Payment[] {
+    return (this.payments || []).filter(
+      (payment) =>
+        this.matchesDayFilter(payment) && this.matchesPeriodFilter(payment),
+    );
+  }
+
   get totalElements(): number {
-    return this.payments.length;
+    return this.filteredPayments.length;
   }
   get totalPages(): number {
     return Math.max(1, Math.ceil(this.totalElements / this.pageSize));
@@ -66,24 +84,50 @@ export class MyPaymentsComponent implements OnInit {
   }
 
   get totalSpent(): number {
-    return this.payments
+    return this.filteredPayments
       .filter((p) => p.status === PaymentStatus.COMPLETED)
       .reduce((sum, p) => sum + Number(p.amount ?? 0), 0);
   }
 
   get successCount(): number {
-    return this.payments.filter((p) => p.status === PaymentStatus.COMPLETED)
-      .length;
+    return this.filteredPayments.filter(
+      (p) => p.status === PaymentStatus.COMPLETED,
+    ).length;
   }
 
   get failedCount(): number {
-    return this.payments.filter((p) => p.status === PaymentStatus.FAILED)
-      .length;
+    return this.filteredPayments.filter(
+      (p) => p.status === PaymentStatus.FAILED,
+    ).length;
   }
 
   get pendingCount(): number {
-    return this.payments.filter((p) => p.status === PaymentStatus.PENDING)
-      .length;
+    return this.filteredPayments.filter(
+      (p) => p.status === PaymentStatus.PENDING,
+    ).length;
+  }
+
+  onDayFilterChange(value: string): void {
+    if (
+      this.dayFilterOptions.includes(
+        value as (typeof this.dayFilterOptions)[number],
+      )
+    ) {
+      this.selectedDayFilter = value as (typeof this.dayFilterOptions)[number];
+      this.pageIndex = 0;
+    }
+  }
+
+  onPeriodFilterChange(value: string): void {
+    if (
+      this.periodFilterOptions.includes(
+        value as (typeof this.periodFilterOptions)[number],
+      )
+    ) {
+      this.selectedPeriodFilter =
+        value as (typeof this.periodFilterOptions)[number];
+      this.pageIndex = 0;
+    }
   }
 
   get visiblePages(): number[] {
@@ -168,5 +212,69 @@ export class MyPaymentsComponent implements OnInit {
         this.alertService.error("Failed to send receipt email.");
       },
     });
+  }
+
+  private getPaymentDate(payment: Payment): Date | null {
+    const raw = payment?.completedAt || payment?.initiatedAt || "";
+    const parsed = Date.parse(raw);
+    if (Number.isNaN(parsed)) return null;
+    return new Date(parsed);
+  }
+
+  private matchesDayFilter(payment: Payment): boolean {
+    if (this.selectedDayFilter === "ALL_DAYS") return true;
+    const paymentDate = this.getPaymentDate(payment);
+    if (!paymentDate) return false;
+
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    if (this.selectedDayFilter === "TODAY") {
+      return this.isSameDate(paymentDate, today);
+    }
+
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    return this.isSameDate(paymentDate, yesterday);
+  }
+
+  private matchesPeriodFilter(payment: Payment): boolean {
+    if (this.selectedPeriodFilter === "ALL_PERIODS") return true;
+    const paymentDate = this.getPaymentDate(payment);
+    if (!paymentDate) return false;
+
+    const now = new Date();
+    const startOfToday = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+    );
+
+    if (this.selectedPeriodFilter === "THIS_MONTH") {
+      return (
+        paymentDate.getFullYear() === now.getFullYear() &&
+        paymentDate.getMonth() === now.getMonth()
+      );
+    }
+
+    const day = startOfToday.getDay();
+    const offset = day === 0 ? 6 : day - 1;
+    const startOfThisWeek = new Date(startOfToday);
+    startOfThisWeek.setDate(startOfThisWeek.getDate() - offset);
+    const startOfLastWeek = new Date(startOfThisWeek);
+    startOfLastWeek.setDate(startOfLastWeek.getDate() - 7);
+
+    if (this.selectedPeriodFilter === "THIS_WEEK") {
+      return paymentDate >= startOfThisWeek;
+    }
+
+    return paymentDate >= startOfLastWeek && paymentDate < startOfThisWeek;
+  }
+
+  private isSameDate(a: Date, b: Date): boolean {
+    return (
+      a.getFullYear() === b.getFullYear() &&
+      a.getMonth() === b.getMonth() &&
+      a.getDate() === b.getDate()
+    );
   }
 }

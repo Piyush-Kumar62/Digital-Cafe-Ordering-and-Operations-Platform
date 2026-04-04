@@ -1,6 +1,6 @@
 <div class="pp">
-  <!-- ── Loading skeleton ──────────────────────────────────────────────────── -->
-  <ng-container *ngIf="loading">
+  <!-- Loading skeleton -->
+    <ng-container *ngIf="loading">
     <div class="pp-hero pp-hero--skel">
       <div class="pp-skel-circle"></div>
       <div class="pp-skel-lines">
@@ -13,23 +13,23 @@
     <div class="pp-skel-card"></div>
   </ng-container>
 
-  <!-- ── Error state ───────────────────────────────────────────────────────── -->
-  <div *ngIf="!loading && loadError" class="pp-error">
+  <!-- Error state -->
+    <div *ngIf="!loading && loadError" class="pp-error">
     <span class="material-icons">error_outline</span>
     <h3>Couldn't load profile</h3>
     <p>{{ loadError }}</p>
   </div>
 
-  <!-- ── Main ──────────────────────────────────────────────────────────────── -->
-  <ng-container *ngIf="!loading && !loadError">
+  <!-- Main -->
+    <ng-container *ngIf="!loading && !loadError">
     <form
       [formGroup]="form"
       (ngSubmit)="saveProfile()"
       novalidate
       autocomplete="off"
     >
-      <!-- ── Hero banner ────────────────────────────────────────────────────── -->
-      <div class="pp-hero">
+      <!-- Hero banner -->
+    <div class="pp-hero">
         <!-- Avatar + SVG completion ring -->
         <div class="pp-avatar-wrap">
           <svg class="pp-ring" viewBox="0 0 120 120" aria-hidden="true">
@@ -80,8 +80,10 @@
           <div class="pp-hero__nameline">
             <h1 class="pp-hero__name">
               {{
-                (form.get("firstName")?.value || form.get("lastName")?.value)
-                  ? (form.get("firstName")?.value || "") + " " + (form.get("lastName")?.value || "")
+                form.get("firstName")?.value || form.get("lastName")?.value
+                  ? (form.get("firstName")?.value || "") +
+                    " " +
+                    (form.get("lastName")?.value || "")
                   : user?.username || "Customer"
               }}
             </h1>
@@ -92,6 +94,13 @@
             {{ profileEmail || user?.email || "—" }}
           </p>
           <div class="pp-hero__meta">
+            <span
+              class="pp-meta-chip pp-meta-chip--verified"
+              *ngIf="user?.isEmailVerified"
+            >
+              <span class="material-icons">verified_user</span>
+              Email Verified
+            </span>
             <span class="pp-meta-chip">
               <span class="material-icons">phone</span>
               {{ heroPhone }}
@@ -143,8 +152,19 @@
       </div>
       <!-- /.pp-hero -->
 
-      <!-- ── Tab strip ──────────────────────────────────────────────────────── -->
-      <nav class="pp-tabs" role="tablist" aria-label="Profile sections">
+      <div class="pp-missing-card" *ngIf="shouldShowMissingProfileWarning">
+        <div class="pp-missing-card__title">
+          <span class="material-icons">warning</span>
+          Complete Missing Details
+        </div>
+        <p class="pp-missing-card__text">
+          Your profile is {{ profileCompletion }}% complete. Please update:
+          {{ profileMissingFields.join(", ") }}
+        </p>
+      </div>
+
+      <!-- Tab strip -->
+    <nav class="pp-tabs" role="tablist" aria-label="Profile sections">
         <button
           type="button"
           role="tab"
@@ -187,8 +207,8 @@
         </button>
       </nav>
 
-      <!-- ── Basic Info panel ────────────────────────────────────────────────── -->
-      <div class="pp-panel" [class.pp-panel--on]="activeSection === 'basic'">
+      <!-- Basic Info panel -->
+    <div class="pp-panel" [class.pp-panel--on]="activeSection === 'basic'">
         <div class="pp-card">
           <div class="pp-card__hd">
             <span class="material-icons pp-card__ico">person_outline</span>
@@ -239,13 +259,20 @@
                 placeholder="Email address"
                 readonly
               />
-              <span class="pp-hint">Email can be updated from account settings.</span>
+              <span class="pp-hint"
+                >Email can be updated from account settings.</span
+              >
             </div>
             <div class="pp-f">
               <label class="pp-lbl"
                 >Date of Birth <span class="req">*</span></label
               >
-              <input class="pp-inp" type="date" formControlName="dateOfBirth" />
+              <input
+                class="pp-inp"
+                type="date"
+                formControlName="dateOfBirth"
+                [attr.max]="maxDob"
+              />
               <span class="pp-err">{{
                 fieldError(form.get("dateOfBirth"), "Date of Birth")
               }}</span>
@@ -336,8 +363,8 @@
         </div>
       </div>
 
-      <!-- ── Address panel ──────────────────────────────────────────────────── -->
-      <div class="pp-panel" [class.pp-panel--on]="activeSection === 'address'">
+      <!-- Address panel -->
+    <div class="pp-panel" [class.pp-panel--on]="activeSection === 'address'">
         <div class="pp-card">
           <div class="pp-card__hd">
             <span class="material-icons pp-card__ico">location_on</span>
@@ -354,8 +381,8 @@
         </div>
       </div>
 
-      <!-- ── Academic panel ─────────────────────────────────────────────────── -->
-      <div
+      <!-- Academic panel -->
+    <div
         class="pp-panel"
         [class.pp-panel--on]="activeSection === 'academic'"
         formArrayName="academicInformation"
@@ -426,7 +453,8 @@
                   <div class="academic-option">
                     <span class="academic-option__title">{{ inst.name }}</span>
                     <span class="academic-option__meta">
-                      {{ inst.city || "India" }}{{ inst.state ? ", " + inst.state : "" }}
+                      {{ inst.city || "India"
+                      }}{{ inst.state ? ", " + inst.state : "" }}
                     </span>
                   </div>
                 </mat-option>
@@ -469,12 +497,15 @@
                 >Branch / Stream <span class="req">*</span>
                 <span
                   class="pp-badge"
-                  *ngIf="!isBranchLoading(i) && getBranchOptions(i).length === 0 && academic.get('degree')?.value"
+                  *ngIf="
+                    !isBranchLoading(i) &&
+                    getBranchOptions(i).length === 0 &&
+                    academic.get('degree')?.value
+                  "
                 >
                   No branches yet
                 </span>
-              </label
-              >
+              </label>
               <ng-container
                 *ngIf="getBranchOptions(i).length > 0; else branchInput"
               >
@@ -501,7 +532,11 @@
               </span>
               <span
                 class="pp-hint"
-                *ngIf="!isBranchLoading(i) && getBranchOptions(i).length === 0 && academic.get('degree')?.value"
+                *ngIf="
+                  !isBranchLoading(i) &&
+                  getBranchOptions(i).length === 0 &&
+                  academic.get('degree')?.value
+                "
               >
                 No branches listed yet. You can type your branch manually.
               </span>
@@ -510,7 +545,9 @@
               }}</span>
             </div>
             <div class="pp-f">
-              <label class="pp-lbl">Passing Year <span class="req">*</span></label>
+              <label class="pp-lbl"
+                >Passing Year <span class="req">*</span></label
+              >
               <select class="pp-inp" formControlName="passingYear">
                 <option value="">Select year</option>
                 <option *ngFor="let y of academicYearOptions" [value]="y">
@@ -548,8 +585,8 @@
         </div>
       </div>
 
-      <!-- ── Work Experience panel ───────────────────────────────────────────── -->
-      <div
+      <!-- Work Experience panel -->
+    <div
         class="pp-panel"
         [class.pp-panel--on]="activeSection === 'work'"
         formArrayName="workExperiences"
@@ -622,7 +659,9 @@
               }}</span>
             </div>
             <div class="pp-f">
-              <label class="pp-lbl">Designation <span class="req">*</span></label>
+              <label class="pp-lbl"
+                >Designation <span class="req">*</span></label
+              >
               <input
                 class="pp-inp"
                 type="text"

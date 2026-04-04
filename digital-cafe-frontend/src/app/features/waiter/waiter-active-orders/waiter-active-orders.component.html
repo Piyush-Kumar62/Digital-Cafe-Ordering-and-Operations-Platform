@@ -1,0 +1,133 @@
+<section class="wa-page">
+  <div class="wa-hero">
+    <div class="wa-hero-text">
+      <h1>Active Orders</h1>
+      <p>Track live service orders and complete ready ones quickly.</p>
+    </div>
+
+    <div class="wa-hero-metrics">
+      <div class="metric metric--active">
+        <span>Active</span>
+        <strong>{{ totalActiveOrders }}</strong>
+      </div>
+      <div class="metric metric--ready">
+        <span>Ready</span>
+        <strong>{{ readyOrdersCount }}</strong>
+      </div>
+      <button class="refresh-btn" (click)="refresh()" [disabled]="refreshing">
+        {{ refreshing ? "Refreshing..." : "Refresh" }}
+      </button>
+    </div>
+  </div>
+
+  <div class="wa-filters">
+    <div class="filter-label">Search by order id, table or customer</div>
+    <input
+      class="search"
+      type="text"
+      placeholder="Search order #, table, customer"
+      [(ngModel)]="searchQuery"
+      (ngModelChange)="onSearchChange()"
+    />
+  </div>
+
+  <div class="loading" *ngIf="loading">Loading active orders...</div>
+
+  <div class="wa-section-bar" *ngIf="!loading">
+    <div class="wa-section-bar__left">
+      <span class="wa-live-dot"></span>
+      <h2 class="wa-section-title">Ready Orders</h2>
+      <span class="wa-badge" *ngIf="readyOrdersCount > 0">{{
+        readyOrdersCount
+      }}</span>
+    </div>
+    <p class="wa-section-sub">Kitchen has prepared these — serve immediately</p>
+  </div>
+
+  <div class="wa-grid" *ngIf="!loading && pagedOrders.length > 0">
+    <article
+      class="wa-card"
+      *ngFor="let order of pagedOrders"
+      [class.urgent]="isUrgent(order)"
+    >
+      <div class="wa-card-top">
+        <div class="wa-order-num">
+          Order #{{ order.orderNumber || order.id }}
+        </div>
+        <div class="wa-card-badges">
+          <span class="status" [class]="order.status.toLowerCase()">{{
+            order.status
+          }}</span>
+          <span class="wa-badge-urgent" *ngIf="isUrgent(order)">Urgent</span>
+        </div>
+      </div>
+
+      <div class="wa-meta">
+        <span class="wa-meta-chip" *ngIf="order.tableNumber || order.tableId"
+          >Table {{ order.tableNumber || order.tableId }}</span
+        >
+        <span class="wa-meta-chip">{{ order.customerName || "Customer" }}</span>
+        <span
+          class="wa-meta-chip"
+          [class.time--urgent]="isUrgent(order)"
+          *ngIf="getOrderAge(order)"
+          >{{ getOrderAge(order) }}</span
+        >
+      </div>
+
+      <div class="wa-items" *ngIf="order.items?.length">
+        <div class="item" *ngFor="let item of order.items">
+          <span
+            ><strong>{{ item.quantity }}x</strong> {{ item.menuItemName }}</span
+          >
+          <span *ngIf="item.totalPrice"
+            >₹{{ item.totalPrice | number: "1.0-0" }}</span
+          >
+        </div>
+      </div>
+
+      <div class="wa-note" *ngIf="order.specialInstructions">
+        {{ order.specialInstructions }}
+      </div>
+
+      <div class="wa-actions" *ngIf="order.status === 'READY'">
+        <div class="wa-total" *ngIf="order.totalAmount">
+          <span class="wa-total-label">Total</span>
+          <strong>₹{{ order.totalAmount | number: "1.2-2" }}</strong>
+        </div>
+        <button class="serve-btn" (click)="markServed(order.id)">
+          Mark As Served
+        </button>
+      </div>
+    </article>
+  </div>
+
+  <div class="empty" *ngIf="!loading && filteredOrders.length === 0">
+    No active orders found.
+  </div>
+
+  <div class="pager" *ngIf="!loading && filteredOrders.length > 0">
+    <span
+      >Showing {{ rangeStart }}-{{ rangeEnd }} of
+      {{ filteredOrders.length }}</span
+    >
+    <div class="controls">
+      <button (click)="goToPage(pageIndex)" [disabled]="pageIndex === 0">
+        Prev
+      </button>
+      <button
+        *ngFor="let page of pageNumbers"
+        [class.active]="page - 1 === pageIndex"
+        (click)="goToPage(page)"
+      >
+        {{ page }}
+      </button>
+      <button
+        (click)="goToPage(pageIndex + 2)"
+        [disabled]="pageIndex + 1 >= totalPages"
+      >
+        Next
+      </button>
+    </div>
+  </div>
+</section>

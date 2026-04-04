@@ -113,9 +113,11 @@ export class WaiterProfileComponent implements OnInit {
           lastLogin: data?.lastLogin || "",
           phoneNumber: data?.phoneNumber || "",
           govtIdType: data?.govtIdType || this.currentUser?.govtIdType || "",
-          govtIdNumber: data?.govtIdNumber || this.currentUser?.govtIdNumber || "",
+          govtIdNumber:
+            data?.govtIdNumber || this.currentUser?.govtIdNumber || "",
           joiningDate: data?.joiningDate || this.currentUser?.joiningDate || "",
-          experienceYears: data?.experienceYears ?? this.currentUser?.experienceYears ?? 0,
+          experienceYears:
+            data?.experienceYears ?? this.currentUser?.experienceYears ?? 0,
           shift: data?.shift || this.currentUser?.shift || "",
         };
         this.loading = false;
@@ -123,12 +125,14 @@ export class WaiterProfileComponent implements OnInit {
       error: () => {
         this.profileData.firstName = this.currentUser?.firstName || "";
         this.profileData.lastName = this.currentUser?.lastName || "";
-        this.profileData.displayName = `${this.profileData.firstName} ${this.profileData.lastName}`.trim();
+        this.profileData.displayName =
+          `${this.profileData.firstName} ${this.profileData.lastName}`.trim();
         this.profileData.email = this.currentUser?.email || "";
         this.profileData.govtIdType = this.currentUser?.govtIdType || "";
         this.profileData.govtIdNumber = this.currentUser?.govtIdNumber || "";
         this.profileData.joiningDate = this.currentUser?.joiningDate || "";
-        this.profileData.experienceYears = this.currentUser?.experienceYears || 0;
+        this.profileData.experienceYears =
+          this.currentUser?.experienceYears || 0;
         this.profileData.shift = this.currentUser?.shift || "";
         this.loading = false;
       },
@@ -179,13 +183,17 @@ export class WaiterProfileComponent implements OnInit {
   }
 
   getExperience(): string {
-    const exp = this.profileData.experienceYears ?? this.currentUser?.experienceYears;
+    const exp =
+      this.profileData.experienceYears ?? this.currentUser?.experienceYears;
     if (exp == null) return "—";
     return `${exp} ${exp === 1 ? "year" : "years"}`;
   }
 
   getJoinDate(): string {
-    const date = this.profileData.joiningDate || this.currentUser?.joiningDate || this.currentUser?.createdAt;
+    const date =
+      this.profileData.joiningDate ||
+      this.currentUser?.joiningDate ||
+      this.currentUser?.createdAt;
     if (!date) return "—";
     return new Date(date).toLocaleDateString("en-IN", {
       year: "numeric",
@@ -204,10 +212,54 @@ export class WaiterProfileComponent implements OnInit {
   }
 
   getCompletionClass(): string {
-    const p = this.profileData.profileCompletionPercentage;
+    const p = this.currentCompletionPercentage;
     if (p >= 80) return "high";
     if (p >= 50) return "mid";
     return "low";
+  }
+
+  get currentCompletionPercentage(): number {
+    if (!this.editMode) {
+      return this.profileData.profileCompletionPercentage || 0;
+    }
+
+    const draft = this.editForm;
+    let filled = 0;
+    const total = 7;
+
+    if (String(draft.firstName || "").trim()) filled++;
+    if (String(draft.lastName || "").trim()) filled++;
+    if (String(draft.displayName || "").trim()) filled++;
+    if (String(draft.phoneNumber || "").trim()) filled++;
+    if (String(draft.govtIdType || "").trim()) filled++;
+    if (String(draft.govtIdNumber || "").trim()) filled++;
+    if (String(draft.joiningDate || "").trim()) filled++;
+
+    return Math.round((filled * 100) / total);
+  }
+
+  get missingProfileFields(): string[] {
+    const source = this.editMode ? this.editForm : this.profileData;
+    const missing: string[] = [];
+
+    if (!String(source.firstName || "").trim()) missing.push("First Name");
+    if (!String(source.lastName || "").trim()) missing.push("Last Name");
+    if (!String(source.displayName || "").trim()) missing.push("Display Name");
+    if (!String(source.phoneNumber || "").trim()) missing.push("Phone Number");
+    if (!String(source.govtIdType || "").trim())
+      missing.push("Government ID Type");
+    if (!String(source.govtIdNumber || "").trim())
+      missing.push("Government ID Number");
+    if (!String(source.joiningDate || "").trim()) missing.push("Joining Date");
+
+    return missing;
+  }
+
+  get shouldShowMissingWarning(): boolean {
+    return (
+      this.currentCompletionPercentage < 100 &&
+      this.missingProfileFields.length > 0
+    );
   }
 
   // ── Edit Profile ────────────────────────────────────────────
@@ -263,7 +315,9 @@ export class WaiterProfileComponent implements OnInit {
           data?.profileCompletionPercentage ??
           this.profileData.profileCompletionPercentage;
         if (data?.profileImageUrl)
-          this.profileData.profileImageUrl = this.apiService.resolveImageUrl(data.profileImageUrl);
+          this.profileData.profileImageUrl = this.apiService.resolveImageUrl(
+            data.profileImageUrl,
+          );
 
         if (this.currentUser) {
           this.currentUser = {
@@ -277,8 +331,10 @@ export class WaiterProfileComponent implements OnInit {
             joiningDate: this.profileData.joiningDate,
             experienceYears: this.profileData.experienceYears,
             shift: this.profileData.shift,
-            profileCompletionPercentage: this.profileData.profileCompletionPercentage,
-            isProfileComplete: this.profileData.profileCompletionPercentage >= 100,
+            profileCompletionPercentage:
+              this.profileData.profileCompletionPercentage,
+            isProfileComplete:
+              this.profileData.profileCompletionPercentage >= 100,
           };
           this.authService.updateUserData(this.currentUser);
         }
@@ -329,7 +385,8 @@ export class WaiterProfileComponent implements OnInit {
         if (this.currentUser) {
           this.currentUser = {
             ...this.currentUser,
-            profileImageUrl: res?.profileImageUrl || this.currentUser.profileImageUrl,
+            profileImageUrl:
+              res?.profileImageUrl || this.currentUser.profileImageUrl,
           };
           this.authService.updateUserData(this.currentUser);
         }

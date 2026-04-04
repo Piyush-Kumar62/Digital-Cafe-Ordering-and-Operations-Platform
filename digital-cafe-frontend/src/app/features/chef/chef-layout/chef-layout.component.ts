@@ -49,6 +49,8 @@ export class ChefLayoutComponent implements OnInit, OnDestroy {
   notificationDropdownOpen = false;
   profileImage = "";
   notifications: ChefNotification[] = [];
+  readonly notificationPageSize = 10;
+  notificationCurrentPage = 1;
 
   private routerEventsSub?: Subscription;
   private currentUserSub?: Subscription;
@@ -124,6 +126,7 @@ export class ChefLayoutComponent implements OnInit, OnDestroy {
     this.profileDropdownOpen = false;
     this.notificationDropdownOpen = !this.notificationDropdownOpen;
     if (this.notificationDropdownOpen) {
+      this.notificationCurrentPage = 1;
       this.notifications = this.notifications.map((n) => ({
         ...n,
         read: true,
@@ -142,7 +145,10 @@ export class ChefLayoutComponent implements OnInit, OnDestroy {
     );
     if (!ok) return;
     this.authService.logout();
-    this.alertService.success("Logged out", "You have been signed out successfully.");
+    this.alertService.success(
+      "Logged out",
+      "You have been signed out successfully.",
+    );
     this.router.navigate(["/auth/login"]).catch(() => {});
   }
 
@@ -170,6 +176,38 @@ export class ChefLayoutComponent implements OnInit, OnDestroy {
 
   get unreadNotifications(): number {
     return this.notifications.filter((n) => !n.read).length;
+  }
+
+  get totalNotificationPages(): number {
+    return Math.max(
+      1,
+      Math.ceil(this.notifications.length / this.notificationPageSize),
+    );
+  }
+
+  get pagedNotifications(): ChefNotification[] {
+    const start =
+      (this.notificationCurrentPage - 1) * this.notificationPageSize;
+    return this.notifications.slice(start, start + this.notificationPageSize);
+  }
+
+  prevNotificationPage(): void {
+    if (this.notificationCurrentPage > 1) {
+      this.notificationCurrentPage -= 1;
+    }
+  }
+
+  nextNotificationPage(): void {
+    if (this.notificationCurrentPage < this.totalNotificationPages) {
+      this.notificationCurrentPage += 1;
+    }
+  }
+
+  markAllRead(): void {
+    this.notifications = this.notifications.map((n) => ({
+      ...n,
+      read: true,
+    }));
   }
 
   getNotificationTime(timestamp: string): string {
@@ -258,8 +296,13 @@ export class ChefLayoutComponent implements OnInit, OnDestroy {
   private pushNotification(payload: any): void {
     const title = payload?.title || "New Order";
     const message =
-      payload?.message || payload?.description || "A new order needs your attention.";
-    const severity = (payload?.severity || "info") as "info" | "warning" | "error";
+      payload?.message ||
+      payload?.description ||
+      "A new order needs your attention.";
+    const severity = (payload?.severity || "info") as
+      | "info"
+      | "warning"
+      | "error";
     const timestamp = payload?.timestamp || new Date().toISOString();
 
     const notification: ChefNotification = {
@@ -277,7 +320,8 @@ export class ChefLayoutComponent implements OnInit, OnDestroy {
     );
     if (exists) return;
 
-    this.notifications = [notification, ...this.notifications].slice(0, 20);
+    this.notifications = [notification, ...this.notifications].slice(0, 50);
+    this.notificationCurrentPage = 1;
   }
 
   private resolveProfileImage(user: any): string {

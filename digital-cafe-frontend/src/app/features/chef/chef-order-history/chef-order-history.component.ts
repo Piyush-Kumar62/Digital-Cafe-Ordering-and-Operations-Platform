@@ -15,6 +15,8 @@ import { Order, OrderStatus } from "@shared/models/order.model";
 export class ChefOrderHistoryComponent implements OnInit {
   orders: Order[] = [];
   isLoading = true;
+  currentPage = 1;
+  readonly pageSize = 10;
 
   constructor(
     private apiService: ApiService,
@@ -30,9 +32,21 @@ export class ChefOrderHistoryComponent implements OnInit {
     this.isLoading = true;
     this.apiService.getChefOrders().subscribe({
       next: (orders) => {
-        this.orders = orders.filter(
-          (o) => o.status === OrderStatus.READY || o.status === OrderStatus.SERVED,
-        );
+        this.orders = orders
+          .filter(
+            (o) =>
+              o.status === OrderStatus.READY || o.status === OrderStatus.SERVED,
+          )
+          .sort((a, b) => {
+            const aTime = new Date(
+              a.readyAt || a.servedAt || a.updatedAt || a.createdAt || 0,
+            ).getTime();
+            const bTime = new Date(
+              b.readyAt || b.servedAt || b.updatedAt || b.createdAt || 0,
+            ).getTime();
+            return bTime - aTime;
+          });
+        this.currentPage = 1;
         this.isLoading = false;
       },
       error: () => {
@@ -42,11 +56,57 @@ export class ChefOrderHistoryComponent implements OnInit {
     });
   }
 
+  get paginatedOrders(): Order[] {
+    const start = (this.currentPage - 1) * this.pageSize;
+    return this.orders.slice(start, start + this.pageSize);
+  }
+
+  get totalPages(): number {
+    return Math.max(1, Math.ceil(this.orders.length / this.pageSize));
+  }
+
+  get pageNumbers(): number[] {
+    return Array.from({ length: this.totalPages }, (_, i) => i + 1);
+  }
+
+  get readyCount(): number {
+    return this.orders.filter((o) => o.status === OrderStatus.READY).length;
+  }
+
+  get servedCount(): number {
+    return this.orders.filter((o) => o.status === OrderStatus.SERVED).length;
+  }
+
+  get rangeStart(): number {
+    if (!this.orders.length) return 0;
+    return (this.currentPage - 1) * this.pageSize + 1;
+  }
+
+  get rangeEnd(): number {
+    return Math.min(this.currentPage * this.pageSize, this.orders.length);
+  }
+
+  goToPage(page: number): void {
+    if (page < 1 || page > this.totalPages || page === this.currentPage) return;
+    this.currentPage = page;
+  }
+
+  goToPreviousPage(): void {
+    this.goToPage(this.currentPage - 1);
+  }
+
+  goToNextPage(): void {
+    this.goToPage(this.currentPage + 1);
+  }
+
   getStatusClass(status: string): string {
     switch (status) {
-      case "READY": return "status-ready";
-      case "SERVED": return "status-served";
-      default: return "status-default";
+      case "READY":
+        return "status-ready";
+      case "SERVED":
+        return "status-served";
+      default:
+        return "status-default";
     }
   }
 

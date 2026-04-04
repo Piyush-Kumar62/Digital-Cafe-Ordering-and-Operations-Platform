@@ -6,7 +6,7 @@
   </div>
 
   <ng-container *ngIf="!loading">
-    <!-- ── HERO BANNER ── -->
+    <!-- HERO BANNER -->
     <div class="cp-hero">
       <div class="cp-hero__bg"></div>
       <div class="cp-hero__content">
@@ -42,9 +42,9 @@
             style="display: none"
             (change)="onFileSelected($event)"
           />
-          <div class="cp-avatar__badge">
-            <span class="material-icons">restaurant</span>
-          </div>
+          <span class="cp-avatar__badge"
+            >{{ currentCompletionPercentage }}%</span
+          >
         </div>
 
         <!-- Name + meta -->
@@ -55,6 +55,13 @@
             <span class="cp-chip cp-chip--role">
               <span class="material-icons">shield</span>
               {{ getRoleLabel() }}
+            </span>
+            <span
+              class="cp-chip cp-chip--verified"
+              *ngIf="currentUser?.isEmailVerified"
+            >
+              <span class="material-icons">verified_user</span>
+              Email Verified
             </span>
             <span class="cp-chip cp-chip--cafe" *ngIf="getCafeName() !== '—'">
               <span class="material-icons">storefront</span>
@@ -79,55 +86,36 @@
           </button>
         </div>
       </div>
-
-      <!-- Kitchen stat mini-tiles in hero -->
-      <div class="cp-hero__stats">
-        <div class="cp-hstat">
-          <span class="cp-hstat__num">{{ chefStats.pendingOrders }}</span>
-          <span class="cp-hstat__lbl">Pending</span>
-        </div>
-        <div class="cp-hstat">
-          <span class="cp-hstat__num">{{ chefStats.preparingOrders }}</span>
-          <span class="cp-hstat__lbl">Preparing</span>
-        </div>
-        <div class="cp-hstat">
-          <span class="cp-hstat__num">{{ chefStats.completedToday }}</span>
-          <span class="cp-hstat__lbl">Done Today</span>
-        </div>
-      </div>
     </div>
 
-    <!-- ── PROFILE COMPLETION BAR ── -->
-    <div
-      class="cp-progress"
-      *ngIf="profileData.profileCompletionPercentage > 0"
-    >
+    <!-- PROFILE COMPLETION BAR -->
+    <div class="cp-progress" *ngIf="currentCompletionPercentage > 0">
       <div class="cp-progress__top">
         <span class="material-icons">bar_chart</span>
         <span>Profile Completion</span>
         <span class="cp-progress__pct" [class]="getCompletionClass()">
-          {{ profileData.profileCompletionPercentage }}%
+          {{ currentCompletionPercentage }}%
         </span>
       </div>
       <div class="cp-progress__track">
         <div
           class="cp-progress__fill"
           [class]="getCompletionClass()"
-          [style.width.%]="profileData.profileCompletionPercentage"
+          [style.width.%]="currentCompletionPercentage"
         ></div>
       </div>
-      <p
-        class="cp-progress__hint"
-        *ngIf="profileData.profileCompletionPercentage < 100"
-      >
+      <p class="cp-progress__hint" *ngIf="currentCompletionPercentage < 100">
         Add more details to complete your chef profile.
+      </p>
+      <p class="cp-progress__missing" *ngIf="shouldShowMissingWarning">
+        Missing details: {{ missingProfileFields.join(", ") }}
       </p>
     </div>
 
-    <!-- ── MAIN GRID ── -->
+    <!-- MAIN GRID -->
     <div class="cp-grid">
-      <!-- ── LEFT COLUMN ── -->
-      <div class="cp-left">
+      <!-- LEFT COLUMN -->
+    <div class="cp-left">
         <!-- Edit Profile Form -->
         <div class="cp-card cp-card--form" *ngIf="editMode">
           <div class="cp-card__head">
@@ -402,7 +390,9 @@
               </div>
               <div class="cp-detail-body">
                 <span class="cp-detail-lbl">Phone Number</span>
-                <span class="cp-detail-val">{{ profileData.phoneNumber || "—" }}</span>
+                <span class="cp-detail-val">{{
+                  profileData.phoneNumber || "—"
+                }}</span>
               </div>
             </div>
             <div class="cp-detail-row">
@@ -412,7 +402,12 @@
               <div class="cp-detail-body">
                 <span class="cp-detail-lbl">Govt ID</span>
                 <span class="cp-detail-val">
-                  {{ profileData.govtIdType || "—" }}{{ profileData.govtIdNumber ? " • " + profileData.govtIdNumber : "" }}
+                  {{ profileData.govtIdType || "—"
+                  }}{{
+                    profileData.govtIdNumber
+                      ? " • " + profileData.govtIdNumber
+                      : ""
+                  }}
                 </span>
               </div>
             </div>
@@ -429,35 +424,8 @@
         </div>
       </div>
 
-      <!-- ── RIGHT COLUMN ── -->
-      <div class="cp-right">
-        <!-- Kitchen Stats Card -->
-        <div class="cp-card cp-card--stats">
-          <div class="cp-card__head">
-            <span class="material-icons">local_fire_department</span>
-            <h3>Kitchen Stats</h3>
-            <span class="cp-live-dot"></span>
-            <span class="cp-live-text">Live</span>
-          </div>
-          <div class="cp-stats-grid">
-            <div class="cp-stat-tile cp-stat--pending">
-              <span class="material-icons cp-stat-icon">schedule</span>
-              <span class="cp-stat-num">{{ chefStats.pendingOrders }}</span>
-              <span class="cp-stat-lbl">Awaiting Kitchen</span>
-            </div>
-            <div class="cp-stat-tile cp-stat--preparing">
-              <span class="material-icons cp-stat-icon">whatshot</span>
-              <span class="cp-stat-num">{{ chefStats.preparingOrders }}</span>
-              <span class="cp-stat-lbl">In Preparation</span>
-            </div>
-            <div class="cp-stat-tile cp-stat--done">
-              <span class="material-icons cp-stat-icon">task_alt</span>
-              <span class="cp-stat-num">{{ chefStats.completedToday }}</span>
-              <span class="cp-stat-lbl">Completed Today</span>
-            </div>
-          </div>
-        </div>
-
+      <!-- RIGHT COLUMN -->
+    <div class="cp-right">
         <!-- Work Information Card -->
         <div class="cp-card">
           <div class="cp-card__head">

@@ -49,6 +49,8 @@ export class WaiterLayoutComponent implements OnInit, OnDestroy {
   notificationDropdownOpen = false;
   profileImage = "";
   notifications: WaiterNotification[] = [];
+  readonly notificationPageSize = 10;
+  notificationCurrentPage = 1;
 
   private routerEventsSub?: Subscription;
   private currentUserSub?: Subscription;
@@ -62,6 +64,16 @@ export class WaiterLayoutComponent implements OnInit, OnDestroy {
 
   navigationItems: WaiterNavItem[] = [
     { label: "Dashboard", icon: "bi-speedometer2", route: "/waiter/dashboard" },
+    {
+      label: "Active Orders",
+      icon: "bi-list-check",
+      route: "/waiter/active-orders",
+    },
+    {
+      label: "Served History",
+      icon: "bi-clock-history",
+      route: "/waiter/served-history",
+    },
     { label: "My Profile", icon: "bi-person-circle", route: "/waiter/profile" },
   ];
 
@@ -118,6 +130,7 @@ export class WaiterLayoutComponent implements OnInit, OnDestroy {
     this.profileDropdownOpen = false;
     this.notificationDropdownOpen = !this.notificationDropdownOpen;
     if (this.notificationDropdownOpen) {
+      this.notificationCurrentPage = 1;
       this.notifications = this.notifications.map((n) => ({
         ...n,
         read: true,
@@ -136,7 +149,10 @@ export class WaiterLayoutComponent implements OnInit, OnDestroy {
     );
     if (!ok) return;
     this.authService.logout();
-    this.alertService.success("Logged out", "You have been signed out successfully.");
+    this.alertService.success(
+      "Logged out",
+      "You have been signed out successfully.",
+    );
     this.router.navigate(["/auth/login"]).catch(() => {});
   }
 
@@ -158,6 +174,38 @@ export class WaiterLayoutComponent implements OnInit, OnDestroy {
 
   get unreadNotifications(): number {
     return this.notifications.filter((n) => !n.read).length;
+  }
+
+  get totalNotificationPages(): number {
+    return Math.max(
+      1,
+      Math.ceil(this.notifications.length / this.notificationPageSize),
+    );
+  }
+
+  get pagedNotifications(): WaiterNotification[] {
+    const start =
+      (this.notificationCurrentPage - 1) * this.notificationPageSize;
+    return this.notifications.slice(start, start + this.notificationPageSize);
+  }
+
+  prevNotificationPage(): void {
+    if (this.notificationCurrentPage > 1) {
+      this.notificationCurrentPage -= 1;
+    }
+  }
+
+  nextNotificationPage(): void {
+    if (this.notificationCurrentPage < this.totalNotificationPages) {
+      this.notificationCurrentPage += 1;
+    }
+  }
+
+  markAllRead(): void {
+    this.notifications = this.notifications.map((n) => ({
+      ...n,
+      read: true,
+    }));
   }
 
   getNotifTime(timestamp: string): string {
@@ -264,7 +312,8 @@ export class WaiterLayoutComponent implements OnInit, OnDestroy {
       read: false,
     };
 
-    this.notifications = [notification, ...this.notifications].slice(0, 20);
+    this.notifications = [notification, ...this.notifications].slice(0, 50);
+    this.notificationCurrentPage = 1;
   }
 
   private resolveProfileImage(user: any): string {

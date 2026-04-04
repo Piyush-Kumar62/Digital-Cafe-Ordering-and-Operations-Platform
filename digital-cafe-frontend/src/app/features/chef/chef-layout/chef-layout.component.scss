@@ -48,8 +48,7 @@
   --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.3);
 }
 
-/* ===== SHELL ===== */
-.chef-shell {
+/* SHELL */.chef-shell {
   display: flex;
   height: 100vh;
   overflow: hidden;
@@ -62,8 +61,7 @@
     sans-serif;
 }
 
-/* ===== MOBILE OVERLAY ===== */
-.mobile-overlay {
+/* MOBILE OVERLAY */.mobile-overlay {
   display: none;
   position: fixed;
   inset: 0;
@@ -76,8 +74,7 @@
   }
 }
 
-/* ===== SIDEBAR ===== */
-.sidebar {
+/* SIDEBAR */.sidebar {
   position: fixed;
   inset: 0 auto 0 0;
   z-index: 50;
@@ -179,7 +176,7 @@
 /* Navigation */
 .sidebar-nav {
   flex: 1;
-  overflow-y: auto;
+  overflow-y: hidden;
   padding: 20px 12px;
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
@@ -325,8 +322,7 @@
   }
 }
 
-/* ===== MAIN AREA ===== */
-.main-area {
+/* MAIN AREA */.main-area {
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -347,8 +343,7 @@
   }
 }
 
-/* ===== TOP HEADER ===== */
-.top-header {
+/* TOP HEADER */.top-header {
   height: var(--header-height);
   min-height: var(--header-height);
   background: var(--surface);
@@ -580,8 +575,7 @@
   line-height: 1.4;
 }
 
-/* ===== PROFILE AREA ===== */
-.profile-area {
+/* PROFILE AREA */.profile-area {
   padding-left: 10px;
   margin-left: 4px;
   border-left: 1px solid var(--border);
@@ -787,7 +781,11 @@
   padding: 12px 14px;
   border-radius: 12px;
   border: 1px solid rgba(239, 68, 68, 0.2);
-  background: linear-gradient(135deg, rgba(239, 68, 68, 0.12), rgba(249, 115, 22, 0.12));
+  background: linear-gradient(
+    135deg,
+    rgba(239, 68, 68, 0.12),
+    rgba(249, 115, 22, 0.12)
+  );
   color: #b91c1c;
   align-items: center;
   gap: 12px;
@@ -822,22 +820,24 @@
   }
 
   &:hover {
-    background: linear-gradient(135deg, rgba(239, 68, 68, 0.18), rgba(249, 115, 22, 0.16));
+    background: linear-gradient(
+      135deg,
+      rgba(239, 68, 68, 0.18),
+      rgba(249, 115, 22, 0.16)
+    );
     color: #991b1b;
     transform: translateY(-1px);
   }
 }
 
-/* ===== PAGE CONTENT ===== */
-.page-content {
+/* PAGE CONTENT */.page-content {
   flex: 1;
   overflow-y: auto;
   background: var(--bg);
   scrollbar-width: thin;
 }
 
-/* ===== ANIMATIONS ===== */
-@keyframes dropIn {
+/* ANIMATIONS */@keyframes dropIn {
   from {
     opacity: 0;
     transform: translateY(-8px);
@@ -848,8 +848,7 @@
   }
 }
 
-/* ===== RESPONSIVE ===== */
-@media (max-width: 768px) {
+/* RESPONSIVE */@media (max-width: 768px) {
   .top-header {
     padding: 0 12px;
     height: 60px;
@@ -892,8 +891,7 @@
   }
 }
 
-/* ===== DARK MODE SPECIFIC ===== */
-:host-context(.dark) {
+/* DARK MODE SPECIFIC */:host-context(.dark) {
   .severity-info {
     color: #93c5fd;
     border-color: rgba(96, 165, 250, 0.35);

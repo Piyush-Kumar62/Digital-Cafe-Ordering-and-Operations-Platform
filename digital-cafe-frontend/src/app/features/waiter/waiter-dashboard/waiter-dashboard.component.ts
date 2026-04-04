@@ -6,6 +6,7 @@ import { AlertService } from "@core/services/alert.service";
 import { WebSocketService } from "@core/websocket/websocket.service";
 import { Order } from "@shared/models/order.model";
 import { WaiterDashboard } from "@shared/models/dashboard.model";
+import { User } from "@shared/models/auth.model";
 import { Subject, interval, takeUntil, forkJoin, of } from "rxjs";
 import { catchError } from "rxjs/operators";
 
@@ -18,12 +19,16 @@ import { catchError } from "rxjs/operators";
 })
 export class WaiterDashboardComponent implements OnInit, OnDestroy {
   loading = true;
+  refreshing = false;
+  hasLoadedOnce = false;
   readyOrders: Order[] = [];
   servedToday = 0;
   activeOrders = 0;
   cafeName = "";
   cafeId: number | null = null;
   lastRefreshed = new Date();
+  currentTime = new Date();
+  currentUser: User | null = null;
 
   private destroy$ = new Subject<void>();
 
@@ -66,13 +71,17 @@ export class WaiterDashboardComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     const user = this.authService.currentUserValue;
+    this.currentUser = user;
     this.cafeId = user?.cafeId ?? null;
     this.loadData();
     this.subscribeRealtime();
     // Auto-refresh every 30 seconds
     interval(30_000)
       .pipe(takeUntil(this.destroy$))
-      .subscribe(() => this.loadData(false));
+      .subscribe(() => {
+        this.currentTime = new Date();
+        this.loadData(false);
+      });
   }
 
   ngOnDestroy(): void {
@@ -113,6 +122,46 @@ export class WaiterDashboardComponent implements OnInit, OnDestroy {
     return `${Math.floor(diff / 60)}h ${diff % 60}m ago`;
   }
 
+  get greeting(): string {
+    const h = this.currentTime.getHours();
+    if (h < 12) return "Good Morning";
+    if (h < 18) return "Good Afternoon";
+    return "Good Evening";
+  }
+
+  get dateTimeFormatted(): string {
+    const date = this.currentTime.toLocaleDateString("en-IN", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+    const time = this.currentTime.toLocaleTimeString("en-IN", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+    return `${date} | ${time}`;
+  }
+
+  get displayName(): string {
+    const first = this.currentUser?.firstName || "";
+    const last = this.currentUser?.lastName || "";
+    const full = `${first} ${last}`.trim();
+    return (
+      this.currentUser?.displayName ||
+      full ||
+      this.currentUser?.username ||
+      "Waiter"
+    );
+  }
+
+  refreshData(): void {
+    this.currentTime = new Date();
+    this.refreshing = true;
+    this.loadData(false);
+  }
+
   isUrgent(order: Order): boolean {
     const ts = order.readyAt || order.placedAt || order.createdAt;
     if (!ts) return false;
@@ -121,7 +170,9 @@ export class WaiterDashboardComponent implements OnInit, OnDestroy {
   }
 
   private loadData(showSpinner = true): void {
-    if (showSpinner) this.loading = true;
+    if (showSpinner && !this.hasLoadedOnce) {
+      this.loading = true;
+    }
 
     const orders$ = this.apiService
       .getReadyOrdersForWaiterWorkflow()
@@ -135,8 +186,13 @@ export class WaiterDashboardComponent implements OnInit, OnDestroy {
 
     forkJoin({ orders: orders$, dashboard: dashboard$ }).subscribe({
       next: ({ orders, dashboard }) => {
+        const previousPageIndex = this.pageIndex;
         this.readyOrders = orders || [];
-        this.pageIndex = 0;
+        const maxPageIndex = Math.max(
+          0,
+          Math.ceil(this.readyOrders.length / this.pageSize) - 1,
+        );
+        this.pageIndex = Math.min(previousPageIndex, maxPageIndex);
         if (dashboard) {
           const d = dashboard as WaiterDashboard;
           this.servedToday = d.servedToday ?? 0;
@@ -146,10 +202,14 @@ export class WaiterDashboardComponent implements OnInit, OnDestroy {
           this.servedToday = this.calculateServedToday(this.readyOrders);
         }
         this.lastRefreshed = new Date();
+        this.hasLoadedOnce = true;
         this.loading = false;
+        this.refreshing = false;
       },
       error: () => {
         this.loading = false;
+        this.refreshing = false;
+        this.hasLoadedOnce = true;
       },
     });
   }

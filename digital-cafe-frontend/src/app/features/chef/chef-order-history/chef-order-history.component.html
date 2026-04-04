@@ -1,10 +1,37 @@
 <div class="history-page">
-  <div class="page-header">
-    <h1 class="page-title">
-      <i class="bi bi-clock-history"></i>
-      Order History
-    </h1>
-    <p class="page-subtitle">Completed and served orders</p>
+  <div class="page-header-card">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">
+          <i class="bi bi-clock-history"></i>
+          Order History
+        </h1>
+        <p class="page-subtitle">Completed and served orders</p>
+      </div>
+      <button
+        class="refresh-btn"
+        (click)="loadHistory()"
+        [disabled]="isLoading"
+      >
+        <i class="bi bi-arrow-clockwise" [class.spinning]="isLoading"></i>
+        Refresh
+      </button>
+    </div>
+
+    <div class="header-stats">
+      <div class="stat-card total">
+        <span class="label">Total</span>
+        <span class="value">{{ orders.length }}</span>
+      </div>
+      <div class="stat-card ready">
+        <span class="label">Ready</span>
+        <span class="value">{{ readyCount }}</span>
+      </div>
+      <div class="stat-card served">
+        <span class="label">Served</span>
+        <span class="value">{{ servedCount }}</span>
+      </div>
+    </div>
   </div>
 
   <div *ngIf="isLoading" class="loading-state">
@@ -30,15 +57,15 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let order of orders">
+        <tr *ngFor="let order of paginatedOrders">
           <td class="order-num">
             <i class="bi bi-receipt"></i>
             #{{ order.orderNumber }}
           </td>
-          <td>{{ order.tableNumber || '—' }}</td>
+          <td>{{ order.tableNumber || "—" }}</td>
           <td>
             <span *ngFor="let item of order.items; let last = last">
-              {{ item.quantity }}x {{ item.menuItemName }}{{ last ? '' : ', ' }}
+              {{ item.quantity }}x {{ item.menuItemName }}{{ last ? "" : ", " }}
             </span>
           </td>
           <td>
@@ -46,9 +73,41 @@
               {{ order.status }}
             </span>
           </td>
-          <td class="date-cell">{{ formatDate(order.readyAt || order.servedAt || order.updatedAt) }}</td>
+          <td class="date-cell">
+            {{ formatDate(order.readyAt || order.servedAt || order.updatedAt) }}
+          </td>
         </tr>
       </tbody>
     </table>
+  </div>
+
+  <div *ngIf="!isLoading && orders.length > 0" class="pagination-bar">
+    <div class="pagination-summary">
+      Showing {{ rangeStart }}-{{ rangeEnd }} of {{ orders.length }} orders
+    </div>
+    <div class="pagination-controls">
+      <button
+        class="page-btn"
+        (click)="goToPreviousPage()"
+        [disabled]="currentPage === 1"
+      >
+        Prev
+      </button>
+      <button
+        *ngFor="let page of pageNumbers"
+        class="page-btn"
+        [class.active]="page === currentPage"
+        (click)="goToPage(page)"
+      >
+        {{ page }}
+      </button>
+      <button
+        class="page-btn"
+        (click)="goToNextPage()"
+        [disabled]="currentPage === totalPages"
+      >
+        Next
+      </button>
+    </div>
   </div>
 </div>

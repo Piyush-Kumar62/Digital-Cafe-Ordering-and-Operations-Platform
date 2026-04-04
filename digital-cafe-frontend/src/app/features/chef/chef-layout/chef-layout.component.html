@@ -51,6 +51,22 @@
           <i class="bi bi-chevron-right"></i>
         </span>
       </a>
+
+      <a
+        routerLink="/chef/notifications"
+        routerLinkActive="nav-active"
+        [routerLinkActiveOptions]="{ exact: true }"
+        class="nav-item"
+        [class.collapsed-item]="isSidebarCollapsed"
+        [title]="isSidebarCollapsed ? 'Notifications' : ''"
+        (click)="isMobileView ? (isSidebarCollapsed = true) : null"
+      >
+        <i class="bi bi-bell nav-icon"></i>
+        <span *ngIf="!isSidebarCollapsed" class="nav-label">Notifications</span>
+        <span class="notif-badge" *ngIf="unreadNotifications > 0">
+          {{ unreadNotifications > 9 ? "9+" : unreadNotifications }}
+        </span>
+      </a>
     </nav>
 
     <!-- Back to Home -->
@@ -107,12 +123,18 @@
           <div *ngIf="notificationDropdownOpen" class="notification-dropdown">
             <div class="dropdown-header">
               <p class="dropdown-header-title">Notifications</p>
+              <button class="link-btn" (click)="markAllRead()">
+                Mark all read
+              </button>
             </div>
             <div *ngIf="notifications.length === 0" class="notification-empty">
               <i class="bi bi-bell-slash"></i>
               <p>No notifications yet</p>
             </div>
-            <div *ngFor="let item of notifications" class="notification-item">
+            <div
+              *ngFor="let item of pagedNotifications"
+              class="notification-item"
+            >
               <div class="notif-top">
                 <span
                   class="notif-severity"
@@ -127,6 +149,40 @@
               <p class="notif-title">{{ item.title }}</p>
               <p class="notif-message">{{ item.message }}</p>
             </div>
+            <div
+              *ngIf="notifications.length > notificationPageSize"
+              class="dropdown-header"
+            >
+              <button
+                class="link-btn"
+                (click)="prevNotificationPage()"
+                [disabled]="notificationCurrentPage === 1"
+              >
+                Prev
+              </button>
+              <p class="dropdown-header-title">
+                {{ notificationCurrentPage }} / {{ totalNotificationPages }}
+              </p>
+              <button
+                class="link-btn"
+                (click)="nextNotificationPage()"
+                [disabled]="notificationCurrentPage === totalNotificationPages"
+              >
+                Next
+              </button>
+            </div>
+            <a
+              routerLink="/chef/notifications"
+              (click)="notificationDropdownOpen = false"
+              class="dropdown-header-title"
+              style="
+                display: block;
+                padding: 0.7rem 1rem;
+                border-top: 1px solid rgba(148, 163, 184, 0.25);
+              "
+            >
+              View all notifications
+            </a>
           </div>
         </div>
 

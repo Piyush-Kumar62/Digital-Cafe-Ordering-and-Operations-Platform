@@ -1,30 +1,46 @@
 <section class="wd-page">
-  <!-- ── HERO HEADER ── -->
-  <div class="wd-hero">
-    <div class="wd-hero__left">
-      <div class="wd-hero__icon-wrap">
-        <span class="material-icons">person_pin</span>
-      </div>
-      <div class="wd-hero__text">
-        <h1 class="wd-hero__title">Waiter Dashboard</h1>
-        <p class="wd-hero__sub" *ngIf="cafeName">
-          <span class="material-icons">location_on</span>
-          {{ cafeName }}
-        </p>
-        <p class="wd-hero__sub" *ngIf="!cafeName">Ready to serve</p>
-      </div>
+  <!-- HERO HEADER -->
+    <div class="wd-hero">
+    <div class="wd-hero__content">
+      <p class="wd-hero__greeting">🛎 {{ greeting }}</p>
+      <h1 class="wd-hero__title">
+        Welcome back, <span class="wd-hero__hl">{{ displayName }}</span
+        >!
+      </h1>
+      <p class="wd-hero__time">{{ dateTimeFormatted }}</p>
+      <p class="wd-hero__label">Waiter Dashboard</p>
+      <p class="wd-hero__sub" *ngIf="cafeName">
+        <span class="material-icons">location_on</span>
+        {{ cafeName }}
+      </p>
     </div>
     <div class="wd-hero__right">
-      <div class="wd-refresh-chip" *ngIf="!loading">
-        <span class="wd-live-dot"></span>
-        <span class="material-icons">update</span>
-        Updated {{ lastRefreshed | date: "h:mm a" }}
+      <div class="wd-hero__avatar">
+        {{ displayName.charAt(0).toUpperCase() }}
       </div>
+      <div class="wd-hero__mini">
+        <div class="wd-hero-mini-stat">
+          <strong>{{ readyOrders.length }}</strong>
+          <span>Ready</span>
+        </div>
+        <div class="wd-hero-mini-stat">
+          <strong>{{ servedToday }}</strong>
+          <span>Served</span>
+        </div>
+      </div>
+      <button
+        class="wd-refresh-btn"
+        (click)="refreshData()"
+        [disabled]="refreshing"
+      >
+        <span class="material-icons" [class.spin]="refreshing">refresh</span>
+        Refresh
+      </button>
     </div>
   </div>
 
-  <!-- ── STATS STRIP ── -->
-  <div class="wd-stats">
+  <!-- STATS STRIP -->
+    <div class="wd-stats">
     <div class="wd-stat wd-stat--ready">
       <div class="wd-stat__icon">
         <span class="material-icons">notifications_active</span>
@@ -57,8 +73,8 @@
     </div>
   </div>
 
-  <!-- ── READY ORDERS SECTION HEADER ── -->
-  <div class="wd-section-bar">
+  <!-- READY ORDERS SECTION HEADER -->
+    <div class="wd-section-bar">
     <div class="wd-section-bar__left">
       <span class="wd-live-dot large"></span>
       <h2 class="wd-section-title">Ready Orders</h2>
@@ -69,14 +85,14 @@
     <p class="wd-section-sub">Kitchen has prepared these — serve immediately</p>
   </div>
 
-  <!-- ── LOADING ── -->
-  <div class="wd-loading" *ngIf="loading">
+  <!-- LOADING -->
+    <div class="wd-loading" *ngIf="loading && !hasLoadedOnce">
     <div class="wd-spinner"></div>
     <p>Loading ready orders…</p>
   </div>
 
-  <!-- ── ORDERS GRID ── -->
-  <div class="wd-orders-grid" *ngIf="!loading">
+  <!-- ORDERS GRID -->
+    <div class="wd-orders-grid" *ngIf="hasLoadedOnce">
     <article
       class="wd-order-card"
       *ngFor="let order of pagedReadyOrders"
@@ -157,8 +173,8 @@
     </article>
   </div>
 
-  <!-- ── EMPTY STATE ── -->
-  <div class="wd-empty" *ngIf="!loading && readyOrders.length === 0">
+  <!-- EMPTY STATE -->
+    <div class="wd-empty" *ngIf="hasLoadedOnce && readyOrders.length === 0">
     <div class="wd-empty-icon">
       <span class="material-icons">coffee</span>
     </div>
@@ -169,19 +185,20 @@
     </p>
   </div>
 
-  <!-- ── PAGINATION ── -->
-  <div class="wd-pager" *ngIf="!loading && readyOrders.length > 0">
+  <!-- PAGINATION -->
+    <div class="wd-pager" *ngIf="hasLoadedOnce && readyOrders.length > 0">
     <span class="wd-range">
-      Showing {{ rangeStart }}–{{ rangeEnd }} of {{ totalElements }}
-      order{{ totalElements !== 1 ? 's' : '' }}
+      Showing {{ rangeStart }}–{{ rangeEnd }} of {{ totalElements }} order{{
+        totalElements !== 1 ? "s" : ""
+      }}
     </span>
-    <div class="wd-pages" *ngIf="totalPages > 1">
+    <div class="wd-pages">
       <button
-        class="wd-pg-btn"
+        class="wd-pg-btn wd-pg-btn--nav"
         [disabled]="pageIndex === 0"
         (click)="goToPage(pageIndex - 1)"
       >
-        <span class="material-icons">chevron_left</span>
+        Prev
       </button>
       <button
         class="wd-pg-btn"
@@ -192,11 +209,11 @@
         {{ p + 1 }}
       </button>
       <button
-        class="wd-pg-btn"
+        class="wd-pg-btn wd-pg-btn--nav"
         [disabled]="pageIndex >= totalPages - 1"
         (click)="goToPage(pageIndex + 1)"
       >
-        <span class="material-icons">chevron_right</span>
+        Next
       </button>
     </div>
   </div>

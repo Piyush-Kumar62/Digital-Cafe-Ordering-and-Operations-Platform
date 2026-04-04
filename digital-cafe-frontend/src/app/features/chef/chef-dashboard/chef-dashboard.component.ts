@@ -4,6 +4,7 @@ import { ApiService } from "@core/services/api.service";
 import { AuthService } from "@core/auth/auth.service";
 import { WebSocketService } from "@core/websocket/websocket.service";
 import { Order, OrderStatus } from "@shared/models/order.model";
+import { User } from "@shared/models/auth.model";
 import { AlertService } from "@core/services/alert.service";
 import { Subject, takeUntil, interval } from "rxjs";
 
@@ -20,7 +21,10 @@ export class ChefDashboardComponent implements OnInit, OnDestroy {
   readyOrders: Order[] = [];
   cafeId: number | null = null;
   currentTime = new Date();
+  currentUser: User | null = null;
   isLoading = true;
+  refreshing = false;
+  hasLoadedOnce = false;
   private destroy$ = new Subject<void>();
 
   readonly pageSize = 10;
@@ -108,6 +112,7 @@ export class ChefDashboardComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     const user = this.authService.currentUserValue;
+    this.currentUser = user;
     if (user && user.cafeId) {
       this.cafeId = user.cafeId;
       this.loadOrders();
@@ -120,17 +125,59 @@ export class ChefDashboardComponent implements OnInit, OnDestroy {
       });
   }
 
+  get greeting(): string {
+    const h = this.currentTime.getHours();
+    if (h < 12) return "Good Morning";
+    if (h < 18) return "Good Afternoon";
+    return "Good Evening";
+  }
+
+  get dateTimeFormatted(): string {
+    const date = this.currentTime.toLocaleDateString("en-IN", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+    const time = this.currentTime.toLocaleTimeString("en-IN", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+    return `${date} | ${time}`;
+  }
+
+  get displayName(): string {
+    const first = this.currentUser?.firstName || "";
+    const last = this.currentUser?.lastName || "";
+    const full = `${first} ${last}`.trim();
+    return (
+      this.currentUser?.displayName ||
+      full ||
+      this.currentUser?.username ||
+      "Chef"
+    );
+  }
+
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
   }
 
-  loadOrders(): void {
-    this.isLoading = true;
+  loadOrders(showSpinner = true): void {
+    if (showSpinner && !this.hasLoadedOnce) {
+      this.isLoading = true;
+    }
+    if (showSpinner && this.hasLoadedOnce) {
+      this.refreshing = true;
+    }
+
     this.apiService.getChefOrders().subscribe({
       next: (orders) => {
         this.categorizeOrders(orders);
+        this.hasLoadedOnce = true;
         this.isLoading = false;
+        this.refreshing = false;
       },
       error: () => {
         this.alertService.error(
@@ -138,12 +185,14 @@ export class ChefDashboardComponent implements OnInit, OnDestroy {
           "Unable to load kitchen orders.",
         );
         this.isLoading = false;
+        this.refreshing = false;
+        this.hasLoadedOnce = true;
       },
     });
   }
 
   refreshOrders(): void {
-    this.loadOrders();
+    this.loadOrders(true);
   }
 
   categorizeOrders(orders: Order[]): void {
@@ -162,7 +211,7 @@ export class ChefDashboardComponent implements OnInit, OnDestroy {
       .subscribe((order) => {
         if (order) {
           this.alertService.info(`New order received: #${order.orderNumber}`);
-          this.loadOrders();
+          this.loadOrders(false);
         }
       });
   }

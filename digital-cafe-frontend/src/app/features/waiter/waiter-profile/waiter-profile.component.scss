@@ -8,8 +8,8 @@
   --surface: #ffffff;
   --surface-2: #f8fafc;
   --text: #0f172a;
-  --text-secondary: #475569;
-  --text-muted: #94a3b8;
+  --text-secondary: #334155;
+  --text-muted: #64748b;
   --border: #e2e8f0;
   --radius: 14px;
   --shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
@@ -20,17 +20,108 @@
   --surface: #1e293b;
   --surface-2: #1a2332;
   --text: #e2e8f0;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
   --border: #334155;
 }
 
-/* ── PAGE ── */
-.profile-page {
-  padding: 24px;
-  max-width: 1060px;
-  margin: 0 auto;
+/* PAGE */.profile-page {
+  padding: 10px;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  min-height: 100%;
   animation: fadeIn 0.3s ease;
+}
+
+/* HERO (Chef-like layout) */.wp-hero {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  justify-content: space-between;
+  background: linear-gradient(135deg, #0ea5e9 0%, #6366f1 58%, #1e3a8a 100%);
+  border-radius: 18px;
+  padding: 18px 20px;
+  border: 1px solid rgba(14, 165, 233, 0.25);
+  box-shadow: var(--shadow-md);
+  flex-wrap: wrap;
+}
+
+.wp-hero .avatar-wrap {
+  margin: 0;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.wp-hero .avatar-ring {
+  width: 136px;
+  height: 136px;
+  border-color: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.3);
+}
+
+.wp-hero .avatar-ring .avatar-initials {
+  font-size: 2.9rem;
+}
+
+.wp-hero-info {
+  flex: 1;
+  min-width: 220px;
+}
+
+.wp-hero .user-name {
+  margin: 0 0 2px;
+  color: #ffffff;
+  font-size: 2rem;
+}
+
+.wp-hero .user-email {
+  margin: 0 0 10px;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 0.95rem;
+  word-break: break-word;
+}
+
+.wp-hero-chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.wp-hero .role-badge {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.35);
+  color: #ffffff;
+}
+
+.wp-hero .role-badge--verified {
+  border-color: rgba(74, 222, 128, 0.48);
+  background: rgba(16, 185, 129, 0.2);
+}
+
+.role-badge--cafe {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.wp-hero .actions-card {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}
+
+.wp-hero .action-btn {
+  min-height: 42px;
+  white-space: nowrap;
+}
+
+.wp-progress {
+  margin-top: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  box-shadow: var(--shadow);
 }
 
 /* Loading */
@@ -86,8 +177,7 @@
   margin: 0;
 }
 
-/* ── LAYOUT ── */
-.profile-layout {
+/* LAYOUT */.profile-layout {
   display: grid;
   grid-template-columns: 280px 1fr;
   gap: 20px;
@@ -107,11 +197,35 @@
 .right-col {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
 }
 
-/* ── PROFILE CARD ── */
-.profile-card {
+@media (max-width: 900px) {
+  .wp-hero {
+    padding: 14px;
+    gap: 12px;
+  }
+
+  .wp-hero .avatar-ring {
+    width: 116px;
+    height: 116px;
+  }
+
+  .wp-hero .user-name {
+    font-size: 1.55rem;
+  }
+
+  .wp-hero .actions-card {
+    width: 100%;
+  }
+
+  .wp-hero .action-btn {
+    flex: 1;
+    justify-content: center;
+  }
+}
+
+/* PROFILE CARD */.profile-card {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 18px;
@@ -149,6 +263,7 @@
 
 /* Avatar */
 .avatar-wrap {
+  position: relative;
   margin-top: -40px;
   display: flex;
   justify-content: center;
@@ -160,8 +275,8 @@
   width: 84px;
   height: 84px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #0ea5e9, #6366f1);
-  border: 3px solid var(--surface);
+  background: #ffffff;
+  border: 6px solid rgba(255, 255, 255, 0.96);
   box-shadow: 0 4px 20px rgba(14, 165, 233, 0.35);
   display: flex;
   align-items: center;
@@ -180,6 +295,21 @@
     font-weight: 900;
     color: #fff;
   }
+}
+
+.avatar-completion-badge {
+  position: absolute;
+  left: 50%;
+  bottom: -4px;
+  transform: translateX(-50%);
+  background: rgba(74, 222, 128, 0.95);
+  color: #14532d;
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 2px 10px;
+  border-radius: 999px;
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  z-index: 3;
 }
 
 .upload-overlay {
@@ -295,6 +425,18 @@
   }
 }
 
+.missing-warning {
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: rgba(254, 242, 242, 0.8);
+}
+
+.warning-text {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: #991b1b;
+}
+
 /* Stats Grid */
 .stats-grid {
   display: grid;
@@ -391,8 +533,7 @@
   }
 }
 
-/* ── INFO CARDS ── */
-.info-card {
+/* INFO CARDS */.info-card {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -539,8 +680,7 @@
   }
 }
 
-/* ── FORMS ── */
-.form-grid {
+/* FORMS */.form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 14px;

@@ -6,452 +6,435 @@
   </div>
 
   <ng-container *ngIf="!loading">
-    <!-- Page Header -->
-    <div class="page-header">
-      <div class="page-header-left">
-        <span class="material-icons page-icon">account_circle</span>
-        <div>
-          <h1 class="page-title">My Profile</h1>
-          <p class="page-sub">Manage your account details and security</p>
+    <div class="wp-hero">
+      <div class="avatar-wrap">
+        <div class="avatar-ring" [class.uploading]="uploadingImage">
+          <img
+            *ngIf="profileData.profileImageUrl"
+            [src]="profileData.profileImageUrl"
+            alt="Profile photo"
+          />
+          <span *ngIf="!profileData.profileImageUrl" class="avatar-initials">
+            {{ getAvatarText() }}
+          </span>
+          <div class="upload-overlay" (click)="triggerFileInput()">
+            <span class="material-icons">{{
+              uploadingImage ? "sync" : "photo_camera"
+            }}</span>
+            <span>{{ uploadingImage ? "Uploading…" : "Change" }}</span>
+          </div>
         </div>
+        <span class="avatar-completion-badge"
+          >{{ currentCompletionPercentage }}%</span
+        >
+        <input
+          #fileInput
+          type="file"
+          accept="image/jpeg,image/png,image/webp,image/avif"
+          style="display: none"
+          (change)="onFileSelected($event)"
+        />
+      </div>
+
+      <div class="wp-hero-info">
+        <h1 class="user-name">{{ getDisplayName() }}</h1>
+        <p class="user-email">{{ profileData.email }}</p>
+        <div class="wp-hero-chips">
+          <span class="role-badge">
+            <span class="material-icons">verified_user</span>
+            {{ getRoleLabel() }}
+          </span>
+          <span
+            class="role-badge role-badge--verified"
+            *ngIf="currentUser?.isEmailVerified"
+          >
+            <span class="material-icons">check_circle</span>
+            Email Verified
+          </span>
+          <span
+            class="role-badge role-badge--cafe"
+            *ngIf="getCafeName() !== '—'"
+          >
+            <span class="material-icons">storefront</span>
+            {{ getCafeName() }}
+          </span>
+        </div>
+      </div>
+
+      <div class="actions-card">
+        <button
+          class="action-btn primary"
+          (click)="openEditMode()"
+          *ngIf="!editMode"
+        >
+          <span class="material-icons">edit</span> Edit Profile
+        </button>
+        <button class="action-btn secondary" (click)="togglePasswordForm()">
+          <span class="material-icons">lock</span>
+          {{ showPasswordForm ? "Cancel Password" : "Change Password" }}
+        </button>
       </div>
     </div>
 
-    <div class="profile-layout">
-      <!-- ── LEFT COLUMN ── -->
-      <aside class="left-col">
-        <!-- Profile Card -->
-        <div class="profile-card">
-          <div class="card-banner">
-            <div class="banner-pattern"></div>
-          </div>
-          <div class="card-body">
-            <!-- Avatar with upload overlay -->
-            <div class="avatar-wrap">
-              <div class="avatar-ring" [class.uploading]="uploadingImage">
-                <img
-                  *ngIf="profileData.profileImageUrl"
-                  [src]="profileData.profileImageUrl"
-                  alt="Profile photo"
-                />
-                <span
-                  *ngIf="!profileData.profileImageUrl"
-                  class="avatar-initials"
-                >
-                  {{ getAvatarText() }}
-                </span>
-                <div class="upload-overlay" (click)="triggerFileInput()">
-                  <span class="material-icons">{{
-                    uploadingImage ? "sync" : "photo_camera"
-                  }}</span>
-                  <span>{{ uploadingImage ? "Uploading…" : "Change" }}</span>
-                </div>
-              </div>
-              <input
-                #fileInput
-                type="file"
-                accept="image/jpeg,image/png,image/webp,image/avif"
-                style="display: none"
-                (change)="onFileSelected($event)"
-              />
-            </div>
-
-            <h2 class="user-name">{{ getDisplayName() }}</h2>
-            <p class="user-email">{{ profileData.email }}</p>
-            <span class="role-badge">
-              <span class="material-icons">verified_user</span>
-              {{ getRoleLabel() }}
-            </span>
-
-            <!-- Completion Bar -->
-            <div
-              class="completion-wrap"
-              *ngIf="profileData.profileCompletionPercentage > 0"
-            >
-              <div class="completion-header">
-                <span>Profile Completion</span>
-                <span class="completion-pct" [class]="getCompletionClass()">
-                  {{ profileData.profileCompletionPercentage }}%
-                </span>
-              </div>
-              <div class="completion-bar">
-                <div
-                  class="completion-fill"
-                  [class]="getCompletionClass()"
-                  [style.width.%]="profileData.profileCompletionPercentage"
-                ></div>
-              </div>
-            </div>
-
-            <!-- Stats -->
-            <div class="stats-grid">
-              <div class="stat-tile ready-tile">
-                <span class="stile-num">{{ dashboardStats.readyOrders }}</span>
-                <span class="stile-lbl">Ready</span>
-              </div>
-              <div class="stat-tile served-tile">
-                <span class="stile-num">{{ dashboardStats.servedToday }}</span>
-                <span class="stile-lbl">Served Today</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Quick Actions -->
-        <div class="actions-card">
-          <button
-            class="action-btn primary"
-            (click)="openEditMode()"
-            *ngIf="!editMode"
-          >
-            <span class="material-icons">edit</span> Edit Profile
-          </button>
-          <button class="action-btn secondary" (click)="togglePasswordForm()">
-            <span class="material-icons">lock</span>
-            {{ showPasswordForm ? "Cancel Password" : "Change Password" }}
-          </button>
-        </div>
-      </aside>
-
-      <!-- ── RIGHT COLUMN ── -->
-      <main class="right-col">
-        <!-- Edit Profile Form -->
-        <div class="info-card" *ngIf="editMode">
-          <div class="card-head">
-            <h3 class="card-title">
-              <span class="material-icons">edit_note</span> Edit Profile
-            </h3>
-            <button class="close-btn" (click)="cancelEdit()">
-              <span class="material-icons">close</span>
-            </button>
-          </div>
-
-          <div class="form-grid">
-            <div class="form-group">
-              <label>First Name <span class="req">*</span></label>
-              <input
-                type="text"
-                [(ngModel)]="editForm.firstName"
-                placeholder="Enter first name"
-                class="form-input"
-                maxlength="100"
-              />
-            </div>
-            <div class="form-group">
-              <label>Last Name <span class="req">*</span></label>
-              <input
-                type="text"
-                [(ngModel)]="editForm.lastName"
-                placeholder="Enter last name"
-                class="form-input"
-                maxlength="100"
-              />
-            </div>
-            <div class="form-group full-width">
-              <label>Display Name <span class="req">*</span></label>
-              <input
-                type="text"
-                [(ngModel)]="editForm.displayName"
-                placeholder="How you appear to others"
-                class="form-input"
-                maxlength="150"
-              />
-            </div>
-            <div class="form-group">
-              <label>Phone Number</label>
-              <input
-                type="text"
-                [(ngModel)]="editForm.phoneNumber"
-                placeholder="10-digit mobile number"
-                class="form-input"
-                maxlength="15"
-              />
-            </div>
-            <div class="form-group">
-              <label>Govt ID Type</label>
-              <input
-                type="text"
-                [(ngModel)]="editForm.govtIdType"
-                placeholder="Aadhaar / PAN / Passport"
-                class="form-input"
-                maxlength="50"
-              />
-            </div>
-            <div class="form-group full-width">
-              <label>Govt ID Number</label>
-              <input
-                type="text"
-                [(ngModel)]="editForm.govtIdNumber"
-                placeholder="Enter ID number"
-                class="form-input"
-                maxlength="100"
-              />
-            </div>
-            <div class="form-group">
-              <label>Joining Date</label>
-              <input
-                type="date"
-                [(ngModel)]="editForm.joiningDate"
-                class="form-input"
-              />
-            </div>
-            <div class="form-group">
-              <label>Experience (Years)</label>
-              <input
-                type="number"
-                min="0"
-                [(ngModel)]="editForm.experienceYears"
-                class="form-input"
-              />
-            </div>
-            <div class="form-group full-width">
-              <label>Shift</label>
-              <input
-                type="text"
-                [(ngModel)]="editForm.shift"
-                placeholder="MORNING / EVENING / FULL_DAY"
-                class="form-input"
-                maxlength="30"
-              />
-            </div>
-          </div>
-
-          <div class="form-actions">
-            <button class="btn-cancel" (click)="cancelEdit()">Cancel</button>
-            <button
-              class="btn-save"
-              (click)="saveProfile()"
-              [disabled]="saving"
-            >
-              <span class="material-icons">{{
-                saving ? "sync" : "check"
-              }}</span>
-              {{ saving ? "Saving…" : "Save Changes" }}
-            </button>
-          </div>
-        </div>
-
-        <!-- Change Password Form -->
-        <div class="info-card password-card" *ngIf="showPasswordForm">
-          <div class="card-head">
-            <h3 class="card-title">
-              <span class="material-icons">lock</span> Change Password
-            </h3>
-            <button class="close-btn" (click)="togglePasswordForm()">
-              <span class="material-icons">close</span>
-            </button>
-          </div>
-
-          <div class="form-grid">
-            <div class="form-group full-width">
-              <label>Current Password <span class="req">*</span></label>
-              <div class="input-group">
-                <input
-                  [type]="showOldPass ? 'text' : 'password'"
-                  [(ngModel)]="passwordForm.oldPassword"
-                  placeholder="Enter current password"
-                  class="form-input"
-                />
-                <button
-                  class="eye-btn"
-                  (click)="showOldPass = !showOldPass"
-                  type="button"
-                >
-                  <span class="material-icons">{{
-                    showOldPass ? "visibility_off" : "visibility"
-                  }}</span>
-                </button>
-              </div>
-            </div>
-            <div class="form-group">
-              <label>New Password <span class="req">*</span></label>
-              <div class="input-group">
-                <input
-                  [type]="showNewPass ? 'text' : 'password'"
-                  [(ngModel)]="passwordForm.newPassword"
-                  placeholder="Min. 8 characters"
-                  class="form-input"
-                />
-                <button
-                  class="eye-btn"
-                  (click)="showNewPass = !showNewPass"
-                  type="button"
-                >
-                  <span class="material-icons">{{
-                    showNewPass ? "visibility_off" : "visibility"
-                  }}</span>
-                </button>
-              </div>
-            </div>
-            <div class="form-group">
-              <label>Confirm New Password <span class="req">*</span></label>
-              <div class="input-group">
-                <input
-                  [type]="showConfirmPass ? 'text' : 'password'"
-                  [(ngModel)]="passwordForm.confirmPassword"
-                  placeholder="Repeat new password"
-                  class="form-input"
-                />
-                <button
-                  class="eye-btn"
-                  (click)="showConfirmPass = !showConfirmPass"
-                  type="button"
-                >
-                  <span class="material-icons">{{
-                    showConfirmPass ? "visibility_off" : "visibility"
-                  }}</span>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div class="form-actions">
-            <button class="btn-cancel" (click)="togglePasswordForm()">
-              Cancel
-            </button>
-            <button
-              class="btn-save btn-danger"
-              (click)="savePassword()"
-              [disabled]="passwordSaving"
-            >
-              <span class="material-icons">{{
-                passwordSaving ? "sync" : "lock"
-              }}</span>
-              {{ passwordSaving ? "Updating…" : "Update Password" }}
-            </button>
-          </div>
-        </div>
-
-        <!-- Account Details Card -->
-        <div class="info-card">
-          <div class="card-head">
-            <h3 class="card-title">
-              <span class="material-icons">badge</span> Account Details
-            </h3>
-          </div>
-
-          <div class="detail-list">
-            <div class="detail-row">
-              <span class="detail-icon"
-                ><span class="material-icons">person</span></span
-              >
-              <div class="detail-content">
-                <span class="detail-lbl">Username</span>
-                <span class="detail-val">{{
-                  currentUser?.username || "—"
-                }}</span>
-              </div>
-            </div>
-            <div class="detail-row">
-              <span class="detail-icon"
-                ><span class="material-icons">email</span></span
-              >
-              <div class="detail-content">
-                <span class="detail-lbl">Email Address</span>
-                <span class="detail-val">{{ profileData.email || "—" }}</span>
-              </div>
-            </div>
-            <div class="detail-row">
-              <span class="detail-icon"
-                ><span class="material-icons">account_box</span></span
-              >
-              <div class="detail-content">
-                <span class="detail-lbl">Display Name</span>
-                <span class="detail-val">{{
-                  profileData.displayName || getDisplayName()
-                }}</span>
-              </div>
-            </div>
-            <div class="detail-row">
-              <span class="detail-icon"
-                ><span class="material-icons">store</span></span
-              >
-              <div class="detail-content">
-                <span class="detail-lbl">Assigned Café</span>
-                <span class="detail-val">{{ getCafeName() }}</span>
-              </div>
-            </div>
-            <div class="detail-row">
-              <span class="detail-icon"
-                ><span class="material-icons">security</span></span
-              >
-              <div class="detail-content">
-                <span class="detail-lbl">Role</span>
-                <span class="detail-val badge-val">{{ getRoleLabel() }}</span>
-              </div>
-            </div>
-            <div class="detail-row">
-              <span class="detail-icon"
-                ><span class="material-icons">history</span></span
-              >
-              <div class="detail-content">
-                <span class="detail-lbl">Last Login</span>
-                <span class="detail-val">{{ getLastLogin() }}</span>
-              </div>
-            </div>
-            <div class="detail-row">
-              <span class="detail-icon"
-                ><span class="material-icons">phone</span></span
-              >
-              <div class="detail-content">
-                <span class="detail-lbl">Phone Number</span>
-                <span class="detail-val">{{ profileData.phoneNumber || "—" }}</span>
-              </div>
-            </div>
-            <div class="detail-row">
-              <span class="detail-icon"
-                ><span class="material-icons">badge</span></span
-              >
-              <div class="detail-content">
-                <span class="detail-lbl">Govt ID</span>
-                <span class="detail-val">
-                  {{ profileData.govtIdType || "—" }}{{ profileData.govtIdNumber ? " • " + profileData.govtIdNumber : "" }}
-                </span>
-              </div>
-            </div>
-            <div class="detail-row">
-              <span class="detail-icon"
-                ><span class="material-icons">event_available</span></span
-              >
-              <div class="detail-content">
-                <span class="detail-lbl">Member Since</span>
-                <span class="detail-val">{{ getJoinDate() }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Work Info Card -->
-        <div class="info-card">
-          <div class="card-head">
-            <h3 class="card-title">
-              <span class="material-icons">work</span> Work Information
-            </h3>
-          </div>
-          <div class="detail-list">
-            <div class="detail-row">
-              <span class="detail-icon"
-                ><span class="material-icons">wb_sunny</span></span
-              >
-              <div class="detail-content">
-                <span class="detail-lbl">Shift</span>
-                <span class="detail-val" [class.chip]="getShift() !== '—'">{{
-                  getShift()
-                }}</span>
-              </div>
-            </div>
-            <div class="detail-row">
-              <span class="detail-icon"
-                ><span class="material-icons">work_history</span></span
-              >
-              <div class="detail-content">
-                <span class="detail-lbl">Experience</span>
-                <span class="detail-val">{{ getExperience() }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </main>
+    <div
+      class="completion-wrap wp-progress"
+      *ngIf="currentCompletionPercentage > 0"
+    >
+      <div class="completion-header">
+        <span>Profile Completion</span>
+        <span class="completion-pct" [class]="getCompletionClass()">
+          {{ currentCompletionPercentage }}%
+        </span>
+      </div>
+      <div class="completion-bar">
+        <div
+          class="completion-fill"
+          [class]="getCompletionClass()"
+          [style.width.%]="currentCompletionPercentage"
+        ></div>
+      </div>
+      <p class="warning-text" *ngIf="shouldShowMissingWarning">
+        Profile is {{ currentCompletionPercentage }}% complete. Please update:
+        {{ missingProfileFields.join(", ") }}
+      </p>
     </div>
+
+    <main class="right-col">
+      <!-- Edit Profile Form -->
+      <div class="info-card" *ngIf="editMode">
+        <div class="card-head">
+          <h3 class="card-title">
+            <span class="material-icons">edit_note</span> Edit Profile
+          </h3>
+          <button class="close-btn" (click)="cancelEdit()">
+            <span class="material-icons">close</span>
+          </button>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label>First Name <span class="req">*</span></label>
+            <input
+              type="text"
+              [(ngModel)]="editForm.firstName"
+              placeholder="Enter first name"
+              class="form-input"
+              maxlength="100"
+            />
+          </div>
+          <div class="form-group">
+            <label>Last Name <span class="req">*</span></label>
+            <input
+              type="text"
+              [(ngModel)]="editForm.lastName"
+              placeholder="Enter last name"
+              class="form-input"
+              maxlength="100"
+            />
+          </div>
+          <div class="form-group full-width">
+            <label>Display Name <span class="req">*</span></label>
+            <input
+              type="text"
+              [(ngModel)]="editForm.displayName"
+              placeholder="How you appear to others"
+              class="form-input"
+              maxlength="150"
+            />
+          </div>
+          <div class="form-group">
+            <label>Phone Number</label>
+            <input
+              type="text"
+              [(ngModel)]="editForm.phoneNumber"
+              placeholder="10-digit mobile number"
+              class="form-input"
+              maxlength="15"
+            />
+          </div>
+          <div class="form-group">
+            <label>Govt ID Type</label>
+            <input
+              type="text"
+              [(ngModel)]="editForm.govtIdType"
+              placeholder="Aadhaar / PAN / Passport"
+              class="form-input"
+              maxlength="50"
+            />
+          </div>
+          <div class="form-group full-width">
+            <label>Govt ID Number</label>
+            <input
+              type="text"
+              [(ngModel)]="editForm.govtIdNumber"
+              placeholder="Enter ID number"
+              class="form-input"
+              maxlength="100"
+            />
+          </div>
+          <div class="form-group">
+            <label>Joining Date</label>
+            <input
+              type="date"
+              [(ngModel)]="editForm.joiningDate"
+              class="form-input"
+            />
+          </div>
+          <div class="form-group">
+            <label>Experience (Years)</label>
+            <input
+              type="number"
+              min="0"
+              [(ngModel)]="editForm.experienceYears"
+              class="form-input"
+            />
+          </div>
+          <div class="form-group full-width">
+            <label>Shift</label>
+            <input
+              type="text"
+              [(ngModel)]="editForm.shift"
+              placeholder="MORNING / EVENING / FULL_DAY"
+              class="form-input"
+              maxlength="30"
+            />
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn-cancel" (click)="cancelEdit()">Cancel</button>
+          <button class="btn-save" (click)="saveProfile()" [disabled]="saving">
+            <span class="material-icons">{{ saving ? "sync" : "check" }}</span>
+            {{ saving ? "Saving…" : "Save Changes" }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Change Password Form -->
+      <div class="info-card password-card" *ngIf="showPasswordForm">
+        <div class="card-head">
+          <h3 class="card-title">
+            <span class="material-icons">lock</span> Change Password
+          </h3>
+          <button class="close-btn" (click)="togglePasswordForm()">
+            <span class="material-icons">close</span>
+          </button>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group full-width">
+            <label>Current Password <span class="req">*</span></label>
+            <div class="input-group">
+              <input
+                [type]="showOldPass ? 'text' : 'password'"
+                [(ngModel)]="passwordForm.oldPassword"
+                placeholder="Enter current password"
+                class="form-input"
+              />
+              <button
+                class="eye-btn"
+                (click)="showOldPass = !showOldPass"
+                type="button"
+              >
+                <span class="material-icons">{{
+                  showOldPass ? "visibility_off" : "visibility"
+                }}</span>
+              </button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>New Password <span class="req">*</span></label>
+            <div class="input-group">
+              <input
+                [type]="showNewPass ? 'text' : 'password'"
+                [(ngModel)]="passwordForm.newPassword"
+                placeholder="Min. 8 characters"
+                class="form-input"
+              />
+              <button
+                class="eye-btn"
+                (click)="showNewPass = !showNewPass"
+                type="button"
+              >
+                <span class="material-icons">{{
+                  showNewPass ? "visibility_off" : "visibility"
+                }}</span>
+              </button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Confirm New Password <span class="req">*</span></label>
+            <div class="input-group">
+              <input
+                [type]="showConfirmPass ? 'text' : 'password'"
+                [(ngModel)]="passwordForm.confirmPassword"
+                placeholder="Repeat new password"
+                class="form-input"
+              />
+              <button
+                class="eye-btn"
+                (click)="showConfirmPass = !showConfirmPass"
+                type="button"
+              >
+                <span class="material-icons">{{
+                  showConfirmPass ? "visibility_off" : "visibility"
+                }}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn-cancel" (click)="togglePasswordForm()">
+            Cancel
+          </button>
+          <button
+            class="btn-save btn-danger"
+            (click)="savePassword()"
+            [disabled]="passwordSaving"
+          >
+            <span class="material-icons">{{
+              passwordSaving ? "sync" : "lock"
+            }}</span>
+            {{ passwordSaving ? "Updating…" : "Update Password" }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Account Details Card -->
+      <div class="info-card">
+        <div class="card-head">
+          <h3 class="card-title">
+            <span class="material-icons">badge</span> Account Details
+          </h3>
+        </div>
+
+        <div class="detail-list">
+          <div class="detail-row">
+            <span class="detail-icon"
+              ><span class="material-icons">person</span></span
+            >
+            <div class="detail-content">
+              <span class="detail-lbl">Username</span>
+              <span class="detail-val">{{ currentUser?.username || "—" }}</span>
+            </div>
+          </div>
+          <div class="detail-row">
+            <span class="detail-icon"
+              ><span class="material-icons">email</span></span
+            >
+            <div class="detail-content">
+              <span class="detail-lbl">Email Address</span>
+              <span class="detail-val">{{ profileData.email || "—" }}</span>
+            </div>
+          </div>
+          <div class="detail-row">
+            <span class="detail-icon"
+              ><span class="material-icons">account_box</span></span
+            >
+            <div class="detail-content">
+              <span class="detail-lbl">Display Name</span>
+              <span class="detail-val">{{
+                profileData.displayName || getDisplayName()
+              }}</span>
+            </div>
+          </div>
+          <div class="detail-row">
+            <span class="detail-icon"
+              ><span class="material-icons">store</span></span
+            >
+            <div class="detail-content">
+              <span class="detail-lbl">Assigned Café</span>
+              <span class="detail-val">{{ getCafeName() }}</span>
+            </div>
+          </div>
+          <div class="detail-row">
+            <span class="detail-icon"
+              ><span class="material-icons">security</span></span
+            >
+            <div class="detail-content">
+              <span class="detail-lbl">Role</span>
+              <span class="detail-val badge-val">{{ getRoleLabel() }}</span>
+            </div>
+          </div>
+          <div class="detail-row">
+            <span class="detail-icon"
+              ><span class="material-icons">history</span></span
+            >
+            <div class="detail-content">
+              <span class="detail-lbl">Last Login</span>
+              <span class="detail-val">{{ getLastLogin() }}</span>
+            </div>
+          </div>
+          <div class="detail-row">
+            <span class="detail-icon"
+              ><span class="material-icons">phone</span></span
+            >
+            <div class="detail-content">
+              <span class="detail-lbl">Phone Number</span>
+              <span class="detail-val">{{
+                profileData.phoneNumber || "—"
+              }}</span>
+            </div>
+          </div>
+          <div class="detail-row">
+            <span class="detail-icon"
+              ><span class="material-icons">badge</span></span
+            >
+            <div class="detail-content">
+              <span class="detail-lbl">Govt ID</span>
+              <span class="detail-val">
+                {{ profileData.govtIdType || "—"
+                }}{{
+                  profileData.govtIdNumber
+                    ? " • " + profileData.govtIdNumber
+                    : ""
+                }}
+              </span>
+            </div>
+          </div>
+          <div class="detail-row">
+            <span class="detail-icon"
+              ><span class="material-icons">event_available</span></span
+            >
+            <div class="detail-content">
+              <span class="detail-lbl">Member Since</span>
+              <span class="detail-val">{{ getJoinDate() }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Work Info Card -->
+      <div class="info-card">
+        <div class="card-head">
+          <h3 class="card-title">
+            <span class="material-icons">work</span> Work Information
+          </h3>
+        </div>
+        <div class="detail-list">
+          <div class="detail-row">
+            <span class="detail-icon"
+              ><span class="material-icons">wb_sunny</span></span
+            >
+            <div class="detail-content">
+              <span class="detail-lbl">Shift</span>
+              <span class="detail-val" [class.chip]="getShift() !== '—'">{{
+                getShift()
+              }}</span>
+            </div>
+          </div>
+          <div class="detail-row">
+            <span class="detail-icon"
+              ><span class="material-icons">work_history</span></span
+            >
+            <div class="detail-content">
+              <span class="detail-lbl">Experience</span>
+              <span class="detail-val">{{ getExperience() }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
   </ng-container>
 </div>

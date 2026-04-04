@@ -5,7 +5,7 @@ on:
     branches:
       - main
     tags:
-      - 'v*.*.*'
+      - "v*.*.*"
   workflow_dispatch:
 
 concurrency:
@@ -28,7 +28,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '21'
+          java-version: "21"
           cache: maven
 
       - name: Backend compile
@@ -38,7 +38,7 @@ jobs:
       - name: Set up Node 20
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: "20"
           cache: npm
           cache-dependency-path: digital-cafe-frontend/package-lock.json
 
@@ -46,7 +46,7 @@ jobs:
         working-directory: digital-cafe-frontend
         run: |
           npm ci
-          npm run build -- --configuration=deployment --base-href=/
+          npm run build -- --configuration=prod --base-href=/
 
   build-and-push:
     runs-on: ubuntu-latest
@@ -109,7 +109,7 @@ jobs:
           file: ./digital-cafe-frontend/Dockerfile
           push: true
           build-args: |
-            BUILD_CONFIGURATION=deployment
+            BUILD_CONFIGURATION=prod
             ANGULAR_BASE_HREF=/
           tags: ${{ steps.frontend_meta.outputs.tags }}
           labels: ${{ steps.frontend_meta.outputs.labels }}
@@ -148,30 +148,30 @@ jobs:
             export GHCR_USERNAME='${{ github.actor }}'
             export GHCR_TOKEN='${{ secrets.GHCR_TOKEN }}'
 
-            if [ -f .env ]; then
-              cp .env .env.bak.$(date +%s)
+            if [ -f digital-cafe-backend/env/.env.prod ]; then
+              cp digital-cafe-backend/env/.env.prod digital-cafe-backend/env/.env.prod.bak.$(date +%s)
             fi
 
-            if grep -q '^BACKEND_IMAGE=' .env 2>/dev/null; then
-              sed -i "s|^BACKEND_IMAGE=.*|BACKEND_IMAGE=$BACKEND_IMAGE|" .env
+            if grep -q '^BACKEND_IMAGE=' digital-cafe-backend/env/.env.prod 2>/dev/null; then
+              sed -i "s|^BACKEND_IMAGE=.*|BACKEND_IMAGE=$BACKEND_IMAGE|" digital-cafe-backend/env/.env.prod
             else
-              echo "BACKEND_IMAGE=$BACKEND_IMAGE" >> .env
+              echo "BACKEND_IMAGE=$BACKEND_IMAGE" >> digital-cafe-backend/env/.env.prod
             fi
 
-            if grep -q '^FRONTEND_IMAGE=' .env 2>/dev/null; then
-              sed -i "s|^FRONTEND_IMAGE=.*|FRONTEND_IMAGE=$FRONTEND_IMAGE|" .env
+            if grep -q '^FRONTEND_IMAGE=' digital-cafe-backend/env/.env.prod 2>/dev/null; then
+              sed -i "s|^FRONTEND_IMAGE=.*|FRONTEND_IMAGE=$FRONTEND_IMAGE|" digital-cafe-backend/env/.env.prod
             else
-              echo "FRONTEND_IMAGE=$FRONTEND_IMAGE" >> .env
+              echo "FRONTEND_IMAGE=$FRONTEND_IMAGE" >> digital-cafe-backend/env/.env.prod
             fi
 
             echo "Pulling latest images..."
-            docker compose -f docker-compose.prod.yml pull
+            docker compose --env-file digital-cafe-backend/env/.env.prod -f infra/compose/docker-compose.prod.yml pull
 
             echo "Restarting stack..."
-            docker compose -f docker-compose.prod.yml up -d --remove-orphans
+            docker compose --env-file digital-cafe-backend/env/.env.prod -f infra/compose/docker-compose.prod.yml up -d --remove-orphans
 
             echo "Container status:"
-            docker compose -f docker-compose.prod.yml ps
+            docker compose --env-file digital-cafe-backend/env/.env.prod -f infra/compose/docker-compose.prod.yml ps
 
             echo "Waiting for API health..."
             for i in $(seq 1 30); do
@@ -183,5 +183,5 @@ jobs:
             done
 
             echo "API health check failed; dumping logs"
-            docker compose -f docker-compose.prod.yml logs --tail=200 backend nginx
+            docker compose --env-file digital-cafe-backend/env/.env.prod -f infra/compose/docker-compose.prod.yml logs --tail=200 backend nginx
             exit 1

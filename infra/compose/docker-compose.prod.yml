@@ -4,12 +4,12 @@ services:
     container_name: digital-cafe-backend
     restart: unless-stopped
     env_file:
-      - path: ./.env
+      - path: ./digital-cafe-backend/env/.env.prod
         required: true
-      - path: ./digital-cafe-backend/.env
+      - path: ./digital-cafe-backend/env/.env.local
         required: false
     environment:
-      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-deploy}
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
       SERVER_PORT: 8080
       FRONTEND_URL: ${FRONTEND_URL:-https://cafehub.tech}
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-https://cafehub.tech,https://www.cafehub.tech}

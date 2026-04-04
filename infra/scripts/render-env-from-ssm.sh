@@ -6,7 +6,7 @@ set -euo pipefail
 
 APP_DIR="${APP_DIR:-/opt/digital-cafe}"
 ENV_FILE="${ENV_FILE:-$APP_DIR/digital-cafe-backend/.env}"
-SSM_PREFIX="${SSM_PREFIX:-/digital-cafe/deployment}"
+SSM_PREFIX="${SSM_PREFIX:-/digital-cafe/prod}"
 AWS_REGION="${AWS_REGION:-ap-south-1}"
 
 get_param() {

@@ -2,169 +2,85 @@
 
 # ☕ Digital Café Ordering and Operations Platform
 
-**A full-stack cafe management system with real-time order tracking, online payments, and multi-role dashboards**
+**A production-ready full-stack platform for managing café operations with real-time order tracking, online payments, and multi-role dashboards**
 
 [![Java](https://img.shields.io/badge/Java-21-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)](https://openjdk.org/)
-[![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.5.10-6DB33F?style=for-the-badge&logo=spring-boot&logoColor=white)](https://spring.io/projects/spring-boot)
+[![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.x-6DB33F?style=for-the-badge&logo=spring-boot&logoColor=white)](https://spring.io/projects/spring-boot)
 [![Angular](https://img.shields.io/badge/Angular-20-DD0031?style=for-the-badge&logo=angular&logoColor=white)](https://angular.io/)
-[![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?style=for-the-badge&logo=mysql&logoColor=white)](https://www.mysql.com/)
-[![Razorpay](https://img.shields.io/badge/Razorpay-Payment-002970?style=for-the-badge&logo=razorpay&logoColor=white)](https://razorpay.com/)
+[![MySQL](https://img.shields.io/badge/MySQL-8-4479A1?style=for-the-badge&logo=mysql&logoColor=white)](https://www.mysql.com/)
+[![AWS](https://img.shields.io/badge/AWS-EC2%20%7C%20RDS%20%7C%20S3-232F3E?style=for-the-badge&logo=amazonaws&logoColor=white)](https://aws.amazon.com/)
 [![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](LICENSE)
 
 </div>
 
 ---
 
-## 📖 About
+## 📖 Overview
 
-Digital Café is an enterprise-grade platform that digitizes the entire café experience — from table booking and menu browsing to order placement and Razorpay payments. It serves **5 distinct user roles**, each with a dedicated dashboard and real-time WebSocket notifications for live order tracking.
+Digital Café is a scalable, enterprise-grade platform that digitizes the complete café workflow — from table booking and menu browsing to order processing and online payments.
 
----
-
-## Quick Start (IntelliJ IDEA + VS Code)
-
-### Prerequisites
-
-- Java 21
-- Maven 3.9+
-- Node.js 20+ and npm
-- MySQL 8
-
-### Environment setup
-
-1. Root `.env` is used for local project-level values.
-2. `digital-cafe-backend/.env` is used by backend runtime values.
-3. Keep `digital-cafe-backend/src/main/resources/application.yml` for dev.
-4. Keep `digital-cafe-backend/src/main/resources/application-deploy.yml` for deployment profile.
-
-### Run backend (local)
-
-1. Import `digital-cafe-backend` in IntelliJ IDEA as Maven project.
-2. Set JDK to 21.
-3. Run `DigitalCafeBackendApplication`.
-4. Or use terminal:
-
-```bash
-mvn -s maven-settings.xml -f digital-cafe-backend/pom.xml spring-boot:run
-```
-
-Backend default URL: `http://localhost:8080`
-
-### Run frontend (local)
-
-1. Open `digital-cafe-frontend` in VS Code.
-2. Install packages:
-
-```bash
-cd digital-cafe-frontend
-npm install
-```
-
-3. Start Angular app:
-
-```bash
-npm start
-```
-
-Frontend default URL: `http://localhost:4200`
-
-### Dev and deploy profiles
-
-- Dev: use `application.yml` and local `.env` values.
-- Deploy: activate Spring profile `deploy` so `application-deploy.yml` is used.
+It supports **multiple user roles** with dedicated dashboards and uses **real-time WebSocket communication** for instant order updates.
 
 ---
 
-## 📸 Screenshots
+## 🔗 Live Links
 
-### Landing Page
-<!-- Replace with your actual screenshot -->
-![Landing Page](docs/screenshots/landing.png)
-
-### Login & Registration
-<!-- Replace with your actual screenshot -->
-![Login Page](docs/screenshots/login.png)
-![Registration Page](docs/screenshots/register.png)
-
-### Customer Dashboard
-<!-- Replace with your actual screenshot -->
-![Customer Dashboard](docs/screenshots/customer-dashboard.png)
-
-### Menu Browsing & Ordering
-<!-- Replace with your actual screenshot -->
-![Menu Page](docs/screenshots/menu.png)
-![Order Placement](docs/screenshots/order-placement.png)
-
-### Table Booking
-<!-- Replace with your actual screenshot -->
-![Table Booking](docs/screenshots/booking.png)
-
-### Razorpay Payment
-<!-- Replace with your actual screenshot -->
-![Payment Page](docs/screenshots/payment.png)
-
-### Real-Time Order Tracking
-<!-- Replace with your actual screenshot -->
-![Order Tracking](docs/screenshots/order-tracking.png)
-
-### Chef Dashboard
-<!-- Replace with your actual screenshot -->
-![Chef Dashboard](docs/screenshots/chef-dashboard.png)
-
-### Waiter Dashboard
-<!-- Replace with your actual screenshot -->
-![Waiter Dashboard](docs/screenshots/waiter-dashboard.png)
-
-### Café Owner Dashboard
-<!-- Replace with your actual screenshot -->
-![Cafe Owner Dashboard](docs/screenshots/owner-dashboard.png)
-
-### Admin Dashboard
-<!-- Replace with your actual screenshot -->
-![Admin Dashboard](docs/screenshots/admin-dashboard.png)
-
-> 💡 **To add screenshots:** Create a `docs/screenshots/` folder in the project root and save your screenshots there with the filenames shown above. They will automatically display here.
+- Frontend: https://cafehub.tech
+- Backend API: https://api.cafehub.tech/api
+- API Docs: https://api.cafehub.tech/swagger-ui.html
 
 ---
 
-## ✨ Features
+## 📌 Problem Statement
+
+Traditional café operations rely on manual processes, leading to:
+
+- Delays in order handling
+- Human errors
+- Lack of real-time visibility
+- Poor customer experience
+
+---
+
+## ✅ Solution
+
+This platform provides:
+
+- Digital ordering and booking system
+- Real-time order tracking
+- Role-based operational dashboards
+- Secure online payments
+
+---
+
+## ✨ Core Features
 
 ### 👤 Customer
-- Browse active cafés and menus with category filtering
-- Book tables with date/time slot selection and conflict detection
-- Place orders linked to bookings with itemized pricing
-- Pay online via **Razorpay** (UPI, Card, Net Banking, Wallet)
-- Track orders in real-time via **WebSocket** push notifications
-- Multi-section profile with address, academic info, and work experience
 
-### 🍳 Chef
-- View incoming paid orders for assigned café
-- Update order status: **PREPARING → READY**
-- Real-time dashboard with WebSocket-powered auto-refresh
+- Browse cafes and menus
+- Book tables with availability checks
+- Place orders and track status in real-time
+- Pay online
 
-### 🍽️ Waiter
-- View ready orders for assigned café
-- Mark orders as **SERVED** to complete the lifecycle
-- Instant notifications when chef marks orders as ready
+### 🧑‍🍳 Chef
 
-### 🏪 Café Owner
-- Manage café details, menu items, and tables
-- Register and manage staff (Chef, Waiter)
-- View café-specific orders and analytics
+- Live order queue
+- Update status: `PENDING → PREPARING → READY`
 
-### 🔑 Admin
-- Platform-wide user management with approval workflows
-- Manage all cafés across the platform
-- Analytics dashboard with aggregate statistics
-- Register café owners with auto-generated credential emails
+### 🧑‍💼 Waiter
 
-### 🔐 Security & Auth
-- JWT authentication with access tokens (24h) and refresh tokens (7d)
-- Email verification via Gmail SMTP with token-based links
-- Password reset flow with secure time-limited tokens
-- Role-based access control at URL and method level (`@PreAuthorize`)
-- BCrypt password hashing
-- 4 Angular route guards (Auth, Role, Email Verification, Profile Completion)
+- Ready order pickup queue
+- Update status: `READY → SERVED`
+
+### 🏪 Cafe Owner
+
+- Manage menu, tables, and staff
+- Monitor orders and operations
+
+### 🛠️ Admin
+
+- Manage users and cafe owners
+- Platform-level monitoring
 
 ---
 
@@ -172,320 +88,207 @@ Frontend default URL: `http://localhost:4200`
 
 ### Backend
 
-| Technology | Purpose |
-|-----------|---------|
-| **Spring Boot 3.5.10** | REST API framework |
-| **Spring Security 6** | Authentication & authorization |
-| **Spring Data JPA** | Database access (Hibernate ORM) |
-| **Spring WebSocket** | Real-time STOMP messaging with SockJS |
-| **Spring Mail** | Email verification & notifications |
-| **MySQL 8.0** | Relational database |
-| **JWT (jjwt 0.12.6)** | Stateless token authentication |
-| **MapStruct** | Entity ↔ DTO mapping |
-| **Razorpay Java SDK** | Payment gateway integration |
-| **Lombok** | Boilerplate code reduction |
-| **Springdoc OpenAPI** | Swagger API documentation |
-| **Maven** | Build & dependency management |
+- Java 21
+- Spring Boot
+- Spring Security (JWT)
+- Spring Data JPA (Hibernate)
+- WebSocket (STOMP)
+- MySQL
 
 ### Frontend
 
-| Technology | Purpose |
-|-----------|---------|
-| **Angular 20** | SPA framework |
-| **TypeScript** | Type-safe JavaScript |
-| **PrimeNG** | UI component library |
-| **Tailwind CSS** | Utility-first styling |
-| **Chart.js** | Analytics & dashboard charts |
-| **STOMP.js + SockJS** | WebSocket client for real-time updates |
-| **RxJS** | Reactive state management |
-| **Angular CDK** | Accessibility & layout utilities |
+- Angular
+- TypeScript
+- RxJS
+- Tailwind CSS / PrimeNG
+
+### Infrastructure
+
+- Docker & Docker Compose
+- Nginx (reverse proxy)
+- AWS (EC2, RDS, S3)
+- GitHub Actions (CI/CD)
 
 ---
 
-## 🏗️ Architecture
+## 🧠 System Architecture
 
 ```
-┌─────────────────────────────────────────────────────┐
-│                 Angular 20 SPA                       │
-│   Admin | Owner | Customer | Chef | Waiter          │
-│   AuthGuard · RoleGuard · AuthInterceptor           │
-└────────────────────┬────────────────────────────────┘
-                     │ HTTP REST + WebSocket (STOMP)
-                     ▼
-┌─────────────────────────────────────────────────────┐
-│              Spring Boot 3.5.10                      │
-│  ┌────────────┐  ┌───────────────────────────────┐  │
-│  │  Security  │  │     12 REST Controllers       │  │
-│  │ JWT Filter │──│  80+ endpoints with RBAC      │  │
-│  └────────────┘  └──────────────┬────────────────┘  │
-│                                 │                    │
-│  ┌──────────────────────────────▼─────────────────┐ │
-│  │        11 Service Implementations              │ │
-│  └──────────────────────────────┬─────────────────┘ │
-│                                 │                    │
-│  ┌──────────────────────────────▼─────────────────┐ │
-│  │          15 JPA Repositories                   │ │
-│  └──────────────────────────────┬─────────────────┘ │
-└─────────────────────────────────┼───────────────────┘
-                                  │ JPA / Hibernate
-                                  ▼
-┌─────────────────────────────────────────────────────┐
-│   MySQL 8.0 (16 tables) │ Razorpay API │ Gmail SMTP│
-└─────────────────────────────────────────────────────┘
+[Angular SPA]
+   |
+   | HTTPS + JWT + WebSocket
+   v
+[Nginx Reverse Proxy]
+   |
+   +--> [Spring Boot API]
+            |
+            +--> [MySQL]
+            +--> [S3 / Local Storage]
+            +--> [Payment Gateway / SMTP]
 ```
 
 ---
 
-## 🔄 Order Lifecycle
+## 🏗️ Architecture Style
 
-```
-  ╔══════════╗        ╔════════════╗        ╔═════════╗        ╔══════════╗
-  ║ PENDING  ║──────▶ ║ PREPARING  ║──────▶ ║  READY  ║──────▶ ║  SERVED  ║
-  ╚════╤═════╝ Pay    ╚════════════╝ Chef   ╚═════════╝Waiter  ╚══════════╝
-       │
-       ▼
-  ╔════════════╗
-  ║ CANCELLED  ║  (Customer can cancel before SERVED)
-  ╚════════════╝
-```
-
-Each status transition triggers a **WebSocket notification** to the relevant dashboard in real-time.
+- Modular Monolith (feature-based design recommended)
+- REST APIs + WebSocket for real-time updates
+- Stateless authentication using JWT
 
 ---
 
-## 📊 Database Schema
+## 🧩 Key Design Decisions
 
-**16 tables** with JPA-managed relationships:
+- **JWT Authentication** → scalable, stateless sessions
+- **DTO Pattern** → decouples API from entity model
+- **Role-Based Access Control** → secure endpoints
+- **Centralized Exception Handling** → consistent API responses
+- **WebSocket Updates** → eliminates polling and improves UX
 
-| Table | Description |
-|-------|-------------|
-| `users` | User accounts with BCrypt-hashed passwords |
-| `roles` | 5 roles: ADMIN, CAFE_OWNER, CHEF, WAITER, CUSTOMER |
-| `user_roles` | Many-to-many join table |
-| `profiles` | Personal details, phone, DOB, gender |
-| `addresses` | Multi-address support per profile |
-| `academic_info` | Education qualifications |
-| `work_experiences` | Professional history |
-| `cafes` | Café details with owner reference |
-| `cafe_tables` | Table inventory per café |
-| `menu_items` | Menu catalog with pricing and category |
-| `bookings` | Table reservations with conflict detection |
-| `orders` | Order header with status tracking |
-| `order_items` | Individual items per order |
-| `payments` | Razorpay transaction records |
-| `email_verification_tokens` | Email verification links |
-| `password_reset_tokens` | Password reset links |
+---
+
+## 🗄️ Database Design
+
+Core entities:
+
+- Users, Roles
+- Cafes, Tables, Menu Items
+- Bookings
+- Orders, Order Items
+- Payments
+
+### Scalability Considerations
+
+- Normalized schema
+- Indexed queries for performance
+- Ready for Redis caching and read replicas
 
 ---
 
 ## 📡 API Overview
 
-**80+ REST endpoints** across 12 controllers, all secured with JWT and role-based access.
-
-### Authentication (`/api/auth`)
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/login` | Login with email/password → JWT tokens |
-| POST | `/simple-register` | Quick customer registration |
-| POST | `/register` | Full multi-step registration |
-| POST | `/refresh-token` | Refresh expired access token |
-| GET | `/verify-email` | Verify email via token link |
-| POST | `/forgot-password` | Request password reset email |
-| POST | `/reset-password` | Reset password with token |
-
-### Admin (`/api/admin`)
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/users` | List all users (paginated) |
-| POST | `/register-cafe-owner` | Register café owner + send credentials |
-| PUT | `/users/{id}/status` | Activate/deactivate user |
-| GET | `/dashboard` | Platform analytics summary |
-| GET | `/dashboard/stats` | Platform-wide analytics |
-
-### Café & Menu (`/api/cafes`, `/api/menu-items`)
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/cafes/active` | List active cafés (public) |
-| POST | `/cafes` | Create new café (CAFE_OWNER) |
-| CRUD | `/menu-items/**` | Full menu management |
-| GET | `/menu-items/cafe/{cafeId}` | Get menu for a café |
-
-### Orders & Payments (`/api/orders`, `/api/payments`)
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/orders` | Place new order (CUSTOMER) |
-| PUT | `/orders/{id}/prepare` | Mark preparing (CHEF) |
-| PUT | `/orders/{id}/ready` | Mark ready (CHEF) |
-| PUT | `/orders/{id}/served` | Mark served (WAITER) |
-| POST | `/payments/initiate` | Create Razorpay order |
-| POST | `/payments/verify` | Verify payment signature |
-
-### Other Controllers
-- **BookingController** — Table reservation with time-slot conflict detection
-- **TableController** — CRUD for café tables with availability checks
-- **StaffController** — Staff registration and management (Chef, Waiter)
-- **ProfileController** — Multi-section profile with completion tracking
-- **HealthController** — Application health check endpoint
-
----
-
-## 🚀 Quick Setup
-
-### Prerequisites
-
-- **Java 21** (JDK)
-- **Node.js 18+** and npm
-- **MySQL 8.0+**
-- **Maven 3.9+** (or use the included Maven wrapper)
-
-### 1. Clone the Repository
-
-```bash
-git clone https://github.com/Piyush-Kumar62/Digital-Cafe-Ordering-and-Operations-Platform.git
-cd Digital-Cafe-Ordering-and-Operations-Platform
-```
-
-### 2. Backend Setup
-
-```bash
-cd digital-cafe-backend
-```
-
-Create a `.env` file or set these environment variables:
-
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `DB_PASSWORD` | ✅ | MySQL root password |
-| `JWT_SECRET` | ✅ | JWT signing key (min 256-bit string) |
-| `MAIL_USERNAME` | ✅ | Gmail address for sending emails |
-| `MAIL_APP_PASSWORD` | ✅ | Gmail App Password ([how to generate](https://support.google.com/mail/answer/185833)) |
-| `RAZORPAY_KEY_ID` | ❌ | Razorpay API key (optional — TEST mode works without it) |
-| `RAZORPAY_KEY_SECRET` | ❌ | Razorpay secret key |
-| `DB_USERNAME` | ❌ | MySQL username (default: `root`) |
-| `DB_URL` | ❌ | JDBC URL (default: `jdbc:mysql://localhost:3306/digital_cafe_db`) |
-
-```bash
-# Start the backend (database auto-creates on first run)
-./mvnw spring-boot:run
-```
-
-> Backend runs at **http://localhost:8080**
-
-### 3. Frontend Setup
-
-```bash
-cd digital-cafe-frontend
-npm install
-ng serve
-```
-
-> Frontend runs at **http://localhost:4200**
-
-### 4. Default Admin Login
-
-| Field | Value |
-|-------|-------|
-| Email | `admin@digitalcafe.com` |
-| Password | `Admin@123` |
-
-> The admin account and all 5 roles are auto-created by `DataInitializationConfig.java` on first startup.
-
-## 📚 Engineering Docs
-
-- [ER Diagram](docs/ER_DIAGRAM.md)
-- [Architecture Diagram](docs/ARCHITECTURE_DIAGRAM.md)
-- [API Documentation](docs/API_DOCUMENTATION.md)
-- [Module Documentation](docs/MODULE_DOCUMENTATION.md)
-
-## 🔁 Project Workflow
-
-1. Register and verify email.
-2. Complete profile.
-3. Book a table.
-4. Place an order linked to booking.
-5. Complete payment.
-6. Chef marks `PREPARING -> READY`.
-7. Waiter marks `READY -> SERVED`.
+| Method | Endpoint                | Description           |
+| ------ | ----------------------- | --------------------- |
+| POST   | /api/auth/login         | User authentication   |
+| GET    | /api/cafes/active       | List cafes            |
+| POST   | /api/bookings           | Create booking        |
+| POST   | /api/orders             | Place order           |
+| PUT    | /api/orders/{id}/ready  | Chef updates status   |
+| PUT    | /api/orders/{id}/served | Waiter updates status |
+| POST   | /api/payments/initiate  | Start payment         |
+| POST   | /api/payments/verify    | Verify payment        |
 
 ---
 
 ## 📁 Project Structure
 
 ```
-Digital-Cafe-Ordering-and-Operations-Platform/
-├── digital-cafe-backend/               # Spring Boot application
-│   └── src/main/java/com/digitalcafe/
-│       ├── config/                     # Security, WebSocket, CORS, DataInit
-│       ├── controller/                 # 12 REST controllers
-│       ├── dto/                        # 50+ Request/Response DTOs
-│       ├── entity/                     # 16 JPA entities
-│       ├── exception/                  # Global exception handler + 6 custom exceptions
-│       ├── mapper/                     # MapStruct entity-DTO mappers
-│       ├── repository/                 # 15 JPA repositories
-│       ├── security/                   # JWT filter, UserDetailsService, JwtUtil
-│       └── service/                    # 11 service interfaces + implementations
-│
-├── digital-cafe-frontend/              # Angular 20 application
-│   └── src/app/
-│       ├── core/                       # Guards, interceptors, services
-│       ├── features/                   # Lazy-loaded feature modules
-│       │   ├── admin/                  # Admin dashboard & management
-│       │   ├── cafe-owner/             # Owner dashboard & operations
-│       │   ├── chef/                   # Chef order queue
-│       │   ├── waiter/                 # Waiter service queue
-│       │   ├── customer/              # Customer booking, ordering, payments
-│       │   ├── auth/                   # Login, register, verification
-│       │   └── landing/               # Public landing page
-│       └── shared/                     # Models, pipes, shared components
-│
-└── docs/screenshots/                   # App screenshots for README
+digital-cafe-backend/
+ ├── core/               # shared configs, security, utils
+ ├── modules/            # feature-based modules (auth, order, etc.)
+ ├── infrastructure/     # external integrations
+ └── resources/
+
+digital-cafe-frontend/
+ ├── core/
+ ├── features/
+ └── shared/
+
+infra/
+ ├── docker/
+ ├── nginx/
+ └── scripts/
 ```
 
 ---
 
-## 🧩 Key Design Decisions
+## ⚙️ Setup Instructions
 
-| Decision | Rationale |
-|----------|-----------|
-| **Stateless JWT** (no sessions) | Scalable — no server-side session storage needed |
-| **Interface + Impl** for services | Loose coupling, testability, proxy support for `@Transactional` |
-| **Constructor injection** everywhere | Immutable dependencies, compile-time safety |
-| **DTOs for all API communication** | Prevents entity exposure, provides stable API contract |
-| **Global exception handler** | Consistent error JSON responses across 80+ endpoints |
-| **Lazy-loaded Angular routes** | Faster initial load, code splitting per role |
-| **Strategy pattern** for payments | Swap Razorpay / Test gateway without code changes |
-| **WebSocket (STOMP + SockJS)** | Real-time order status updates without polling |
+### 1. Clone Repository
+
+```bash
+git clone https://github.com/Piyush-Kumar62/Digital-Cafe-Ordering-and-Operations-Platform.git
+cd Digital-Cafe-Ordering-and-Operations-Platform
+```
 
 ---
 
-## 🤝 Contributing
+### 2. Backend Configuration (IMPORTANT)
 
-Contributions are welcome! Please follow these steps:
+Use Spring profiles instead of `.env` files:
 
-1. **Fork** the repository
-2. **Create** a feature branch: `git checkout -b feature/amazing-feature`
-3. **Commit** your changes: `git commit -m "Add amazing feature"`
-4. **Push** to the branch: `git push origin feature/amazing-feature`
-5. **Open** a Pull Request
+```
+application.yml
+application-dev.yml
+application-prod.yml
+```
 
----
+Run with:
 
-## 👤 Author
-
-**Piyush Kumar** — [@Piyush-Kumar62](https://github.com/Piyush-Kumar62)
-
-📧 piyushkumar30066@gmail.com
+```bash
+SPRING_PROFILES_ACTIVE=dev
+```
 
 ---
 
-## 📝 License
+### 3. Run Backend
 
-This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
+```bash
+cd digital-cafe-backend
+./mvnw spring-boot:run
+```
+
+Backend runs at: `http://localhost:8080`
 
 ---
 
-<div align="center">
+### 4. Run Frontend
 
-**⭐ If you found this project helpful, please give it a star!**
+```bash
+cd digital-cafe-frontend
+npm install
+npm start
+```
 
-</div>
+Frontend runs at: `http://localhost:4200`
+
+---
+
+## 🚀 Deployment
+
+- Dockerized services
+- AWS EC2 for hosting
+- AWS RDS for database
+- Nginx for reverse proxy & HTTPS
+- AWS S3 for static/media storage
+
+---
+
+## 🔐 Security
+
+- JWT-based authentication
+- BCrypt password hashing
+- Role-based authorization
+- CORS configuration
+- Secure environment variable handling
+
+---
+
+## 📈 Future Improvements
+
+- Redis caching
+- Kafka event-driven architecture
+- OpenTelemetry monitoring
+- Rate limiting & throttling
+- Mobile app (Flutter / React Native)
+
+---
+
+## 👨‍💻 Author
+
+**Piyush Kumar**
+
+- GitHub: https://github.com/Piyush-Kumar62
+- LinkedIn: https://linkedin.com/in/your-linkedin
+
+---

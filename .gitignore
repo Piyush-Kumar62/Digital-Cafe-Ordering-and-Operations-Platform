@@ -53,6 +53,7 @@ uploads/
 digital-cafe-backend/uploads/
 digital-cafe-backend/env/
 digital-cafe-frontend/src/assets/downloads/**/image copy.*
+digital-cafe-frontend/src/assets/downloads/cafes/
 
 # Keep cert directory placeholder only; never commit real certs/keys
 infra/nginx/certs/*

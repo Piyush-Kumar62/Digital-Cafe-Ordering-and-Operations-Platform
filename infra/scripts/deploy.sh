@@ -2,6 +2,7 @@
 set -euo pipefail
 
 APP_DIR="/opt/digital-cafe"
+ENV_FILE="${ENV_FILE:-digital-cafe-backend/env/.env.prod}"
 BACKEND_HEALTH_URL="${BACKEND_HEALTH_URL:-http://localhost:8080/api/public/health}"
 FRONTEND_HEALTH_URL="${FRONTEND_HEALTH_URL:-http://localhost}"
 RENDER_ENV_FROM_SSM="${RENDER_ENV_FROM_SSM:-false}"
@@ -16,20 +17,20 @@ if [[ -n "${GHCR_USERNAME:-}" && -n "${GHCR_TOKEN:-}" ]]; then
   echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USERNAME" --password-stdin
 fi
 
-if [[ "$RENDER_ENV_FROM_SSM" == "true" && -x "./scripts/render-env-from-ssm.sh" ]]; then
+if [[ "$RENDER_ENV_FROM_SSM" == "true" && -x "./infra/scripts/render-env-from-ssm.sh" ]]; then
   if ! command -v aws >/dev/null 2>&1; then
     echo "AWS CLI is required when RENDER_ENV_FROM_SSM=true, but it is not installed."
     exit 1
   fi
   echo "Rendering backend env from AWS SSM..."
-  APP_DIR="$APP_DIR" SSM_PREFIX="$SSM_PREFIX" ./scripts/render-env-from-ssm.sh
+  APP_DIR="$APP_DIR" SSM_PREFIX="$SSM_PREFIX" ./infra/scripts/render-env-from-ssm.sh
 fi
 
 echo "Pulling latest images..."
-docker compose -f docker-compose.prod.yml pull
+docker compose --env-file "$ENV_FILE" -f infra/compose/docker-compose.prod.yml pull
 
 echo "Restarting stack..."
-docker compose -f docker-compose.prod.yml up -d --remove-orphans
+docker compose --env-file "$ENV_FILE" -f infra/compose/docker-compose.prod.yml up -d --remove-orphans
 
 echo "Waiting for backend health..."
 for i in {1..60}; do

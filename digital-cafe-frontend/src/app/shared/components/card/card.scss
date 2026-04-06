@@ -82,7 +82,7 @@
   gap: 6px;
 
   .card-value {
-    font-size: clamp(1.7rem, 2.35vw, 2.5rem);
+    font-size: clamp(1.45rem, 2vw, 2rem);
     font-weight: 800;
     color: var(--card-value);
     margin: 0;
@@ -162,7 +162,7 @@
   }
 
   .card-body .card-value {
-    font-size: clamp(1.5rem, 5.4vw, 1.95rem);
+    font-size: clamp(1.3rem, 4.8vw, 1.7rem);
   }
 
   .card-body .card-description {
@@ -177,11 +177,12 @@
   }
 
   .card-body .card-value {
-    font-size: clamp(1.4rem, 6.8vw, 1.8rem);
+    font-size: clamp(1.2rem, 6.2vw, 1.55rem);
   }
 }
 
-/* Dark mode */:host-context(body.dark-theme) {
+/* Dark mode */
+:host-context(body.dark-theme) {
   .card {
     --card-title: #e2e8f0;
     --card-value: #f1f5f9;

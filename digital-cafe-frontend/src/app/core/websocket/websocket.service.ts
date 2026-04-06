@@ -1,10 +1,10 @@
-import { Injectable } from '@angular/core';
-import { Client, IMessage, StompSubscription } from '@stomp/stompjs';
-import SockJS from 'sockjs-client';
-import { BehaviorSubject, filter, Observable } from 'rxjs';
-import { environment } from '@environments/environment';
-import { AuthService } from '@core/auth/auth.service';
-import { Order } from '@shared/models/order.model';
+import { Injectable } from "@angular/core";
+import { Client, IMessage, StompSubscription } from "@stomp/stompjs";
+import SockJS from "sockjs-client";
+import { BehaviorSubject, filter, Observable } from "rxjs";
+import { environment } from "@environments/environment";
+import { AuthService } from "@core/auth/auth.service";
+import { Order } from "@shared/models/order.model";
 
 export interface WebSocketMessage {
   type: string;
@@ -13,13 +13,15 @@ export interface WebSocketMessage {
 }
 
 @Injectable({
-  providedIn: 'root',
+  providedIn: "root",
 })
 export class WebSocketService {
   private client: Client | null = null;
   private subscriptions: Map<string, StompSubscription> = new Map();
-  private destinationCallbacks: Map<string, Array<(payload: any) => void>> = new Map();
-  private destinationStreams: Map<string, BehaviorSubject<any | null>> = new Map();
+  private destinationCallbacks: Map<string, Array<(payload: any) => void>> =
+    new Map();
+  private destinationStreams: Map<string, BehaviorSubject<any | null>> =
+    new Map();
   private defaultSubscriptionsInitialized = false;
   private connectionStatus = new BehaviorSubject<boolean>(false);
   public connectionStatus$ = this.connectionStatus.asObservable();
@@ -31,7 +33,8 @@ export class WebSocketService {
   public orderStatusUpdates$ = this.orderStatusUpdates.asObservable();
 
   private tableAvailabilityUpdates = new BehaviorSubject<any>(null);
-  public tableAvailabilityUpdates$ = this.tableAvailabilityUpdates.asObservable();
+  public tableAvailabilityUpdates$ =
+    this.tableAvailabilityUpdates.asObservable();
   private tableAvailabilityDestination: string | null = null;
   private notificationsStore = new BehaviorSubject<WebSocketMessage[]>([]);
   public notifications$ = this.notificationsStore.asObservable();
@@ -129,7 +132,10 @@ export class WebSocketService {
 
   subscribeToTableAvailability(cafeId: number): void {
     const destination = `/topic/cafe/${cafeId}/tables`;
-    if (this.tableAvailabilityDestination && this.tableAvailabilityDestination !== destination) {
+    if (
+      this.tableAvailabilityDestination &&
+      this.tableAvailabilityDestination !== destination
+    ) {
       this.unsubscribe(this.tableAvailabilityDestination);
     }
     this.tableAvailabilityDestination = destination;
@@ -150,7 +156,9 @@ export class WebSocketService {
       this.connect();
     }
 
-    return stream.asObservable().pipe(filter((value): value is T => value !== null));
+    return stream
+      .asObservable()
+      .pipe(filter((value): value is T => value !== null));
   }
 
   unsubscribe(destination: string): void {
@@ -187,29 +195,42 @@ export class WebSocketService {
     const user = this.authService.currentUserValue;
     if (!user) return;
 
-    this.subscribe('/user/queue/notifications', (message) => this.handleNotification(message));
-    this.subscribe(`/user/${user.id}/queue/notifications`, (message) => this.handleNotification(message));
+    this.subscribe("/user/queue/notifications", (message) =>
+      this.handleNotification(message),
+    );
+    this.subscribe(`/user/${user.id}/queue/notifications`, (message) =>
+      this.handleNotification(message),
+    );
 
-    if (user.roles.includes('ROLE_CHEF') && user.cafeId) {
+    if (user.roles.includes("ROLE_CHEF") && user.cafeId) {
       this.subscribeToChefOrders(user.cafeId);
     }
 
-    if (user.roles.includes('ROLE_WAITER') && user.cafeId) {
+    if (user.roles.includes("ROLE_WAITER") && user.cafeId) {
       this.subscribeToWaiterOrders(user.cafeId);
     }
 
-    if (user.roles.includes('ROLE_CAFE_OWNER') && user.cafeId) {
+    if (user.roles.includes("ROLE_CAFE_OWNER") && user.cafeId) {
       this.subscribeToCafeOrders(user.cafeId);
     }
 
-    if (user.roles.includes('ROLE_CUSTOMER')) {
+    if (user.roles.includes("ROLE_CUSTOMER")) {
       this.subscribeToCustomerOrders(user.id);
+    }
+
+    if (user.roles.includes("ROLE_ADMIN")) {
+      this.subscribe("/topic/admin/orders", (message) =>
+        this.handleNotification(message),
+      );
     }
 
     this.defaultSubscriptionsInitialized = true;
   }
 
-  private subscribe(destination: string, callback: (payload: any) => void): void {
+  private subscribe(
+    destination: string,
+    callback: (payload: any) => void,
+  ): void {
     const callbacks = this.destinationCallbacks.get(destination) || [];
     this.destinationCallbacks.set(destination, [...callbacks, callback]);
 
@@ -217,37 +238,61 @@ export class WebSocketService {
       return;
     }
 
-    const subscription = this.client.subscribe(destination, (message: IMessage) => {
-      try {
-        const payload = JSON.parse(message.body);
-        const destinationCallbacks = this.destinationCallbacks.get(destination) || [];
-        destinationCallbacks.forEach((cb) => cb(payload));
-      } catch {
-        // Silently discard malformed WebSocket messages
-      }
-    });
+    const subscription = this.client.subscribe(
+      destination,
+      (message: IMessage) => {
+        try {
+          const payload = JSON.parse(message.body);
+          const destinationCallbacks =
+            this.destinationCallbacks.get(destination) || [];
+          destinationCallbacks.forEach((cb) => cb(payload));
+        } catch {
+          // Silently discard malformed WebSocket messages
+        }
+      },
+    );
 
     this.subscriptions.set(destination, subscription);
   }
 
   private handleNotification(message: any): void {
+    const payload = message?.payload ?? message;
+    const type = message?.type ?? payload?.type ?? "NOTIFICATION";
+    const timestamp =
+      message?.timestamp ?? payload?.timestamp ?? new Date().toISOString();
+
     const current = this.notificationsStore.getValue();
     // Cap in-memory notifications at 50 to avoid unbounded memory growth
-    this.notificationsStore.next([{
-      type: message.type,
-      payload: message.payload,
-      timestamp: message.timestamp ?? new Date().toISOString(),
-    }, ...current].slice(0, 50));
+    this.notificationsStore.next(
+      [
+        {
+          type,
+          payload,
+          timestamp,
+        },
+        ...current,
+      ].slice(0, 50),
+    );
 
-    switch (message.type) {
-      case 'NEW_ORDER':
-        this.orderNotifications.next(message.payload);
-        break;
-      case 'ORDER_STATUS_UPDATE':
-        this.orderStatusUpdates.next(message.payload);
-        break;
-      default:
-        break;
+    const orderTypes = new Set([
+      "NEW_ORDER",
+      "PREPARING",
+      "READY",
+      "SERVED",
+      "CANCELLED",
+      "ORDER_PLACED",
+      "ORDER_PREPARING",
+      "ORDER_READY",
+      "ORDER_SERVED",
+      "ORDER_CANCELLED",
+      "ORDER_CONFIRMED",
+      "PAYMENT_CAPTURED",
+      "ORDER_STATUS_UPDATE",
+    ]);
+
+    if (orderTypes.has(type) || !!payload?.status || !!payload?.orderId) {
+      this.orderNotifications.next(payload);
+      this.orderStatusUpdates.next(payload);
     }
   }
 
@@ -257,15 +302,18 @@ export class WebSocketService {
         return;
       }
 
-      const subscription = this.client.subscribe(destination, (message: IMessage) => {
-        try {
-          const payload = JSON.parse(message.body);
-          const callbacks = this.destinationCallbacks.get(destination) || [];
-          callbacks.forEach((cb) => cb(payload));
-        } catch {
-          // Silently discard malformed WebSocket messages
-        }
-      });
+      const subscription = this.client.subscribe(
+        destination,
+        (message: IMessage) => {
+          try {
+            const payload = JSON.parse(message.body);
+            const callbacks = this.destinationCallbacks.get(destination) || [];
+            callbacks.forEach((cb) => cb(payload));
+          } catch {
+            // Silently discard malformed WebSocket messages
+          }
+        },
+      );
 
       this.subscriptions.set(destination, subscription);
     });

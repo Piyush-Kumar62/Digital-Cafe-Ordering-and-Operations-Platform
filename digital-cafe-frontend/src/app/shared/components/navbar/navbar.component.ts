@@ -1,4 +1,10 @@
-import { Component, ElementRef, HostListener, OnInit, ViewChild } from "@angular/core";
+import {
+  Component,
+  ElementRef,
+  HostListener,
+  OnInit,
+  ViewChild,
+} from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { RouterModule, Router, NavigationEnd } from "@angular/router";
 import { AuthService } from "@core/auth/auth.service";
@@ -11,8 +17,8 @@ import { User } from "@shared/models/auth.model";
   selector: "app-navbar",
   standalone: true,
   imports: [CommonModule, RouterModule],
-  templateUrl: './navbar.component.html',
-  styleUrls: ['./navbar.component.scss'],
+  templateUrl: "./navbar.component.html",
+  styleUrls: ["./navbar.component.scss"],
 })
 export class NavbarComponent implements OnInit {
   menuOpen = false;
@@ -182,7 +188,9 @@ export class NavbarComponent implements OnInit {
   }
 
   private refreshAvatar(user: User): void {
-    const resolved = this.apiService.resolveImageUrl(user.profileImageUrl || "");
+    const resolved = this.apiService.resolveImageUrl(
+      user.profileImageUrl || "",
+    );
     if (!resolved) {
       this.avatarUrl = "";
       this.avatarLoadFailed = false;
@@ -211,7 +219,10 @@ export class NavbarComponent implements OnInit {
     this.authService.logout();
     this.userMenuOpen = false;
     this.closeMenu();
-    this.alertService.success("Logged out", "You have been signed out successfully.");
+    this.alertService.success(
+      "Logged out",
+      "You have been signed out successfully.",
+    );
     this.router.navigate(["/auth/login"]);
   }
 
@@ -229,7 +240,7 @@ export class NavbarComponent implements OnInit {
   }
 
   private getRoleLabel(user: User): string {
-    const raw = user?.roles?.[0] || "ACCOUNT";
+    const raw = this.getPrimaryRole(user) || "ACCOUNT";
     return raw
       .replace("ROLE_", "")
       .replace(/_/g, " ")
@@ -238,7 +249,7 @@ export class NavbarComponent implements OnInit {
   }
 
   private getProfileRoute(user: User): string {
-    const role = (user?.roles?.[0] || "").replace("ROLE_", "");
+    const role = (this.getPrimaryRole(user) || "").replace("ROLE_", "");
     switch (role) {
       case "ADMIN":
         return "/admin/profile";
@@ -254,5 +265,30 @@ export class NavbarComponent implements OnInit {
         return this.dashboardRoute || "/";
     }
   }
-}
 
+  private getPrimaryRole(user: User | null): string {
+    const roles = user?.roles || [];
+    const preferredOrder = [
+      "ROLE_ADMIN",
+      "ROLE_CAFE_OWNER",
+      "ROLE_CHEF",
+      "ROLE_WAITER",
+      "ROLE_CUSTOMER",
+      "ADMIN",
+      "CAFE_OWNER",
+      "CHEF",
+      "WAITER",
+      "CUSTOMER",
+    ];
+
+    for (const role of preferredOrder) {
+      if (roles.includes(role)) {
+        return role.startsWith("ROLE_") ? role : `ROLE_${role}`;
+      }
+    }
+
+    const first = roles[0] || "";
+    if (!first) return "";
+    return first.startsWith("ROLE_") ? first : `ROLE_${first}`;
+  }
+}

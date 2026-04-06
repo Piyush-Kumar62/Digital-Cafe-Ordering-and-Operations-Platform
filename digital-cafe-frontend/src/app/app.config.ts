@@ -1,4 +1,4 @@
-import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
+import { ApplicationConfig, LOCALE_ID, provideZoneChangeDetection } from '@angular/core';
 import { provideRouter, withInMemoryScrolling } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideAnimations } from '@angular/platform-browser/animations';
@@ -18,5 +18,6 @@ export const appConfig: ApplicationConfig = {
     ),
     provideHttpClient(withInterceptors([authInterceptor, errorInterceptor])),
     provideAnimations(),
+    { provide: LOCALE_ID, useValue: "en-IN" },
   ],
 };

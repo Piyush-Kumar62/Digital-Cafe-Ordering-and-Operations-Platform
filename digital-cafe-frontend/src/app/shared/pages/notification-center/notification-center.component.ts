@@ -2,6 +2,7 @@ import { CommonModule } from "@angular/common";
 import { Component, OnDestroy, OnInit, inject } from "@angular/core";
 import { AuthService } from "@core/auth/auth.service";
 import { WebSocketService } from "@core/websocket/websocket.service";
+import { uppercaseMeridiem } from "@core/utils/date-time-format.util";
 import { Subject, takeUntil } from "rxjs";
 
 interface NotificationItem {
@@ -48,6 +49,10 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
     const roles = user.roles || [];
     if (roles.includes("ROLE_CUSTOMER")) {
       this.bindDestination(`/topic/customer/${user.id}`);
+    }
+
+    if (roles.includes("ROLE_ADMIN")) {
+      this.bindDestination("/topic/admin/orders");
     }
 
     if (
@@ -119,8 +124,8 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
     const message =
       payload?.message || payload?.description || "You have a new update.";
     const createdAt = payload?.timestamp
-      ? new Date(payload.timestamp).toLocaleString()
-      : new Date().toLocaleString();
+      ? uppercaseMeridiem(new Date(payload.timestamp).toLocaleString())
+      : uppercaseMeridiem(new Date().toLocaleString());
 
     const fingerprint = `${title}|${message}|${createdAt}`;
     const duplicate = this.notifications.some(

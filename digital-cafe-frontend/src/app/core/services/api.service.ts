@@ -5,8 +5,8 @@ import {
   HttpHeaders,
   HttpParams,
 } from "@angular/common/http";
-import { Observable } from "rxjs";
-import { map } from "rxjs/operators";
+import { Observable, of } from "rxjs";
+import { catchError, map, switchMap } from "rxjs/operators";
 import { environment } from "@environments/environment";
 import { Cafe, CreateCafeRequest, Table } from "@shared/models/cafe.model";
 import { MenuItem, MenuItemRequest } from "@shared/models/menu.model";
@@ -59,9 +59,32 @@ export class ApiService {
       return src;
     }
     if (src.startsWith("/")) return `${this.backendBase}${src}`;
-    // Absolute filesystem path (Windows drive letter or backslash) — discard
+    // Try to recover legacy absolute filesystem paths that contain /uploads/
+    const normalized = src.replace(/\\/g, "/");
+    const uploadsIdx = normalized.toLowerCase().indexOf("/uploads/");
+    if (uploadsIdx >= 0) {
+      return `${this.backendBase}${normalized.substring(uploadsIdx)}`;
+    }
+    // Absolute filesystem path (Windows drive letter or UNC) with no web route
     if (/^[A-Za-z]:[/\\]/.test(src) || src.startsWith("\\\\")) return "";
     return src;
+  }
+
+  resolveFileUrl(src: string | null | undefined): string {
+    if (!src) return "";
+    if (/^https?:\/\//.test(src)) return src;
+    const normalized = src.replace(/\\/g, "/");
+    if (normalized.startsWith("/uploads/")) {
+      return `${this.backendBase}${normalized}`;
+    }
+    const uploadsIdx = normalized.toLowerCase().indexOf("/uploads/");
+    if (uploadsIdx >= 0) {
+      return `${this.backendBase}${normalized.substring(uploadsIdx)}`;
+    }
+    if (normalized.startsWith("/")) {
+      return `${this.backendBase}${normalized}`;
+    }
+    return normalized;
   }
 
   getAllCafes(): Observable<Cafe[]> {
@@ -339,6 +362,21 @@ export class ApiService {
           const cafes: any[] = res?.data?.content || res?.content || [];
           return cafes.map((c) => this.resolveCafeImages(c));
         }),
+        switchMap((cafes) => {
+          if (cafes.length > 0) {
+            return of(cafes);
+          }
+          return this.getMyCafe().pipe(
+            map((cafe) => (cafe?.id ? [cafe] : [])),
+            catchError(() => of([])),
+          );
+        }),
+        catchError(() =>
+          this.getMyCafe().pipe(
+            map((cafe) => (cafe?.id ? [cafe] : [])),
+            catchError(() => of([])),
+          ),
+        ),
       );
   }
 
@@ -539,9 +577,9 @@ export class ApiService {
   }
 
   getOrdersByStatus(cafeId: number, status: string): Observable<Order[]> {
-    return this.http.get<Order[]>(
-      `${this.baseUrl}/orders/cafe/${cafeId}/status/${status}`,
-    );
+    return this.http
+      .get<any>(`${this.baseUrl}/orders/cafe/${cafeId}/status/${status}`)
+      .pipe(map((res: any) => this.unwrapApiData<Order[]>(res, [])));
   }
 
   createOrder(request: OrderRequest): Observable<Order> {
@@ -741,6 +779,37 @@ export class ApiService {
       );
   }
 
+  uploadCustomerGovtIdDocument(file: File): Observable<{
+    govtIdFileName?: string;
+    govtIdContentType?: string;
+    govtIdDocumentPath?: string;
+    govtIdFileSize?: number;
+  }> {
+    const formData = new FormData();
+    formData.append("file", file);
+    return this.http
+      .post<any>(
+        `${this.baseUrl}/users/profile/self/govt-id-document`,
+        formData,
+      )
+      .pipe(
+        map((res: any) =>
+          this.unwrapApiData(res, {
+            govtIdFileName: "",
+            govtIdContentType: "",
+            govtIdDocumentPath: "",
+            govtIdFileSize: 0,
+          }),
+        ),
+      );
+  }
+
+  deleteCustomerGovtIdDocument(): Observable<any> {
+    return this.http.delete<any>(
+      `${this.baseUrl}/users/profile/self/govt-id-document`,
+    );
+  }
+
   updateCustomerProfile(request: {
     firstName?: string;
     lastName?: string;
@@ -750,6 +819,10 @@ export class ApiService {
     gender?: string;
     govtIdType?: string;
     govtIdNumber?: string;
+    govtIdFileName?: string;
+    govtIdContentType?: string;
+    govtIdDocumentPath?: string;
+    govtIdFileSize?: number;
     joiningDate?: string;
     experienceYears?: number;
     shift?: string;
@@ -770,6 +843,10 @@ export class ApiService {
     gender?: string;
     govtIdType?: string;
     govtIdNumber?: string;
+    govtIdFileName?: string;
+    govtIdContentType?: string;
+    govtIdDocumentPath?: string;
+    govtIdFileSize?: number;
     joiningDate?: string;
     experienceYears?: number;
     shift?: string;
@@ -798,6 +875,10 @@ export class ApiService {
             gender: "",
             govtIdType: "",
             govtIdNumber: "",
+            govtIdFileName: "",
+            govtIdContentType: "",
+            govtIdDocumentPath: "",
+            govtIdFileSize: 0,
             joiningDate: "",
             experienceYears: 0,
             shift: "",
@@ -824,6 +905,10 @@ export class ApiService {
     gender?: string;
     govtIdType?: string;
     govtIdNumber?: string;
+    govtIdFileName?: string;
+    govtIdContentType?: string;
+    govtIdDocumentPath?: string;
+    govtIdFileSize?: number;
     joiningDate?: string;
     experienceYears?: number;
     shift?: string;
@@ -850,6 +935,10 @@ export class ApiService {
           gender: "",
           govtIdType: "",
           govtIdNumber: "",
+          govtIdFileName: "",
+          govtIdContentType: "",
+          govtIdDocumentPath: "",
+          govtIdFileSize: 0,
           joiningDate: "",
           experienceYears: 0,
           shift: "",

@@ -124,10 +124,14 @@ export class AuthService {
   }
 
   login(request: LoginRequest): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.apiUrl}/login`, request, { withCredentials: true }).pipe(
-      tap((response) => this.handleAuthResponse(response)),
-      catchError(this.handleError),
-    );
+    return this.http
+      .post<AuthResponse>(`${this.apiUrl}/login`, request, {
+        withCredentials: true,
+      })
+      .pipe(
+        tap((response) => this.handleAuthResponse(response)),
+        catchError(this.handleError),
+      );
   }
 
   verifyEmail(token: string): Observable<MessageResponse> {
@@ -189,10 +193,12 @@ export class AuthService {
 
   logout(): void {
     // Notify backend to clear the HTTP-only refresh cookie
-    this.http.post(`${this.apiUrl}/logout`, null, { withCredentials: true }).subscribe({
-      next: () => this.clearClientState(),
-      error: () => this.clearClientState()
-    });
+    this.http
+      .post(`${this.apiUrl}/logout`, null, { withCredentials: true })
+      .subscribe({
+        next: () => this.clearClientState(),
+        error: () => this.clearClientState(),
+      });
   }
 
   private clearClientState(): void {
@@ -217,14 +223,15 @@ export class AuthService {
   }
 
   refreshToken(): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.apiUrl}/refresh-token`, null, { withCredentials: true }).pipe(
-      tap((response) => this.handleAuthResponse(response))
-    );
+    return this.http
+      .post<AuthResponse>(`${this.apiUrl}/refresh-token`, null, {
+        withCredentials: true,
+      })
+      .pipe(tap((response) => this.handleAuthResponse(response)));
   }
 
   private handleAuthResponse(response: AuthResponse): void {
     localStorage.setItem(environment.tokenKey, response.token);
-    
 
     const user: User = {
       id: response.userId,
@@ -232,6 +239,7 @@ export class AuthService {
       email: response.email,
       firstName: response.firstName ?? "",
       lastName: response.lastName ?? "",
+      cafeId: response.cafeId,
       roles: response.roles,
       isEmailVerified: response.isEmailVerified,
       isProfileComplete: response.isProfileComplete,

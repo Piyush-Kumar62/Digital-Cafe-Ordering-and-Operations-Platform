@@ -13,6 +13,7 @@ import { forkJoin, of, interval, Subscription } from "rxjs";
 import { catchError, distinctUntilChanged } from "rxjs/operators";
 
 import { ApiService } from "@core/services/api.service";
+import { uppercaseMeridiem } from "@core/utils/date-time-format.util";
 import { AlertService } from "@core/services/alert.service";
 import { OwnerDashboard } from "@shared/models/dashboard.model";
 import { CafeContextService } from "../services/cafe-context.service";
@@ -703,8 +704,13 @@ export class CafeOwnerDashboardComponent
     if (!dateStr) return "-";
     const d = new Date(dateStr);
     return isNaN(d.getTime())
-      ? dateStr
-      : d.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
+      ? uppercaseMeridiem(dateStr)
+      : uppercaseMeridiem(
+          d.toLocaleTimeString("en-IN", {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+        );
   }
 
   refresh(): void {
@@ -737,7 +743,7 @@ export class CafeOwnerDashboardComponent
       minute: "2-digit",
       hour12: true,
     });
-    return `${date} | ${time}`;
+    return `${date} | ${uppercaseMeridiem(time)}`;
   }
 
   get displayName(): string {

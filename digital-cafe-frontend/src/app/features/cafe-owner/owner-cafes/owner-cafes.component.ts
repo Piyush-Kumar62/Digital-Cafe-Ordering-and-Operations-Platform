@@ -11,6 +11,7 @@ import {
 import { of, switchMap } from "rxjs";
 import { ApiService } from "@core/services/api.service";
 import { AlertService } from "@core/services/alert.service";
+import { uppercaseMeridiem } from "@core/utils/date-time-format.util";
 import { CafeContextService } from "../services/cafe-context.service";
 import { Cafe } from "@shared/models/cafe.model";
 import { environment } from "@environments/environment";
@@ -497,7 +498,7 @@ export class OwnerCafesComponent implements OnInit {
 
   formatTime(val: string | null | undefined): string {
     if (!val || val.trim() === "") return "";
-    if (/AM|PM/i.test(val)) return val;
+    if (/AM|PM/i.test(val)) return uppercaseMeridiem(val);
     const parts = val.split(":");
     if (parts.length < 2) return val;
     const h = parseInt(parts[0], 10);

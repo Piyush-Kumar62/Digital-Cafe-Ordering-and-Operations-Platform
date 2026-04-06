@@ -13,6 +13,7 @@ import { filter } from "rxjs/operators";
 import { AuthService } from "@core/auth/auth.service";
 import { ApiService } from "@core/services/api.service";
 import { ThemeService } from "@core/services/theme.service";
+import { uppercaseMeridiem } from "@core/utils/date-time-format.util";
 import { AlertService } from "@core/services/alert.service";
 import { getOwnerRegistrationCompletion } from "@core/utils/owner-profile-completion.util";
 import { CafeContextService } from "../services/cafe-context.service";
@@ -247,7 +248,7 @@ export class OwnerLayoutComponent implements OnInit, OnDestroy {
 
   getLastLoginText(): string {
     if (!this.lastLogin) return "Just now";
-    return this.lastLogin.toLocaleString();
+    return uppercaseMeridiem(this.lastLogin.toLocaleString());
   }
 
   getPageTitle(): string {
@@ -335,7 +336,7 @@ export class OwnerLayoutComponent implements OnInit, OnDestroy {
         id: "owner-notif-1",
         title: "Welcome to Owner Dashboard",
         message: "You can monitor orders, staff and reservations from here.",
-        createdAt: new Date().toLocaleString(),
+        createdAt: uppercaseMeridiem(new Date().toLocaleString()),
         read: false,
       },
     ];
@@ -423,8 +424,8 @@ export class OwnerLayoutComponent implements OnInit, OnDestroy {
       payload?.description ||
       "You have a new notification.";
     const createdAt = payload?.timestamp
-      ? new Date(payload.timestamp).toLocaleString()
-      : new Date().toLocaleString();
+      ? uppercaseMeridiem(new Date(payload.timestamp).toLocaleString())
+      : uppercaseMeridiem(new Date().toLocaleString());
 
     const fingerprint = `${title}|${message}|${createdAt}`;
     const duplicate = this.notifications.some(

@@ -22,9 +22,11 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
@@ -679,28 +681,70 @@ public class PaymentService {
                 ? order.getPlacedAt().toString()
                 : LocalDateTime.now().toString();
         String method = payment.getPaymentMethod() != null ? payment.getPaymentMethod().name().replace('_', ' ') : "-";
+        BigDecimal subtotal = order.getSubtotal() != null ? order.getSubtotal() : safeAmount(payment.getAmount());
+        BigDecimal discount = order.getDiscount() != null ? order.getDiscount() : BigDecimal.ZERO;
+        BigDecimal tax = order.getTax() != null ? order.getTax() : BigDecimal.ZERO;
+        BigDecimal fee = BigDecimal.ZERO;
+        BigDecimal rounding = BigDecimal.ZERO;
+        BigDecimal netPayable = subtotal.subtract(discount).add(tax).add(fee).add(rounding);
 
         String itemLines = "-";
         if (order.getItems() != null && !order.getItems().isEmpty()) {
             itemLines = order.getItems().stream()
-                    .map(i -> String.format("%s x%s (INR %s)", safeString(i.getMenuItemName()), i.getQuantity(), i.getTotalPrice()))
+                    .map(i -> String.format(
+                            "%s||%s||INR %s||INR %s||HSN:-||Notes:-",
+                            safeString(i.getMenuItemName()),
+                            i.getQuantity() != null ? i.getQuantity() : 1,
+                            i.getUnitPrice() != null ? i.getUnitPrice().toPlainString() : "0.00",
+                            i.getTotalPrice() != null ? i.getTotalPrice().toPlainString() : "0.00"
+                    ))
                     .reduce((a, b) -> a + "; " + b)
                     .orElse("-");
         }
 
         return String.format(
-                "Order: %s%nCafe: %s%nAmount Paid: %s %s%nStatus: %s%nMethod: %s%nGateway: %s%nGateway Order ID: %s%nGateway Payment ID: %s%nPayment Time: %s%nBooking: %s%nItems: %s",
+                "Invoice Type: %s%nOrder: %s%nCafe: %s%nCafe Legal Name: %s%nCafe GSTIN: %s%nCafe Address: %s%nCafe Contact: %s%nAmount Paid: %s %s%nSubtotal: %s %s%nDiscount: %s %s%nTax: %s %s%nCGST: %s %s%nSGST: %s %s%nIGST: %s %s%nPlatform / Service Fee: %s %s%nRounding: %s %s%nNet Payable: %s %s%nStatus: %s%nMethod: %s%nPayment Instrument: %s%nGateway: %s%nGateway Order ID: %s%nGateway Payment ID: %s%nPayment Time: %s%nIssue Time: %s%nGenerated At: %s%nTimezone: %s%nBooking: %s%nOrder Channel: %s%nServed By: %s%nCashier: %s%nItems: %s",
+                "Tax Invoice",
                 safeString(order.getOrderNumber()),
                 safeString(order.getCafeName()),
+                safeString(order.getCafeName()),
+                "-",
+                "-",
+                "-",
                 safeString(payment.getCurrency()),
                 payment.getAmount() != null ? payment.getAmount().toPlainString() : "0.00",
+                safeString(payment.getCurrency()),
+                subtotal != null ? subtotal.toPlainString() : "0.00",
+                safeString(payment.getCurrency()),
+                discount.toPlainString(),
+                safeString(payment.getCurrency()),
+                tax.toPlainString(),
+                safeString(payment.getCurrency()),
+                tax.divide(new BigDecimal("2"), 2, RoundingMode.HALF_UP).toPlainString(),
+                safeString(payment.getCurrency()),
+                tax.divide(new BigDecimal("2"), 2, RoundingMode.HALF_UP).toPlainString(),
+                safeString(payment.getCurrency()),
+                "0.00",
+                safeString(payment.getCurrency()),
+                fee.toPlainString(),
+                safeString(payment.getCurrency()),
+                rounding.toPlainString(),
+                safeString(payment.getCurrency()),
+                netPayable.toPlainString(),
                 safeString(payment.getStatus() != null ? payment.getStatus().name() : null),
+                method,
                 method,
                 safeString(gatewayLabel),
                 safeString(payment.getPaymentGatewayOrderId()),
                 safeString(payment.getPaymentGatewayPaymentId()),
                 safeString(completedAt),
+                safeString(completedAt),
+                LocalDateTime.now().toString(),
+                ZoneId.systemDefault().toString(),
                 safeString(order.getBookingNumber()),
+                "WEB",
+                safeString(order.getServedByWaiterName()),
+                safeString(order.getServedByWaiterName()),
                 itemLines
         );
     }
@@ -773,6 +817,10 @@ public class PaymentService {
 
     private String safeString(String value) {
         return value == null ? "" : value;
+    }
+
+    private BigDecimal safeAmount(BigDecimal value) {
+        return value != null ? value : BigDecimal.ZERO;
     }
 
     private OptionalDuplicate checkDuplicateGatewayPaymentId(String gatewayPaymentId, Long currentPaymentId) {

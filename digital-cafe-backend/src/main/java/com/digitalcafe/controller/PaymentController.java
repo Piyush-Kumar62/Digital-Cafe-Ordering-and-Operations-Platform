@@ -26,7 +26,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 import java.util.List;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.stream.Collectors;
 
@@ -270,27 +272,69 @@ public class PaymentController {
     private String buildPaymentDetails(Payment payment, OrderResponse order, String gatewayLabel) {
         String completedAt = formatReceiptTime(payment.getCompletedAt());
         String method = payment.getPaymentMethod() != null ? payment.getPaymentMethod().name().replace('_', ' ') : "-";
+        BigDecimal subtotal = order.getSubtotal() != null ? order.getSubtotal() : safeAmount(payment.getAmount());
+        BigDecimal discount = order.getDiscount() != null ? order.getDiscount() : BigDecimal.ZERO;
+        BigDecimal tax = order.getTax() != null ? order.getTax() : BigDecimal.ZERO;
+        BigDecimal fee = BigDecimal.ZERO;
+        BigDecimal rounding = BigDecimal.ZERO;
+        BigDecimal netPayable = subtotal.subtract(discount).add(tax).add(fee).add(rounding);
 
         String itemLines = "-";
         if (order.getItems() != null && !order.getItems().isEmpty()) {
             itemLines = order.getItems().stream()
-                    .map(i -> String.format("%s x%s (INR %s)", safe(i.getMenuItemName()), i.getQuantity(), i.getTotalPrice()))
+                    .map(i -> String.format(
+                            "%s||%s||INR %s||INR %s||HSN:-||Notes:-",
+                            safe(i.getMenuItemName()),
+                            i.getQuantity() != null ? i.getQuantity() : 1,
+                            i.getUnitPrice() != null ? i.getUnitPrice().toPlainString() : "0.00",
+                            i.getTotalPrice() != null ? i.getTotalPrice().toPlainString() : "0.00"
+                    ))
                     .collect(Collectors.joining("; "));
         }
 
         return String.format(
-                "Order: %s%nCafe: %s%nAmount Paid: %s %s%nStatus: %s%nMethod: %s%nGateway: %s%nGateway Order ID: %s%nGateway Payment ID: %s%nPayment Time: %s%nBooking: %s%nItems: %s",
+                "Invoice Type: %s%nOrder: %s%nCafe: %s%nCafe Legal Name: %s%nCafe GSTIN: %s%nCafe Address: %s%nCafe Contact: %s%nAmount Paid: %s %s%nSubtotal: %s %s%nDiscount: %s %s%nTax: %s %s%nCGST: %s %s%nSGST: %s %s%nIGST: %s %s%nPlatform / Service Fee: %s %s%nRounding: %s %s%nNet Payable: %s %s%nStatus: %s%nMethod: %s%nPayment Instrument: %s%nGateway: %s%nGateway Order ID: %s%nGateway Payment ID: %s%nPayment Time: %s%nIssue Time: %s%nGenerated At: %s%nTimezone: %s%nBooking: %s%nOrder Channel: %s%nServed By: %s%nCashier: %s%nItems: %s",
+                "Tax Invoice",
                 safe(order.getOrderNumber()),
                 safe(order.getCafeName()),
+                safe(order.getCafeName()),
+                "-",
+                "-",
+                "-",
                 safe(payment.getCurrency()),
                 payment.getAmount() != null ? payment.getAmount().toPlainString() : "0.00",
+                safe(payment.getCurrency()),
+                subtotal != null ? subtotal.toPlainString() : "0.00",
+                safe(payment.getCurrency()),
+                discount.toPlainString(),
+                safe(payment.getCurrency()),
+                tax.toPlainString(),
+                safe(payment.getCurrency()),
+                tax.divide(new java.math.BigDecimal("2"), 2, java.math.RoundingMode.HALF_UP).toPlainString(),
+                safe(payment.getCurrency()),
+                tax.divide(new java.math.BigDecimal("2"), 2, java.math.RoundingMode.HALF_UP).toPlainString(),
+                safe(payment.getCurrency()),
+                "0.00",
+                safe(payment.getCurrency()),
+                fee.toPlainString(),
+                safe(payment.getCurrency()),
+                rounding.toPlainString(),
+                safe(payment.getCurrency()),
+                netPayable.toPlainString(),
                 safe(payment.getStatus() != null ? payment.getStatus().name() : null),
+                method,
                 method,
                 safe(gatewayLabel),
                 safe(payment.getPaymentGatewayOrderId()),
                 safe(payment.getPaymentGatewayPaymentId()),
                 completedAt,
+                completedAt,
+                formatReceiptTime(LocalDateTime.now()),
+                ZoneId.systemDefault().toString(),
                 safe(order.getBookingNumber()),
+                "WEB",
+                safe(order.getServedByWaiterName()),
+                safe(order.getServedByWaiterName()),
                 itemLines
         );
     }
@@ -302,5 +346,9 @@ public class PaymentController {
     private String formatReceiptTime(LocalDateTime dateTime) {
         LocalDateTime effective = dateTime != null ? dateTime : LocalDateTime.now();
         return effective.format(RECEIPT_TIME_FORMATTER);
+    }
+
+    private BigDecimal safeAmount(BigDecimal value) {
+        return value != null ? value : BigDecimal.ZERO;
     }
 }

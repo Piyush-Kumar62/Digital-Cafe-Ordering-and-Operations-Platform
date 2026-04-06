@@ -54,16 +54,16 @@ public class EmailServiceImpl implements EmailService {
     private String smtpPassword;
 
     /** The address that appears in the email "From:" header. Must be a real email address. */
-    @Value("${MAIL_FROM_EMAIL:noreply@digitalcafe.com}")
+    @Value("${app.email.from-email:${MAIL_FROM_EMAIL:noreply@digitalcafe.com}}")
     private String fromEmail;
 
-    @Value("${MAIL_ENABLED:true}")
+    @Value("${app.email.enabled:${MAIL_ENABLED:true}}")
     private boolean emailEnabled;
 
     @Value("${MAIL_SKIP_ADMIN:false}")
     private boolean skipAdminRecipients;
 
-    @Value("${EMAIL_FROM_NAME:Digital Cafe Team}")
+    @Value("${app.email.from-name:${EMAIL_FROM_NAME:Digital Cafe Team}}")
     private String fromName;
 
     @Value("${FRONTEND_URL:http://localhost:4200}")

@@ -3,6 +3,8 @@ package com.digitalcafe.service;
 import com.digitalcafe.dto.request.ProfileRequest;
 import com.digitalcafe.dto.response.ProfileResponse;
 
+import java.util.Optional;
+
 /**
  * Service interface for user profile management operations.
  */
@@ -17,6 +19,11 @@ public interface ProfileService {
      * Get profile by user ID
      */
     ProfileResponse getProfileByUserId(Long userId);
+
+    /**
+     * Get profile by user ID when available.
+     */
+    Optional<ProfileResponse> findProfileByUserId(Long userId);
 
     /**
      * Calculate and update profile completion percentage

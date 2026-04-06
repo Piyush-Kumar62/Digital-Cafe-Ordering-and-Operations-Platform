@@ -27,7 +27,11 @@ public class RegisterRequest {
     @NotBlank(message = "Role is required")
     private String role; // ADMIN, CAFE_OWNER, CHEF, WAITER, CUSTOMER
 
+    @Size(max = 50, message = "Government ID type must be at most 50 characters")
     private String govtIdType;
+
+    @Size(max = 20, message = "Government ID number must be at most 20 characters")
+    @Pattern(regexp = "^$|^[A-Za-z0-9-]{4,20}$", message = "Government ID number must be 4 to 20 valid characters")
     private String govtIdNumber;
 
     @Valid

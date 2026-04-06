@@ -35,7 +35,7 @@ public class ProfileRequest {
     private String gender;
 
     @NotBlank(message = "Phone number is required")
-    @Pattern(regexp = "^[0-9]{10,20}$", message = "Phone number must be valid")
+    @Pattern(regexp = "^[0-9]{10}$", message = "Phone number must be exactly 10 digits")
     private String phoneNumber;
 
     private String profilePictureUrl;
@@ -44,6 +44,7 @@ public class ProfileRequest {
     private String govtIdType;
 
     @Size(max = 100, message = "Government ID number is too long")
+    @Pattern(regexp = "^$|^[A-Za-z0-9-]{4,20}$", message = "Government ID number must be 4 to 20 valid characters")
     private String govtIdNumber;
 
     @NotNull(message = "Address is required")

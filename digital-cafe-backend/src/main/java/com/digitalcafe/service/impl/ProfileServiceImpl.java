@@ -20,6 +20,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -111,6 +113,18 @@ public class ProfileServiceImpl implements ProfileService {
                 .orElseThrow(() -> new ResourceNotFoundException("Profile not found for user"));
         loadCollections(profile);
         return profileMapper.toResponse(profile);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<ProfileResponse> findProfileByUserId(Long userId) {
+        Optional<Profile> profileOpt = profileRepository.findWithDetailsByUserId(userId);
+        if (profileOpt.isEmpty()) {
+            return Optional.empty();
+        }
+        Profile profile = profileOpt.get();
+        loadCollections(profile);
+        return Optional.of(profileMapper.toResponse(profile));
     }
 
     @Override

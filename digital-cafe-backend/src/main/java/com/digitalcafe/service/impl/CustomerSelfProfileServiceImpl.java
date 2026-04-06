@@ -10,6 +10,7 @@ import com.digitalcafe.exception.ResourceNotFoundException;
 import com.digitalcafe.repository.ProfileRepository;
 import com.digitalcafe.repository.UserRepository;
 import com.digitalcafe.service.CustomerSelfProfileService;
+import com.digitalcafe.service.DocumentStorageService;
 import com.digitalcafe.storage.FileStorageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
@@ -25,6 +26,7 @@ public class CustomerSelfProfileServiceImpl implements CustomerSelfProfileServic
     private final UserRepository userRepository;
     private final ProfileRepository profileRepository;
     private final FileStorageService fileStorageService;
+    private final DocumentStorageService documentStorageService;
 
     @Override
     @Transactional(readOnly = true)
@@ -43,6 +45,7 @@ public class CustomerSelfProfileServiceImpl implements CustomerSelfProfileServic
                 .orElseGet(() -> {
                     Profile created = new Profile();
                     created.setUser(user);
+                    initializeRequiredProfileFields(created, user);
                     return created;
                 });
 
@@ -113,6 +116,7 @@ public class CustomerSelfProfileServiceImpl implements CustomerSelfProfileServic
             user.setShift(request.getShift().trim());
         }
 
+        initializeRequiredProfileFields(profile, user);
         profileRepository.save(profile);
         user.setProfile(profile);
         int completionPercentage = profile.calculateCompletionPercentage();
@@ -130,6 +134,50 @@ public class CustomerSelfProfileServiceImpl implements CustomerSelfProfileServic
         user.setProfileImageUrl(relativePath);
         userRepository.save(user);
         return relativePath;
+    }
+
+    @Override
+    @Transactional
+    public CustomerSelfProfileResponseDTO uploadGovtIdDocument(Authentication authentication, MultipartFile file) {
+        User user = getAuthenticatedUser(authentication);
+        Profile profile = profileRepository.findByUserId(user.getId())
+                .orElseGet(() -> {
+                    Profile created = new Profile();
+                    created.setUser(user);
+                    initializeRequiredProfileFields(created, user);
+                    return created;
+                });
+
+        DocumentStorageService.StoredDocument storedDocument = documentStorageService.storeGovtIdProof(file);
+        initializeRequiredProfileFields(profile, user);
+        profile.setGovtIdFileName(storedDocument.fileName());
+        profile.setGovtIdContentType(storedDocument.contentType());
+        profile.setGovtIdDocumentPath(storedDocument.storedPath());
+        profile.setGovtIdFileSize(storedDocument.size());
+        profileRepository.save(profile);
+
+        user.setProfile(profile);
+        syncProfileCompletion(user);
+        return toResponse(user);
+    }
+
+    @Override
+    @Transactional
+    public CustomerSelfProfileResponseDTO deleteGovtIdDocument(Authentication authentication) {
+        User user = getAuthenticatedUser(authentication);
+        Profile profile = profileRepository.findByUserId(user.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Profile", "userId", user.getId()));
+
+        profile.setGovtIdFileName(null);
+        profile.setGovtIdContentType(null);
+        profile.setGovtIdDocumentPath(null);
+        profile.setGovtIdFileSize(null);
+        initializeRequiredProfileFields(profile, user);
+        profileRepository.save(profile);
+
+        user.setProfile(profile);
+        syncProfileCompletion(user);
+        return toResponse(user);
     }
 
     @Override
@@ -158,6 +206,33 @@ public class CustomerSelfProfileServiceImpl implements CustomerSelfProfileServic
             return Profile.Gender.valueOf(normalized.toUpperCase());
         } catch (IllegalArgumentException ex) {
             throw new BadRequestException("Invalid gender value: " + value);
+        }
+    }
+
+    private void initializeRequiredProfileFields(Profile profile, User user) {
+        if (profile == null || user == null) {
+            return;
+        }
+
+        String fallbackFirstName = StringUtils.hasText(user.getFirstName())
+                ? user.getFirstName().trim()
+                : "User";
+        String fallbackLastName = StringUtils.hasText(user.getLastName())
+                ? user.getLastName().trim()
+                : "Profile";
+
+        if (!StringUtils.hasText(profile.getFirstName())) {
+            profile.setFirstName(fallbackFirstName);
+        }
+        if (!StringUtils.hasText(profile.getLastName())) {
+            profile.setLastName(fallbackLastName);
+        }
+
+        if (!StringUtils.hasText(user.getFirstName())) {
+            user.setFirstName(fallbackFirstName);
+        }
+        if (!StringUtils.hasText(user.getLastName())) {
+            user.setLastName(fallbackLastName);
         }
     }
 
@@ -224,6 +299,10 @@ public class CustomerSelfProfileServiceImpl implements CustomerSelfProfileServic
                 .gender(profile != null && profile.getGender() != null ? profile.getGender().name() : null)
                 .govtIdType(govtIdType)
                 .govtIdNumber(govtIdNumber)
+                .govtIdFileName(profile != null ? profile.getGovtIdFileName() : null)
+                .govtIdContentType(profile != null ? profile.getGovtIdContentType() : null)
+                .govtIdDocumentPath(profile != null ? profile.getGovtIdDocumentPath() : null)
+                .govtIdFileSize(profile != null ? profile.getGovtIdFileSize() : null)
                 .address(address == null ? null : CustomerSelfProfileResponseDTO.ProfileAddressResponse.builder()
                         .street(address.getStreet())
                         .plotNumber(address.getPlotNumber())

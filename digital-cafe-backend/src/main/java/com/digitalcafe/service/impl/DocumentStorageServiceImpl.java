@@ -56,7 +56,7 @@ public class DocumentStorageServiceImpl implements DocumentStorageService {
             Files.copy(file.getInputStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
             log.info("Stored govt ID proof at {}", targetPath);
             return new StoredDocument(
-                    targetPath.toString(),
+                "/uploads/govt-id-proofs/" + storedFileName,
                     file.getOriginalFilename(),
                     contentType,
                     file.getSize()

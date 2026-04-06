@@ -1,6 +1,7 @@
 package com.digitalcafe.controller;
 
 import com.digitalcafe.dto.request.CustomerSelfProfileUpdateDTO;
+import com.digitalcafe.dto.response.GovtIdDocumentUploadResponseDTO;
 import com.digitalcafe.dto.response.ProfileImageUploadResponseDTO;
 import com.digitalcafe.dto.response.CustomerSelfProfileResponseDTO;
 import com.digitalcafe.service.CustomerSelfProfileService;
@@ -47,6 +48,27 @@ public class UserProfileController {
     ) {
         String imageUrl = customerSelfProfileService.updateProfileImage(authentication, file);
         return ResponseEntity.ok(new ProfileImageUploadResponseDTO(imageUrl));
+    }
+
+    @PostMapping(value = "/self/govt-id-document", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<GovtIdDocumentUploadResponseDTO> uploadGovtIdDocument(
+            Authentication authentication,
+            @RequestParam("file") MultipartFile file
+    ) {
+        CustomerSelfProfileResponseDTO response = customerSelfProfileService.uploadGovtIdDocument(authentication, file);
+        return ResponseEntity.ok(new GovtIdDocumentUploadResponseDTO(
+                response.getGovtIdFileName(),
+                response.getGovtIdContentType(),
+                response.getGovtIdDocumentPath(),
+                response.getGovtIdFileSize()
+        ));
+    }
+
+    @DeleteMapping("/self/govt-id-document")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<CustomerSelfProfileResponseDTO> deleteGovtIdDocument(Authentication authentication) {
+        return ResponseEntity.ok(customerSelfProfileService.deleteGovtIdDocument(authentication));
     }
 
     @DeleteMapping("/self/image")

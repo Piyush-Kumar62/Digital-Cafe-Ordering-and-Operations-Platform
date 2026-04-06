@@ -21,6 +21,10 @@ public class CustomerSelfProfileResponseDTO {
     private String gender;
     private String govtIdType;
     private String govtIdNumber;
+    private String govtIdFileName;
+    private String govtIdContentType;
+    private String govtIdDocumentPath;
+    private Long govtIdFileSize;
     private ProfileAddressResponse address;
     private LocalDate joiningDate;
     private Integer experienceYears;

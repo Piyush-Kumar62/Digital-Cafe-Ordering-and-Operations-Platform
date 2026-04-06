@@ -19,6 +19,6 @@ public class UserAccessPolicy {
         if (isSystemAdmin(user)) {
             return false;
         }
-        return user == null || !user.hasRole(Role.RoleName.CAFE_OWNER);
+        return user != null && user.hasRole(Role.RoleName.CUSTOMER);
     }
 }

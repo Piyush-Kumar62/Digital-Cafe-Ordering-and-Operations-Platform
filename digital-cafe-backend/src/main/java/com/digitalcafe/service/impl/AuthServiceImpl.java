@@ -111,6 +111,8 @@ public class AuthServiceImpl implements AuthService {
     User user = saveUserOrThrow(buildOwnerUser(request, tempPassword, cafeOwnerRole));
     String logoUrl = (logo != null && !logo.isEmpty()) ? fileStorageService.storeMenuItemImage(logo) : null;
     Cafe savedCafe = cafeRepository.save(buildCafe(request, user, logoUrl));
+    user.setCafe(savedCafe);
+    userRepository.save(user);
     persistCafeGallery(savedCafe, galleryImages);
     String verificationTokenStr = saveVerificationToken(user);
     emailService.sendVerificationEmail(user.getEmail(), verificationTokenStr, tempPassword);
@@ -394,6 +396,7 @@ public class AuthServiceImpl implements AuthService {
     cafe.setName(request.getCafeName()); cafe.setDescription(request.getDescription());
     cafe.setAddress(request.getAddress()); cafe.setCity(request.getCity()); cafe.setState(request.getState());
     cafe.setPincode(request.getPincode()); cafe.setPhoneNumber(request.getPhoneNumber());
+    cafe.setEmail(request.getEmail());
     cafe.setOpenTime(request.getOpenTime()); cafe.setCloseTime(request.getCloseTime());
     cafe.setFssaiNumber(normalizeDigits(request.getFssaiNumber()));
     cafe.setGstNumber(normalizeUpper(request.getGstNumber()));

@@ -13,5 +13,9 @@ public interface CustomerSelfProfileService {
 
     String updateProfileImage(Authentication authentication, MultipartFile file);
 
+    CustomerSelfProfileResponseDTO uploadGovtIdDocument(Authentication authentication, MultipartFile file);
+
+    CustomerSelfProfileResponseDTO deleteGovtIdDocument(Authentication authentication);
+
     void deleteProfileImage(Authentication authentication);
 }

@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -25,7 +26,9 @@ class ProfileCompletionFilterTest {
 
     private final UserRepository userRepository = mock(UserRepository.class);
     private final ObjectMapper objectMapper = new ObjectMapper();
-    private final ProfileCompletionFilter filter = new ProfileCompletionFilter(userRepository, objectMapper);
+    private final UserAccessPolicy userAccessPolicy = mock(UserAccessPolicy.class);
+    private final ProfileCompletionFilter filter =
+            new ProfileCompletionFilter(userRepository, objectMapper, userAccessPolicy);
 
     @AfterEach
     void clearContext() {
@@ -41,6 +44,8 @@ class ProfileCompletionFilterTest {
         user.setIsEmailVerified(false);
         user.setIsProfileComplete(true);
         when(userRepository.findByEmail("customer@test.com")).thenReturn(Optional.of(user));
+        when(userAccessPolicy.requiresEmailVerification(any(User.class))).thenReturn(true);
+        when(userAccessPolicy.requiresProfileCompletion(any(User.class))).thenReturn(true);
 
         MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/customer/orders");
         MockHttpServletResponse response = new MockHttpServletResponse();
@@ -61,6 +66,8 @@ class ProfileCompletionFilterTest {
         user.setIsEmailVerified(true);
         user.setIsProfileComplete(false);
         when(userRepository.findByEmail("customer@test.com")).thenReturn(Optional.of(user));
+        when(userAccessPolicy.requiresEmailVerification(any(User.class))).thenReturn(true);
+        when(userAccessPolicy.requiresProfileCompletion(any(User.class))).thenReturn(true);
 
         MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/customer/orders");
         MockHttpServletResponse response = new MockHttpServletResponse();

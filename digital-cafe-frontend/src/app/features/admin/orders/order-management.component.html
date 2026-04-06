@@ -45,7 +45,11 @@
               {{ order.totalAmount | currency: "INR" }}
             </td>
             <td>
-              <span class="status-pill">{{ order.status }}</span>
+              <span
+                class="status-pill"
+                [ngClass]="getOrderStatusClass(order.status)"
+                >{{ order.status }}</span
+              >
             </td>
             <td
               class="single-line-cell payment-cell"
@@ -57,10 +61,14 @@
               "
             >
               <span class="meta-label">Status:</span>
-              <span class="meta-value">{{ order.payment?.status || "-" }}</span>
+              <span
+                class="meta-value payment-pill"
+                [ngClass]="getPaymentStatusClass(order.payment?.status)"
+                >{{ order.payment?.status || "-" }}</span
+              >
               <span class="meta-sep">|</span>
               <span class="meta-label">Txn:</span>
-              <span class="meta-value mono-inline">{{
+              <span class="meta-value mono-inline txn-pill">{{
                 order.payment?.transactionId || "-"
               }}</span>
             </td>

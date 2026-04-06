@@ -4,6 +4,7 @@ import { FormsModule } from "@angular/forms";
 import { ApiService } from "@core/services/api.service";
 import { AlertService } from "@core/services/alert.service";
 import { Cafe } from "@shared/models/cafe.model";
+import { uppercaseMeridiem } from "@core/utils/date-time-format.util";
 
 @Component({
   selector: "app-cafe-management",
@@ -141,7 +142,17 @@ export class CafeManagementComponent implements OnInit {
   fmtDate(value?: string): string {
     if (!value) return "-";
     const d = new Date(value);
-    return Number.isNaN(d.getTime()) ? value : d.toLocaleString();
+    if (Number.isNaN(d.getTime())) return value;
+    const formatted = d.toLocaleString("en-IN", {
+      year: "numeric",
+      month: "numeric",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: true,
+    });
+    return uppercaseMeridiem(formatted);
   }
 
   ownerLabel(cafe: Cafe): string {

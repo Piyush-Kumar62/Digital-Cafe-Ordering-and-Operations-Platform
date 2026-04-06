@@ -17,6 +17,7 @@ import { filter } from "rxjs/operators";
 
 import { AuthService } from "@core/auth/auth.service";
 import { ThemeService } from "@core/services/theme.service";
+import { uppercaseMeridiem } from "@core/utils/date-time-format.util";
 import { AlertService } from "@core/services/alert.service";
 import { AdminProfileService } from "../profile/admin-profile.service";
 import { WebSocketService } from "@core/websocket/websocket.service";
@@ -69,9 +70,12 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
   private profileWsSub?: Subscription;
   private adminNotificationSub?: Subscription;
   private adminNotificationGlobalSub?: Subscription;
+  private adminOrderNotificationSub?: Subscription;
   private wsDestination: string | null = null;
   private notificationDestination: string | null = null;
   private globalNotificationDestination: string | null = null;
+  private adminOrderDestination: string | null = null;
+  private currentWsBindingKey: string | null = null;
   @ViewChild("profileContainer", { static: false })
   profileContainer!: ElementRef;
   @ViewChild("notificationContainer", { static: false })
@@ -171,13 +175,18 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
     this.adminProfileImage = this.resolveImageUrl(
       this.currentUser?.avatarUrl || "",
     );
-    this.currentUserSub = this.authService.currentUser.subscribe((user) => {
-      this.currentUser = user;
-      this.adminProfileImage = this.resolveImageUrl(user?.avatarUrl || "");
-    });
-    this.loadAdminProfileForHeader();
     this.bindProfileRealtimeUpdates();
     this.bindAdminNotifications();
+    this.currentUserSub = this.authService.currentUser.subscribe((user) => {
+      const previousBindingKey = this.currentWsBindingKey;
+      this.currentUser = user;
+      this.adminProfileImage = this.resolveImageUrl(user?.avatarUrl || "");
+      const nextBindingKey = this.getWsBindingKey();
+      if (previousBindingKey !== nextBindingKey) {
+        this.rebindAdminRealtime();
+      }
+    });
+    this.loadAdminProfileForHeader();
     this.updateRouteState(this.router.url);
     this.routerEventsSub = this.router.events
       .pipe(filter((event) => event instanceof NavigationEnd))
@@ -190,18 +199,7 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.routerEventsSub?.unsubscribe();
     this.currentUserSub?.unsubscribe();
-    this.profileWsSub?.unsubscribe();
-    this.adminNotificationSub?.unsubscribe();
-    this.adminNotificationGlobalSub?.unsubscribe();
-    if (this.wsDestination) {
-      this.webSocketService.unsubscribe(this.wsDestination);
-    }
-    if (this.notificationDestination) {
-      this.webSocketService.unsubscribe(this.notificationDestination);
-    }
-    if (this.globalNotificationDestination) {
-      this.webSocketService.unsubscribe(this.globalNotificationDestination);
-    }
+    this.unbindAdminRealtime();
   }
 
   toggleSidebar(): void {
@@ -371,7 +369,9 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
     if (Number.isNaN(date.getTime())) {
       return "";
     }
-    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    return uppercaseMeridiem(
+      date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+    );
   }
 
   getNotificationSeverityClass(severity: "info" | "warning" | "error"): string {
@@ -430,10 +430,12 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
   }
 
   private bindProfileRealtimeUpdates(): void {
-    const userId = this.authService.currentUserValue?.id;
+    const userId =
+      this.currentUser?.id || this.authService.currentUserValue?.id;
     if (!userId) {
       return;
     }
+    this.currentWsBindingKey = this.getWsBindingKey();
     this.wsDestination = `/topic/profile/${userId}`;
     this.profileWsSub = this.webSocketService
       .watchDestination<AdminProfile>(this.wsDestination)
@@ -444,7 +446,8 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
   }
 
   private bindAdminNotifications(): void {
-    const userId = this.authService.currentUserValue?.id;
+    const userId =
+      this.currentUser?.id || this.authService.currentUserValue?.id;
     if (!userId) {
       return;
     }
@@ -464,6 +467,54 @@ export class AdminLayoutComponent implements OnInit, OnDestroy {
         next: (payload) =>
           this.ngZone.run(() => this.pushNotification(payload)),
       });
+
+    this.adminOrderDestination = "/topic/admin/orders";
+    this.adminOrderNotificationSub = this.webSocketService
+      .watchDestination<any>(this.adminOrderDestination)
+      .subscribe({
+        next: (payload) =>
+          this.ngZone.run(() => this.pushNotification(payload)),
+      });
+  }
+
+  private rebindAdminRealtime(): void {
+    this.unbindAdminRealtime();
+    this.bindProfileRealtimeUpdates();
+    this.bindAdminNotifications();
+  }
+
+  private unbindAdminRealtime(): void {
+    this.profileWsSub?.unsubscribe();
+    this.adminNotificationSub?.unsubscribe();
+    this.adminNotificationGlobalSub?.unsubscribe();
+    this.adminOrderNotificationSub?.unsubscribe();
+    this.profileWsSub = undefined;
+    this.adminNotificationSub = undefined;
+    this.adminNotificationGlobalSub = undefined;
+    this.adminOrderNotificationSub = undefined;
+
+    if (this.wsDestination) {
+      this.webSocketService.unsubscribe(this.wsDestination);
+      this.wsDestination = null;
+    }
+    if (this.notificationDestination) {
+      this.webSocketService.unsubscribe(this.notificationDestination);
+      this.notificationDestination = null;
+    }
+    if (this.globalNotificationDestination) {
+      this.webSocketService.unsubscribe(this.globalNotificationDestination);
+      this.globalNotificationDestination = null;
+    }
+    if (this.adminOrderDestination) {
+      this.webSocketService.unsubscribe(this.adminOrderDestination);
+      this.adminOrderDestination = null;
+    }
+    this.currentWsBindingKey = null;
+  }
+
+  private getWsBindingKey(): string {
+    const userId = this.currentUser?.id ?? "no-user";
+    return String(userId);
   }
 
   private applyAdminProfileToHeader(profile: AdminProfile): void {

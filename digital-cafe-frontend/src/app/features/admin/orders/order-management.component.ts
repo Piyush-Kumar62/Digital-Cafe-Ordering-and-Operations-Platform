@@ -3,6 +3,7 @@ import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
 import { ApiService } from "@core/services/api.service";
 import { AlertService } from "@core/services/alert.service";
+import { uppercaseMeridiem } from "@core/utils/date-time-format.util";
 import { Order } from "@shared/models/order.model";
 import { Cafe } from "@shared/models/cafe.model";
 
@@ -156,6 +157,27 @@ export class OrderManagementComponent implements OnInit, OnDestroy {
   fmtDate(value?: string): string {
     if (!value) return "-";
     const d = new Date(value);
-    return Number.isNaN(d.getTime()) ? value : d.toLocaleString();
+    return Number.isNaN(d.getTime())
+      ? uppercaseMeridiem(value)
+      : uppercaseMeridiem(d.toLocaleString());
+  }
+
+  getOrderStatusClass(status?: string): string {
+    const value = String(status || "").toUpperCase();
+    if (value === "PLACED") return "status-placed";
+    if (value === "PREPARING") return "status-preparing";
+    if (value === "READY") return "status-ready";
+    if (value === "SERVED") return "status-served";
+    if (value === "CANCELLED") return "status-cancelled";
+    if (value === "PENDING_PAYMENT") return "status-pending-payment";
+    return "status-default";
+  }
+
+  getPaymentStatusClass(status?: string): string {
+    const value = String(status || "").toUpperCase();
+    if (value === "CAPTURED") return "payment-captured";
+    if (value === "PENDING") return "payment-pending";
+    if (value === "CANCELLED" || value === "FAILED") return "payment-failed";
+    return "payment-default";
   }
 }

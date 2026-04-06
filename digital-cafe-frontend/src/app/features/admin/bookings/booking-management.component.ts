@@ -3,6 +3,7 @@ import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
 import { ApiService } from "@core/services/api.service";
 import { AlertService } from "@core/services/alert.service";
+import { uppercaseMeridiem } from "@core/utils/date-time-format.util";
 import { Booking } from "@shared/models/booking.model";
 import { Cafe } from "@shared/models/cafe.model";
 
@@ -158,7 +159,9 @@ export class BookingManagementComponent implements OnInit, OnDestroy {
   fmtDate(value?: string): string {
     if (!value) return "-";
     const d = new Date(value);
-    return Number.isNaN(d.getTime()) ? value : d.toLocaleString();
+    return Number.isNaN(d.getTime())
+      ? uppercaseMeridiem(value)
+      : uppercaseMeridiem(d.toLocaleString());
   }
 
   customerLabel(booking: Booking): string {

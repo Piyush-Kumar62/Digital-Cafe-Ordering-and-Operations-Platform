@@ -9,50 +9,52 @@
     <span class="meta">Total: {{ filteredCafes.length }}</span>
   </div>
 
-  <div class="card table-wrap" *ngIf="filteredCafes.length; else emptyState">
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Owner</th>
-          <th>Owner ID</th>
-          <th>Location</th>
-          <th>Contact</th>
-          <th>Created</th>
-          <th class="status-cell">Status</th>
-          <th class="actions-cell">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let cafe of pagedCafes">
-          <td>{{ cafe.name }}</td>
-          <td>{{ ownerLabel(cafe) }}</td>
-          <td>{{ cafe.ownerId || "-" }}</td>
-          <td>{{ cafe.city }}, {{ cafe.state }}</td>
-          <td>{{ cafe.email }}</td>
-          <td>{{ fmtDate(cafe.createdAt) }}</td>
-          <td class="status-cell">
-            <span
-              class="badge"
-              [class.active]="cafe.isActive"
-              [class.inactive]="!cafe.isActive"
-            >
-              {{ cafe.isActive ? "ACTIVE" : "INACTIVE" }}
-            </span>
-          </td>
-          <td class="actions-cell">
-            <div class="actions">
-              <button class="btn-info" (click)="toggleStatus(cafe)">
-                {{ cafe.isActive ? "Deactivate" : "Activate" }}
-              </button>
-              <button class="btn-danger" (click)="deleteCafe(cafe)">
-                Delete
-              </button>
-            </div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+  <div class="card" *ngIf="filteredCafes.length; else emptyState">
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Owner</th>
+            <th>Owner ID</th>
+            <th>Location</th>
+            <th>Contact</th>
+            <th>Created</th>
+            <th class="status-cell">Status</th>
+            <th class="actions-cell">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let cafe of pagedCafes">
+            <td>{{ cafe.name }}</td>
+            <td>{{ ownerLabel(cafe) }}</td>
+            <td>{{ cafe.ownerId || "-" }}</td>
+            <td>{{ cafe.city }}, {{ cafe.state }}</td>
+            <td>{{ cafe.email }}</td>
+            <td>{{ fmtDate(cafe.createdAt) }}</td>
+            <td class="status-cell">
+              <span
+                class="badge"
+                [class.active]="cafe.isActive"
+                [class.inactive]="!cafe.isActive"
+              >
+                {{ cafe.isActive ? "ACTIVE" : "INACTIVE" }}
+              </span>
+            </td>
+            <td class="actions-cell">
+              <div class="actions">
+                <button class="btn-info" (click)="toggleStatus(cafe)">
+                  {{ cafe.isActive ? "Deactivate" : "Activate" }}
+                </button>
+                <button class="btn-danger" (click)="deleteCafe(cafe)">
+                  Delete
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
     <div class="pager">
       <div class="pager-left">
         <span class="range-text"

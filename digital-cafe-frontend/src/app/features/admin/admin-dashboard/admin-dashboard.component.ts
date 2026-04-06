@@ -12,6 +12,7 @@ import { ApiService } from "@core/services/api.service";
 import { AlertService } from "@core/services/alert.service";
 import { AdminDashboard } from "@shared/models/dashboard.model";
 import { User } from "@shared/models/auth.model";
+import { uppercaseMeridiem } from "@core/utils/date-time-format.util";
 import { AuthService } from "@core/auth/auth.service";
 import { Chart, ChartConfiguration, registerables } from "chart.js";
 
@@ -100,7 +101,7 @@ export class AdminDashboardComponent
       minute: "2-digit",
       hour12: true,
     });
-    return `${date} | ${time}`;
+    return `${date} | ${uppercaseMeridiem(time)}`;
   }
 
   get displayName(): string {

@@ -83,12 +83,6 @@
     <!-- Navigation Menu -->
     <nav class="flex-1 px-4 py-6">
       <div class="space-y-2">
-        <p
-          *ngIf="!isSidebarCollapsed"
-          class="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4"
-        >
-          Main Navigation
-        </p>
         <a
           *ngFor="let item of navigationItems"
           [routerLink]="item.route"

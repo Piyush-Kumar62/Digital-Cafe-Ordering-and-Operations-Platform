@@ -42,6 +42,8 @@
   border: 1px solid #dbe4f0;
   border-radius: 14px;
   padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
   box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
   transition:
     transform 0.2s ease,
@@ -57,9 +59,11 @@
 }
 .table-wrap {
   overflow-x: auto;
+  border-radius: 10px;
 }
 table {
   width: 100%;
+  min-width: 1200px;
   border-collapse: collapse;
 }
 th,
@@ -68,6 +72,7 @@ td {
   border-bottom: 1px solid #e2e8f0;
   padding: 0.68rem;
   color: #0f172a;
+  white-space: nowrap;
 }
 th {
   color: #475569;
@@ -109,6 +114,83 @@ tbody tr:hover {
 .actions button {
   white-space: nowrap;
 }
+
+.pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.8rem 0.25rem 0.15rem;
+}
+
+.pager-left {
+  flex: 1;
+  min-width: 0;
+}
+
+.range-text {
+  display: inline-block;
+  color: #64748b;
+  font-size: 0.86rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.pager-right {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: nowrap;
+  max-width: 100%;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.page-btn {
+  border: 1px solid #cbd5e1;
+  border-radius: 9px;
+  background: #ffffff;
+  color: #334155;
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1;
+  padding: 0.45rem 0.62rem;
+  min-width: 2rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.page-btn.active {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #ffffff;
+}
+
+.page-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.nav-btn {
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+}
+
+@media (max-width: 760px) {
+  .pager {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .pager-left {
+    text-align: center;
+  }
+
+  .pager-right {
+    justify-content: flex-start;
+  }
+}
+
 button {
   border: none;
   border-radius: 9px;

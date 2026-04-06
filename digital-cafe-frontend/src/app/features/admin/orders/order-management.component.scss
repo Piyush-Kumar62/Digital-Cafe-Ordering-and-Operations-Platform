@@ -136,6 +136,48 @@ tbody tr:hover {
   white-space: nowrap;
 }
 
+.status-pill.status-placed {
+  background: #dbeafe;
+  border-color: #93c5fd;
+  color: #1d4ed8;
+}
+
+.status-pill.status-preparing {
+  background: #ffedd5;
+  border-color: #fdba74;
+  color: #c2410c;
+}
+
+.status-pill.status-ready {
+  background: #dcfce7;
+  border-color: #86efac;
+  color: #15803d;
+}
+
+.status-pill.status-served {
+  background: #ccfbf1;
+  border-color: #5eead4;
+  color: #0f766e;
+}
+
+.status-pill.status-cancelled {
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #b91c1c;
+}
+
+.status-pill.status-pending-payment {
+  background: #fef9c3;
+  border-color: #fde047;
+  color: #a16207;
+}
+
+.status-pill.status-default {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #334155;
+}
+
 .single-line-cell {
   white-space: nowrap;
 }
@@ -161,6 +203,46 @@ tbody tr:hover {
 .meta-value {
   color: var(--om-text);
   font-size: 0.92rem;
+}
+
+.payment-pill,
+.txn-pill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  padding: 0.16rem 0.5rem;
+  line-height: 1.2;
+}
+
+.payment-pill.payment-captured {
+  background: #dcfce7;
+  border-color: #86efac;
+  color: #166534;
+}
+
+.payment-pill.payment-pending {
+  background: #fef9c3;
+  border-color: #fde047;
+  color: #854d0e;
+}
+
+.payment-pill.payment-failed {
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #991b1b;
+}
+
+.payment-pill.payment-default {
+  background: #e2e8f0;
+  border-color: #cbd5e1;
+  color: #334155;
+}
+
+.txn-pill {
+  background: #eef2ff;
+  border-color: #c7d2fe;
+  color: #3730a3;
 }
 
 .meta-sep {

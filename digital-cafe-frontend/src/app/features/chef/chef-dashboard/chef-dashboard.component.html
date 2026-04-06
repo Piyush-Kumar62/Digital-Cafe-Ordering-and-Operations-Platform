@@ -9,12 +9,35 @@
         >!
       </h1>
       <p class="dashboard-welcome__subtitle">{{ dateTimeFormatted }}</p>
-      <p class="dashboard-welcome__label">Chef Dashboard</p>
+      <div class="dashboard-welcome__refresh">
+        <button
+          class="refresh-btn"
+          (click)="refreshOrders()"
+          [disabled]="refreshing"
+        >
+          <i class="bi bi-arrow-clockwise" [class.spinning]="refreshing"></i>
+          Refresh
+        </button>
+        <p class="dashboard-welcome__updated">
+          Updated {{ lastRefreshed | date: "shortTime" }}
+        </p>
+      </div>
     </div>
 
     <div class="dashboard-welcome__right">
-      <div class="dashboard-welcome__avatar">
+      <div
+        class="dashboard-welcome__avatar"
+        [class.has-image]="!!heroAvatarImage"
+      >
+        <img
+          *ngIf="heroAvatarImage"
+          [src]="heroAvatarImage"
+          [alt]="displayName + ' profile photo'"
+          (error)="onHeroAvatarError()"
+        />
+        <span *ngIf="!heroAvatarImage">
         {{ displayName.charAt(0).toUpperCase() }}
+        </span>
       </div>
       <div class="dashboard-welcome__mini">
         <div class="welcome-mini-stat">
@@ -26,14 +49,6 @@
           <span>Preparing</span>
         </div>
       </div>
-      <button
-        class="refresh-btn"
-        (click)="refreshOrders()"
-        [disabled]="refreshing"
-      >
-        <i class="bi bi-arrow-clockwise" [class.spinning]="refreshing"></i>
-        Refresh
-      </button>
     </div>
   </div>
 

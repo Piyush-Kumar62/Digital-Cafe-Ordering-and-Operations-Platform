@@ -8,15 +8,35 @@
         >!
       </h1>
       <p class="wd-hero__time">{{ dateTimeFormatted }}</p>
-      <p class="wd-hero__label">Waiter Dashboard</p>
       <p class="wd-hero__sub" *ngIf="cafeName">
         <span class="material-icons">location_on</span>
         {{ cafeName }}
       </p>
+      <div class="wd-hero__refresh">
+        <button
+          class="wd-refresh-btn"
+          (click)="refreshData()"
+          [disabled]="refreshing"
+        >
+          <span class="material-icons" [class.spin]="refreshing">refresh</span>
+          Refresh
+        </button>
+        <p class="wd-last-updated">
+          Updated {{ lastRefreshed | date: "shortTime" }}
+        </p>
+      </div>
     </div>
     <div class="wd-hero__right">
-      <div class="wd-hero__avatar">
+      <div class="wd-hero__avatar" [class.has-image]="!!heroAvatarImage">
+        <img
+          *ngIf="heroAvatarImage"
+          [src]="heroAvatarImage"
+          [alt]="displayName + ' profile photo'"
+          (error)="onHeroAvatarError()"
+        />
+        <span *ngIf="!heroAvatarImage">
         {{ displayName.charAt(0).toUpperCase() }}
+        </span>
       </div>
       <div class="wd-hero__mini">
         <div class="wd-hero-mini-stat">
@@ -28,17 +48,6 @@
           <span>Served</span>
         </div>
       </div>
-      <button
-        class="wd-refresh-btn"
-        (click)="refreshData()"
-        [disabled]="refreshing"
-      >
-        <span class="material-icons" [class.spin]="refreshing">refresh</span>
-        Refresh
-      </button>
-      <p class="wd-last-updated">
-        Updated {{ lastRefreshed | date: "shortTime" }}
-      </p>
     </div>
   </div>
 

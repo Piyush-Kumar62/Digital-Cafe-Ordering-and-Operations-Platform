@@ -22,10 +22,12 @@ export class ChefDashboardComponent implements OnInit, OnDestroy {
   readyOrders: Order[] = [];
   cafeId: number | null = null;
   currentTime = new Date();
+  lastRefreshed = new Date();
   currentUser: User | null = null;
   isLoading = true;
   refreshing = false;
   hasLoadedOnce = false;
+  heroAvatarLoadFailed = false;
   private destroy$ = new Subject<void>();
 
   readonly pageSize = 10;
@@ -160,6 +162,18 @@ export class ChefDashboardComponent implements OnInit, OnDestroy {
     );
   }
 
+  get heroAvatarImage(): string {
+    if (this.heroAvatarLoadFailed) return "";
+    const raw =
+      this.currentUser?.profileImageUrl || this.currentUser?.avatarUrl || "";
+    if (!raw) return "";
+    return this.apiService.resolveImageUrl(raw);
+  }
+
+  onHeroAvatarError(): void {
+    this.heroAvatarLoadFailed = true;
+  }
+
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
@@ -176,6 +190,7 @@ export class ChefDashboardComponent implements OnInit, OnDestroy {
     this.apiService.getChefOrders().subscribe({
       next: (orders) => {
         this.categorizeOrders(orders);
+        this.lastRefreshed = new Date();
         this.hasLoadedOnce = true;
         this.isLoading = false;
         this.refreshing = false;

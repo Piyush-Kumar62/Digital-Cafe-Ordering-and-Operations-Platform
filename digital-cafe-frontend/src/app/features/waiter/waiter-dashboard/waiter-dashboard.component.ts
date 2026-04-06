@@ -33,6 +33,7 @@ export class WaiterDashboardComponent implements OnInit, OnDestroy {
   currentTime = new Date();
   currentUser: User | null = null;
   errorMessage = "";
+  heroAvatarLoadFailed = false;
 
   private destroy$ = new Subject<void>();
 
@@ -176,6 +177,18 @@ export class WaiterDashboardComponent implements OnInit, OnDestroy {
       this.currentUser?.username ||
       "Waiter"
     );
+  }
+
+  get heroAvatarImage(): string {
+    if (this.heroAvatarLoadFailed) return "";
+    const raw =
+      this.currentUser?.profileImageUrl || this.currentUser?.avatarUrl || "";
+    if (!raw) return "";
+    return this.apiService.resolveImageUrl(raw);
+  }
+
+  onHeroAvatarError(): void {
+    this.heroAvatarLoadFailed = true;
   }
 
   refreshData(): void {

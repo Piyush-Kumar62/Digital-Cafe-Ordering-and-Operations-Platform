@@ -412,9 +412,6 @@ public class DevDataInitializer implements CommandLineRunner {
             long demoBefore = countDemoCafes();
             log.info("[DevSeed] Existing cafes detected (total={}, demo={}) — running demo top-up and metadata repair.",
                     totalBefore, demoBefore);
-            // Print credentials early so local developers can sign in immediately,
-            // even while the idempotent top-up/repair work is still running.
-            logAllCredentials();
             // Top-up demo cafes for owners so public UI can show the complete dev catalog.
             createAllCafes(owner1, owner2, owner3, owner4, owner5);
             repairExistingMetadata(owner1);
@@ -466,7 +463,6 @@ public class DevDataInitializer implements CommandLineRunner {
                 log.warn("[DevSeed] Demo cafes below expected count (expected={}, actual={}).", EXPECTED_DEMO_CAFES, demoAfter);
             }
 
-            logAllCredentials();
             log.info("[DevSeed] DevDataInitializer completed (existing-data mode).");
             return;
         }
@@ -501,8 +497,11 @@ public class DevDataInitializer implements CommandLineRunner {
         long totalWaiters = userRepository.findByRoleName(Role.RoleName.WAITER).size();
         log.info("[DevSeed] Seed complete | cafes={} demoCafes={} tables={} menuItems={} chefs={} waiters={} customers={} orders={}",
             cafes.size(), countDemoCafes(), totalTables, totalMenuItems, totalChefs, totalWaiters, customers.size(), totalOrders);
-        logAllCredentials();
         log.info("[DevSeed] DevDataInitializer completed.");
+    }
+
+    public void logCredentialsSummary() {
+        logAllCredentials();
     }
 
     private long countDemoCafes() {

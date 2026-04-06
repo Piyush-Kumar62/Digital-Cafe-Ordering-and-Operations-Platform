@@ -1,6 +1,7 @@
 package com.digitalcafe.exception;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.catalina.connector.ClientAbortException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -24,6 +25,13 @@ import java.util.Map;
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(ClientAbortException.class)
+    public ResponseEntity<Void> handleClientAbortException(ClientAbortException ex, WebRequest request) {
+        log.debug("error_tag=CLIENT_ABORT path={} message={}",
+                resolvePath(request), ex.getMessage());
+        return ResponseEntity.noContent().build();
+    }
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleResourceNotFoundException(

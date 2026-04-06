@@ -4,6 +4,21 @@
 # Runtime artifacts
 /uploads/
 *.log
+logs/
+*.tmp
+*.temp
+
+# Test/runtime outputs
+/.surefire-*
+/.failsafe-*
+
+# IDE metadata
+.idea/
+*.iml
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
 
 # Local env file
 .env
@@ -11,3 +26,15 @@
 # Local profile/env files
 env/
 .env.*
+
+# Secrets and keys
+*.pem
+*.key
+*.p12
+*.jks
+credentials.json
+secrets.json
+
+# Local certificate directory contents (keep placeholder only)
+certs/*
+!certs/.gitkeep

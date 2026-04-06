@@ -42,7 +42,24 @@ testem.log
 .env
 .env.local
 .env.*.local
+.env.*
 
 # System files
 .DS_Store
 Thumbs.db
+
+# Runtime/downloaded assets (generated or local)
+/src/assets/downloads/
+
+# Cypress artifacts
+/cypress/screenshots/
+/cypress/videos/
+/cypress/downloads/
+
+# Secrets and certs
+*.pem
+*.key
+*.p12
+*.jks
+credentials.json
+secrets.json

@@ -38,7 +38,8 @@
   --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.4);
 }
 
-/* PAGE */.wd-page {
+/* PAGE */
+.wd-page {
   padding: 10px;
   width: 100%;
   max-width: 100%;
@@ -55,7 +56,8 @@
   }
 }
 
-/* HERO HEADER */.wd-hero {
+/* HERO HEADER */
+.wd-hero {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -149,6 +151,12 @@
   gap: 0.7rem;
   flex-shrink: 0;
 }
+.wd-last-updated {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+}
 
 .wd-hero__avatar {
   width: 72px;
@@ -225,7 +233,8 @@
   }
 }
 
-/* STATS STRIP */.wd-stats {
+/* STATS STRIP */
+.wd-stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr));
   gap: 14px;
@@ -309,7 +318,8 @@
   animation: wdPulse 2s ease infinite;
 }
 
-/* SECTION HEADER */.wd-section-bar {
+/* SECTION HEADER */
+.wd-section-bar {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
@@ -352,6 +362,51 @@
 }
 
 .wd-badge {
+  .wd-sync {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .wd-sync__info {
+    margin: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+
+    .material-icons {
+      font-size: 0.95rem;
+      color: var(--accent);
+    }
+  }
+  .wd-sync__error {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(239, 68, 68, 0.25);
+    background: rgba(239, 68, 68, 0.08);
+    color: #b91c1c;
+    font-size: 0.8rem;
+    font-weight: 600;
+
+    .material-icons {
+      font-size: 0.95rem;
+    }
+  }
+  .wd-sync__retry {
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 8px;
+    background: #fff;
+    color: #b91c1c;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 5px 10px;
+    cursor: pointer;
+  }
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -365,7 +420,8 @@
   font-weight: 700;
 }
 
-/* LOADING */.wd-loading {
+/* LOADING */
+.wd-loading {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -384,7 +440,8 @@
   animation: wdSpin 0.8s linear infinite;
 }
 
-/* ORDER CARDS GRID */.wd-orders-grid {
+/* ORDER CARDS GRID */
+.wd-orders-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
   gap: 16px;
@@ -459,6 +516,33 @@
 }
 
 .wd-badge-ready {
+  .wd-badge-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border: 1px solid transparent;
+  }
+  .wd-badge-status--placed {
+    background: rgba(245, 158, 11, 0.12);
+    border-color: rgba(245, 158, 11, 0.25);
+    color: #b45309;
+  }
+  .wd-badge-status--prep {
+    background: rgba(59, 130, 246, 0.12);
+    border-color: rgba(59, 130, 246, 0.25);
+    color: #1d4ed8;
+  }
+  .wd-badge-status--ready {
+    background: rgba(16, 185, 129, 0.12);
+    border-color: rgba(16, 185, 129, 0.25);
+    color: #047857;
+  }
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -617,6 +701,36 @@
 }
 
 .wd-serve-btn {
+  .wd-queue-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 14px;
+    border: none;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #fff;
+    cursor: default;
+    .material-icons {
+      font-size: 1rem;
+    }
+  }
+  .wd-queue-btn--placed {
+    background: linear-gradient(135deg, #64748b, #475569);
+    box-shadow: 0 4px 14px rgba(100, 116, 139, 0.3);
+  }
+  .wd-queue-btn--prep {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
+  }
+  .wd-queue-btn--ready {
+    background: linear-gradient(135deg, #10b981, #059669);
+    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+  }
+  .wd-empty--compact {
+    padding: 20px 16px;
+  }
   display: flex;
   align-items: center;
   gap: 7px;
@@ -645,7 +759,8 @@
   }
 }
 
-/* EMPTY */.wd-empty {
+/* EMPTY */
+.wd-empty {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -685,7 +800,8 @@
   }
 }
 
-/* PAGER */.wd-pager {
+/* PAGER */
+.wd-pager {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -752,7 +868,8 @@
   }
 }
 
-/* ANIMATIONS */@keyframes wdFadeIn {
+/* ANIMATIONS */
+@keyframes wdFadeIn {
   from {
     opacity: 0;
     transform: translateY(8px);

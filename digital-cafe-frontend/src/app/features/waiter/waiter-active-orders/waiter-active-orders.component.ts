@@ -4,6 +4,7 @@ import { FormsModule } from "@angular/forms";
 import { AuthService } from "@core/auth/auth.service";
 import { AlertService } from "@core/services/alert.service";
 import { ApiService } from "@core/services/api.service";
+import { uppercaseMeridiem } from "@core/utils/date-time-format.util";
 import { WebSocketService } from "@core/websocket/websocket.service";
 import { Order, OrderStatus } from "@shared/models/order.model";
 import { Subject, catchError, forkJoin, interval, of, takeUntil } from "rxjs";
@@ -107,6 +108,40 @@ export class WaiterActiveOrdersComponent implements OnInit, OnDestroy {
     return this.orders.filter((o) => o.status === OrderStatus.READY).length;
   }
 
+  isReadyOrder(order: Order): boolean {
+    return order.status === OrderStatus.READY;
+  }
+
+  getWaiterActionLabel(order: Order): string {
+    if (order.status === OrderStatus.PREPARING) {
+      return "In Progress";
+    }
+    if (order.status === OrderStatus.PLACED) {
+      return "Awaiting Kitchen";
+    }
+    return "In Progress";
+  }
+
+  getWaiterActionIcon(order: Order): string {
+    if (order.status === OrderStatus.READY) {
+      return "done_all";
+    }
+    if (order.status === OrderStatus.PREPARING) {
+      return "local_fire_department";
+    }
+    return "restaurant";
+  }
+
+  getWaiterActionButtonClass(order: Order): string {
+    if (order.status === OrderStatus.READY) {
+      return "serve-btn--ready";
+    }
+    if (order.status === OrderStatus.PREPARING) {
+      return "serve-btn--preparing";
+    }
+    return "serve-btn--placed";
+  }
+
   refresh(): void {
     this.refreshing = true;
     this.loadOrders(false);
@@ -147,13 +182,15 @@ export class WaiterActiveOrdersComponent implements OnInit, OnDestroy {
     const value =
       order.readyAt || order.preparingAt || order.placedAt || order.createdAt;
     if (!value) return "—";
-    return new Date(value).toLocaleString("en-IN", {
-      day: "2-digit",
-      month: "short",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    });
+    return uppercaseMeridiem(
+      new Date(value).toLocaleString("en-IN", {
+        day: "2-digit",
+        month: "short",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      }),
+    );
   }
 
   getOrderAge(order: Order): string {

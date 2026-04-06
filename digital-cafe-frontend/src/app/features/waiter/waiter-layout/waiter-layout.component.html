@@ -107,6 +107,19 @@
       </div>
 
       <div class="header-actions">
+        <div class="header-profile-progress">
+          <span class="header-profile-progress__label">Profile</span>
+          <div class="header-profile-progress__track">
+            <div
+              class="header-profile-progress__fill"
+              [style.width.%]="getProfileCompletionPercentage()"
+            ></div>
+          </div>
+          <span class="header-profile-progress__value"
+            >{{ getProfileCompletionPercentage() }}%</span
+          >
+        </div>
+
         <!-- Notifications -->
         <div #notificationContainer class="header-action-item">
           <button

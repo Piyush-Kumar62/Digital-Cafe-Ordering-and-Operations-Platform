@@ -4,6 +4,7 @@ import { FormsModule } from "@angular/forms";
 import { AuthService } from "@core/auth/auth.service";
 import { AlertService } from "@core/services/alert.service";
 import { ApiService } from "@core/services/api.service";
+import { uppercaseMeridiem } from "@core/utils/date-time-format.util";
 import { WebSocketService } from "@core/websocket/websocket.service";
 import { Order, OrderStatus } from "@shared/models/order.model";
 import { Subject, interval, takeUntil } from "rxjs";
@@ -102,14 +103,16 @@ export class WaiterServedHistoryComponent implements OnInit, OnDestroy {
   formatServedAt(order: Order): string {
     const value = order.servedAt || order.updatedAt || order.createdAt;
     if (!value) return "—";
-    return new Date(value).toLocaleString("en-IN", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    });
+    return uppercaseMeridiem(
+      new Date(value).toLocaleString("en-IN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      }),
+    );
   }
 
   private loadOrders(): void {

@@ -93,9 +93,11 @@
           [style.width.%]="currentCompletionPercentage"
         ></div>
       </div>
+      <p class="completion-hint" *ngIf="currentCompletionPercentage < 100">
+        Add more details to complete your waiter profile.
+      </p>
       <p class="warning-text" *ngIf="shouldShowMissingWarning">
-        Profile is {{ currentCompletionPercentage }}% complete. Please update:
-        {{ missingProfileFields.join(", ") }}
+        Missing details: {{ missingProfileFields.join(", ") }}
       </p>
     </div>
 
@@ -147,30 +149,99 @@
             <input
               type="text"
               [(ngModel)]="editForm.phoneNumber"
+              (ngModelChange)="onPhoneNumberChange($event)"
               placeholder="10-digit mobile number"
               class="form-input"
-              maxlength="15"
+              maxlength="10"
+              inputmode="numeric"
             />
           </div>
           <div class="form-group">
             <label>Govt ID Type</label>
-            <input
-              type="text"
+            <select
               [(ngModel)]="editForm.govtIdType"
-              placeholder="Aadhaar / PAN / Passport"
+              (ngModelChange)="onGovtIdTypeChange()"
               class="form-input"
-              maxlength="50"
-            />
+            >
+              <option value="">Select Govt ID Type</option>
+              <option
+                *ngIf="
+                  editForm.govtIdType &&
+                  !govtIdTypeOptions.includes(editForm.govtIdType)
+                "
+                [value]="editForm.govtIdType"
+              >
+                {{ editForm.govtIdType }}
+              </option>
+              <option *ngFor="let option of govtIdTypeOptions" [value]="option">
+                {{ option }}
+              </option>
+            </select>
           </div>
           <div class="form-group full-width">
             <label>Govt ID Number</label>
             <input
               type="text"
               [(ngModel)]="editForm.govtIdNumber"
+              (ngModelChange)="onGovtIdNumberChange($event)"
               placeholder="Enter ID number"
               class="form-input"
-              maxlength="100"
+              [attr.maxlength]="getGovtIdNumberMaxLength()"
             />
+            <div class="doc-badges" *ngIf="hasGovtDocument()">
+              <span class="doc-badge doc-badge--type">{{
+                getGovtDocumentTypeLabel()
+              }}</span>
+              <span class="doc-badge" *ngIf="getGovtDocumentSizeLabel()">{{
+                getGovtDocumentSizeLabel()
+              }}</span>
+            </div>
+          </div>
+          <div class="form-group full-width">
+            <label>Govt ID Document</label>
+            <div class="doc-editor-actions">
+              <button
+                type="button"
+                class="doc-upload-btn"
+                (click)="triggerGovtDocInput()"
+                [disabled]="uploadingGovtDocument"
+              >
+                <span class="material-icons">upload_file</span>
+                {{
+                  uploadingGovtDocument
+                    ? "Uploading…"
+                    : hasGovtDocument()
+                      ? "Replace Document"
+                      : "Upload Document"
+                }}
+              </button>
+              <a
+                *ngIf="hasGovtDocument()"
+                [href]="getGovtDocumentUrl()"
+                target="_blank"
+                rel="noopener"
+                class="doc-open-link"
+              >
+                <span class="material-icons">open_in_new</span>
+                Open
+              </a>
+            </div>
+            <input
+              #govtDocInput
+              type="file"
+              accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+              style="display: none"
+              (change)="onGovtDocumentSelected($event)"
+            />
+            <img
+              *ngIf="hasGovtDocument() && isGovtDocumentImage()"
+              class="doc-preview"
+              [src]="getGovtDocumentUrl()"
+              alt="Government ID preview"
+            />
+            <p *ngIf="hasGovtDocument()" class="doc-name">
+              {{ profileData.govtIdFileName || "Government ID document" }}
+            </p>
           </div>
           <div class="form-group">
             <label>Joining Date</label>
@@ -391,6 +462,39 @@
                     : ""
                 }}
               </span>
+            </div>
+          </div>
+          <div class="detail-row">
+            <span class="detail-icon"
+              ><span class="material-icons">description</span></span
+            >
+            <div class="detail-content detail-content--doc">
+              <span class="detail-lbl">Govt ID Document</span>
+              <span class="detail-val" *ngIf="!hasGovtDocument()">—</span>
+              <ng-container *ngIf="hasGovtDocument()">
+                <div class="doc-badges">
+                  <span class="doc-badge doc-badge--type">{{
+                    getGovtDocumentTypeLabel()
+                  }}</span>
+                  <span class="doc-badge" *ngIf="getGovtDocumentSizeLabel()">{{
+                    getGovtDocumentSizeLabel()
+                  }}</span>
+                </div>
+                <img
+                  *ngIf="isGovtDocumentImage()"
+                  class="doc-preview"
+                  [src]="getGovtDocumentUrl()"
+                  alt="Government ID preview"
+                />
+                <a
+                  class="detail-val detail-val--doc"
+                  [href]="getGovtDocumentUrl()"
+                  target="_blank"
+                  rel="noopener"
+                >
+                  {{ profileData.govtIdFileName || "View Document" }}
+                </a>
+              </ng-container>
             </div>
           </div>
           <div class="detail-row">

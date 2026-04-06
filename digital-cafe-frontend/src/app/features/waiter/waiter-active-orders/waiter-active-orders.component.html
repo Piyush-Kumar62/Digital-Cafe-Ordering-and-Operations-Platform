@@ -52,7 +52,8 @@
     >
       <div class="wa-card-top">
         <div class="wa-order-num">
-          Order #{{ order.orderNumber || order.id }}
+          <span class="material-icons">receipt_long</span>
+          <span>Order #{{ order.orderNumber || order.id }}</span>
         </div>
         <div class="wa-card-badges">
           <span class="status" [class]="order.status.toLowerCase()">{{
@@ -64,13 +65,18 @@
 
       <div class="wa-meta">
         <span class="wa-meta-chip" *ngIf="order.tableNumber || order.tableId"
-          >Table {{ order.tableNumber || order.tableId }}</span
+          ><span class="material-icons">table_restaurant</span>Table
+          {{ order.tableNumber || order.tableId }}</span
         >
-        <span class="wa-meta-chip">{{ order.customerName || "Customer" }}</span>
+        <span class="wa-meta-chip"
+          ><span class="material-icons">person</span
+          >{{ order.customerName || "Customer" }}</span
+        >
         <span
           class="wa-meta-chip"
           [class.time--urgent]="isUrgent(order)"
           *ngIf="getOrderAge(order)"
+          ><span class="material-icons">schedule</span
           >{{ getOrderAge(order) }}</span
         >
       </div>
@@ -90,14 +96,30 @@
         {{ order.specialInstructions }}
       </div>
 
-      <div class="wa-actions" *ngIf="order.status === 'READY'">
+      <div class="wa-card-foot">
         <div class="wa-total" *ngIf="order.totalAmount">
           <span class="wa-total-label">Total</span>
           <strong>₹{{ order.totalAmount | number: "1.2-2" }}</strong>
         </div>
-        <button class="serve-btn" (click)="markServed(order.id)">
+        <button
+          class="serve-btn"
+          [ngClass]="getWaiterActionButtonClass(order)"
+          *ngIf="isReadyOrder(order); else inProgressAction"
+          (click)="markServed(order.id)"
+        >
+          <span class="material-icons">{{ getWaiterActionIcon(order) }}</span>
           Mark As Served
         </button>
+        <ng-template #inProgressAction>
+          <button
+            class="serve-btn"
+            [ngClass]="getWaiterActionButtonClass(order)"
+            disabled
+          >
+            <span class="material-icons">{{ getWaiterActionIcon(order) }}</span>
+            {{ getWaiterActionLabel(order) }}
+          </button>
+        </ng-template>
       </div>
     </article>
   </div>

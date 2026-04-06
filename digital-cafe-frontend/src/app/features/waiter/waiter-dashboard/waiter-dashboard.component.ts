@@ -4,11 +4,12 @@ import { ApiService } from "@core/services/api.service";
 import { AuthService } from "@core/auth/auth.service";
 import { AlertService } from "@core/services/alert.service";
 import { WebSocketService } from "@core/websocket/websocket.service";
-import { Order } from "@shared/models/order.model";
+import { uppercaseMeridiem } from "@core/utils/date-time-format.util";
+import { Order, OrderStatus } from "@shared/models/order.model";
 import { WaiterDashboard } from "@shared/models/dashboard.model";
 import { User } from "@shared/models/auth.model";
 import { Subject, interval, takeUntil, forkJoin, of } from "rxjs";
-import { catchError } from "rxjs/operators";
+import { catchError, map } from "rxjs/operators";
 
 @Component({
   selector: "app-waiter-dashboard",
@@ -22,6 +23,8 @@ export class WaiterDashboardComponent implements OnInit, OnDestroy {
   refreshing = false;
   hasLoadedOnce = false;
   readyOrders: Order[] = [];
+  placedOrders: Order[] = [];
+  preparingOrders: Order[] = [];
   servedToday = 0;
   activeOrders = 0;
   cafeName = "";
@@ -29,6 +32,7 @@ export class WaiterDashboardComponent implements OnInit, OnDestroy {
   lastRefreshed = new Date();
   currentTime = new Date();
   currentUser: User | null = null;
+  errorMessage = "";
 
   private destroy$ = new Subject<void>();
 
@@ -55,6 +59,24 @@ export class WaiterDashboardComponent implements OnInit, OnDestroy {
   }
   get allPages(): number[] {
     return Array.from({ length: this.totalPages }, (_, i) => i);
+  }
+
+  get queueOrders(): Order[] {
+    return [...this.placedOrders, ...this.preparingOrders]
+      .sort((a, b) => {
+        const aTime = new Date(
+          a.preparingAt || a.placedAt || a.createdAt || 0,
+        ).getTime();
+        const bTime = new Date(
+          b.preparingAt || b.placedAt || b.createdAt || 0,
+        ).getTime();
+        return aTime - bTime;
+      })
+      .slice(0, 6);
+  }
+
+  get hasQueueOrders(): boolean {
+    return this.queueOrders.length > 0;
   }
 
   goToPage(page: number): void {
@@ -141,7 +163,7 @@ export class WaiterDashboardComponent implements OnInit, OnDestroy {
       minute: "2-digit",
       hour12: true,
     });
-    return `${date} | ${time}`;
+    return `${date} | ${uppercaseMeridiem(time)}`;
   }
 
   get displayName(): string {
@@ -159,6 +181,7 @@ export class WaiterDashboardComponent implements OnInit, OnDestroy {
   refreshData(): void {
     this.currentTime = new Date();
     this.refreshing = true;
+    this.errorMessage = "";
     this.loadData(false);
   }
 
@@ -169,44 +192,108 @@ export class WaiterDashboardComponent implements OnInit, OnDestroy {
     return diff >= 5;
   }
 
+  getStatusBadgeClass(order: Order): string {
+    if (order.status === OrderStatus.PREPARING) return "wd-badge-status--prep";
+    if (order.status === OrderStatus.PLACED) return "wd-badge-status--placed";
+    return "wd-badge-status--ready";
+  }
+
+  getQueueActionLabel(order: Order): string {
+    if (order.status === OrderStatus.PREPARING) return "In Progress";
+    if (order.status === OrderStatus.PLACED) return "Awaiting Kitchen";
+    return "Ready to Serve";
+  }
+
+  getQueueActionIcon(order: Order): string {
+    if (order.status === OrderStatus.PREPARING) return "local_fire_department";
+    if (order.status === OrderStatus.PLACED) return "restaurant";
+    return "done_all";
+  }
+
+  getQueueActionClass(order: Order): string {
+    if (order.status === OrderStatus.PREPARING) return "wd-queue-btn--prep";
+    if (order.status === OrderStatus.PLACED) return "wd-queue-btn--placed";
+    return "wd-queue-btn--ready";
+  }
+
   private loadData(showSpinner = true): void {
     if (showSpinner && !this.hasLoadedOnce) {
       this.loading = true;
     }
 
-    const orders$ = this.apiService
-      .getReadyOrdersForWaiterWorkflow()
-      .pipe(catchError(() => of([] as Order[])));
+    const ready$ = this.apiService.getReadyOrdersForWaiterWorkflow().pipe(
+      map((orders) => ({ data: orders || [], failed: false })),
+      catchError(() => of({ data: [] as Order[], failed: true })),
+    );
+
+    const placed$ = this.cafeId
+      ? this.apiService.getOrdersByStatus(this.cafeId, OrderStatus.PLACED).pipe(
+          map((orders) => ({ data: orders || [], failed: false })),
+          catchError(() => of({ data: [] as Order[], failed: true })),
+        )
+      : of({ data: [] as Order[], failed: false });
+
+    const preparing$ = this.cafeId
+      ? this.apiService
+          .getOrdersByStatus(this.cafeId, OrderStatus.PREPARING)
+          .pipe(
+            map((orders) => ({ data: orders || [], failed: false })),
+            catchError(() => of({ data: [] as Order[], failed: true })),
+          )
+      : of({ data: [] as Order[], failed: false });
 
     const dashboard$ = this.cafeId
-      ? this.apiService
-          .getWaiterDashboard(this.cafeId)
-          .pipe(catchError(() => of(null)))
-      : of(null);
+      ? this.apiService.getWaiterDashboard(this.cafeId).pipe(
+          map((dashboard) => ({ data: dashboard, failed: false })),
+          catchError(() =>
+            of({ data: null as WaiterDashboard | null, failed: true }),
+          ),
+        )
+      : of({ data: null as WaiterDashboard | null, failed: false });
 
-    forkJoin({ orders: orders$, dashboard: dashboard$ }).subscribe({
-      next: ({ orders, dashboard }) => {
+    forkJoin({
+      ready: ready$,
+      placed: placed$,
+      preparing: preparing$,
+      dashboard: dashboard$,
+    }).subscribe({
+      next: ({ ready, placed, preparing, dashboard }) => {
         const previousPageIndex = this.pageIndex;
-        this.readyOrders = orders || [];
+        this.readyOrders = ready.data;
+        this.placedOrders = placed.data;
+        this.preparingOrders = preparing.data;
+
         const maxPageIndex = Math.max(
           0,
           Math.ceil(this.readyOrders.length / this.pageSize) - 1,
         );
         this.pageIndex = Math.min(previousPageIndex, maxPageIndex);
-        if (dashboard) {
-          const d = dashboard as WaiterDashboard;
+
+        if (dashboard.data) {
+          const d = dashboard.data;
           this.servedToday = d.servedToday ?? 0;
-          this.activeOrders = d.activeOrders ?? 0;
+          this.activeOrders =
+            d.activeOrders ??
+            this.placedOrders.length + this.preparingOrders.length;
           this.cafeName = d.cafeName || "";
         } else {
-          this.servedToday = this.calculateServedToday(this.readyOrders);
+          this.servedToday = 0;
+          this.activeOrders =
+            this.placedOrders.length + this.preparingOrders.length;
         }
+
+        this.errorMessage =
+          ready.failed || placed.failed || preparing.failed || dashboard.failed
+            ? "Some dashboard data could not be refreshed. Showing available data."
+            : "";
+
         this.lastRefreshed = new Date();
         this.hasLoadedOnce = true;
         this.loading = false;
         this.refreshing = false;
       },
       error: () => {
+        this.errorMessage = "Unable to load waiter dashboard right now.";
         this.loading = false;
         this.refreshing = false;
         this.hasLoadedOnce = true;
@@ -224,8 +311,7 @@ export class WaiterDashboardComponent implements OnInit, OnDestroy {
       });
   }
 
-  private calculateServedToday(orders: Order[]): number {
-    const today = new Date().toISOString().slice(0, 10);
-    return orders.filter((o) => o.servedAt?.slice(0, 10) === today).length;
+  retryLoad(): void {
+    this.refreshData();
   }
 }

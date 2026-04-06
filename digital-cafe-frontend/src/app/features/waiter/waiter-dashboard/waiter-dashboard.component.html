@@ -1,6 +1,6 @@
 <section class="wd-page">
   <!-- HERO HEADER -->
-    <div class="wd-hero">
+  <div class="wd-hero">
     <div class="wd-hero__content">
       <p class="wd-hero__greeting">🛎 {{ greeting }}</p>
       <h1 class="wd-hero__title">
@@ -36,11 +36,14 @@
         <span class="material-icons" [class.spin]="refreshing">refresh</span>
         Refresh
       </button>
+      <p class="wd-last-updated">
+        Updated {{ lastRefreshed | date: "shortTime" }}
+      </p>
     </div>
   </div>
 
   <!-- STATS STRIP -->
-    <div class="wd-stats">
+  <div class="wd-stats">
     <div class="wd-stat wd-stat--ready">
       <div class="wd-stat__icon">
         <span class="material-icons">notifications_active</span>
@@ -73,8 +76,113 @@
     </div>
   </div>
 
+  <div class="wd-sync" *ngIf="refreshing || errorMessage">
+    <p class="wd-sync__info" *ngIf="refreshing">
+      <span class="material-icons spin">autorenew</span>
+      Refreshing waiter dashboard...
+    </p>
+    <div class="wd-sync__error" *ngIf="errorMessage">
+      <span class="material-icons">warning</span>
+      <span>{{ errorMessage }}</span>
+      <button class="wd-sync__retry" (click)="retryLoad()">Retry</button>
+    </div>
+  </div>
+
+  <div class="wd-section-bar" *ngIf="hasLoadedOnce">
+    <div class="wd-section-bar__left">
+      <span class="wd-live-dot large"></span>
+      <h2 class="wd-section-title">Kitchen Queue</h2>
+      <span class="wd-badge" *ngIf="hasQueueOrders">{{
+        queueOrders.length
+      }}</span>
+    </div>
+    <p class="wd-section-sub">Quick view of PLACED and PREPARING orders</p>
+  </div>
+
+  <div class="wd-orders-grid" *ngIf="hasLoadedOnce && hasQueueOrders">
+    <article
+      class="wd-order-card"
+      *ngFor="let order of queueOrders"
+      [class.urgent]="isUrgent(order)"
+    >
+      <div class="wd-card-head">
+        <div class="wd-order-num">
+          <span class="material-icons">receipt_long</span>
+          <span>#{{ order.orderNumber || order.id }}</span>
+        </div>
+        <div class="wd-card-badges">
+          <span class="wd-badge-status" [ngClass]="getStatusBadgeClass(order)">
+            {{ order.status }}
+          </span>
+          <span class="wd-badge-urgent" *ngIf="isUrgent(order)">
+            <span class="material-icons">alarm</span>
+            Urgent
+          </span>
+        </div>
+      </div>
+
+      <div class="wd-card-meta">
+        <div class="wd-meta-chip" *ngIf="order.tableNumber || order.tableId">
+          <span class="material-icons">table_restaurant</span>
+          Table {{ order.tableNumber || order.tableId }}
+        </div>
+        <div class="wd-meta-chip">
+          <span class="material-icons">person</span>
+          {{ order.customerName || "Customer #" + order.customerId }}
+        </div>
+        <div
+          class="wd-meta-chip"
+          [class.time--urgent]="isUrgent(order)"
+          *ngIf="getOrderAge(order)"
+        >
+          <span class="material-icons">schedule</span>
+          {{ getOrderAge(order) }}
+        </div>
+      </div>
+
+      <ul class="wd-items">
+        <li *ngFor="let item of order.items" class="wd-item-row">
+          <span class="wd-qty">{{ item.quantity }}×</span>
+          <span class="wd-item-name">{{ item.menuItemName }}</span>
+          <span class="wd-item-price" *ngIf="item.totalPrice">
+            ₹{{ item.totalPrice | number: "1.0-0" }}
+          </span>
+        </li>
+      </ul>
+
+      <div class="wd-note" *ngIf="order.specialInstructions">
+        <span class="material-icons">sticky_note_2</span>
+        <span>{{ order.specialInstructions }}</span>
+      </div>
+
+      <div class="wd-card-foot">
+        <div class="wd-total" *ngIf="order.totalAmount">
+          <span class="wd-total-lbl">Total</span>
+          <span class="wd-total-val"
+            >₹{{ order.totalAmount | number: "1.2-2" }}</span
+          >
+        </div>
+        <button
+          class="wd-queue-btn"
+          [ngClass]="getQueueActionClass(order)"
+          disabled
+        >
+          <span class="material-icons">{{ getQueueActionIcon(order) }}</span>
+          {{ getQueueActionLabel(order) }}
+        </button>
+      </div>
+    </article>
+  </div>
+
+  <div
+    class="wd-empty wd-empty--compact"
+    *ngIf="hasLoadedOnce && !hasQueueOrders"
+  >
+    <p>No PLACED or PREPARING orders in queue.</p>
+  </div>
+
   <!-- READY ORDERS SECTION HEADER -->
-    <div class="wd-section-bar">
+  <div class="wd-section-bar">
     <div class="wd-section-bar__left">
       <span class="wd-live-dot large"></span>
       <h2 class="wd-section-title">Ready Orders</h2>
@@ -86,13 +194,13 @@
   </div>
 
   <!-- LOADING -->
-    <div class="wd-loading" *ngIf="loading && !hasLoadedOnce">
+  <div class="wd-loading" *ngIf="loading && !hasLoadedOnce">
     <div class="wd-spinner"></div>
     <p>Loading ready orders…</p>
   </div>
 
   <!-- ORDERS GRID -->
-    <div class="wd-orders-grid" *ngIf="hasLoadedOnce">
+  <div class="wd-orders-grid" *ngIf="hasLoadedOnce">
     <article
       class="wd-order-card"
       *ngFor="let order of pagedReadyOrders"
@@ -174,7 +282,7 @@
   </div>
 
   <!-- EMPTY STATE -->
-    <div class="wd-empty" *ngIf="hasLoadedOnce && readyOrders.length === 0">
+  <div class="wd-empty" *ngIf="hasLoadedOnce && readyOrders.length === 0">
     <div class="wd-empty-icon">
       <span class="material-icons">coffee</span>
     </div>
@@ -186,7 +294,7 @@
   </div>
 
   <!-- PAGINATION -->
-    <div class="wd-pager" *ngIf="hasLoadedOnce && readyOrders.length > 0">
+  <div class="wd-pager" *ngIf="hasLoadedOnce && readyOrders.length > 0">
     <span class="wd-range">
       Showing {{ rangeStart }}–{{ rangeEnd }} of {{ totalElements }} order{{
         totalElements !== 1 ? "s" : ""

@@ -1,12 +1,13 @@
 <section class="ws-page">
   <div class="ws-hero">
-    <h1>Served History</h1>
-    <p>Review all orders marked as served by the service team.</p>
-  </div>
-
-  <div class="ws-summary" *ngIf="!loading">
-    <span class="label">Total Served Records</span>
-    <strong>{{ filteredOrders.length }}</strong>
+    <div class="ws-hero-main">
+      <h1>Served History</h1>
+      <p>Review all orders marked as served by the service team.</p>
+    </div>
+    <div class="ws-hero-stat" *ngIf="!loading">
+      <span class="label">Total Served Records</span>
+      <strong>{{ filteredOrders.length }}</strong>
+    </div>
   </div>
 
   <div class="ws-search-wrap">
@@ -26,24 +27,53 @@
   <div class="ws-grid" *ngIf="!loading && pagedOrders.length > 0">
     <article class="ws-card" *ngFor="let order of pagedOrders">
       <div class="ws-card-top">
-        <h3>#{{ order.orderNumber || order.id }}</h3>
-        <span class="status">SERVED</span>
+        <h3>
+          <span class="material-icons">receipt_long</span>
+          #{{ order.orderNumber || order.id }}
+        </h3>
+        <span class="status"
+          ><span class="material-icons">done_all</span>SERVED</span
+        >
       </div>
       <div class="ws-meta">
-        <span>Table {{ order.tableNumber || order.tableId || "—" }}</span>
-        <span>{{ order.customerName || "Customer" }}</span>
+        <span
+          ><span class="material-icons">table_restaurant</span>Table
+          {{ order.tableNumber || order.tableId || "—" }}</span
+        >
+        <span
+          ><span class="material-icons">person</span
+          >{{ order.customerName || "Customer" }}</span
+        >
       </div>
-      <div class="ws-served-at">Served: {{ formatServedAt(order) }}</div>
+      <div class="ws-served-at">
+        <span class="material-icons">schedule</span>
+        <span>Served: {{ formatServedAt(order) }}</span>
+      </div>
       <div class="ws-items" *ngIf="order.items?.length">
         <div class="item" *ngFor="let item of order.items">
-          <span>{{ item.quantity }}x {{ item.menuItemName }}</span>
+          <span
+            ><strong>{{ item.quantity }}x</strong> {{ item.menuItemName }}</span
+          >
           <span *ngIf="item.totalPrice"
             >₹{{ item.totalPrice | number: "1.0-0" }}</span
           >
         </div>
       </div>
-      <div class="ws-total" *ngIf="order.totalAmount">
-        Total: ₹{{ order.totalAmount | number: "1.2-2" }}
+
+      <div class="ws-note" *ngIf="order.specialInstructions">
+        <span class="material-icons">sticky_note_2</span>
+        <span>{{ order.specialInstructions }}</span>
+      </div>
+
+      <div class="ws-foot">
+        <div class="ws-total" *ngIf="order.totalAmount">
+          <span class="ws-total-label">Total</span>
+          <strong>₹{{ order.totalAmount | number: "1.2-2" }}</strong>
+        </div>
+        <button class="ws-serve-btn" disabled>
+          <span class="material-icons">check_circle</span>
+          Served
+        </button>
       </div>
     </article>
   </div>

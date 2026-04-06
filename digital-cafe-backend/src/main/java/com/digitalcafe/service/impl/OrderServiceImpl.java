@@ -364,71 +364,77 @@ public class OrderServiceImpl implements OrderService {
     }
 
     private void applyStatusTimestamps(Order order, Order.OrderStatus newStatus, OrderStatusUpdateRequest request) {
-        switch (newStatus) {
-            case PREPARING -> {
-                if (order.getPreparingAt() == null) order.setPreparingAt(LocalDateTime.now());
-                if (request.getStaffId() != null) {
-                    order.setPreparingByChef(userRepository.findById(request.getStaffId())
-                            .orElseThrow(() -> new ResourceNotFoundException("Chef not found: " + request.getStaffId())));
-                }
+        if (newStatus == Order.OrderStatus.PREPARING) {
+            if (order.getPreparingAt() == null) order.setPreparingAt(LocalDateTime.now());
+            if (request.getStaffId() != null) {
+                order.setPreparingByChef(userRepository.findById(request.getStaffId())
+                        .orElseThrow(() -> new ResourceNotFoundException("Chef not found: " + request.getStaffId())));
             }
-            case READY -> { if (order.getReadyAt() == null) order.setReadyAt(LocalDateTime.now()); }
-            case SERVED -> {
-                if (order.getServedAt() == null) order.setServedAt(LocalDateTime.now());
-                if (request.getStaffId() != null) {
-                    order.setServedByWaiter(userRepository.findById(request.getStaffId())
-                            .orElseThrow(() -> new ResourceNotFoundException("Waiter not found: " + request.getStaffId())));
-                }
+        } else if (newStatus == Order.OrderStatus.READY) {
+            if (order.getReadyAt() == null) order.setReadyAt(LocalDateTime.now());
+        } else if (newStatus == Order.OrderStatus.SERVED) {
+            if (order.getServedAt() == null) order.setServedAt(LocalDateTime.now());
+            if (request.getStaffId() != null) {
+                order.setServedByWaiter(userRepository.findById(request.getStaffId())
+                        .orElseThrow(() -> new ResourceNotFoundException("Waiter not found: " + request.getStaffId())));
             }
-            case CANCELLED -> {
-                order.setCancelledAt(LocalDateTime.now());
-                order.setCancellationReason(request.getReason());
-            }
-            default -> { /* PLACED / PENDING_PAYMENT – no timestamp action needed */ }
+        } else if (newStatus == Order.OrderStatus.CANCELLED) {
+            order.setCancelledAt(LocalDateTime.now());
+            order.setCancellationReason(request.getReason());
         }
         order.setStatus(newStatus);
     }
 
     private void emitStatusNotification(Order order, Order.OrderStatus newStatus) {
-        switch (newStatus) {
-            case PENDING_PAYMENT -> { /* no external notification — awaiting payment */ }
-            case PLACED     -> {
-                notificationService.pushOrderEvent(order, "ORDER_PLACED", "/topic/chef/" + order.getCafe().getId());
-                notificationService.pushOrderEvent(order, "ORDER_PLACED", "/topic/waiter/" + order.getCafe().getId());
-                notificationService.pushOrderEvent(order, "ORDER_PLACED", "/topic/cafe/" + order.getCafe().getId());
-                notificationService.pushOrderEvent(order, "ORDER_PLACED", "/topic/admin/orders");
-            }
-            case PREPARING  -> {
-                notificationService.pushOrderEvent(order, "ORDER_PREPARING", "/topic/chef/"     + order.getCafe().getId());
-                notificationService.pushOrderEvent(order, "ORDER_PREPARING", "/topic/waiter/"   + order.getCafe().getId());
-                notificationService.pushOrderEvent(order, "ORDER_PREPARING", "/topic/customer/" + order.getCustomer().getId());
-                notificationService.pushOrderEvent(order, "ORDER_PREPARING", "/topic/cafe/"     + order.getCafe().getId());
-                notificationService.pushOrderEvent(order, "ORDER_PREPARING", "/topic/admin/orders");
-            }
-            case READY      -> {
-                notificationService.pushOrderEvent(order, "ORDER_READY", "/topic/chef/"     + order.getCafe().getId());
-                notificationService.pushOrderEvent(order, "ORDER_READY", "/topic/waiter/"   + order.getCafe().getId());
-                notificationService.pushOrderEvent(order, "ORDER_READY", "/topic/customer/" + order.getCustomer().getId());
-                notificationService.pushOrderEvent(order, "ORDER_READY", "/topic/cafe/"     + order.getCafe().getId());
-                notificationService.pushOrderEvent(order, "ORDER_READY", "/topic/admin/orders");
-                emailService.sendOrderReadyNotification(order.getCustomer().getEmail(), order.getOrderNumber());
-            }
-            case SERVED     -> {
-                notificationService.pushOrderEvent(order, "ORDER_SERVED", "/topic/chef/"     + order.getCafe().getId());
-                notificationService.pushOrderEvent(order, "ORDER_SERVED", "/topic/waiter/"   + order.getCafe().getId());
-                notificationService.pushOrderEvent(order, "ORDER_SERVED", "/topic/customer/" + order.getCustomer().getId());
-                notificationService.pushOrderEvent(order, "ORDER_SERVED", "/topic/cafe/"     + order.getCafe().getId());
-                notificationService.pushOrderEvent(order, "ORDER_SERVED", "/topic/admin/orders");
-                emailService.sendOrderServedNotification(order.getCustomer().getEmail(), order.getOrderNumber());
-            }
-            case CANCELLED  -> {
-                notificationService.pushOrderEvent(order, "ORDER_CANCELLED", "/topic/customer/" + order.getCustomer().getId());
-                notificationService.pushOrderEvent(order, "ORDER_CANCELLED", "/topic/chef/"     + order.getCafe().getId());
-                notificationService.pushOrderEvent(order, "ORDER_CANCELLED", "/topic/waiter/"   + order.getCafe().getId());
-                notificationService.pushOrderEvent(order, "ORDER_CANCELLED", "/topic/cafe/"     + order.getCafe().getId());
-                notificationService.pushOrderEvent(order, "ORDER_CANCELLED", "/topic/admin/orders");
-                emailService.sendOrderCancelledNotification(order.getCustomer().getEmail(), order.getOrderNumber());
-            }
+        if (newStatus == Order.OrderStatus.PENDING_PAYMENT) {
+            // no external notification — awaiting payment
+            return;
+        }
+
+        if (newStatus == Order.OrderStatus.PLACED) {
+            notificationService.pushOrderEvent(order, "ORDER_PLACED", "/topic/chef/" + order.getCafe().getId());
+            notificationService.pushOrderEvent(order, "ORDER_PLACED", "/topic/waiter/" + order.getCafe().getId());
+            notificationService.pushOrderEvent(order, "ORDER_PLACED", "/topic/cafe/" + order.getCafe().getId());
+            notificationService.pushOrderEvent(order, "ORDER_PLACED", "/topic/admin/orders");
+            return;
+        }
+
+        if (newStatus == Order.OrderStatus.PREPARING) {
+            notificationService.pushOrderEvent(order, "ORDER_PREPARING", "/topic/chef/" + order.getCafe().getId());
+            notificationService.pushOrderEvent(order, "ORDER_PREPARING", "/topic/waiter/" + order.getCafe().getId());
+            notificationService.pushOrderEvent(order, "ORDER_PREPARING", "/topic/customer/" + order.getCustomer().getId());
+            notificationService.pushOrderEvent(order, "ORDER_PREPARING", "/topic/cafe/" + order.getCafe().getId());
+            notificationService.pushOrderEvent(order, "ORDER_PREPARING", "/topic/admin/orders");
+            return;
+        }
+
+        if (newStatus == Order.OrderStatus.READY) {
+            notificationService.pushOrderEvent(order, "ORDER_READY", "/topic/chef/" + order.getCafe().getId());
+            notificationService.pushOrderEvent(order, "ORDER_READY", "/topic/waiter/" + order.getCafe().getId());
+            notificationService.pushOrderEvent(order, "ORDER_READY", "/topic/customer/" + order.getCustomer().getId());
+            notificationService.pushOrderEvent(order, "ORDER_READY", "/topic/cafe/" + order.getCafe().getId());
+            notificationService.pushOrderEvent(order, "ORDER_READY", "/topic/admin/orders");
+            emailService.sendOrderReadyNotification(order.getCustomer().getEmail(), order.getOrderNumber());
+            return;
+        }
+
+        if (newStatus == Order.OrderStatus.SERVED) {
+            notificationService.pushOrderEvent(order, "ORDER_SERVED", "/topic/chef/" + order.getCafe().getId());
+            notificationService.pushOrderEvent(order, "ORDER_SERVED", "/topic/waiter/" + order.getCafe().getId());
+            notificationService.pushOrderEvent(order, "ORDER_SERVED", "/topic/customer/" + order.getCustomer().getId());
+            notificationService.pushOrderEvent(order, "ORDER_SERVED", "/topic/cafe/" + order.getCafe().getId());
+            notificationService.pushOrderEvent(order, "ORDER_SERVED", "/topic/admin/orders");
+            emailService.sendOrderServedNotification(order.getCustomer().getEmail(), order.getOrderNumber());
+            return;
+        }
+
+        if (newStatus == Order.OrderStatus.CANCELLED) {
+            notificationService.pushOrderEvent(order, "ORDER_CANCELLED", "/topic/customer/" + order.getCustomer().getId());
+            notificationService.pushOrderEvent(order, "ORDER_CANCELLED", "/topic/chef/" + order.getCafe().getId());
+            notificationService.pushOrderEvent(order, "ORDER_CANCELLED", "/topic/waiter/" + order.getCafe().getId());
+            notificationService.pushOrderEvent(order, "ORDER_CANCELLED", "/topic/cafe/" + order.getCafe().getId());
+            notificationService.pushOrderEvent(order, "ORDER_CANCELLED", "/topic/admin/orders");
+            emailService.sendOrderCancelledNotification(order.getCustomer().getEmail(), order.getOrderNumber());
         }
     }
 

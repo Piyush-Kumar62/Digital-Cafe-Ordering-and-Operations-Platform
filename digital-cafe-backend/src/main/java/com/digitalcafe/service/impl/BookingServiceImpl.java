@@ -383,6 +383,18 @@ public class BookingServiceImpl implements BookingService {
                                 .build()
                 );
             }
+
+            webSocketNotificationService.notifyAdmins(
+                    RealtimeNotification.builder()
+                            .type(type)
+                            .title("Booking Update")
+                            .message("Booking " + booking.getBookingNumber() + " is now " + booking.getStatus() + ".")
+                            .severity(severity)
+                            .entityType("BOOKING")
+                            .entityId(booking.getId())
+                            .timestamp(now)
+                            .build()
+            );
         } catch (Exception ex) {
             log.warn("Failed to notify booking parties for bookingId={}: {}", booking.getId(), ex.getMessage());
         }

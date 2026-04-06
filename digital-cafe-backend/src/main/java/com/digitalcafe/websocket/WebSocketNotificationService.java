@@ -24,8 +24,10 @@ public class WebSocketNotificationService {
      */
     public void sendOrderNotification(Long cafeId, OrderNotification notification) {
         try {
-            String destination = "/topic/cafe/" + cafeId + "/orders";
-            messagingTemplate.convertAndSend(destination, notification);
+            String legacyDestination = "/topic/cafe/" + cafeId + "/orders";
+            String canonicalDestination = "/topic/cafe/" + cafeId;
+            messagingTemplate.convertAndSend(legacyDestination, notification);
+            messagingTemplate.convertAndSend(canonicalDestination, notification);
             log.info("Sent order notification to cafe {}: {}", cafeId, notification.getType());
         } catch (Exception e) {
             log.error("Failed to send WebSocket notification", e);
@@ -37,8 +39,10 @@ public class WebSocketNotificationService {
      */
     public void notifyChef(Long cafeId, OrderNotification notification) {
         try {
-            String destination = "/topic/cafe/" + cafeId + "/chef";
-            messagingTemplate.convertAndSend(destination, notification);
+            String canonicalDestination = "/topic/chef/" + cafeId;
+            String legacyDestination = "/topic/cafe/" + cafeId + "/chef";
+            messagingTemplate.convertAndSend(canonicalDestination, notification);
+            messagingTemplate.convertAndSend(legacyDestination, notification);
             log.info("Notified chef for cafe {}", cafeId);
         } catch (Exception e) {
             log.error("Failed to notify chef", e);
@@ -50,8 +54,10 @@ public class WebSocketNotificationService {
      */
     public void notifyWaiter(Long cafeId, OrderNotification notification) {
         try {
-            String destination = "/topic/cafe/" + cafeId + "/waiter";
-            messagingTemplate.convertAndSend(destination, notification);
+            String canonicalDestination = "/topic/waiter/" + cafeId;
+            String legacyDestination = "/topic/cafe/" + cafeId + "/waiter";
+            messagingTemplate.convertAndSend(canonicalDestination, notification);
+            messagingTemplate.convertAndSend(legacyDestination, notification);
             log.info("Notified waiter for cafe {}", cafeId);
         } catch (Exception e) {
             log.error("Failed to notify waiter", e);
@@ -63,8 +69,10 @@ public class WebSocketNotificationService {
      */
     public void notifyCustomer(Long customerId, OrderNotification notification) {
         try {
-            String destination = "/user/" + customerId + "/queue/notifications";
-            messagingTemplate.convertAndSend(destination, notification);
+            String userQueueDestination = "/user/" + customerId + "/queue/notifications";
+            String customerTopicDestination = "/topic/customer/" + customerId;
+            messagingTemplate.convertAndSend(userQueueDestination, notification);
+            messagingTemplate.convertAndSend(customerTopicDestination, notification);
             log.info("Notified customer {}", customerId);
         } catch (Exception e) {
             log.error("Failed to notify customer", e);

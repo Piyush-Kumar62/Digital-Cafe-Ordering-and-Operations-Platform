@@ -215,6 +215,7 @@ public class OrderServiceImpl implements OrderService {
         notificationService.pushOrderEvent(order, "ORDER_CANCELLED", "/topic/chef/" + order.getCafe().getId());
         notificationService.pushOrderEvent(order, "ORDER_CANCELLED", "/topic/waiter/" + order.getCafe().getId());
         notificationService.pushOrderEvent(order, "ORDER_CANCELLED", "/topic/cafe/" + order.getCafe().getId());
+        notificationService.pushOrderEvent(order, "ORDER_CANCELLED", "/topic/admin/orders");
         return orderMapper.toResponse(order);
     }
 
@@ -254,7 +255,9 @@ public class OrderServiceImpl implements OrderService {
 
         // Notify all relevant channels after activation.
         notificationService.pushOrderEvent(order, "ORDER_PLACED", "/topic/chef/" + order.getCafe().getId());
+        notificationService.pushOrderEvent(order, "ORDER_PLACED", "/topic/waiter/" + order.getCafe().getId());
         notificationService.pushOrderEvent(order, "ORDER_PLACED", "/topic/cafe/" + order.getCafe().getId());
+        notificationService.pushOrderEvent(order, "ORDER_PLACED", "/topic/admin/orders");
         notificationService.pushOrderEvent(order, "ORDER_CONFIRMED", "/topic/customer/" + order.getCustomer().getId());
         notificationService.pushOrderEvent(order, "PAYMENT_CAPTURED", "/topic/customer/" + order.getCustomer().getId());
         // Send confirmation email to customer.
@@ -389,20 +392,33 @@ public class OrderServiceImpl implements OrderService {
     private void emitStatusNotification(Order order, Order.OrderStatus newStatus) {
         switch (newStatus) {
             case PENDING_PAYMENT -> { /* no external notification — awaiting payment */ }
-            case PLACED     -> notificationService.pushOrderEvent(order, "ORDER_PLACED",    "/topic/cafe/"     + order.getCafe().getId());
+            case PLACED     -> {
+                notificationService.pushOrderEvent(order, "ORDER_PLACED", "/topic/chef/" + order.getCafe().getId());
+                notificationService.pushOrderEvent(order, "ORDER_PLACED", "/topic/waiter/" + order.getCafe().getId());
+                notificationService.pushOrderEvent(order, "ORDER_PLACED", "/topic/cafe/" + order.getCafe().getId());
+                notificationService.pushOrderEvent(order, "ORDER_PLACED", "/topic/admin/orders");
+            }
             case PREPARING  -> {
+                notificationService.pushOrderEvent(order, "ORDER_PREPARING", "/topic/chef/"     + order.getCafe().getId());
+                notificationService.pushOrderEvent(order, "ORDER_PREPARING", "/topic/waiter/"   + order.getCafe().getId());
                 notificationService.pushOrderEvent(order, "ORDER_PREPARING", "/topic/customer/" + order.getCustomer().getId());
                 notificationService.pushOrderEvent(order, "ORDER_PREPARING", "/topic/cafe/"     + order.getCafe().getId());
+                notificationService.pushOrderEvent(order, "ORDER_PREPARING", "/topic/admin/orders");
             }
             case READY      -> {
+                notificationService.pushOrderEvent(order, "ORDER_READY", "/topic/chef/"     + order.getCafe().getId());
                 notificationService.pushOrderEvent(order, "ORDER_READY", "/topic/waiter/"   + order.getCafe().getId());
                 notificationService.pushOrderEvent(order, "ORDER_READY", "/topic/customer/" + order.getCustomer().getId());
                 notificationService.pushOrderEvent(order, "ORDER_READY", "/topic/cafe/"     + order.getCafe().getId());
+                notificationService.pushOrderEvent(order, "ORDER_READY", "/topic/admin/orders");
                 emailService.sendOrderReadyNotification(order.getCustomer().getEmail(), order.getOrderNumber());
             }
             case SERVED     -> {
+                notificationService.pushOrderEvent(order, "ORDER_SERVED", "/topic/chef/"     + order.getCafe().getId());
+                notificationService.pushOrderEvent(order, "ORDER_SERVED", "/topic/waiter/"   + order.getCafe().getId());
                 notificationService.pushOrderEvent(order, "ORDER_SERVED", "/topic/customer/" + order.getCustomer().getId());
                 notificationService.pushOrderEvent(order, "ORDER_SERVED", "/topic/cafe/"     + order.getCafe().getId());
+                notificationService.pushOrderEvent(order, "ORDER_SERVED", "/topic/admin/orders");
                 emailService.sendOrderServedNotification(order.getCustomer().getEmail(), order.getOrderNumber());
             }
             case CANCELLED  -> {
@@ -410,6 +426,7 @@ public class OrderServiceImpl implements OrderService {
                 notificationService.pushOrderEvent(order, "ORDER_CANCELLED", "/topic/chef/"     + order.getCafe().getId());
                 notificationService.pushOrderEvent(order, "ORDER_CANCELLED", "/topic/waiter/"   + order.getCafe().getId());
                 notificationService.pushOrderEvent(order, "ORDER_CANCELLED", "/topic/cafe/"     + order.getCafe().getId());
+                notificationService.pushOrderEvent(order, "ORDER_CANCELLED", "/topic/admin/orders");
                 emailService.sendOrderCancelledNotification(order.getCustomer().getEmail(), order.getOrderNumber());
             }
         }
@@ -469,8 +486,7 @@ public class OrderServiceImpl implements OrderService {
                 .readyOrders(orderRepository.countByCafeIdAndStatus(cafeId, Order.OrderStatus.READY))
                 .activeOrders(orderRepository.countByCafeIdAndStatusIn(
                         cafeId, List.of(Order.OrderStatus.PLACED, Order.OrderStatus.PREPARING)))
-                .servedToday(orderRepository.countByCafeIdAndStatusAndCreatedAtBetween(
-                        cafeId, Order.OrderStatus.SERVED, startOfDay, endOfDay))
+                .servedToday(orderRepository.countServedTodayForDashboard(cafeId, startOfDay, endOfDay))
                 .recentOrders(Collections.emptyList())
                 .build();
     }

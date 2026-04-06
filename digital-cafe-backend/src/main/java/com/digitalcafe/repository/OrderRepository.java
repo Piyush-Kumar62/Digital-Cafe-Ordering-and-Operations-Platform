@@ -5,6 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
@@ -54,6 +55,12 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     Long countByCafeIdAndStatusIn(Long cafeId, List<Order.OrderStatus> statuses);
     Long countByCafeIdAndStatus(Long cafeId, Order.OrderStatus status);
     Long countByCafeIdAndStatusAndCreatedAtBetween(Long cafeId, Order.OrderStatus status, LocalDateTime start, LocalDateTime end);
+    @Query("SELECT COUNT(o) FROM Order o WHERE o.cafe.id = :cafeId AND o.status = 'SERVED' " +
+           "AND ((o.servedAt IS NOT NULL AND o.servedAt BETWEEN :start AND :end) " +
+           "OR (o.servedAt IS NULL AND o.createdAt BETWEEN :start AND :end))")
+    Long countServedTodayForDashboard(@Param("cafeId") Long cafeId,
+                                      @Param("start") LocalDateTime start,
+                                      @Param("end") LocalDateTime end);
     List<Order> findByCafeIdAndCreatedAtBetween(Long cafeId, LocalDateTime start, LocalDateTime end);
     List<Order> findByCafeIdAndCreatedAtAfter(Long cafeId, LocalDateTime date);
     List<Order> findByCafeIdAndStatusInOrderByCreatedAtAsc(Long cafeId, List<Order.OrderStatus> statuses);

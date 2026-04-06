@@ -6,6 +6,7 @@ import com.digitalcafe.dto.response.ApiResponse;
 import com.digitalcafe.dto.response.OrderResponse;
 import com.digitalcafe.dto.response.PageResponse;
 import com.digitalcafe.entity.Order;
+import com.digitalcafe.exception.BadRequestException;
 import com.digitalcafe.service.CafeService;
 import com.digitalcafe.service.OrderService;
 import com.digitalcafe.service.UserService;
@@ -77,6 +78,23 @@ public class OrderController {
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
 
         PageResponse<OrderResponse> response = orderService.getOrdersByCafeId(cafeId, pageable);
+        return ResponseEntity.ok(ApiResponse.success("Orders retrieved successfully", response));
+    }
+
+    @GetMapping("/cafe/{cafeId}/status/{status}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CAFE_OWNER', 'CHEF', 'WAITER')")
+    public ResponseEntity<ApiResponse<List<OrderResponse>>> getOrdersByCafeIdAndStatus(
+            @PathVariable Long cafeId,
+            @PathVariable String status) {
+
+        final Order.OrderStatus orderStatus;
+        try {
+            orderStatus = Order.OrderStatus.valueOf(status.toUpperCase());
+        } catch (IllegalArgumentException ex) {
+            throw new BadRequestException("Invalid order status: " + status);
+        }
+
+        List<OrderResponse> response = orderService.getOrdersByStatus(cafeId, orderStatus);
         return ResponseEntity.ok(ApiResponse.success("Orders retrieved successfully", response));
     }
 

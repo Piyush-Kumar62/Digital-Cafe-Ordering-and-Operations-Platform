@@ -4,6 +4,7 @@ import { RouterModule } from "@angular/router";
 import { Subject, forkJoin } from "rxjs";
 import { takeUntil } from "rxjs/operators";
 import { ApiService } from "@core/services/api.service";
+import { uppercaseMeridiem } from "@core/utils/date-time-format.util";
 import { Booking, BookingStatus } from "@shared/models/booking.model";
 import { Order, OrderStatus } from "@shared/models/order.model";
 import { CardComponent } from "@shared/components/card/card";
@@ -279,7 +280,7 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
       minute: "2-digit",
       hour12: true,
     });
-    return `${date} | ${time}`;
+    return `${date} | ${uppercaseMeridiem(time)}`;
   }
 
   get displayName(): string {
@@ -321,7 +322,8 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy {
           phoneNumber: profile?.phoneNumber || this.user.phoneNumber,
           govtIdType: profile?.govtIdType || this.user.govtIdType,
           govtIdNumber: profile?.govtIdNumber || this.user.govtIdNumber,
-          profileImageUrl: profile?.profileImageUrl || this.user.profileImageUrl,
+          profileImageUrl:
+            profile?.profileImageUrl || this.user.profileImageUrl,
           profileCompletionPercentage:
             profile?.profileCompletionPercentage ??
             this.user.profileCompletionPercentage,

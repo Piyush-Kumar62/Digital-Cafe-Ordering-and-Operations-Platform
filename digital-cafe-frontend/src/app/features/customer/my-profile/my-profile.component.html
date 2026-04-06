@@ -1,6 +1,6 @@
 <div class="pp">
   <!-- Loading skeleton -->
-    <ng-container *ngIf="loading">
+  <ng-container *ngIf="loading">
     <div class="pp-hero pp-hero--skel">
       <div class="pp-skel-circle"></div>
       <div class="pp-skel-lines">
@@ -14,14 +14,14 @@
   </ng-container>
 
   <!-- Error state -->
-    <div *ngIf="!loading && loadError" class="pp-error">
+  <div *ngIf="!loading && loadError" class="pp-error">
     <span class="material-icons">error_outline</span>
     <h3>Couldn't load profile</h3>
     <p>{{ loadError }}</p>
   </div>
 
   <!-- Main -->
-    <ng-container *ngIf="!loading && !loadError">
+  <ng-container *ngIf="!loading && !loadError">
     <form
       [formGroup]="form"
       (ngSubmit)="saveProfile()"
@@ -29,7 +29,7 @@
       autocomplete="off"
     >
       <!-- Hero banner -->
-    <div class="pp-hero">
+      <div class="pp-hero">
         <!-- Avatar + SVG completion ring -->
         <div class="pp-avatar-wrap">
           <svg class="pp-ring" viewBox="0 0 120 120" aria-hidden="true">
@@ -164,7 +164,7 @@
       </div>
 
       <!-- Tab strip -->
-    <nav class="pp-tabs" role="tablist" aria-label="Profile sections">
+      <nav class="pp-tabs" role="tablist" aria-label="Profile sections">
         <button
           type="button"
           role="tab"
@@ -208,7 +208,7 @@
       </nav>
 
       <!-- Basic Info panel -->
-    <div class="pp-panel" [class.pp-panel--on]="activeSection === 'basic'">
+      <div class="pp-panel" [class.pp-panel--on]="activeSection === 'basic'">
         <div class="pp-card">
           <div class="pp-card__hd">
             <span class="material-icons pp-card__ico">person_outline</span>
@@ -300,6 +300,7 @@
                   class="pp-inp pp-inp--prefix"
                   type="tel"
                   formControlName="phoneNumber"
+                  (input)="onPhoneInput($any($event.target).value)"
                   placeholder="98765 43210"
                   maxlength="10"
                   inputmode="numeric"
@@ -339,6 +340,7 @@
                   class="pp-inp"
                   [type]="govtIdVisible ? 'text' : 'password'"
                   formControlName="govtIdNumber"
+                  (input)="onGovtIdNumberInput($any($event.target).value)"
                   [placeholder]="govtIdNumberPlaceholder"
                   [attr.maxlength]="govtIdNumberMaxLength || null"
                 />
@@ -364,7 +366,7 @@
       </div>
 
       <!-- Address panel -->
-    <div class="pp-panel" [class.pp-panel--on]="activeSection === 'address'">
+      <div class="pp-panel" [class.pp-panel--on]="activeSection === 'address'">
         <div class="pp-card">
           <div class="pp-card__hd">
             <span class="material-icons pp-card__ico">location_on</span>
@@ -382,7 +384,7 @@
       </div>
 
       <!-- Academic panel -->
-    <div
+      <div
         class="pp-panel"
         [class.pp-panel--on]="activeSection === 'academic'"
         formArrayName="academicInformation"
@@ -586,7 +588,7 @@
       </div>
 
       <!-- Work Experience panel -->
-    <div
+      <div
         class="pp-panel"
         [class.pp-panel--on]="activeSection === 'work'"
         formArrayName="workExperiences"

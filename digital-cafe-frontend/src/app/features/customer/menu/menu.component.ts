@@ -3,6 +3,7 @@ import { Component, OnDestroy, OnInit } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { Router } from "@angular/router";
 import { Subject, Subscription, interval, takeUntil } from "rxjs";
+import { AuthService } from "@core/auth/auth.service";
 import { AlertService } from "@core/services/alert.service";
 import { WebSocketService } from "@core/websocket/websocket.service";
 import { Booking, BookingRequest } from "@shared/models/booking.model";
@@ -47,6 +48,10 @@ export class MenuComponent implements OnInit, OnDestroy {
 
   private quantitySelection: Record<number, number> = {};
   private orderTopicSub?: Subscription;
+  private customerTopicSub?: Subscription;
+  private userQueueSub?: Subscription;
+  private customerTopicDest: string | null = null;
+  private userQueueDest: string | null = null;
   private destroy$ = new Subject<void>();
 
   readonly orderSteps: OrderStatus[] = [
@@ -64,6 +69,7 @@ export class MenuComponent implements OnInit, OnDestroy {
     private webSocketService: WebSocketService,
     private alertService: AlertService,
     private router: Router,
+    private authService: AuthService,
   ) {}
 
   ngOnInit(): void {
@@ -75,10 +81,16 @@ export class MenuComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    if (this.orderTopicSub && this.activeOrder?.id) {
-      this.webSocketService.unsubscribe(
-        `/topic/customer-order/${this.activeOrder.id}`,
-      );
+    if (this.orderTopicSub) {
+      this.orderTopicSub.unsubscribe();
+    }
+    this.customerTopicSub?.unsubscribe();
+    this.userQueueSub?.unsubscribe();
+    if (this.customerTopicDest) {
+      this.webSocketService.unsubscribe(this.customerTopicDest);
+    }
+    if (this.userQueueDest) {
+      this.webSocketService.unsubscribe(this.userQueueDest);
     }
     this.destroy$.next();
     this.destroy$.complete();
@@ -582,16 +594,39 @@ export class MenuComponent implements OnInit, OnDestroy {
   }
 
   private subscribeToCustomerOrderTopic(orderId: number): void {
-    if (this.orderTopicSub && this.activeOrder?.id) {
-      this.webSocketService.unsubscribe(
-        `/topic/customer-order/${this.activeOrder.id}`,
-      );
+    this.orderTopicSub?.unsubscribe();
+
+    this.customerTopicSub?.unsubscribe();
+    if (this.customerTopicDest) {
+      this.webSocketService.unsubscribe(this.customerTopicDest);
+      this.customerTopicDest = null;
+    }
+
+    this.userQueueSub?.unsubscribe();
+    if (this.userQueueDest) {
+      this.webSocketService.unsubscribe(this.userQueueDest);
+      this.userQueueDest = null;
     }
 
     this.orderTopicSub = this.webSocketService
-      .watchDestination<any>(`/topic/customer-order/${orderId}`)
+      .watchDestination<any>("/user/queue/notifications")
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => this.refreshOrder());
+
+    const userId = this.authService.currentUserValue?.id;
+    if (userId) {
+      this.customerTopicDest = `/topic/customer/${userId}`;
+      this.customerTopicSub = this.webSocketService
+        .watchDestination<any>(this.customerTopicDest)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(() => this.refreshOrder());
+
+      this.userQueueDest = `/user/${userId}/queue/notifications`;
+      this.userQueueSub = this.webSocketService
+        .watchDestination<any>(this.userQueueDest)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(() => this.refreshOrder());
+    }
 
     interval(8000)
       .pipe(takeUntil(this.destroy$))

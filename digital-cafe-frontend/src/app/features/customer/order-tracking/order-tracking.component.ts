@@ -15,6 +15,7 @@ import { OrderTrackingService } from "./order-tracking.service";
 import { WebSocketService } from "@core/websocket/websocket.service";
 import { ApiService } from "@core/services/api.service";
 import { AlertService } from "@core/services/alert.service";
+import { uppercaseMeridiem } from "@core/utils/date-time-format.util";
 
 const TERMINAL_STATUSES = new Set([OrderStatus.SERVED, OrderStatus.CANCELLED]);
 
@@ -162,14 +163,16 @@ export class OrderTrackingComponent implements OnInit, OnDestroy {
   fmtDate(value?: string): string {
     if (!value) return "-";
     const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return value;
-    return date.toLocaleString("en-IN", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    if (Number.isNaN(date.getTime())) return uppercaseMeridiem(value);
+    return uppercaseMeridiem(
+      date.toLocaleString("en-IN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+    );
   }
 
   canDownloadReceipt(order: Order | null): boolean {

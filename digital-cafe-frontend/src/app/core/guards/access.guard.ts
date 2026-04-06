@@ -56,22 +56,14 @@ export const accessGuard: CanActivateFn = (route, state) => {
     }
   }
 
-  // Non-admin users must complete profile before accessing protected app routes.
+  // Customer users must complete profile before accessing protected app routes.
   // Keep this aligned with backend ProfileCompletionFilter to avoid 403 API storms.
   if (
     !route.data["skipProfileCheck"] &&
     !user.isProfileComplete &&
-    !authService.isCafeOwner()
+    authService.isCustomer()
   ) {
     let completionRoute = "/customer/complete-profile";
-
-    if (authService.isChef()) {
-      completionRoute = "/chef/profile";
-    } else if (authService.isWaiter()) {
-      completionRoute = "/waiter/profile";
-    } else if (authService.isCustomer()) {
-      completionRoute = "/customer/complete-profile";
-    }
 
     if (!state.url.startsWith(completionRoute)) {
       router.navigate([completionRoute]);

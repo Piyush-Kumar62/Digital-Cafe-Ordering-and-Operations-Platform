@@ -94,6 +94,26 @@ export class MyProfileComponent implements OnInit, OnDestroy {
   private avatarLoadFailed = false;
   private suppressCompletionWatch = false;
   private readonly destroy$ = new Subject<void>();
+  private readonly govtIdNumberValidator = (
+    control: AbstractControl,
+  ): ValidationErrors | null => {
+    const value = String(control.value || "").trim();
+    if (!value) return null;
+
+    const type = String(control.parent?.get("govtIdType")?.value || "");
+    const maxLength = this.getGovtIdNumberMaxLengthByType(type);
+    if (maxLength && value.length > maxLength) {
+      return {
+        maxlength: {
+          requiredLength: maxLength,
+          actualLength: value.length,
+        },
+      };
+    }
+
+    const pattern = this.getGovtIdPatternByType(type);
+    return pattern.test(value) ? null : { pattern: true };
+  };
 
   constructor(
     private fb: FormBuilder,
@@ -117,7 +137,7 @@ export class MyProfileComponent implements OnInit, OnDestroy {
         ],
       ],
       govtIdType: ["", [Validators.required, Validators.maxLength(50)]],
-      govtIdNumber: ["", [Validators.required, Validators.maxLength(100)]],
+      govtIdNumber: ["", [Validators.required, this.govtIdNumberValidator]],
       ...buildAddressControls({
         includeCountry: false,
         requireState: true,
@@ -234,10 +254,29 @@ export class MyProfileComponent implements OnInit, OnDestroy {
   }
 
   onGovtIdTypeChange(): void {
+    const type = String(this.form.get("govtIdType")?.value || "");
     const currentValue = this.form.get("govtIdNumber")?.value as string;
-    if (currentValue) {
-      this.form.get("govtIdNumber")?.setValue(currentValue.trim());
-    }
+    this.form
+      .get("govtIdNumber")
+      ?.setValue(this.normalizeGovtIdNumber(currentValue, type));
+    this.form.get("govtIdNumber")?.updateValueAndValidity();
+  }
+
+  onGovtIdNumberInput(value: string): void {
+    const type = String(this.form.get("govtIdType")?.value || "");
+    this.form
+      .get("govtIdNumber")
+      ?.setValue(this.normalizeGovtIdNumber(value, type), { emitEvent: false });
+    this.form.get("govtIdNumber")?.updateValueAndValidity({
+      emitEvent: false,
+      onlySelf: true,
+    });
+  }
+
+  onPhoneInput(value: string): void {
+    this.form
+      .get("phoneNumber")
+      ?.setValue(this.normalizePhone(value), { emitEvent: false });
   }
 
   get govtIdNumberPlaceholder(): string {
@@ -256,14 +295,9 @@ export class MyProfileComponent implements OnInit, OnDestroy {
   }
 
   get govtIdNumberMaxLength(): number | null {
-    switch ((this.form.get("govtIdType")?.value || "").toLowerCase()) {
-      case "aadhaar":
-        return 12;
-      case "pan card":
-        return 10;
-      default:
-        return null;
-    }
+    return this.getGovtIdNumberMaxLengthByType(
+      String(this.form.get("govtIdType")?.value || ""),
+    );
   }
 
   addAcademicRecord(): void {
@@ -385,6 +419,10 @@ export class MyProfileComponent implements OnInit, OnDestroy {
     }
 
     const v = this.form.getRawValue();
+    const normalizedGovtIdNumber = this.normalizeGovtIdNumber(
+      v.govtIdNumber,
+      v.govtIdType,
+    );
     const displayName = `${v.firstName} ${v.lastName}`.trim();
 
     const fullPayload = {
@@ -394,7 +432,7 @@ export class MyProfileComponent implements OnInit, OnDestroy {
       gender: v.gender,
       phoneNumber: this.normalizePhone(v.phoneNumber),
       govtIdType: v.govtIdType || null,
-      govtIdNumber: v.govtIdNumber || null,
+      govtIdNumber: normalizedGovtIdNumber || null,
       profilePictureUrl:
         v.profilePictureUrl || this.user?.profileImageUrl || null,
       address: {
@@ -439,7 +477,7 @@ export class MyProfileComponent implements OnInit, OnDestroy {
         gender: v.gender,
         phoneNumber: this.normalizePhone(v.phoneNumber),
         govtIdType: v.govtIdType || null,
-        govtIdNumber: v.govtIdNumber || null,
+        govtIdNumber: normalizedGovtIdNumber || undefined,
         address: {
           street: v.street,
           plotNumber: v.plotNumber,
@@ -488,7 +526,7 @@ export class MyProfileComponent implements OnInit, OnDestroy {
                   dateOfBirth: this.normalizeDateForApi(v.dateOfBirth),
                   gender: v.gender,
                   govtIdType: v.govtIdType,
-                  govtIdNumber: v.govtIdNumber,
+                  govtIdNumber: normalizedGovtIdNumber,
                   address: {
                     street: v.street,
                     plotNumber: v.plotNumber,
@@ -1177,6 +1215,53 @@ export class MyProfileComponent implements OnInit, OnDestroy {
     const digits = String(value || "").replace(/\D/g, "");
     if (!digits) return "";
     return digits.length > 10 ? digits.slice(-10) : digits;
+  }
+
+  private normalizeGovtIdNumber(value: unknown, govtIdType: unknown): string {
+    const raw = String(value || "").trim();
+    if (!raw) return "";
+
+    const normalizedType = String(govtIdType || "").toLowerCase();
+    if (normalizedType === "aadhaar") {
+      return raw
+        .replace(/\D/g, "")
+        .slice(0, this.getGovtIdNumberMaxLengthByType(normalizedType));
+    }
+
+    return raw
+      .toUpperCase()
+      .replace(/[^A-Z0-9]/g, "")
+      .slice(0, this.getGovtIdNumberMaxLengthByType(normalizedType));
+  }
+
+  private getGovtIdNumberMaxLengthByType(govtIdType: string): number {
+    switch (String(govtIdType || "").toLowerCase()) {
+      case "aadhaar":
+        return 12;
+      case "pan card":
+        return 10;
+      case "passport":
+        return 9;
+      case "driving license":
+        return 16;
+      default:
+        return 20;
+    }
+  }
+
+  private getGovtIdPatternByType(govtIdType: string): RegExp {
+    switch (String(govtIdType || "").toLowerCase()) {
+      case "aadhaar":
+        return /^\d{12}$/;
+      case "pan card":
+        return /^[A-Z]{5}[0-9]{4}[A-Z]$/;
+      case "passport":
+        return /^[A-Z0-9]{6,9}$/;
+      case "driving license":
+        return /^[A-Z0-9]{8,16}$/;
+      default:
+        return /^[A-Z0-9]{4,20}$/;
+    }
   }
 
   private normalizeDateForInput(value: unknown): string {

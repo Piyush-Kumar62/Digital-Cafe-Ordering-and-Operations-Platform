@@ -805,8 +805,16 @@ export class RegisterComponent implements OnInit, OnDestroy {
       this.errorMessage = "Please select a Government ID type";
       return false;
     }
+    this.govtIdNumber = this.normalizeGovtIdNumber(
+      this.govtIdNumber,
+      this.govtIdType,
+    );
     if (!this.govtIdNumber.trim()) {
       this.errorMessage = "Please enter your Government ID number";
+      return false;
+    }
+    if (!this.isValidGovtIdNumber(this.govtIdNumber, this.govtIdType)) {
+      this.errorMessage = this.getGovtIdValidationMessage(this.govtIdType);
       return false;
     }
     if (!this.govtIdProof) {
@@ -818,6 +826,7 @@ export class RegisterComponent implements OnInit, OnDestroy {
 
   validatePersonalDetails(): boolean {
     const pd = this.personalDetails;
+    pd.phone = this.normalizeIndianPhone(pd.phone);
     if (!pd.firstName.trim() || !pd.lastName.trim()) {
       this.errorMessage = "First name and last name are required";
       return false;
@@ -1177,9 +1186,18 @@ export class RegisterComponent implements OnInit, OnDestroy {
   }
 
   onGovtIdTypeChange() {
-    if (this.govtIdNumber.trim()) {
-      this.govtIdNumber = this.govtIdNumber.trim();
-    }
+    this.govtIdNumber = this.normalizeGovtIdNumber(
+      this.govtIdNumber,
+      this.govtIdType,
+    );
+  }
+
+  onGovtIdNumberInput(value: string): void {
+    this.govtIdNumber = this.normalizeGovtIdNumber(value, this.govtIdType);
+  }
+
+  onCustomerPhoneInput(value: string): void {
+    this.personalDetails.phone = this.normalizeIndianPhone(value);
   }
 
   private cacheRegistrationPayload(
@@ -1226,8 +1244,66 @@ export class RegisterComponent implements OnInit, OnDestroy {
         return 12;
       case "pan card":
         return 10;
+      case "passport":
+        return 9;
+      case "driving license":
+        return 16;
       default:
-        return null;
+        return 20;
+    }
+  }
+
+  private normalizeIndianPhone(value: string): string {
+    return String(value || "")
+      .replace(/\D/g, "")
+      .slice(0, 10);
+  }
+
+  private normalizeGovtIdNumber(value: string, govtIdType: string): string {
+    const raw = String(value || "").trim();
+    if (!raw) return "";
+
+    const normalizedType = String(govtIdType || "").toLowerCase();
+    if (normalizedType === "aadhaar") {
+      return raw.replace(/\D/g, "").slice(0, this.govtIdNumberMaxLength || 20);
+    }
+
+    return raw
+      .toUpperCase()
+      .replace(/[^A-Z0-9]/g, "")
+      .slice(0, this.govtIdNumberMaxLength || 20);
+  }
+
+  private isValidGovtIdNumber(value: string, govtIdType: string): boolean {
+    const id = String(value || "").trim();
+    if (!id) return false;
+
+    switch (String(govtIdType || "").toLowerCase()) {
+      case "aadhaar":
+        return /^\d{12}$/.test(id);
+      case "pan card":
+        return /^[A-Z]{5}[0-9]{4}[A-Z]$/.test(id);
+      case "passport":
+        return /^[A-Z0-9]{6,9}$/.test(id);
+      case "driving license":
+        return /^[A-Z0-9]{8,16}$/.test(id);
+      default:
+        return /^[A-Z0-9]{4,20}$/.test(id);
+    }
+  }
+
+  private getGovtIdValidationMessage(govtIdType: string): string {
+    switch (String(govtIdType || "").toLowerCase()) {
+      case "aadhaar":
+        return "Aadhaar must be exactly 12 digits.";
+      case "pan card":
+        return "PAN must be 10 characters in format AAAAA9999A.";
+      case "passport":
+        return "Passport number must be 6 to 9 alphanumeric characters.";
+      case "driving license":
+        return "Driving License must be 8 to 16 alphanumeric characters.";
+      default:
+        return "Government ID must be 4 to 20 valid characters.";
     }
   }
 

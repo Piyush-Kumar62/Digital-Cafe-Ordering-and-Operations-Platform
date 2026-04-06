@@ -109,6 +109,7 @@
             <input
               type="tel"
               formControlName="phoneNumber"
+              (input)="onPhoneInput($any($event.target).value)"
               placeholder="10-digit mobile number"
               maxlength="10"
               inputmode="numeric"
@@ -126,6 +127,7 @@
           Government ID Type
           <select
             formControlName="govtIdType"
+            (change)="onGovtIdTypeChange()"
             data-testid="profile-govt-id-type"
           >
             <option value="">Select ID Type</option>
@@ -139,7 +141,9 @@
           <input
             type="text"
             formControlName="govtIdNumber"
+            (input)="onGovtIdNumberInput($any($event.target).value)"
             placeholder="Enter ID number"
+            [attr.maxlength]="govtIdNumberMaxLength || null"
             data-testid="profile-govt-id-number"
           />
         </label>

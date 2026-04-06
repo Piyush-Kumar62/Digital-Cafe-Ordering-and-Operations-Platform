@@ -3,6 +3,7 @@ import { Component, OnInit } from "@angular/core";
 import { RouterModule } from "@angular/router";
 import { ApiService } from "@core/services/api.service";
 import { AlertService } from "@core/services/alert.service";
+import { uppercaseMeridiem } from "@core/utils/date-time-format.util";
 import {
   Payment,
   PaymentMethod,
@@ -166,14 +167,16 @@ export class MyPaymentsComponent implements OnInit {
   fmtDate(value?: string): string {
     if (!value) return "-";
     const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return value;
-    return date.toLocaleString("en-IN", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    if (Number.isNaN(date.getTime())) return uppercaseMeridiem(value);
+    return uppercaseMeridiem(
+      date.toLocaleString("en-IN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+    );
   }
 
   downloadReceipt(payment: Payment): void {

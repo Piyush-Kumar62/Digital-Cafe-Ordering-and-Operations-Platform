@@ -24,7 +24,7 @@ export class BrowseCafesComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
   pageIndex = 0;
-  readonly pageSize = 9;
+  readonly pageSize = 15;
   totalElements = 0;
   totalPages = 0;
 
@@ -72,11 +72,11 @@ export class BrowseCafesComponent implements OnInit, OnDestroy {
           return this.cafeBrowseService
             .getPublicCafes(this.pageIndex, this.pageSize)
             .pipe(
-            catchError(() => {
-              this.error = true;
-              this.loading = false;
-              return of(null);
-            }),
+              catchError(() => {
+                this.error = true;
+                this.loading = false;
+                return of(null);
+              }),
             );
         }),
         takeUntil(this.destroy$),

@@ -11,6 +11,7 @@ import { Subject, Subscription, takeUntil } from "rxjs";
 import { WebSocketService } from "@core/websocket/websocket.service";
 import { Router } from "@angular/router";
 import { ThemeService } from "@core/services/theme.service";
+import { uppercaseMeridiem } from "@core/utils/date-time-format.util";
 
 type HeaderNotification = {
   id: string;
@@ -50,7 +51,12 @@ export class CustomerHeaderComponent implements OnInit {
   };
   private userSubscription: Subscription | undefined;
   private customerOrderSub?: Subscription;
+  private userQueueSub?: Subscription;
+  private globalQueueSub?: Subscription;
   private customerOrderDest: string | null = null;
+  private userQueueDest: string | null = null;
+  private globalQueueDest: string | null = null;
+  private currentWsBindingKey: string | null = null;
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -65,15 +71,18 @@ export class CustomerHeaderComponent implements OnInit {
 
   ngOnInit(): void {
     this.userSubscription = this.authService.currentUser.subscribe((user) => {
+      const previousBindingKey = this.currentWsBindingKey;
       this.user = user;
       if (user) {
         this.profileCompletion = user.profileCompletionPercentage || 0;
         this.lastLogin = new Date(user.lastLogin || Date.now());
       }
-      this.rebindCustomerOrderStream();
+      const nextBindingKey = this.getWsBindingKey();
+      if (previousBindingKey !== nextBindingKey) {
+        this.rebindCustomerStreams();
+      }
     });
     this.loadProfile();
-    this.setupNotificationStream();
     this.themeService.syncFromStorage();
     this.isDarkMode = this.themeService.isDarkMode();
   }
@@ -84,10 +93,7 @@ export class CustomerHeaderComponent implements OnInit {
     if (this.userSubscription) {
       this.userSubscription.unsubscribe();
     }
-    this.customerOrderSub?.unsubscribe();
-    if (this.customerOrderDest) {
-      this.webSocketService.unsubscribe(this.customerOrderDest);
-    }
+    this.unbindCustomerStreams();
   }
 
   toggleNotifications(event: MouseEvent): void {
@@ -273,8 +279,20 @@ export class CustomerHeaderComponent implements OnInit {
   }
 
   private setupNotificationStream(): void {
-    this.webSocketService
-      .watchDestination<any>("/user/queue/notifications")
+    const userId = this.user?.id;
+    if (userId) {
+      this.userQueueDest = `/user/${userId}/queue/notifications`;
+      this.userQueueSub = this.webSocketService
+        .watchDestination<any>(this.userQueueDest)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe((payload) => {
+          this.pushNotification(payload);
+        });
+    }
+
+    this.globalQueueDest = "/user/queue/notifications";
+    this.globalQueueSub = this.webSocketService
+      .watchDestination<any>(this.globalQueueDest)
       .pipe(takeUntil(this.destroy$))
       .subscribe((payload) => {
         this.pushNotification(payload);
@@ -303,12 +321,47 @@ export class CustomerHeaderComponent implements OnInit {
     this.bindCustomerOrderStream();
   }
 
+  private rebindCustomerStreams(): void {
+    this.unbindCustomerStreams();
+    this.currentWsBindingKey = this.getWsBindingKey();
+    this.setupNotificationStream();
+    this.bindCustomerOrderStream();
+  }
+
+  private unbindCustomerStreams(): void {
+    this.customerOrderSub?.unsubscribe();
+    this.userQueueSub?.unsubscribe();
+    this.globalQueueSub?.unsubscribe();
+    this.customerOrderSub = undefined;
+    this.userQueueSub = undefined;
+    this.globalQueueSub = undefined;
+
+    if (this.customerOrderDest) {
+      this.webSocketService.unsubscribe(this.customerOrderDest);
+      this.customerOrderDest = null;
+    }
+    if (this.userQueueDest) {
+      this.webSocketService.unsubscribe(this.userQueueDest);
+      this.userQueueDest = null;
+    }
+    if (this.globalQueueDest) {
+      this.webSocketService.unsubscribe(this.globalQueueDest);
+      this.globalQueueDest = null;
+    }
+    this.currentWsBindingKey = null;
+  }
+
+  private getWsBindingKey(): string {
+    const userId = this.user?.id ?? "no-user";
+    return String(userId);
+  }
+
   private pushNotification(payload: any): void {
     const title = payload?.title || payload?.type || "Notification";
     const message = payload?.message || "You have a new update.";
     const createdAt = payload?.timestamp
-      ? new Date(payload.timestamp).toLocaleString()
-      : new Date().toLocaleString();
+      ? uppercaseMeridiem(new Date(payload.timestamp).toLocaleString())
+      : uppercaseMeridiem(new Date().toLocaleString());
 
     const fingerprint = `${title}|${message}|${createdAt}`;
     const duplicate = this.notifications.some(

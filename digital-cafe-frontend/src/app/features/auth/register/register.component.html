@@ -208,6 +208,7 @@
                   class="form-control"
                   id="govtIdNumber"
                   [(ngModel)]="govtIdNumber"
+                  (ngModelChange)="onGovtIdNumberInput($event)"
                   name="govtIdNumber"
                   [attr.maxlength]="govtIdNumberMaxLength"
                   [placeholder]="govtIdNumberPlaceholder"
@@ -329,7 +330,9 @@
                   class="form-control"
                   id="phone"
                   [(ngModel)]="personalDetails.phone"
-                  (ngModelChange)="errorMessage = ''"
+                  (ngModelChange)="
+                    onCustomerPhoneInput($event); errorMessage = ''
+                  "
                   name="phone"
                   #phoneCtrl="ngModel"
                   pattern="^[0-9]{10}$"
@@ -882,7 +885,7 @@
           "
         >
           <!-- STEP 1: Owner Information -->
-    <div *ngIf="cafeCurrentStep === 1" class="step-content">
+          <div *ngIf="cafeCurrentStep === 1" class="step-content">
             <h4 class="text-lg font-semibold mb-4 flex items-center">
               <i class="bi bi-person-circle me-3"></i>Owner Information
             </h4>
@@ -1007,7 +1010,7 @@
           </div>
 
           <!-- STEP 2: Café Business Details -->
-    <div *ngIf="cafeCurrentStep === 2" class="step-content">
+          <div *ngIf="cafeCurrentStep === 2" class="step-content">
             <h4 class="text-lg font-semibold mb-4 flex items-center">
               <i class="bi bi-shop-window me-3"></i>Café Business Details
             </h4>
@@ -1241,7 +1244,7 @@
           </div>
 
           <!-- STEP 3: Legal & Compliance + Café Logo -->
-    <div *ngIf="cafeCurrentStep === 3" class="step-content">
+          <div *ngIf="cafeCurrentStep === 3" class="step-content">
             <h4 class="text-lg font-semibold mb-1 flex items-center">
               <i class="bi bi-shield-check me-3"></i>Legal &amp; Compliance
             </h4>

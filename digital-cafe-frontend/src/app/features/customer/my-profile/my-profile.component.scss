@@ -1,5 +1,6 @@
 // CSS Custom Properties
-:host {  --pp-bg: #f1f5f9;
+:host {
+  --pp-bg: #f1f5f9;
   --pp-surface: #ffffff;
   --pp-border: #e2e8f0;
   --pp-text: #1e293b;
@@ -25,7 +26,8 @@
 }
 
 // Root wrapper
-.pp {  background: var(--pp-bg);
+.pp {
+  background: var(--pp-bg);
   min-height: 100vh;
   padding: 6px 10px 40px;
 }
@@ -109,7 +111,8 @@
 }
 
 // Shimmer animation
-@keyframes pp-shimmer {  0% {
+@keyframes pp-shimmer {
+  0% {
     background-position: -900px 0;
   }
   100% {
@@ -178,7 +181,8 @@
 }
 
 // Error state
-.pp-error {  max-width: 380px;
+.pp-error {
+  max-width: 380px;
   margin: 60px auto 0;
   text-align: center;
   color: var(--pp-sub);
@@ -203,7 +207,8 @@
 }
 
 // Hero banner
-.pp-hero {  max-width: var(--pp-content-max);
+.pp-hero {
+  max-width: var(--pp-content-max);
   width: 100%;
   margin: 0 auto 14px;
   background: linear-gradient(
@@ -263,12 +268,12 @@
   }
 }
 
-// A
-vatar + SVG ring
-.pp-avatar-wrap {  position: relative;
+// Avatar + completion ring
+.pp-avatar-wrap {
+  position: relative;
   width: 168px;
   height: 168px;
-  flex-shrink: 0;
+  flex: 0 0 168px;
 }
 
 .pp-ring {
@@ -292,11 +297,9 @@ vatar + SVG ring
 }
 
 .pp-avatar {
-  position: absolute;
-  top: 4px;
-  left: 4px;
-  width: 160px;
-  height: 160px;
+  position: relative;
+  width: 100%;
+  height: 100%;
   border-radius: 50%;
   object-fit: cover;
   border: 6px solid rgba(255, 255, 255, 0.92);
@@ -317,9 +320,9 @@ vatar + SVG ring
 
 .pp-cam {
   position: absolute;
-  inset: 4px;
-  width: 160px;
-  height: 160px;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   border-radius: 50%;
   background: rgba(0, 0, 0, 0.52);
   display: flex;
@@ -358,7 +361,8 @@ vatar + SVG ring
 }
 
 // Hero body
-.pp-hero__body {  flex: 1;
+.pp-hero__body {
+  flex: 1;
   min-width: 180px;
   color: #fff;
   z-index: 1;
@@ -503,11 +507,12 @@ vatar + SVG ring
 .pp-meta-chip--verified {
   background: rgba(16, 185, 129, 0.14);
   border-color: rgba(16, 185, 129, 0.32);
-  color: #065f46;
+  color: rgba(255, 255, 255, 0.96);
 }
 
 // Buttons
-.pp-btn {  display: inline-flex;
+.pp-btn {
+  display: inline-flex;
   align-items: center;
   gap: 6px;
   padding: 9px 18px;
@@ -572,7 +577,8 @@ vatar + SVG ring
 }
 
 // Tab strip
-.pp-tabs {  max-width: var(--pp-content-max);
+.pp-tabs {
+  max-width: var(--pp-content-max);
   width: 100%;
   margin: 0 auto 14px;
   background: var(--pp-surface);
@@ -623,7 +629,8 @@ vatar + SVG ring
 }
 
 // Panels
-.pp-panel {  display: none;
+.pp-panel {
+  display: none;
   max-width: var(--pp-content-max);
   width: 100%;
   margin: 0 auto;
@@ -634,7 +641,8 @@ vatar + SVG ring
 }
 
 // Cards
-.pp-card {  background: var(--pp-surface);
+.pp-card {
+  background: var(--pp-surface);
   border: 1px solid var(--pp-border);
   border-radius: var(--pp-radius);
   padding: 22px 24px;
@@ -679,7 +687,8 @@ vatar + SVG ring
 }
 
 // Grids
-.pp-g {  display: grid;
+.pp-g {
+  display: grid;
   gap: 14px;
   margin-bottom: 14px;
   align-items: start;
@@ -696,7 +705,8 @@ vatar + SVG ring
 }
 
 // Form fields
-.pp-f {  --pp-label-track: 22px;
+.pp-f {
+  --pp-label-track: 22px;
 
   // 3-row grid: label | input | error-space
   // The 3rd row is always at least 1rem so every cell is the same height
@@ -928,7 +938,8 @@ select.pp-inp:required:invalid {
 }
 
 // Add button
-.pp-add-btn {  display: inline-flex;
+.pp-add-btn {
+  display: inline-flex;
   align-items: center;
   gap: 4px;
   margin-left: auto;
@@ -956,7 +967,8 @@ select.pp-inp:required:invalid {
 }
 
 // Nested record card
-.pp-nested {  background: var(--pp-surface);
+.pp-nested {
+  background: var(--pp-surface);
   border: 1px solid var(--pp-border);
   border-radius: 12px;
   padding: 18px 20px;
@@ -993,7 +1005,8 @@ select.pp-inp:required:invalid {
 }
 
 // Remove button
-.pp-rm-btn {  width: 28px;
+.pp-rm-btn {
+  width: 28px;
   height: 28px;
   border-radius: 7px;
   border: 1px solid rgba(239, 68, 68, 0.3);
@@ -1021,7 +1034,8 @@ select.pp-inp:required:invalid {
 }
 
 // Custom checkbox
-.pp-chk {  display: inline-flex;
+.pp-chk {
+  display: inline-flex;
   align-items: center;
   gap: 12px;
   cursor: pointer;
@@ -1105,7 +1119,8 @@ select.pp-inp:required:invalid {
 }
 
 // Empty state
-.pp-empty {  text-align: center;
+.pp-empty {
+  text-align: center;
   padding: 40px 20px;
   color: var(--pp-sub);
   background: var(--pp-surface);
@@ -1126,7 +1141,8 @@ select.pp-inp:required:invalid {
 }
 
 // Bottom save bar
-.pp-bottombar {  max-width: var(--pp-content-max);
+.pp-bottombar {
+  max-width: var(--pp-content-max);
   width: 100%;
   margin: 6px auto 0;
   display: flex;
@@ -1134,7 +1150,8 @@ select.pp-inp:required:invalid {
 }
 
 // Responsive
-@media (max-width: 768px) {  .pp-hero {
+@media (max-width: 768px) {
+  .pp-hero {
     padding: 20px 16px;
     gap: 16px;
   }

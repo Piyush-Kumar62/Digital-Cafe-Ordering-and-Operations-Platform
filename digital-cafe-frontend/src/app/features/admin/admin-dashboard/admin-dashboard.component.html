@@ -51,7 +51,16 @@
 
     <div class="admin-hero__right">
       <div class="admin-hero__avatar">
-        {{ displayName.charAt(0).toUpperCase() }}
+        <img
+          *ngIf="heroAvatarUrl"
+          [src]="heroAvatarUrl"
+          [alt]="displayName + ' profile image'"
+          class="admin-hero__avatar-image"
+          (error)="onHeroAvatarError()"
+        />
+        <span *ngIf="!heroAvatarUrl">
+          {{ displayName.charAt(0).toUpperCase() }}
+        </span>
       </div>
       <div class="admin-hero__mini">
         <div class="admin-mini-stat">
@@ -142,7 +151,7 @@
           <p class="text-blue-100 text-sm font-medium mb-1">
             Total Registered Users
           </p>
-          <p class="text-4xl font-bold mb-2">
+          <p appAutoFitText [autoFitGroup]="'admin-kpi-main'" [maxFontPx]="52" [minFontPx]="24" class="text-4xl font-bold mb-2">
             {{ dashboard.totalUsers | number }}
           </p>
           <div class="flex items-center gap-2 text-sm">
@@ -178,7 +187,7 @@
       <div class="flex items-center justify-between">
         <div class="flex-1">
           <p class="text-green-100 text-sm font-medium mb-1">Active Users</p>
-          <p class="text-4xl font-bold mb-2">
+          <p appAutoFitText [autoFitGroup]="'admin-kpi-main'" [maxFontPx]="52" [minFontPx]="24" class="text-4xl font-bold mb-2">
             {{ dashboard.activeUsers | number }}
           </p>
           <div class="text-sm bg-white/20 px-2 py-1 rounded-md inline-block">
@@ -215,7 +224,7 @@
       <div class="flex items-center justify-between">
         <div class="flex-1">
           <p class="text-orange-100 text-sm font-medium mb-1">Inactive Users</p>
-          <p class="text-4xl font-bold mb-2">
+          <p appAutoFitText [autoFitGroup]="'admin-kpi-main'" [maxFontPx]="52" [minFontPx]="24" class="text-4xl font-bold mb-2">
             {{ dashboard.inactiveUsers | number }}
           </p>
           <div class="text-sm bg-white/20 px-2 py-1 rounded-md inline-block">
@@ -254,7 +263,7 @@
           <p class="text-red-100 text-sm font-medium mb-1">
             Password Reset Required
           </p>
-          <p class="text-4xl font-bold mb-2">
+          <p appAutoFitText [autoFitGroup]="'admin-kpi-main'" [maxFontPx]="52" [minFontPx]="24" class="text-4xl font-bold mb-2">
             {{ dashboard.usersWithoutPasswordReset | number }}
           </p>
           <div class="text-sm bg-white/20 px-2 py-1 rounded-md inline-block">
@@ -308,11 +317,11 @@
             </svg>
           </div>
         </div>
-        <div class="ml-4 flex-1">
+        <div class="ml-4 flex-1 min-w-0">
           <p class="text-sm font-medium text-gray-600">
             Today's New Registrations
           </p>
-          <p class="text-3xl font-bold text-gray-900">
+          <p appAutoFitText [autoFitGroup]="'admin-kpi-main'" [maxFontPx]="44" [minFontPx]="20" class="text-3xl font-bold text-gray-900">
             {{ dashboard.todayNewRegistrations | number }}
           </p>
           <p class="text-sm text-indigo-600">
@@ -349,11 +358,11 @@
             </svg>
           </div>
         </div>
-        <div class="ml-4 flex-1">
+        <div class="ml-4 flex-1 min-w-0">
           <p class="text-sm font-medium text-gray-600">
             Today's New Registrations
           </p>
-          <p class="text-3xl font-bold text-gray-900">
+          <p appAutoFitText [autoFitGroup]="'admin-kpi-main'" [maxFontPx]="44" [minFontPx]="20" class="text-3xl font-bold text-gray-900">
             {{ dashboard.todayNewRegistrations | number }}
           </p>
           <p class="text-sm text-indigo-600">
@@ -390,9 +399,9 @@
             </svg>
           </div>
         </div>
-        <div class="ml-4 flex-1">
+        <div class="ml-4 flex-1 min-w-0">
           <p class="text-sm font-medium text-gray-600">Unverified Emails</p>
-          <p class="text-3xl font-bold text-gray-900">
+          <p appAutoFitText [autoFitGroup]="'admin-kpi-main'" [maxFontPx]="44" [minFontPx]="20" class="text-3xl font-bold text-gray-900">
             {{ dashboard.unverifiedEmailUsers | number }}
           </p>
           <p class="text-sm text-yellow-600">Need verification</p>
@@ -424,9 +433,9 @@
             </svg>
           </div>
         </div>
-        <div class="ml-4 flex-1">
+        <div class="ml-4 flex-1 min-w-0">
           <p class="text-sm font-medium text-gray-600">Total Cafés</p>
-          <p class="text-3xl font-bold text-gray-900">
+          <p appAutoFitText [autoFitGroup]="'admin-kpi-main'" [maxFontPx]="44" [minFontPx]="20" class="text-3xl font-bold text-gray-900">
             {{ dashboard.totalCafes | number }}
           </p>
           <p class="text-sm text-pink-600">
@@ -460,9 +469,9 @@
             </svg>
           </div>
         </div>
-        <div class="ml-4 flex-1">
+        <div class="ml-4 flex-1 min-w-0">
           <p class="text-sm font-medium text-gray-600">Total Bookings</p>
-          <p class="text-3xl font-bold text-gray-900">
+          <p appAutoFitText [autoFitGroup]="'admin-kpi-main'" [maxFontPx]="44" [minFontPx]="20" class="text-3xl font-bold text-gray-900">
             {{ dashboard.totalBookings | number }}
           </p>
           <p class="text-sm text-cyan-600">
@@ -495,9 +504,9 @@
             </svg>
           </div>
         </div>
-        <div class="ml-4 flex-1">
+        <div class="ml-4 flex-1 min-w-0">
           <p class="text-sm font-medium text-gray-600">Today's Bookings</p>
-          <p class="text-3xl font-bold text-gray-900">
+          <p appAutoFitText [autoFitGroup]="'admin-kpi-main'" [maxFontPx]="44" [minFontPx]="20" class="text-3xl font-bold text-gray-900">
             {{ dashboard.todayBookings || 0 | number }}
           </p>
           <p class="text-sm text-cyan-600">Today performance</p>
@@ -528,9 +537,9 @@
             </svg>
           </div>
         </div>
-        <div class="ml-4 flex-1">
+        <div class="ml-4 flex-1 min-w-0">
           <p class="text-sm font-medium text-gray-600">This Week Bookings</p>
-          <p class="text-3xl font-bold text-gray-900">
+          <p appAutoFitText [autoFitGroup]="'admin-kpi-main'" [maxFontPx]="44" [minFontPx]="20" class="text-3xl font-bold text-gray-900">
             {{ dashboard.thisWeekBookings || 0 | number }}
           </p>
           <p class="text-sm text-indigo-600">Weekly performance</p>
@@ -562,9 +571,9 @@
             </svg>
           </div>
         </div>
-        <div class="ml-4 flex-1">
+        <div class="ml-4 flex-1 min-w-0">
           <p class="text-sm font-medium text-gray-600">This Month Bookings</p>
-          <p class="text-3xl font-bold text-gray-900">
+          <p appAutoFitText [autoFitGroup]="'admin-kpi-main'" [maxFontPx]="44" [minFontPx]="20" class="text-3xl font-bold text-gray-900">
             {{ dashboard.thisMonthBookings || 0 | number }}
           </p>
           <p class="text-sm text-emerald-600">Monthly performance</p>
@@ -599,9 +608,9 @@
             </svg>
           </div>
         </div>
-        <div class="ml-4 flex-1">
+        <div class="ml-4 flex-1 min-w-0">
           <p class="text-sm font-medium text-gray-600">Total Orders</p>
-          <p class="text-3xl font-bold text-gray-900">
+          <p appAutoFitText [autoFitGroup]="'admin-kpi-main'" [maxFontPx]="44" [minFontPx]="20" class="text-3xl font-bold text-gray-900">
             {{ dashboard.totalOrders | number }}
           </p>
           <p class="text-sm text-purple-600">
@@ -635,9 +644,9 @@
             </svg>
           </div>
         </div>
-        <div class="ml-4 flex-1">
+        <div class="ml-4 flex-1 min-w-0">
           <p class="text-sm font-medium text-gray-600">Pending Orders</p>
-          <p class="text-3xl font-bold text-gray-900">
+          <p appAutoFitText [autoFitGroup]="'admin-kpi-main'" [maxFontPx]="44" [minFontPx]="20" class="text-3xl font-bold text-gray-900">
             {{ dashboard.pendingOrders | number }}
           </p>
           <p class="text-sm text-amber-600">Need processing</p>
@@ -669,12 +678,12 @@
             </svg>
           </div>
         </div>
-        <div class="ml-4 flex-1">
+        <div class="ml-4 flex-1 min-w-0">
           <p class="text-sm font-medium text-gray-600">Total Revenue</p>
-          <p class="text-3xl font-bold text-gray-900">
+          <p appAutoFitText [autoFitGroup]="'admin-kpi-main'" [maxFontPx]="44" [minFontPx]="20" class="text-3xl font-bold text-gray-900 admin-kpi-value admin-kpi-value--currency">
             ₹{{ dashboard.totalRevenue | number: "1.2-2" }}
           </p>
-          <p class="text-sm text-emerald-600">
+          <p appAutoFitText [maxFontPx]="14" [minFontPx]="12" class="text-sm text-emerald-600 admin-kpi-subvalue admin-kpi-subvalue--currency">
             ₹{{ dashboard.todayRevenue | number: "1.2-2" }} Today
           </p>
         </div>
@@ -705,9 +714,9 @@
             </svg>
           </div>
         </div>
-        <div class="ml-4 flex-1">
+        <div class="ml-4 flex-1 min-w-0">
           <p class="text-sm font-medium text-gray-600">This Month Revenue</p>
-          <p class="text-3xl font-bold text-gray-900">
+          <p appAutoFitText [autoFitGroup]="'admin-kpi-main'" [maxFontPx]="44" [minFontPx]="20" class="text-3xl font-bold text-gray-900 admin-kpi-value admin-kpi-value--currency">
             ₹{{ dashboard.thisMonthRevenue | number: "1.2-2" }}
           </p>
           <p class="text-sm text-teal-600">Monthly performance</p>
@@ -822,3 +831,7 @@
     </div>
   </div>
 </div>
+
+
+
+

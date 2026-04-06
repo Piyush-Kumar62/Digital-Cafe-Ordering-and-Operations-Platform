@@ -8,12 +8,15 @@ import {
 } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { RouterModule } from "@angular/router";
+import { Subscription } from "rxjs";
 import { ApiService } from "@core/services/api.service";
 import { AlertService } from "@core/services/alert.service";
 import { AdminDashboard } from "@shared/models/dashboard.model";
 import { User } from "@shared/models/auth.model";
 import { uppercaseMeridiem } from "@core/utils/date-time-format.util";
 import { AuthService } from "@core/auth/auth.service";
+import { environment } from "@environments/environment";
+import { AutoFitTextDirective } from "@shared/directives/auto-fit-text.directive";
 import { Chart, ChartConfiguration, registerables } from "chart.js";
 
 // Register Chart.js components
@@ -22,7 +25,7 @@ Chart.register(...registerables);
 @Component({
   selector: "app-admin-dashboard",
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, AutoFitTextDirective],
   templateUrl: "./admin-dashboard.component.html",
   styleUrls: ["./admin-dashboard.component.scss"],
 })
@@ -38,8 +41,10 @@ export class AdminDashboardComponent
   pendingUsers: User[] = [];
   pendingLoading = false;
   currentUser: User | null = null;
+  heroAvatarLoadFailed = false;
   currentDateTime = new Date();
   private clockTimerId?: ReturnType<typeof setInterval>;
+  private currentUserSub?: Subscription;
   weeklyChart: Chart | null = null;
   roleChart: Chart | null = null;
 
@@ -50,7 +55,10 @@ export class AdminDashboardComponent
   ) {}
 
   ngOnInit(): void {
-    this.authService.currentUser.subscribe((user) => (this.currentUser = user));
+    this.currentUserSub = this.authService.currentUser.subscribe((user) => {
+      this.currentUser = user;
+      this.heroAvatarLoadFailed = false;
+    });
     this.startClock();
     this.loadDashboard();
     this.loadPendingApprovals();
@@ -61,6 +69,7 @@ export class AdminDashboardComponent
   }
 
   ngOnDestroy(): void {
+    this.currentUserSub?.unsubscribe();
     if (this.clockTimerId) {
       clearInterval(this.clockTimerId);
       this.clockTimerId = undefined;
@@ -114,6 +123,29 @@ export class AdminDashboardComponent
       this.currentUser?.username ||
       "Admin"
     );
+  }
+
+  get heroAvatarUrl(): string {
+    if (this.heroAvatarLoadFailed) {
+      return "";
+    }
+
+    const imageValue =
+      this.currentUser?.profileImageUrl || this.currentUser?.avatarUrl || "";
+    if (!imageValue) {
+      return "";
+    }
+
+    if (imageValue.startsWith("http")) {
+      return imageValue;
+    }
+
+    const backendBase = environment.apiUrl.replace("/api", "");
+    return `${backendBase}${imageValue}`;
+  }
+
+  onHeroAvatarError(): void {
+    this.heroAvatarLoadFailed = true;
   }
 
   loadDashboard(isRefresh = false): void {

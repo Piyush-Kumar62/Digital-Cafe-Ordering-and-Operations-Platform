@@ -6,6 +6,7 @@ import { WebSocketService } from "@core/websocket/websocket.service";
 import { Order, OrderStatus } from "@shared/models/order.model";
 import { User } from "@shared/models/auth.model";
 import { AlertService } from "@core/services/alert.service";
+import { uppercaseMeridiem } from "@core/utils/date-time-format.util";
 import { Subject, takeUntil, interval } from "rxjs";
 
 @Component({
@@ -144,7 +145,7 @@ export class ChefDashboardComponent implements OnInit, OnDestroy {
       minute: "2-digit",
       hour12: true,
     });
-    return `${date} | ${time}`;
+    return `${date} | ${uppercaseMeridiem(time)}`;
   }
 
   get displayName(): string {

@@ -115,7 +115,7 @@
     <!-- MAIN GRID -->
     <div class="cp-grid">
       <!-- LEFT COLUMN -->
-    <div class="cp-left">
+      <div class="cp-left">
         <!-- Edit Profile Form -->
         <div class="cp-card cp-card--form" *ngIf="editMode">
           <div class="cp-card__head">
@@ -161,30 +161,102 @@
               <input
                 type="text"
                 [(ngModel)]="editForm.phoneNumber"
+                (ngModelChange)="onPhoneNumberChange($event)"
                 placeholder="10-digit mobile number"
                 class="cp-input"
-                maxlength="15"
+                maxlength="10"
+                inputmode="numeric"
               />
             </div>
             <div class="cp-form-group">
               <label>Govt ID Type</label>
-              <input
-                type="text"
+              <select
                 [(ngModel)]="editForm.govtIdType"
-                placeholder="Aadhaar / PAN / Passport"
+                (ngModelChange)="onGovtIdTypeChange()"
                 class="cp-input"
-                maxlength="50"
-              />
+              >
+                <option value="">Select Govt ID Type</option>
+                <option
+                  *ngIf="
+                    editForm.govtIdType &&
+                    !govtIdTypeOptions.includes(editForm.govtIdType)
+                  "
+                  [value]="editForm.govtIdType"
+                >
+                  {{ editForm.govtIdType }}
+                </option>
+                <option
+                  *ngFor="let option of govtIdTypeOptions"
+                  [value]="option"
+                >
+                  {{ option }}
+                </option>
+              </select>
             </div>
             <div class="cp-form-group cp-form-group--full">
               <label>Govt ID Number</label>
               <input
                 type="text"
                 [(ngModel)]="editForm.govtIdNumber"
+                (ngModelChange)="onGovtIdNumberChange($event)"
                 placeholder="Enter ID number"
                 class="cp-input"
-                maxlength="100"
+                [attr.maxlength]="getGovtIdNumberMaxLength()"
               />
+              <div class="cp-doc-badges" *ngIf="hasGovtDocument()">
+                <span class="cp-doc-badge cp-doc-badge--type">{{
+                  getGovtDocumentTypeLabel()
+                }}</span>
+                <span class="cp-doc-badge" *ngIf="getGovtDocumentSizeLabel()">{{
+                  getGovtDocumentSizeLabel()
+                }}</span>
+              </div>
+            </div>
+            <div class="cp-form-group cp-form-group--full">
+              <label>Govt ID Document</label>
+              <div class="cp-doc-editor-actions">
+                <button
+                  type="button"
+                  class="cp-doc-upload-btn"
+                  (click)="triggerGovtDocInput()"
+                  [disabled]="uploadingGovtDocument"
+                >
+                  <span class="material-icons">upload_file</span>
+                  {{
+                    uploadingGovtDocument
+                      ? "Uploading…"
+                      : hasGovtDocument()
+                        ? "Replace Document"
+                        : "Upload Document"
+                  }}
+                </button>
+                <a
+                  *ngIf="hasGovtDocument()"
+                  [href]="getGovtDocumentUrl()"
+                  target="_blank"
+                  rel="noopener"
+                  class="cp-doc-open-link"
+                >
+                  <span class="material-icons">open_in_new</span>
+                  Open
+                </a>
+              </div>
+              <input
+                #govtDocInput
+                type="file"
+                accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                style="display: none"
+                (change)="onGovtDocumentSelected($event)"
+              />
+              <img
+                *ngIf="hasGovtDocument() && isGovtDocumentImage()"
+                class="cp-doc-preview"
+                [src]="getGovtDocumentUrl()"
+                alt="Government ID preview"
+              />
+              <p *ngIf="hasGovtDocument()" class="cp-doc-name">
+                {{ profileData.govtIdFileName || "Government ID document" }}
+              </p>
             </div>
             <div class="cp-form-group">
               <label>Joining Date</label>
@@ -413,6 +485,41 @@
             </div>
             <div class="cp-detail-row">
               <div class="cp-detail-icon">
+                <span class="material-icons">description</span>
+              </div>
+              <div class="cp-detail-body cp-detail-body--doc">
+                <span class="cp-detail-lbl">Govt ID Document</span>
+                <span class="cp-detail-val" *ngIf="!hasGovtDocument()">—</span>
+                <ng-container *ngIf="hasGovtDocument()">
+                  <div class="cp-doc-badges">
+                    <span class="cp-doc-badge cp-doc-badge--type">{{
+                      getGovtDocumentTypeLabel()
+                    }}</span>
+                    <span
+                      class="cp-doc-badge"
+                      *ngIf="getGovtDocumentSizeLabel()"
+                      >{{ getGovtDocumentSizeLabel() }}</span
+                    >
+                  </div>
+                  <img
+                    *ngIf="isGovtDocumentImage()"
+                    class="cp-doc-preview"
+                    [src]="getGovtDocumentUrl()"
+                    alt="Government ID preview"
+                  />
+                  <a
+                    class="cp-detail-val cp-detail-val--doc"
+                    [href]="getGovtDocumentUrl()"
+                    target="_blank"
+                    rel="noopener"
+                  >
+                    {{ profileData.govtIdFileName || "View Document" }}
+                  </a>
+                </ng-container>
+              </div>
+            </div>
+            <div class="cp-detail-row">
+              <div class="cp-detail-icon">
                 <span class="material-icons">event_available</span>
               </div>
               <div class="cp-detail-body">
@@ -425,7 +532,7 @@
       </div>
 
       <!-- RIGHT COLUMN -->
-    <div class="cp-right">
+      <div class="cp-right">
         <!-- Work Information Card -->
         <div class="cp-card">
           <div class="cp-card__head">

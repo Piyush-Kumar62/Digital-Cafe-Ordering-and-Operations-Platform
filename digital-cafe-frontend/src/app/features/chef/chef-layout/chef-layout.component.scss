@@ -48,7 +48,8 @@
   --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.3);
 }
 
-/* SHELL */.chef-shell {
+/* SHELL */
+.chef-shell {
   display: flex;
   height: 100vh;
   overflow: hidden;
@@ -61,7 +62,8 @@
     sans-serif;
 }
 
-/* MOBILE OVERLAY */.mobile-overlay {
+/* MOBILE OVERLAY */
+.mobile-overlay {
   display: none;
   position: fixed;
   inset: 0;
@@ -74,7 +76,8 @@
   }
 }
 
-/* SIDEBAR */.sidebar {
+/* SIDEBAR */
+.sidebar {
   position: fixed;
   inset: 0 auto 0 0;
   z-index: 50;
@@ -322,7 +325,8 @@
   }
 }
 
-/* MAIN AREA */.main-area {
+/* MAIN AREA */
+.main-area {
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -343,7 +347,8 @@
   }
 }
 
-/* TOP HEADER */.top-header {
+/* TOP HEADER */
+.top-header {
   height: var(--header-height);
   min-height: var(--header-height);
   background: var(--surface);
@@ -415,6 +420,46 @@
   display: flex;
   align-items: center;
   gap: 6px;
+}
+
+.header-profile-progress {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+
+  @media (max-width: 880px) {
+    display: none;
+  }
+}
+
+.header-profile-progress__label {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  font-weight: 700;
+}
+
+.header-profile-progress__track {
+  width: 90px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.3);
+  overflow: hidden;
+}
+
+.header-profile-progress__fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #22c55e, #16a34a);
+}
+
+.header-profile-progress__value {
+  font-size: 0.75rem;
+  color: #15803d;
+  font-weight: 800;
 }
 
 .header-action-item {
@@ -575,7 +620,8 @@
   line-height: 1.4;
 }
 
-/* PROFILE AREA */.profile-area {
+/* PROFILE AREA */
+.profile-area {
   padding-left: 10px;
   margin-left: 4px;
   border-left: 1px solid var(--border);
@@ -830,14 +876,16 @@
   }
 }
 
-/* PAGE CONTENT */.page-content {
+/* PAGE CONTENT */
+.page-content {
   flex: 1;
   overflow-y: auto;
   background: var(--bg);
   scrollbar-width: thin;
 }
 
-/* ANIMATIONS */@keyframes dropIn {
+/* ANIMATIONS */
+@keyframes dropIn {
   from {
     opacity: 0;
     transform: translateY(-8px);
@@ -848,7 +896,8 @@
   }
 }
 
-/* RESPONSIVE */@media (max-width: 768px) {
+/* RESPONSIVE */
+@media (max-width: 768px) {
   .top-header {
     padding: 0 12px;
     height: 60px;
@@ -891,7 +940,8 @@
   }
 }
 
-/* DARK MODE SPECIFIC */:host-context(.dark) {
+/* DARK MODE SPECIFIC */
+:host-context(.dark) {
   .severity-info {
     color: #93c5fd;
     border-color: rgba(96, 165, 250, 0.35);

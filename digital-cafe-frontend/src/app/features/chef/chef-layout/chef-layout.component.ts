@@ -9,12 +9,13 @@ import {
 } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { RouterModule, Router, NavigationEnd } from "@angular/router";
-import { Subscription } from "rxjs";
-import { filter } from "rxjs/operators";
+import { Subscription, forkJoin, of } from "rxjs";
+import { catchError, filter } from "rxjs/operators";
 
 import { AuthService } from "@core/auth/auth.service";
 import { ApiService } from "@core/services/api.service";
 import { ThemeService } from "@core/services/theme.service";
+import { uppercaseMeridiem } from "@core/utils/date-time-format.util";
 import { AlertService } from "@core/services/alert.service";
 import { WebSocketService } from "@core/websocket/websocket.service";
 
@@ -55,7 +56,12 @@ export class ChefLayoutComponent implements OnInit, OnDestroy {
   private routerEventsSub?: Subscription;
   private currentUserSub?: Subscription;
   private orderNotifSub?: Subscription;
+  private userNotifSub?: Subscription;
+  private globalNotifSub?: Subscription;
   private wsOrderDest: string | null = null;
+  private wsUserNotifDest: string | null = null;
+  private wsGlobalNotifDest: string | null = null;
+  private currentWsBindingKey: string | null = null;
 
   @ViewChild("profileContainer", { static: false })
   profileContainer!: ElementRef;
@@ -93,12 +99,17 @@ export class ChefLayoutComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.currentUser = this.authService.currentUserValue;
     this.profileImage = this.resolveProfileImage(this.currentUser);
+    this.bindOrderNotifications();
     this.currentUserSub = this.authService.currentUser.subscribe((user) => {
+      const previousBindingKey = this.currentWsBindingKey;
       this.currentUser = user;
       this.profileImage = this.resolveProfileImage(user);
+      const nextBindingKey = this.getWsBindingKey();
+      if (previousBindingKey !== nextBindingKey) {
+        this.rebindOrderNotifications();
+      }
     });
     this.refreshProfileFromDb();
-    this.bindOrderNotifications();
     this.routerEventsSub = this.router.events
       .pipe(filter((event) => event instanceof NavigationEnd))
       .subscribe(() => {});
@@ -107,10 +118,7 @@ export class ChefLayoutComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.routerEventsSub?.unsubscribe();
     this.currentUserSub?.unsubscribe();
-    this.orderNotifSub?.unsubscribe();
-    if (this.wsOrderDest) {
-      this.webSocketService.unsubscribe(this.wsOrderDest);
-    }
+    this.unbindOrderNotifications();
   }
 
   toggleSidebar(): void {
@@ -169,6 +177,31 @@ export class ChefLayoutComponent implements OnInit, OnDestroy {
     return String(role).replace("ROLE_", "");
   }
 
+  getProfileCompletionPercentage(): number {
+    const stored = Number(this.currentUser?.profileCompletionPercentage ?? 0);
+    const safeStored =
+      Number.isNaN(stored) || stored < 0
+        ? 0
+        : Math.min(100, Math.round(stored));
+
+    // Fallback to live field-based progress if backend percentage is stale.
+    const user = this.currentUser || {};
+    let filled = 0;
+    const total = 8;
+
+    if (String(user.firstName || "").trim()) filled++;
+    if (String(user.lastName || "").trim()) filled++;
+    if (String(user.displayName || "").trim()) filled++;
+    if (String(user.phoneNumber || "").trim()) filled++;
+    if (String(user.govtIdType || "").trim()) filled++;
+    if (String(user.govtIdNumber || "").trim()) filled++;
+    if (String(user.govtIdDocumentPath || "").trim()) filled++;
+    if (String(user.joiningDate || "").trim()) filled++;
+
+    const calculated = Math.round((filled * 100) / total);
+    return Math.max(safeStored, calculated);
+  }
+
   getAvatarText(): string {
     const name = this.getDisplayName();
     return name?.charAt(0)?.toUpperCase() || "C";
@@ -213,7 +246,9 @@ export class ChefLayoutComponent implements OnInit, OnDestroy {
   getNotificationTime(timestamp: string): string {
     const date = new Date(timestamp);
     if (Number.isNaN(date.getTime())) return "";
-    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    return uppercaseMeridiem(
+      date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+    );
   }
 
   getNotificationSeverityClass(severity: "info" | "warning" | "error"): string {
@@ -281,7 +316,28 @@ export class ChefLayoutComponent implements OnInit, OnDestroy {
   }
 
   private bindOrderNotifications(): void {
+    const userId = this.currentUser?.id;
     const cafeId = this.currentUser?.cafeId;
+    this.currentWsBindingKey = this.getWsBindingKey();
+
+    if (userId) {
+      this.wsUserNotifDest = `/user/${userId}/queue/notifications`;
+      this.userNotifSub = this.webSocketService
+        .watchDestination<any>(this.wsUserNotifDest)
+        .subscribe({
+          next: (payload) =>
+            this.ngZone.run(() => this.pushNotification(payload)),
+        });
+
+      this.wsGlobalNotifDest = "/user/queue/notifications";
+      this.globalNotifSub = this.webSocketService
+        .watchDestination<any>(this.wsGlobalNotifDest)
+        .subscribe({
+          next: (payload) =>
+            this.ngZone.run(() => this.pushNotification(payload)),
+        });
+    }
+
     if (!cafeId) return;
 
     this.wsOrderDest = `/topic/chef/${cafeId}`;
@@ -291,6 +347,40 @@ export class ChefLayoutComponent implements OnInit, OnDestroy {
         next: (payload) =>
           this.ngZone.run(() => this.pushNotification(payload)),
       });
+  }
+
+  private rebindOrderNotifications(): void {
+    this.unbindOrderNotifications();
+    this.bindOrderNotifications();
+  }
+
+  private unbindOrderNotifications(): void {
+    this.orderNotifSub?.unsubscribe();
+    this.userNotifSub?.unsubscribe();
+    this.globalNotifSub?.unsubscribe();
+    this.orderNotifSub = undefined;
+    this.userNotifSub = undefined;
+    this.globalNotifSub = undefined;
+
+    if (this.wsOrderDest) {
+      this.webSocketService.unsubscribe(this.wsOrderDest);
+      this.wsOrderDest = null;
+    }
+    if (this.wsUserNotifDest) {
+      this.webSocketService.unsubscribe(this.wsUserNotifDest);
+      this.wsUserNotifDest = null;
+    }
+    if (this.wsGlobalNotifDest) {
+      this.webSocketService.unsubscribe(this.wsGlobalNotifDest);
+      this.wsGlobalNotifDest = null;
+    }
+    this.currentWsBindingKey = null;
+  }
+
+  private getWsBindingKey(): string {
+    const userId = this.currentUser?.id ?? "no-user";
+    const cafeId = this.currentUser?.cafeId ?? "no-cafe";
+    return `${userId}:${cafeId}`;
   }
 
   private pushNotification(payload: any): void {
@@ -332,34 +422,73 @@ export class ChefLayoutComponent implements OnInit, OnDestroy {
   }
 
   private refreshProfileFromDb(): void {
-    this.apiService.getCustomerProfile().subscribe({
-      next: (profile) => {
+    forkJoin({
+      basic: this.apiService
+        .getCustomerProfile()
+        .pipe(catchError(() => of(null))),
+      full: this.apiService.getMyFullProfile().pipe(catchError(() => of(null))),
+    }).subscribe({
+      next: ({ basic, full }) => {
         if (!this.currentUser) return;
-        const firstName = profile?.firstName || this.currentUser.firstName;
-        const lastName = profile?.lastName || this.currentUser.lastName;
+        const firstName =
+          basic?.firstName || full?.firstName || this.currentUser.firstName;
+        const lastName =
+          basic?.lastName || full?.lastName || this.currentUser.lastName;
         const updated = {
           ...this.currentUser,
           firstName,
           lastName,
           displayName:
-            profile?.displayName ||
+            basic?.displayName ||
+            full?.displayName ||
             this.currentUser.displayName ||
             `${firstName} ${lastName}`.trim(),
-          phoneNumber: profile?.phoneNumber || this.currentUser.phoneNumber,
-          govtIdType: profile?.govtIdType || this.currentUser.govtIdType,
-          govtIdNumber: profile?.govtIdNumber || this.currentUser.govtIdNumber,
+          phoneNumber:
+            basic?.phoneNumber ||
+            full?.phoneNumber ||
+            this.currentUser.phoneNumber,
+          govtIdType:
+            basic?.govtIdType ||
+            full?.govtIdType ||
+            this.currentUser.govtIdType,
+          govtIdNumber:
+            basic?.govtIdNumber ||
+            full?.govtIdNumber ||
+            this.currentUser.govtIdNumber,
+          govtIdFileName:
+            basic?.govtIdFileName ||
+            full?.govtIdFileName ||
+            this.currentUser.govtIdFileName,
+          govtIdContentType:
+            basic?.govtIdContentType ||
+            full?.govtIdContentType ||
+            this.currentUser.govtIdContentType,
+          govtIdDocumentPath:
+            basic?.govtIdDocumentPath ||
+            full?.govtIdDocumentPath ||
+            this.currentUser.govtIdDocumentPath,
+          govtIdFileSize:
+            basic?.govtIdFileSize ??
+            full?.govtIdFileSize ??
+            this.currentUser.govtIdFileSize,
           profileImageUrl:
-            profile?.profileImageUrl || this.currentUser.profileImageUrl,
+            basic?.profileImageUrl || this.currentUser.profileImageUrl,
           profileCompletionPercentage:
-            profile?.profileCompletionPercentage ??
+            basic?.profileCompletionPercentage ??
+            full?.completionPercentage ??
             this.currentUser.profileCompletionPercentage,
           isProfileComplete:
-            (profile?.profileCompletionPercentage ??
+            (basic?.profileCompletionPercentage ??
+              full?.completionPercentage ??
               this.currentUser.profileCompletionPercentage) >= 100,
-          lastLogin: profile?.lastLogin || this.currentUser.lastLogin,
+          lastLogin: basic?.lastLogin || this.currentUser.lastLogin,
         };
+        const changed =
+          JSON.stringify(updated) !== JSON.stringify(this.currentUser);
         this.currentUser = updated;
-        this.authService.updateUserData(updated);
+        if (changed) {
+          this.authService.updateUserData(updated);
+        }
         this.profileImage = this.resolveProfileImage(updated);
       },
     });

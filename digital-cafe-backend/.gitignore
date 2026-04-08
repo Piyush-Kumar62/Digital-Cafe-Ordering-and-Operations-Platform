@@ -24,8 +24,11 @@ Thumbs.db
 .env
 
 # Local profile/env files
-env/
+env/*
 .env.*
+env/.env.dev
+env/.env.prod
+!env/.env.prod.example
 
 # Secrets and keys
 *.pem

@@ -3,19 +3,19 @@ package com.digitalcafe.util;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 /**
- * Utility to generate BCrypt password hash
- * Run this to get the hash, then use it in SQL
+ * Utility helpers for BCrypt hashing.
  */
 public class PasswordHashGenerator {
-    public static void main(String[] args) {
-        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-        String rawPassword = "admin123";
-        String hashedPassword = encoder.encode(rawPassword);
-        System.out.println("Raw Password: " + rawPassword);
-        System.out.println("BCrypt Hash: " + hashedPassword);
-        
-        // Verify the hash works
-        boolean matches = encoder.matches(rawPassword, hashedPassword);
-        System.out.println("Verification: " + (matches ? "SUCCESS" : "FAILED"));
+    private static final BCryptPasswordEncoder ENCODER = new BCryptPasswordEncoder();
+
+    private PasswordHashGenerator() {
+    }
+
+    public static String hash(String rawPassword) {
+        return ENCODER.encode(rawPassword);
+    }
+
+    public static boolean matches(String rawPassword, String hashedPassword) {
+        return ENCODER.matches(rawPassword, hashedPassword);
     }
 }

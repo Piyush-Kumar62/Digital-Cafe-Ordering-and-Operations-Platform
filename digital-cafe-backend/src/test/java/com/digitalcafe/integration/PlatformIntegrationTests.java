@@ -27,6 +27,10 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.digitalcafe.dto.request.BookingRequest;
+import com.digitalcafe.entity.Booking;
+import com.digitalcafe.entity.Cafe;
+import com.digitalcafe.entity.CafeTable;
+import com.digitalcafe.entity.Order;
 import com.digitalcafe.entity.User;
 import com.digitalcafe.exception.BookingConflictException;
 import com.digitalcafe.repository.UserRepository;
@@ -111,6 +115,22 @@ class PlatformIntegrationTests {
     @Test
     @WithMockUser(username = "waiter@test.com", roles = "WAITER")
     void waiterCannotMarkServedWithoutReady() throws Exception {
+        User waiter = User.builder()
+                .id(30L)
+                .email("waiter@test.com")
+                .isEmailVerified(true)
+                .isProfileComplete(true)
+                .cafe(Cafe.builder().id(5L).build())
+                .build();
+
+        Order order = Order.builder()
+                .id(1L)
+                .cafe(Cafe.builder().id(5L).build())
+                .booking(Booking.builder().table(CafeTable.builder().id(1L).build()).build())
+                .build();
+
+        when(userRepository.findByEmail("waiter@test.com")).thenReturn(Optional.of(waiter));
+        when(orderService.getOrderEntity(1L)).thenReturn(order);
         when(orderService.updateOrderStatus(anyLong(), any()))
                 .thenThrow(new com.digitalcafe.exception.AccessDeniedException("Waiter can only move READY orders to SERVED"));
 

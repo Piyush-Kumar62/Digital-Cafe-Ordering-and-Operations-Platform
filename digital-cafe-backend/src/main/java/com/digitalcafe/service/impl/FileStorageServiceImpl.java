@@ -23,6 +23,7 @@ import java.util.UUID;
 public class FileStorageServiceImpl implements FileStorageService {
 
     private static final long MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
+    private static final long MAX_GALLERY_FILE_SIZE = 5 * 1024 * 1024; // 5MB
     private static final long MAX_PROFILE_IMAGE_SIZE = MAX_FILE_SIZE;
     private static final Set<String> ALLOWED_CONTENT_TYPES = Set.of(
             "image/png",
@@ -115,6 +116,40 @@ public class FileStorageServiceImpl implements FileStorageService {
             return "/uploads/menu-items/" + generatedName;
         } catch (IOException e) {
             throw new BadRequestException("Failed to store menu item image");
+        }
+    }
+
+    @Override
+    public String storeGalleryImage(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new BadRequestException("Image file is required");
+        }
+        String ct = file.getContentType();
+        if (ct == null || !ALLOWED_CONTENT_TYPES.contains(ct)) {
+            throw new BadRequestException("Only PNG, JPEG, WEBP, AVIF or GIF images are allowed");
+        }
+        if (file.getSize() > MAX_GALLERY_FILE_SIZE) {
+            throw new BadRequestException("Image file size must be 5MB or less");
+        }
+
+        String extension = resolveExtension(ct);
+        String generatedName = UUID.randomUUID() + extension;
+
+        Path galleryDir = rootUploadPath.resolve("cafes").normalize();
+        if (!galleryDir.startsWith(rootUploadPath)) {
+            throw new BadRequestException("Invalid upload path");
+        }
+
+        try {
+            Files.createDirectories(galleryDir);
+            Path targetPath = galleryDir.resolve(generatedName).normalize();
+            if (!targetPath.startsWith(galleryDir)) {
+                throw new BadRequestException("Invalid file destination");
+            }
+            Files.copy(file.getInputStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
+            return "/uploads/cafes/" + generatedName;
+        } catch (IOException e) {
+            throw new BadRequestException("Failed to store gallery image");
         }
     }
 

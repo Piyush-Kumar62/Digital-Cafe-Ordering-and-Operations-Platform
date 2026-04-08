@@ -32,6 +32,7 @@ public class LocalFileStorageService implements FileStorageService {
     private String uploadDir;
 
     private static final long MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
+    private static final long MAX_GALLERY_FILE_SIZE = 5 * 1024 * 1024; // 5MB
     private static final Set<String> PROFILE_TYPES = Set.of(
             "image/png",
             "image/jpeg",
@@ -69,6 +70,12 @@ public class LocalFileStorageService implements FileStorageService {
     public String storeMenuItemImage(MultipartFile file) {
         validate(file, MENU_TYPES, MAX_FILE_SIZE);
         return store(file, "menu-items", MENU_TYPES);
+    }
+
+    @Override
+    public String storeGalleryImage(MultipartFile file) {
+        validate(file, GENERAL_TYPES, MAX_GALLERY_FILE_SIZE);
+        return store(file, "cafes", GENERAL_TYPES);
     }
 
     @Override

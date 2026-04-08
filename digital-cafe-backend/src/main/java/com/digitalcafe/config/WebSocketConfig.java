@@ -7,6 +7,8 @@ import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBr
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
+import java.util.Arrays;
+
 /**
  * WebSocket configuration for real-time notifications.
  * Supports STOMP protocol over WebSocket for order updates, table bookings, etc.
@@ -32,7 +34,13 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        String[] origins = allowedOriginsConfig.split(",");
+        String[] origins = Arrays.stream(allowedOriginsConfig.split(","))
+                .map(String::trim)
+                .filter(value -> !value.isEmpty())
+                .toArray(String[]::new);
+        if (origins.length == 0) {
+            origins = new String[] {"http://localhost:4200", "http://localhost:3000"};
+        }
         // Register the /ws endpoint for WebSocket connections
         registry.addEndpoint("/ws")
                 .setAllowedOrigins(origins)

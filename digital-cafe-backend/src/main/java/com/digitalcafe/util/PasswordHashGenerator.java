@@ -1,21 +1,11 @@
 package com.digitalcafe.util;
 
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-
 /**
- * Utility helpers for BCrypt hashing.
+ * Deprecated placeholder kept only to avoid local filesystem lock issues.
+ * Password hashing for seeded users is handled in DevDataInitializer via PasswordEncoder.
  */
-public class PasswordHashGenerator {
-    private static final BCryptPasswordEncoder ENCODER = new BCryptPasswordEncoder();
-
+@Deprecated(forRemoval = true)
+public final class PasswordHashGenerator {
     private PasswordHashGenerator() {
-    }
-
-    public static String hash(String rawPassword) {
-        return ENCODER.encode(rawPassword);
-    }
-
-    public static boolean matches(String rawPassword, String hashedPassword) {
-        return ENCODER.matches(rawPassword, hashedPassword);
     }
 }

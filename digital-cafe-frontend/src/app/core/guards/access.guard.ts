@@ -56,8 +56,7 @@ export const accessGuard: CanActivateFn = (route, state) => {
     }
   }
 
-  // Customer users must complete profile before accessing protected app routes.
-  // Keep this aligned with backend ProfileCompletionFilter to avoid 403 API storms.
+  // Customers must complete their profile before protected routes, aligned with backend profile checks.
   if (
     !route.data["skipProfileCheck"] &&
     !user.isProfileComplete &&

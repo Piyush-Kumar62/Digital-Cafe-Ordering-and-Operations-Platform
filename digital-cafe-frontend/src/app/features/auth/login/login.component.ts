@@ -20,13 +20,14 @@ import { NavbarComponent } from "@shared/components/navbar/navbar.component";
   styleUrls: ["./login.component.scss"],
 })
 export class LoginComponent implements OnInit, OnDestroy {
-  loginHeroImage = "/assets/downloads/cafes/image.png";
+  loginHeroImage = "/assets/downloads/cafes/login-form-hero.webp";
   heroImageVisible = true;
   loginForm!: FormGroup;
   loading = false;
   showPassword = false;
   returnUrl: string = "/";
-  private readonly fallbackHeroImage = "/assets/downloads/cafes/image.png";
+  private readonly fallbackHeroImage =
+    "/assets/downloads/cafes/login-form-hero.webp";
 
   constructor(
     private fb: FormBuilder,
@@ -62,7 +63,10 @@ export class LoginComponent implements OnInit, OnDestroy {
   }
 
   onHeroImageError(): void {
-    this.loginHeroImage = this.fallbackHeroImage;
+    if (this.loginHeroImage !== this.fallbackHeroImage) {
+      this.loginHeroImage = this.fallbackHeroImage;
+      return;
+    }
     this.heroImageVisible = true;
   }
 

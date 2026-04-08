@@ -325,9 +325,7 @@ export class CafeDetailComponent implements OnInit {
             return;
           }
 
-          // Fast-retry path          // If an orderId is already held from a prior cancelled/failed payment
-          // attempt, skip createOrder (backend would reuse it anyway) and go
-          // straight to payment — avoids an unnecessary round-trip.
+          // Fast retry path: reuse existing orderId and go straight to payment.
           if (this.orderId) {
             this.cafeBrowseService
               .pay({

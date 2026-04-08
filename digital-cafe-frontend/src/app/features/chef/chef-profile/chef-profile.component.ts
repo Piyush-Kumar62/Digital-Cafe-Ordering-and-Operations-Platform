@@ -505,10 +505,10 @@ export class ChefProfileComponent implements OnInit {
     const file = input.files?.[0];
     if (!file) return;
 
-    if (file.size > 5 * 1024 * 1024) {
+    if (file.size > 2 * 1024 * 1024) {
       this.alertService.error(
         "File Too Large",
-        "Please upload an image under 5MB.",
+        "Please upload an image under 2MB.",
       );
       return;
     }

@@ -262,9 +262,7 @@ export class OwnerCafesComponent implements OnInit {
       gstNumber: c.gstNumber,
       msmeNumber: c.msmeNumber,
     });
-    // Only set previewUrl when the cafe actually has a logo/image URL.
-    // getCafeImage() falls back to the logo endpoint which returns 404 when
-    // no logo is uploaded, causing a broken image instead of the empty-state.
+    // Set previewUrl only when an image exists to avoid broken logo fallback requests.
     const rawImg = cafe.logoUrl || cafe.imageUrl;
     this.previewUrl = rawImg ? this.getCafeImage(cafe) : null;
     this.galleryFiles = [];
@@ -323,8 +321,8 @@ export class OwnerCafesComponent implements OnInit {
         );
         return;
       }
-      if (file.size > 2 * 1024 * 1024) {
-        this.alertService.error("Each gallery image must be 2MB or less.");
+      if (file.size > 5 * 1024 * 1024) {
+        this.alertService.error("Each gallery image must be 5MB or less.");
         return;
       }
       this.galleryFiles.push(file);

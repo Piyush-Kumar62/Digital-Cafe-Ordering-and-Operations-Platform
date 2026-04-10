@@ -25,6 +25,8 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -98,7 +100,7 @@ class OrderServiceLifecycleTest {
 
         assertThat(response.getStatus()).isEqualTo(Order.OrderStatus.PREPARING);
         assertThat(order.getStatus()).isEqualTo(Order.OrderStatus.PREPARING);
-        verify(notificationService).pushOrderEvent(any(Order.class), any(), any());
+        verify(notificationService, times(5)).pushOrderEvent(any(Order.class), eq("ORDER_PREPARING"), any());
     }
 
     @Test

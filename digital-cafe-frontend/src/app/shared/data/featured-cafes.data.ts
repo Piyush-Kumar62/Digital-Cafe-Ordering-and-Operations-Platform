@@ -29,8 +29,7 @@ export const FEATURED_CAFE_SEED: FeaturedCafeSeed[] = [
     rating: 4.8,
     openingTime: "07:00 AM",
     closingTime: "10:00 PM",
-    imageUrl:
-      "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=800&h=500&fit=crop&auto=format",
+    imageUrl: "assets/cafe/cafe-interior-01.jpg",
     address: "14, Bandra West, Linking Road",
     phoneNumber: "9876543210",
     pincode: "400050",
@@ -47,8 +46,7 @@ export const FEATURED_CAFE_SEED: FeaturedCafeSeed[] = [
     rating: 4.7,
     openingTime: "06:30 AM",
     closingTime: "09:30 PM",
-    imageUrl:
-      "https://images.unsplash.com/photo-1445116572660-236099ec97a0?w=800&h=500&fit=crop&auto=format",
+    imageUrl: "assets/cafe/cafe-ambience.jpg",
     address: "23, Indiranagar 100 Feet Road",
     phoneNumber: "9812345678",
     pincode: "560038",
@@ -65,8 +63,7 @@ export const FEATURED_CAFE_SEED: FeaturedCafeSeed[] = [
     rating: 4.9,
     openingTime: "07:30 AM",
     closingTime: "11:00 PM",
-    imageUrl:
-      "https://images.unsplash.com/photo-1493857671505-72967e2e2760?w=800&h=500&fit=crop&auto=format",
+    imageUrl: "assets/cafe/coffee-shop-scene-01.jpg",
     address: "45, Khan Market",
     phoneNumber: "9701234567",
     pincode: "110003",
@@ -83,8 +80,7 @@ export const FEATURED_CAFE_SEED: FeaturedCafeSeed[] = [
     rating: 4.6,
     openingTime: "08:00 AM",
     closingTime: "09:00 PM",
-    imageUrl:
-      "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=800&h=500&fit=crop&auto=format",
+    imageUrl: "assets/cafe/cafe-scene-jon-tyson.jpg",
     address: "7, MI Road, Statue Circle",
     phoneNumber: "9654321098",
     pincode: "302001",
@@ -101,8 +97,7 @@ export const FEATURED_CAFE_SEED: FeaturedCafeSeed[] = [
     rating: 4.5,
     openingTime: "07:00 AM",
     closingTime: "10:00 PM",
-    imageUrl:
-      "https://images.unsplash.com/photo-1511920170033-f8396924c348?w=800&h=500&fit=crop&auto=format",
+    imageUrl: "assets/coffee/coffee-cup-unsplash-01.jpg",
     address: "12, Koregaon Park Lane 5",
     phoneNumber: "9543210987",
     pincode: "411001",
@@ -119,8 +114,7 @@ export const FEATURED_CAFE_SEED: FeaturedCafeSeed[] = [
     rating: 4.8,
     openingTime: "06:00 AM",
     closingTime: "09:00 PM",
-    imageUrl:
-      "https://images.unsplash.com/photo-1447933601403-0c6688de566e?w=800&h=500&fit=crop&auto=format",
+    imageUrl: "assets/coffee/coffee-table-pexels.jpg",
     address: "88, Anna Salai, Nungambakkam",
     phoneNumber: "9432109876",
     pincode: "600006",

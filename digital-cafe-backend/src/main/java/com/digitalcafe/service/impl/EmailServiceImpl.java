@@ -78,6 +78,9 @@ public class EmailServiceImpl implements EmailService {
     @Value("${spring.mail.port:587}")
     private int smtpPort;
 
+    @Value("${app.logging.sensitive.enabled:false}")
+    private boolean sensitiveLoggingEnabled;
+
     @PostConstruct
     public void logEmailConfig() {
         if (!emailEnabled) {
@@ -86,13 +89,21 @@ public class EmailServiceImpl implements EmailService {
         }
         if ((fromEmail == null || fromEmail.isBlank()) && smtpUsername != null && !smtpUsername.isBlank()) {
             fromEmail = smtpUsername;
-            log.warn("[Email] MAIL_FROM_EMAIL is empty; defaulting from-email to spring.mail.username={}", smtpUsername);
+            if (sensitiveLoggingEnabled) {
+                log.warn("[Email] MAIL_FROM_EMAIL is empty; defaulting from-email to spring.mail.username={}", smtpUsername);
+            } else {
+                log.warn("[Email] MAIL_FROM_EMAIL is empty; defaulting from-email to configured SMTP username.");
+            }
         }
         if (smtpUsername == null || smtpUsername.isBlank() || smtpPassword == null || smtpPassword.isBlank()) {
             log.warn("[Email] ⚠️  SMTP credentials NOT configured! Set MAIL_USERNAME + MAIL_PASSWORD in .env. ALL emails will be skipped.");
         } else {
-            log.info("[Email] ✅ Ready — from=\"{}\" <{}>, smtp={}:{}, username={}",
-                    fromName, fromEmail, smtpHost, smtpPort, smtpUsername);
+            if (sensitiveLoggingEnabled) {
+                log.info("[Email] ✅ Ready — from=\"{}\" <{}>, smtp={}:{}, username={}",
+                        fromName, fromEmail, smtpHost, smtpPort, smtpUsername);
+            } else {
+                log.info("[Email] ✅ Ready — mail service configured and credentials loaded.");
+            }
         }
 
         // Warn if any email template is missing from the classpath

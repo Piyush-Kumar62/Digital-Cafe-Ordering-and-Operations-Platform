@@ -5,7 +5,7 @@ set -euo pipefail
 # Required IAM permission: ssm:GetParameter on the configured parameter names.
 
 APP_DIR="${APP_DIR:-/opt/digital-cafe}"
-ENV_FILE="${ENV_FILE:-$APP_DIR/digital-cafe-backend/.env}"
+ENV_FILE="${ENV_FILE:-$APP_DIR/digital-cafe-backend/env/.env.prod}"
 SSM_PREFIX="${SSM_PREFIX:-/digital-cafe/prod}"
 AWS_REGION="${AWS_REGION:-ap-south-1}"
 
@@ -36,20 +36,39 @@ get_param_optional() {
 
 echo "Rendering backend env file from SSM prefix: $SSM_PREFIX"
 
-DB_URL="$(get_param "$SSM_PREFIX/DB_URL")"
-if [[ "$DB_URL" == *"localhost"* || "$DB_URL" == *"127.0.0.1"* ]]; then
-  echo "Refusing to write env: DB_URL points to localhost ($DB_URL)"
+DB_HOST="$(get_param_optional "$SSM_PREFIX/DB_HOST" "")"
+DB_PORT="$(get_param_optional "$SSM_PREFIX/DB_PORT" "3306")"
+DB_NAME="$(get_param_optional "$SSM_PREFIX/DB_NAME" "")"
+DB_URL="$(get_param_optional "$SSM_PREFIX/DB_URL" "")"
+
+if [[ -n "$DB_URL" ]]; then
+  if [[ "$DB_URL" == *"localhost"* || "$DB_URL" == *"127.0.0.1"* ]]; then
+    echo "Refusing to write env: DB_URL points to localhost ($DB_URL)"
+    exit 1
+  fi
+  if [[ -z "$DB_HOST" ]] && [[ "$DB_URL" =~ jdbc:mysql://([^:/]+)(:([0-9]+))?/([^?]+) ]]; then
+    DB_HOST="${BASH_REMATCH[1]}"
+    DB_PORT="${BASH_REMATCH[3]:-3306}"
+    DB_NAME="${BASH_REMATCH[4]}"
+  fi
+fi
+
+if [[ -z "$DB_HOST" || -z "$DB_NAME" ]]; then
+  echo "Missing DB settings in SSM. Provide DB_HOST/DB_NAME (or DB_URL parsable as jdbc:mysql://host:port/db)."
   exit 1
 fi
 
 cat > "$ENV_FILE" <<EOF
-DB_URL=$DB_URL
+DB_HOST=$DB_HOST
+DB_PORT=$DB_PORT
+DB_NAME=$DB_NAME
 DB_USERNAME=$(get_param "$SSM_PREFIX/DB_USERNAME")
 DB_PASSWORD=$(get_param "$SSM_PREFIX/DB_PASSWORD")
 JWT_SECRET=$(get_param "$SSM_PREFIX/JWT_SECRET")
 JWT_EXPIRATION=$(get_param "$SSM_PREFIX/JWT_EXPIRATION")
 JWT_REFRESH_EXPIRATION=$(get_param "$SSM_PREFIX/JWT_REFRESH_EXPIRATION")
 FRONTEND_URL=$(get_param "$SSM_PREFIX/FRONTEND_URL")
+APP_CORS_ALLOWED_ORIGINS=$(get_param_optional "$SSM_PREFIX/APP_CORS_ALLOWED_ORIGINS" "$(get_param "$SSM_PREFIX/FRONTEND_URL")")
 PAYMENT_GATEWAY=$(get_param "$SSM_PREFIX/PAYMENT_GATEWAY")
 RAZORPAY_KEY_ID=$(get_param "$SSM_PREFIX/RAZORPAY_KEY_ID")
 RAZORPAY_KEY_SECRET=$(get_param "$SSM_PREFIX/RAZORPAY_KEY_SECRET")

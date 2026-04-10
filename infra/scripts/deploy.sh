@@ -3,8 +3,9 @@ set -euo pipefail
 
 APP_DIR="/opt/digital-cafe"
 ENV_FILE="${ENV_FILE:-digital-cafe-backend/env/.env.prod}"
-BACKEND_HEALTH_URL="${BACKEND_HEALTH_URL:-http://localhost:8080/api/public/health}"
-FRONTEND_HEALTH_URL="${FRONTEND_HEALTH_URL:-http://localhost}"
+# Backend is not exposed on host directly in prod compose. Health is checked through Nginx.
+BACKEND_HEALTH_URL="${BACKEND_HEALTH_URL:-http://localhost/api/public/health}"
+FRONTEND_HEALTH_URL="${FRONTEND_HEALTH_URL:-http://localhost/healthz}"
 RENDER_ENV_FROM_SSM="${RENDER_ENV_FROM_SSM:-false}"
 SSM_PREFIX="${SSM_PREFIX:-/digital-cafe/prod}"
 

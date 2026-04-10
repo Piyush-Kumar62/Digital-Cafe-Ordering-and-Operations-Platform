@@ -397,10 +397,9 @@ public class DevDataInitializer implements CommandLineRunner {
         Role chefRole     = ensureRole(Role.RoleName.CHEF,       "Chef");
         Role waiterRole   = ensureRole(Role.RoleName.WAITER,     "Waiter");
         Role customerRole = ensureRole(Role.RoleName.CUSTOMER,   "Customer");
+        ensureNonAdminProfilesComplete();
 
-        // ── 2. Primary demo owner — always ensure owner@cafe.com exists and is activated.
-        //    Runs on every startup so a previously-registered but still-pending account
-        //    (isActive=false / PENDING_APPROVAL) gets dev-approved automatically.
+        // Always ensure owner@cafe.com exists and is active, including previously pending dev signups.
         User owner1 = findOrCreateOwner("owner@cafe.com", "Raj",     "Sharma",   "9876540001", OWNER_PW,  ownerRole);
         User owner2 = findOrCreateOwner("owner2@cafe.com", "Priya",  "Nair",     "9876540002", OWNER2_PW, ownerRole);
         User owner3 = findOrCreateOwner("owner3@cafe.com", "Vikram", "Patel",    "9876540003", OWNER3_PW, ownerRole);
@@ -509,6 +508,36 @@ public class DevDataInitializer implements CommandLineRunner {
                 .map(Cafe::getEmail)
                 .filter(email -> email != null && email.startsWith("demo.cafe.") && email.endsWith("@demo.com"))
                 .count();
+    }
+
+    private void ensureNonAdminProfilesComplete() {
+        List<User> users = userRepository.findAll();
+        int updated = 0;
+        for (User user : users) {
+            boolean isAdmin = user.getRoles().stream()
+                    .anyMatch(role -> role.getName() == Role.RoleName.ADMIN);
+            if (isAdmin) {
+                continue;
+            }
+
+            boolean changed = false;
+            if (!Boolean.TRUE.equals(user.getIsProfileComplete())) {
+                user.setIsProfileComplete(true);
+                changed = true;
+            }
+            if (user.getProfileCompletionPercentage() == null || user.getProfileCompletionPercentage() < 100) {
+                user.setProfileCompletionPercentage(100);
+                changed = true;
+            }
+
+            if (changed) {
+                userRepository.save(user);
+                updated++;
+            }
+        }
+        if (updated > 0) {
+            log.info("[DevSeed] Marked {} non-admin users as profile-complete for demo access.", updated);
+        }
     }
     //  Dev credentials summary — always printed on startup
     private void logAllCredentials() {
@@ -625,10 +654,7 @@ public class DevDataInitializer implements CommandLineRunner {
         u.setIsTempPassword(false);
         return u;
     }
-    //  Cafe Owners — findOrCreate helper
-    //  Also activates users that were previously registered via the
-    //  sign-up flow (isActive=false / PENDING_APPROVAL) so they can
-    //  immediately use the dashboard in dev mode.
+    // Finds or creates cafe owners and auto-activates pending dev signup accounts.
     private User findOrCreateOwner(String email, String firstName, String lastName,
                                     String phone, String pw, Role ownerRole) {
         return userRepository.findByEmail(email).map(existing -> {
@@ -1520,8 +1546,7 @@ public class DevDataInitializer implements CommandLineRunner {
         logVerbose("[DevSeed] {} customers seeded.", saved.size());
         return saved;
     }
-    //  9. Bookings → Orders → OrderItems → Payments
-    //     Dev dataset target: TRANSACTION_SLOTS_PER_CAFE orders per cafe.
+    // Seeds booking, order, order-item, and payment records with TRANSACTION_SLOTS_PER_CAFE orders per cafe.
     private int seedDemoTransactions(List<Cafe> cafes, List<User> customers) {
         if (customers.isEmpty()) {
             log.warn("[DevSeed] No customers available — skipping orders.");
@@ -1589,8 +1614,7 @@ public class DevDataInitializer implements CommandLineRunner {
                     booking.setNumberOfGuests(Math.min(table.getCapacity(), 2));
                     booking.setStatus(deriveBookingStatus(status));    // Req #4
                     booking.setSpecialRequests("Please prepare the table before arrival.");
-                    // set createdAt before save so @CreatedDate auditing keeps the
-                    // historical value instead of stamping now() — critical for dashboard analytics.
+                    // Set createdAt before save so auditing preserves historical times for analytics.
                     booking.setCreatedAt(placedAt);
                     Booking savedBooking = bookingRepository.save(booking);
 
@@ -1636,8 +1660,7 @@ public class DevDataInitializer implements CommandLineRunner {
                     order.setSubtotal(subtotal);
                     order.setTax(tax);
                     order.setTotalAmount(total);
-                    // anchor createdAt to placedAt so historical orders appear
-                    // in the correct day bucket on analytics dashboards.
+                    // Anchor createdAt to placedAt so historical orders land in the correct analytics day bucket.
                     order.setCreatedAt(placedAt);
                     Order savedOrder = orderRepository.save(order);   // cascade saves OrderItems
 
@@ -1671,8 +1694,7 @@ public class DevDataInitializer implements CommandLineRunner {
 
                     paymentRepository.save(payment);
 
-                    // Mark the table as occupied for live (today's) active orders so
-                    // the owner dashboard "Table Availability" chart is realistic.
+                    // Mark tables occupied for today's active orders so availability charts stay realistic.
                     if (daysAgo == 0
                             && status != Order.OrderStatus.SERVED
                             && status != Order.OrderStatus.CANCELLED) {

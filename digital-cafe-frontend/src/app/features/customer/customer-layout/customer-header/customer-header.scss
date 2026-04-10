@@ -332,8 +332,7 @@
     color 0.25s ease;
 }
 
-// LIGHT mode: sun is active (orange, on white thumb) — clearly visible
-//             moon is inactive — dimmed on the right
+// Light mode shows the sun as active and dims the moon on the right.
 .theme-toggle .t-sun {
   left: 5px;
   color: #ea580c; // orange-600 — contrasts against white thumb
@@ -346,8 +345,7 @@
   opacity: 0.4;
 }
 
-// DARK mode: moon is active (white, on indigo thumb) — clearly visible
-//            sun is inactive — dimmed on the left
+// Dark mode shows the moon as active and dims the sun on the left.
 .theme-toggle.dark .t-sun {
   opacity: 0.35;
   color: #64748b;

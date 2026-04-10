@@ -80,8 +80,7 @@ export class CafeListComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Single polling stream (refreshes every 30s).
-    // NavigationEnd to /cafes resets the stream so fresh data loads immediately.
+    // Keep one polling stream and reset it on /cafes navigation for immediate fresh data.
     const onCafesRoute$ = this.router.events.pipe(
       filter((e) => e instanceof NavigationEnd),
       filter(

@@ -109,7 +109,7 @@ public class AuthServiceImpl implements AuthService {
         .orElseThrow(() -> new ResourceNotFoundException("Role", "name", "CAFE_OWNER"));
     String tempPassword = PasswordGenerator.generateTemporaryPassword();
     User user = saveUserOrThrow(buildOwnerUser(request, tempPassword, cafeOwnerRole));
-    String logoUrl = (logo != null && !logo.isEmpty()) ? fileStorageService.storeMenuItemImage(logo) : null;
+    String logoUrl = (logo != null && !logo.isEmpty()) ? fileStorageService.uploadFile(logo) : null;
     Cafe savedCafe = cafeRepository.save(buildCafe(request, user, logoUrl));
     user.setCafe(savedCafe);
     userRepository.save(user);
@@ -205,8 +205,7 @@ public class AuthServiceImpl implements AuthService {
 
     emailVerificationTokenRepository.delete(verificationToken);
 
-    // For simple-registered users (registrationStatus == null → no admin-approval required),
-    // they are now fully active. Send them a "you're all set" confirmation.
+    // Send a final confirmation email to users who are fully active after verification.
     if (user.getRegistrationStatus() == null
         || user.getRegistrationStatus() == User.RegistrationStatus.APPROVED) {
       String displayName = resolveDisplayName(user);
@@ -416,7 +415,7 @@ public class AuthServiceImpl implements AuthService {
       if (file == null || file.isEmpty()) {
         continue;
       }
-      String imageUrl = fileStorageService.storeMenuItemImage(file);
+      String imageUrl = fileStorageService.storeGalleryImage(file);
       CafeGallery gallery = CafeGallery.builder()
           .cafe(cafe)
           .imageUrl(imageUrl)

@@ -276,6 +276,8 @@ Useful files:
 - `infra/scripts/deploy.sh`
 - `infra/scripts/render-env-from-ssm.sh`
 - `.github/workflows/ci-cd.yml`
+- `docs/aws-deployment-guide.md` (Phase 0 -> Phase 8 runbook)
+- `docs/prod-values-checklist.md` (ready-to-fill production values)
 
 ## 🔐 Security Implementation
 

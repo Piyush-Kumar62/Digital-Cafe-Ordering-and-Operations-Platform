@@ -11,9 +11,11 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.core.env.Environment;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Collections;
+import java.util.Arrays;
 
 /**
  * Database initialization configuration.
@@ -28,6 +30,7 @@ public class DataInitializationConfig {
     private final RoleRepository roleRepository;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final Environment environment;
 
     @Bean
     @Order(1)
@@ -97,11 +100,20 @@ public class DataInitializationConfig {
             log.info("====================================");
             log.info("Default Admin User Created:");
             log.info("Email: {}", adminEmail);
-            log.info("Password: Admin@123");
+            if (isDevProfile()) {
+                log.info("Password: Admin@123");
+            } else {
+                log.info("Password: [hidden outside dev profile]");
+            }
             log.info("====================================");
         } else {
             log.info("Admin user already exists");
         }
+    }
+
+    private boolean isDevProfile() {
+        return Arrays.stream(environment.getActiveProfiles())
+                .anyMatch("dev"::equalsIgnoreCase);
     }
 }
 

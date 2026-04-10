@@ -27,6 +27,7 @@ public class S3FileStorageService implements FileStorageService {
     private final String bucket;
     private final String baseUrl;
     private static final long MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
+    private static final long MAX_GALLERY_FILE_SIZE = 5 * 1024 * 1024; // 5MB
     private static final java.util.Set<String> PROFILE_TYPES = java.util.Set.of(
             "image/png",
             "image/jpeg",
@@ -95,6 +96,11 @@ public class S3FileStorageService implements FileStorageService {
     }
 
     @Override
+    public String storeGalleryImage(MultipartFile file) {
+        return uploadWithPrefix(file, "cafes", GENERAL_TYPES, MAX_GALLERY_FILE_SIZE);
+    }
+
+    @Override
     public void deleteFile(String filePath) {
         if (filePath == null || filePath.isBlank()) {
             return;
@@ -136,6 +142,14 @@ public class S3FileStorageService implements FileStorageService {
     }
 
     private String uploadWithPrefix(MultipartFile file, String prefix, java.util.Set<String> allowedTypes) {
+        return uploadWithPrefix(file, prefix, allowedTypes, MAX_FILE_SIZE);
+    }
+
+    private String uploadWithPrefix(
+            MultipartFile file,
+            String prefix,
+            java.util.Set<String> allowedTypes,
+            long maxBytes) {
         if (file == null || file.isEmpty()) {
             throw new BusinessException("Cannot upload empty file");
         }
@@ -143,8 +157,8 @@ public class S3FileStorageService implements FileStorageService {
         if (contentType == null || !allowedTypes.contains(contentType)) {
             throw new BusinessException("Unsupported file type: " + (contentType != null ? contentType : "unknown"));
         }
-        if (file.getSize() > MAX_FILE_SIZE) {
-            throw new BusinessException("File size must be 2MB or less");
+        if (file.getSize() > maxBytes) {
+            throw new BusinessException("File size must be " + (maxBytes / (1024 * 1024)) + "MB or less");
         }
 
         try {

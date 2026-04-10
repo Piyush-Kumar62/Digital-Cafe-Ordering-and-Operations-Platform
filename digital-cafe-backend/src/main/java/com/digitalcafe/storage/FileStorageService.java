@@ -28,6 +28,11 @@ public interface FileStorageService {
     String storeMenuItemImage(MultipartFile file);
 
     /**
+     * Uploads a cafe gallery image and returns its access path or URL.
+     */
+    String storeGalleryImage(MultipartFile file);
+
+    /**
      * Deletes a file by its path or URL.
      */
     void deleteFile(String filePath);

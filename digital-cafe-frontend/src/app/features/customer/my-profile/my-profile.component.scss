@@ -708,9 +708,7 @@
 .pp-f {
   --pp-label-track: 22px;
 
-  // 3-row grid: label | input | error-space
-  // The 3rd row is always at least 1rem so every cell is the same height
-  // regardless of whether a pp-err span is present or not → inputs align.
+  // Use a 3-row grid with reserved error space so all fields stay aligned.
   display: grid;
   grid-template-rows: var(--pp-label-track) auto minmax(1rem, auto);
   row-gap: 4px;
@@ -933,8 +931,7 @@ select.pp-inp:required:invalid {
   font-size: 0.72rem;
   color: var(--pp-danger);
   line-height: 1.3;
-  // min-height removed — the pp-f grid's 3rd row (minmax(1rem, auto))
-  // already reserves consistent space for every field.
+  // Min-height is unnecessary because the grid already reserves consistent error space.
 }
 
 // Add button

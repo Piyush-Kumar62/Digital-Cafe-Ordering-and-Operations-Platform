@@ -16,6 +16,11 @@ Desktop.ini
 .env.*.local
 **/.env
 **/.env.*
+**/.env.dev
+**/.env.prod
+!digital-cafe-backend/env/.env.prod.example
+!**/.env.example
+!**/.env.*.example
 *.pem
 *.key
 *.p12
@@ -51,7 +56,8 @@ cypress/screenshots/
 # Runtime uploads and generated assets
 uploads/
 digital-cafe-backend/uploads/
-digital-cafe-backend/env/
+digital-cafe-backend/env/*
+!digital-cafe-backend/env/.env.prod.example
 digital-cafe-frontend/src/assets/downloads/**/image copy.*
 digital-cafe-frontend/src/assets/downloads/cafes/
 
@@ -65,3 +71,5 @@ infra/nginx/certs/*
 # Misc generated files
 *.session.sql
 .env.prod.bak.*
+aws-deployment-guide.md
+prod-values-checklist.md

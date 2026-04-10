@@ -10,6 +10,7 @@ import com.digitalcafe.entity.CafeGallery;
 import com.digitalcafe.entity.Role;
 import com.digitalcafe.entity.User;
 import com.digitalcafe.exception.AccessDeniedException;
+import com.digitalcafe.exception.AuthenticationException;
 import com.digitalcafe.exception.BadRequestException;
 import com.digitalcafe.exception.BusinessException;
 import com.digitalcafe.exception.ResourceNotFoundException;
@@ -264,18 +265,25 @@ public class CafeServiceImpl implements CafeService {
 
     @Override
     public Long getCafeIdForUser(String email) {
+        if (email == null || email.isBlank()) {
+            throw new AuthenticationException("Authenticated user not found");
+        }
+
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("Authenticated user not found"));
+                .orElseThrow(() -> new AuthenticationException("Authenticated user not found"));
+
         // Direct association (staff assigned to a cafe)
         if (user.getCafe() != null && user.getCafe().getId() != null) {
             return user.getCafe().getId();
         }
+
         // Owner: find cafes where this user is the owner
         List<Cafe> owned = cafeRepository.findAllByOwnerIdOrderByCreatedAtDesc(user.getId());
         if (!owned.isEmpty()) {
             return owned.get(0).getId();
         }
-        throw new IllegalArgumentException("Authenticated user is not assigned to any cafe");
+
+        throw new AccessDeniedException("Authenticated user is not assigned to any cafe");
     }
 
     private User getCurrentOwner() {
@@ -311,7 +319,7 @@ public class CafeServiceImpl implements CafeService {
 
         for (MultipartFile file : files) {
 
-            String path = fileStorageService.uploadFile(file);
+            String path = fileStorageService.storeGalleryImage(file);
 
             CafeGallery gallery = CafeGallery.builder()
                     .imageUrl(path)

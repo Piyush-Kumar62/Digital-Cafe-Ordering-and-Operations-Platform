@@ -1,6 +1,8 @@
 describe('Admin API flow', () => {
   it('logs in and reads admin dashboard + users', () => {
-    cy.apiLogin('admin@digitalcafe.com', 'Admin@123').then((token) => {
+    const adminEmail = (Cypress.env('adminEmail') as string) || 'cafehub.admin@gmail.com';
+    const adminPassword = (Cypress.env('adminPassword') as string) || 'Admin@123';
+    cy.apiLogin(adminEmail, adminPassword).then((token) => {
       cy.apiGet(token, '/admin/dashboard/stats').then((stats) => {
         expect(stats.status).to.eq(200);
         expect(stats.body).to.have.property('data');

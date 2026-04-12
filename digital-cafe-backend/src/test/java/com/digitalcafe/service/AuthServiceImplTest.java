@@ -100,7 +100,7 @@ class AuthServiceImplTest {
     @Test
     void verifyEmailShouldBypassAdminUsers() {
         User user = new User();
-        user.setEmail("admin@digitalcafe.com");
+        user.setEmail("cafehub.admin@gmail.com");
 
         EmailVerificationToken token = new EmailVerificationToken();
         token.setToken("admin-token");

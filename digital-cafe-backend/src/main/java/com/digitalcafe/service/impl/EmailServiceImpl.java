@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.retry.support.RetryTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.core.io.ClassPathResource;
@@ -38,13 +39,16 @@ public class EmailServiceImpl implements EmailService {
     private final JavaMailSender mailSender;
     private final SpringTemplateEngine templateEngine;
     private final UserRepository userRepository;
+    private final RetryTemplate emailRetryTemplate;
 
     public EmailServiceImpl(JavaMailSender mailSender,
                             @Qualifier("emailTemplateEngine") SpringTemplateEngine templateEngine,
-                            UserRepository userRepository) {
+                            UserRepository userRepository,
+                            @Qualifier("emailRetryTemplate") RetryTemplate emailRetryTemplate) {
         this.mailSender = mailSender;
         this.templateEngine = templateEngine;
         this.userRepository = userRepository;
+        this.emailRetryTemplate = emailRetryTemplate;
     }
 
     @Value("${spring.mail.username:}")
@@ -54,7 +58,7 @@ public class EmailServiceImpl implements EmailService {
     private String smtpPassword;
 
     /** The address that appears in the email "From:" header. Must be a real email address. */
-    @Value("${app.email.from-email:${MAIL_FROM_EMAIL:noreply@digitalcafe.com}}")
+    @Value("${app.email.from-email:${MAIL_FROM_EMAIL:no-reply@cafehub.tech}}")
     private String fromEmail;
 
     @Value("${app.email.enabled:${MAIL_ENABLED:true}}")
@@ -63,7 +67,7 @@ public class EmailServiceImpl implements EmailService {
     @Value("${MAIL_SKIP_ADMIN:false}")
     private boolean skipAdminRecipients;
 
-    @Value("${app.email.from-name:${EMAIL_FROM_NAME:Digital Cafe Team}}")
+    @Value("${app.email.from-name:${EMAIL_FROM_NAME:CafeHub}}")
     private String fromName;
 
     @Value("${FRONTEND_URL:http://localhost:4200}")
@@ -72,7 +76,7 @@ public class EmailServiceImpl implements EmailService {
     @Value("${EMAIL_SUPPORT_URL:http://localhost:4200/contact}")
     private String supportUrl;
 
-    @Value("${spring.mail.host:smtp.gmail.com}")
+    @Value("${spring.mail.host:smtp-relay.brevo.com}")
     private String smtpHost;
 
     @Value("${spring.mail.port:587}")
@@ -96,11 +100,11 @@ public class EmailServiceImpl implements EmailService {
             }
         }
         if (smtpUsername == null || smtpUsername.isBlank() || smtpPassword == null || smtpPassword.isBlank()) {
-            log.warn("[Email] ⚠️  SMTP credentials NOT configured! Set MAIL_USERNAME + MAIL_PASSWORD in .env. ALL emails will be skipped.");
+            log.warn("[Email] ⚠️  SMTP credentials NOT configured! Set BREVO_SMTP_USER + BREVO_SMTP_PASS (or MAIL_USERNAME + MAIL_PASSWORD) in env. ALL emails will be skipped.");
         } else {
             if (sensitiveLoggingEnabled) {
-                log.info("[Email] ✅ Ready — from=\"{}\" <{}>, smtp={}:{}, username={}",
-                        fromName, fromEmail, smtpHost, smtpPort, smtpUsername);
+                log.info("[Email] ✅ Ready — from=\"{}\" <{}>, smtp={}:{}",
+                        fromName, fromEmail, smtpHost, smtpPort);
             } else {
                 log.info("[Email] ✅ Ready — mail service configured and credentials loaded.");
             }
@@ -326,6 +330,17 @@ public class EmailServiceImpl implements EmailService {
         internalSend(to, "Your Digital Cafe booking has been cancelled", EmailTemplateType.BOOKING_CANCELLED, vars);
     }
 
+    @Async("emailTaskExecutor")
+    @Override
+    public void sendAdminNotification(String to, String title, String message) {
+        log.info("[Email] Queuing ADMIN_NOTIFICATION -> {}", to);
+        Map<String, Object> vars = new HashMap<>();
+        vars.put("title", title);
+        vars.put("eventMessage", message);
+        vars.put("dashboardUrl", frontendUrl + "/admin/dashboard");
+        internalSend(to, title, EmailTemplateType.ADMIN_NOTIFICATION, vars);
+    }
+
     // Internal helpers
     private void internalSend(
             String to,
@@ -353,15 +368,39 @@ public class EmailServiceImpl implements EmailService {
             return;
         }
         if (smtpUsername.isBlank() || smtpPassword.isBlank()) {
-            log.warn("[Email] SKIP (no credentials) {} -> {} | Set MAIL_USERNAME + MAIL_PASSWORD in .env", templateType, to);
+            log.warn("[Email] SKIP (no credentials) {} -> {} | Set BREVO_SMTP_USER + BREVO_SMTP_PASS (or MAIL_USERNAME + MAIL_PASSWORD) in env", templateType, to);
             return;
         }
 
+        emailRetryTemplate.execute(context -> {
+            int attempt = context.getRetryCount() + 1;
+            if (attempt > 1) {
+                log.warn("[Email] Retry attempt {} for {} -> {}", attempt, templateType, to);
+            }
+            sendSingleAttempt(to, subject, templateType, variables, attachments);
+            return null;
+        }, context -> {
+            Throwable last = context.getLastThrowable();
+            log.error("[Email] ❌ FAILED after {} attempts {} -> {} | Last error: {}",
+                    context.getRetryCount(), templateType, to, last != null ? last.getMessage() : "unknown");
+            if (last != null) {
+                log.debug("[Email] Full SMTP exception stack:", last);
+            }
+            return null;
+        });
+    }
+
+    private void sendSingleAttempt(
+            String to,
+            String subject,
+            EmailTemplateType templateType,
+            Map<String, Object> variables,
+            List<EmailAttachment> attachments) {
         try {
             variables.put("currentYear", Year.now().getValue());
             variables.put("frontendUrl", frontendUrl);
             variables.put("supportUrl", supportUrl);
-            variables.put("brandName", "Digital Cafe");
+            variables.put("brandName", "CafeHub");
             if (!variables.containsKey("username") || isBlank(String.valueOf(variables.get("username")))) {
                 variables.put("username", resolveDisplayName(to));
             }
@@ -395,13 +434,8 @@ public class EmailServiceImpl implements EmailService {
 
             mailSender.send(message);
             log.info("[Email] ✅ Sent {} -> {}", templateType, to);
-
-        } catch (Exception e) {
-            Throwable cause = e.getCause();
-            log.error("[Email] ❌ FAILED {} -> {} | Error: {} | Root cause: {}",
-                    templateType, to, e.getMessage(),
-                    cause != null ? cause.getClass().getSimpleName() + ": " + cause.getMessage() : "none");
-            log.debug("[Email] Full SMTP exception stack:", e);
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
         }
     }
 

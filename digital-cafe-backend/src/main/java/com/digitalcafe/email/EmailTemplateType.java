@@ -32,6 +32,7 @@ public enum EmailTemplateType {
     REGISTRATION_REJECTED("registration-rejected"),
     ACCOUNT_DEACTIVATED("account-deactivated"),
     ACCOUNT_REACTIVATED("account-reactivated"),
+    ADMIN_NOTIFICATION("admin-notification"),
 
     // Order lifecycle templates
     ORDER_CONFIRMATION("order-confirmation"),

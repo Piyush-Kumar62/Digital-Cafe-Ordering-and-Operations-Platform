@@ -11,11 +11,18 @@ import { Router, RouterModule, ActivatedRoute } from "@angular/router";
 import { AuthService } from "@core/auth/auth.service";
 import { AlertService } from "@core/services/alert.service";
 import { NavbarComponent } from "@shared/components/navbar/navbar.component";
+import { TrimInputDirective } from "@shared/directives/trim-input.directive";
 
 @Component({
   selector: "app-login",
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule, NavbarComponent],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    RouterModule,
+    NavbarComponent,
+    TrimInputDirective,
+  ],
   templateUrl: "./login.component.html",
   styleUrls: ["./login.component.scss"],
 })
@@ -79,6 +86,8 @@ export class LoginComponent implements OnInit, OnDestroy {
   }
 
   onSubmit(): void {
+    this.trimCredentialControls();
+
     if (!this.loginForm || this.loginForm.invalid) {
       if (this.loginForm) {
         Object.keys(this.loginForm.controls).forEach((key) => {
@@ -141,5 +150,21 @@ export class LoginComponent implements OnInit, OnDestroy {
         );
       },
     });
+  }
+
+  private trimCredentialControls(): void {
+    const emailControl = this.loginForm.get("email");
+    if (typeof emailControl?.value === "string") {
+      emailControl.setValue(emailControl.value.replace(/\s+/g, ""), {
+        emitEvent: false,
+      });
+    }
+
+    const passwordControl = this.loginForm.get("password");
+    if (typeof passwordControl?.value === "string") {
+      passwordControl.setValue(passwordControl.value.replace(/\s+/g, ""), {
+        emitEvent: false,
+      });
+    }
   }
 }

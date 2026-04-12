@@ -81,6 +81,7 @@
             type="email"
             class="form-input"
             placeholder="Enter your email"
+            appTrimInput="no-whitespace" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" inputmode="email"
             [(ngModel)]="resendEmail"
           />
           <button class="btn-primary" type="button" (click)="resendVerification()" [disabled]="resending">
@@ -114,6 +115,7 @@
             type="email"
             class="form-input"
             placeholder="Enter your email"
+            appTrimInput="no-whitespace" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" inputmode="email"
             [(ngModel)]="resendEmail"
           />
           <button class="btn-primary" type="button" (click)="resendVerification()" [disabled]="resending">

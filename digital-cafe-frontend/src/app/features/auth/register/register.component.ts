@@ -39,6 +39,7 @@ import { buildAddressControls } from "../../../shared/forms/address-form.factory
 import { PostalPincodeService } from "../../../shared/services/postal-pincode.service";
 import { EducationDataService } from "@shared/services/education-data.service";
 import { Institution } from "@shared/models/education.model";
+import { TrimInputDirective } from "@shared/directives/trim-input.directive";
 
 interface TimeSlotOption {
   label: string;
@@ -59,6 +60,7 @@ interface TimeSlotOption {
     MatInputModule,
     MatSelectModule,
     MatFormFieldModule,
+    TrimInputDirective,
   ],
   templateUrl: "./register.component.html",
   styleUrl: "./register.component.scss",

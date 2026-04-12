@@ -1,6 +1,7 @@
 package com.digitalcafe.config;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.aop.interceptor.AsyncUncaughtExceptionHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -24,6 +25,18 @@ import java.util.concurrent.ThreadPoolExecutor;
 @EnableAsync
 public class AsyncConfig implements AsyncConfigurer {
 
+    @Value("${app.email.async.core-pool-size:4}")
+    private int emailCorePoolSize;
+
+    @Value("${app.email.async.max-pool-size:12}")
+    private int emailMaxPoolSize;
+
+    @Value("${app.email.async.queue-capacity:500}")
+    private int emailQueueCapacity;
+
+    @Value("${app.email.async.await-termination-seconds:45}")
+    private int emailAwaitTerminationSeconds;
+
     /**
      * Dedicated executor for email sending tasks.
      * Keeps email I/O off the main request threads.
@@ -31,15 +44,15 @@ public class AsyncConfig implements AsyncConfigurer {
     @Bean(name = "emailTaskExecutor")
     public Executor emailTaskExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(2);
-        executor.setMaxPoolSize(5);
-        executor.setQueueCapacity(100);
+        executor.setCorePoolSize(emailCorePoolSize);
+        executor.setMaxPoolSize(emailMaxPoolSize);
+        executor.setQueueCapacity(emailQueueCapacity);
         executor.setThreadNamePrefix("email-");
         executor.setTaskDecorator(mdcTaskDecorator());
         // If queue is full, caller thread executes the task — avoids silently dropping emails
         executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
         executor.setWaitForTasksToCompleteOnShutdown(true);
-        executor.setAwaitTerminationSeconds(30);
+        executor.setAwaitTerminationSeconds(emailAwaitTerminationSeconds);
         executor.initialize();
         return executor;
     }

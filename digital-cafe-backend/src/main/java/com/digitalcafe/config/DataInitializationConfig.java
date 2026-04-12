@@ -4,18 +4,19 @@ import com.digitalcafe.entity.Role;
 import com.digitalcafe.entity.User;
 import com.digitalcafe.repository.RoleRepository;
 import com.digitalcafe.repository.UserRepository;
+import com.digitalcafe.service.EmailService;
+import com.digitalcafe.util.PasswordGenerator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
-import org.springframework.core.env.Environment;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Collections;
-import java.util.Arrays;
 
 /**
  * Database initialization configuration.
@@ -24,13 +25,16 @@ import java.util.Arrays;
 @Slf4j
 @Configuration
 @RequiredArgsConstructor
-@ConditionalOnProperty(name = "app.data.init.enabled", havingValue = "true", matchIfMissing = false)
+@ConditionalOnProperty(name = "app.admin.bootstrap.enabled", havingValue = "true", matchIfMissing = true)
 public class DataInitializationConfig {
 
     private final RoleRepository roleRepository;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final Environment environment;
+    private final EmailService emailService;
+
+    @Value("${admin.email:${ADMIN_EMAIL:cafehub.admin@gmail.com}}")
+    private String adminEmail;
 
     @Bean
     @Order(1)
@@ -69,13 +73,12 @@ public class DataInitializationConfig {
     }
 
     private void createAdminUserIfNotExists() {
-        String adminEmail = "admin@digitalcafe.com";
         boolean adminExistsByEmail = userRepository.existsByEmail(adminEmail);
-        boolean adminExistsByRole = userRepository.existsByRoleName(Role.RoleName.ADMIN);
 
-        if (!adminExistsByEmail && !adminExistsByRole) {
+        if (!adminExistsByEmail) {
             Role adminRole = roleRepository.findByName(Role.RoleName.ADMIN)
                     .orElseThrow(() -> new RuntimeException("Admin role not found"));
+            String tempPassword = PasswordGenerator.generateTemporaryPassword();
 
             User admin = User.builder()
                     .username(adminEmail)
@@ -83,37 +86,33 @@ public class DataInitializationConfig {
                     .firstName("System")
                     .lastName("Admin")
                     .displayName("System Admin")
-                    .password(passwordEncoder.encode("Admin@123"))
+                    .password(passwordEncoder.encode(tempPassword))
                     .isActive(true)
                     .isEmailVerified(true)
                     .emailVerified(true)
                     .accountStatus(User.AccountStatus.ACTIVE)
                     .registrationStatus(User.RegistrationStatus.APPROVED)
                     .isProfileComplete(true)
-                    .mustResetPassword(false)
-                    .isTempPassword(false)
+                    .mustResetPassword(true)
+                    .isTempPassword(true)
                     .profileCompletionPercentage(100)
                     .roles(Collections.singleton(adminRole))
                     .build();
 
             userRepository.save(admin);
-            log.info("====================================");
-            log.info("Default Admin User Created:");
-            log.info("Email: {}", adminEmail);
-            if (isDevProfile()) {
-                log.info("Password: Admin@123");
-            } else {
-                log.info("Password: [hidden outside dev profile]");
-            }
-            log.info("====================================");
-        } else {
-            log.info("Admin user already exists");
-        }
-    }
 
-    private boolean isDevProfile() {
-        return Arrays.stream(environment.getActiveProfiles())
-                .anyMatch("dev"::equalsIgnoreCase);
+            // Send generated temporary password to admin mailbox; never log password.
+            emailService.sendWelcomeEmail(
+                    adminEmail,
+                    "System Admin",
+                    tempPassword,
+                    "ADMIN",
+                    "/admin/dashboard"
+            );
+            log.info("Bootstrap admin created for {}. Temporary password was sent by email. Password reset is required at first login.", adminEmail);
+        } else {
+            log.info("Bootstrap admin already exists for {}", adminEmail);
+        }
     }
 }
 

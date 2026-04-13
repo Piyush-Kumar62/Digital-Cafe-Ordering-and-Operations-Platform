@@ -26,13 +26,14 @@ public class PublicCafeController {
     @GetMapping
     public ResponseEntity<ApiResponse<PageResponse<PublicCafeCardResponse>>> getActiveCafes(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String keyword) {
         Pageable pageable = PageRequest.of(
                 page,
                 size,
                 Sort.by(Sort.Order.desc("createdAt"), Sort.Order.desc("id"))
         );
-        PageResponse<PublicCafeCardResponse> response = cafeService.getPublicActiveCafes(pageable);
+        PageResponse<PublicCafeCardResponse> response = cafeService.getPublicActiveCafes(pageable, keyword);
         return ResponseEntity.ok(ApiResponse.success("Public cafes retrieved successfully", response));
     }
 

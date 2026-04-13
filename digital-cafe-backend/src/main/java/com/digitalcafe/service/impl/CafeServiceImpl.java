@@ -458,8 +458,9 @@ public class CafeServiceImpl implements CafeService {
 
     @Override
     @Transactional(readOnly = true)
-    public PageResponse<PublicCafeCardResponse> getPublicActiveCafes(Pageable pageable) {
-        Page<Cafe> cafesPage = cafeRepository.findByIsActiveTrue(pageable);
+    public PageResponse<PublicCafeCardResponse> getPublicActiveCafes(Pageable pageable, String keyword) {
+        String normalizedKeyword = keyword == null ? "" : keyword.trim();
+        Page<Cafe> cafesPage = cafeRepository.searchActiveCafes(normalizedKeyword, pageable);
         List<PublicCafeCardResponse> responses = cafesPage.getContent().stream()
                 .map(cafe -> PublicCafeCardResponse.builder()
                         .id(cafe.getId())

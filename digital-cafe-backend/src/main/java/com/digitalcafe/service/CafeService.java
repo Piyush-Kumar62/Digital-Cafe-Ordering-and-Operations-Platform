@@ -53,7 +53,7 @@ public interface CafeService {
      */
     Long getCafeIdForUser(String email);
 
-    PageResponse<PublicCafeCardResponse> getPublicActiveCafes(Pageable pageable);
+    PageResponse<PublicCafeCardResponse> getPublicActiveCafes(Pageable pageable, String keyword);
 
     PublicCafeDetailResponse getPublicCafeDetails(Long cafeId);
 }

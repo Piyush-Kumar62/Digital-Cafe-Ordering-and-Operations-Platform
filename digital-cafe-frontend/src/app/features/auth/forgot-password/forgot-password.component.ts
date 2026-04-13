@@ -6,6 +6,7 @@ import { AuthService } from "@core/auth/auth.service";
 import { AlertService } from "@core/services/alert.service";
 import { NavbarComponent } from "@shared/components/navbar/navbar.component";
 import { TrimInputDirective } from "@shared/directives/trim-input.directive";
+import { sanitizeEmailCredential } from "@shared/utils/input-sanitizer.util";
 
 @Component({
   selector: "app-forgot-password",
@@ -32,6 +33,16 @@ export class ForgotPasswordComponent {
   ) {
     this.forgotPasswordForm = this.fb.group({
       email: ["", [Validators.required, Validators.email]],
+    });
+    const emailControl = this.forgotPasswordForm.get("email");
+    emailControl?.valueChanges.subscribe((value) => {
+      if (typeof value !== "string") {
+        return;
+      }
+      const sanitized = sanitizeEmailCredential(value);
+      if (sanitized !== value) {
+        emailControl.setValue(sanitized, { emitEvent: false });
+      }
     });
   }
 
@@ -70,7 +81,7 @@ export class ForgotPasswordComponent {
     const control = this.forgotPasswordForm.get("email");
     const value = control?.value;
     if (typeof value === "string") {
-      control?.setValue(value.replace(/\s+/g, ""), { emitEvent: false });
+      control?.setValue(sanitizeEmailCredential(value), { emitEvent: false });
     }
   }
 }

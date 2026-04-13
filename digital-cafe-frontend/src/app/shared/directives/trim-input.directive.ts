@@ -5,13 +5,22 @@ import {
   Input,
   Renderer2,
 } from "@angular/core";
+import {
+  sanitizeNoWhitespace,
+  sanitizeNormalizeWhitespace,
+  sanitizeTrimEdges,
+} from "@shared/utils/input-sanitizer.util";
 
 @Directive({
   selector: "[appTrimInput]",
   standalone: true,
 })
 export class TrimInputDirective {
-  @Input() appTrimInput: "trim" | "no-whitespace" | "" = "trim";
+  @Input() appTrimInput:
+    | "trim"
+    | "no-whitespace"
+    | "normalize-whitespace"
+    | "" = "trim";
 
   constructor(
     private readonly host: ElementRef<HTMLInputElement | HTMLTextAreaElement>,
@@ -25,15 +34,19 @@ export class TrimInputDirective {
 
   @HostListener("paste")
   onPaste(): void {
-    // Wait until pasted text lands in the input, then normalize it.
-    setTimeout(() => this.trimAndSync());
+    // Allow native paste, then normalize immediately.
+    this.scheduleNormalize();
   }
 
   @HostListener("input")
   onInput(): void {
-    if (this.appTrimInput === "no-whitespace") {
-      this.trimAndSync();
-    }
+    this.trimAndSync();
+    this.scheduleNormalize();
+  }
+
+  @HostListener("change")
+  onChange(): void {
+    this.trimAndSync();
   }
 
   private trimAndSync(): void {
@@ -41,8 +54,10 @@ export class TrimInputDirective {
     const currentValue = String(element.value ?? "");
     const trimmedValue =
       this.appTrimInput === "no-whitespace"
-        ? currentValue.replace(/\s+/g, "")
-        : currentValue.trim();
+        ? sanitizeNoWhitespace(currentValue)
+        : this.appTrimInput === "normalize-whitespace"
+          ? sanitizeNormalizeWhitespace(currentValue)
+          : sanitizeTrimEdges(currentValue);
 
     if (currentValue === trimmedValue) {
       return;
@@ -50,5 +65,10 @@ export class TrimInputDirective {
 
     this.renderer.setProperty(element, "value", trimmedValue);
     element.dispatchEvent(new Event("input", { bubbles: true }));
+  }
+
+  private scheduleNormalize(): void {
+    queueMicrotask(() => this.trimAndSync());
+    setTimeout(() => this.trimAndSync(), 0);
   }
 }

@@ -16,6 +16,7 @@ import { ThemeService } from './core/services/theme.service';
 export class AppComponent implements OnInit, OnDestroy {
   title = 'Digital Café Platform';
   private removeValidationListeners: Array<() => void> = [];
+  private suggestionObserver: MutationObserver | null = null;
 
   constructor(
     private webSocketService: WebSocketService,
@@ -28,6 +29,7 @@ export class AppComponent implements OnInit, OnDestroy {
     try {
       this.initializeTheme();
       this.preloadCriticalImages();
+      this.disableTextSuggestionsGlobally();
       // this.initializeInlineValidationWarnings(); // Disabled to fix duplicate warnings
 
       // Clear stale auth state on landing page when the JWT token is gone
@@ -75,6 +77,64 @@ export class AppComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.removeValidationListeners.forEach((remove) => remove());
     this.removeValidationListeners = [];
+    this.suggestionObserver?.disconnect();
+    this.suggestionObserver = null;
+  }
+
+  private disableTextSuggestionsGlobally(): void {
+    const applyToElement = (
+      element: HTMLInputElement | HTMLTextAreaElement,
+    ): void => {
+      element.setAttribute('spellcheck', 'false');
+      element.setAttribute('autocorrect', 'off');
+      element.setAttribute('autocapitalize', 'off');
+      element.setAttribute('data-gramm', 'false');
+      element.setAttribute('data-gramm_editor', 'false');
+      element.setAttribute('data-enable-grammarly', 'false');
+    };
+
+    const applyToTree = (root: ParentNode): void => {
+      root
+        .querySelectorAll<HTMLInputElement | HTMLTextAreaElement>(
+          'input, textarea',
+        )
+        .forEach(applyToElement);
+    };
+
+    applyToTree(document);
+
+    const onFocusIn = (event: Event): void => {
+      const target = event.target as Element | null;
+      if (!(target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement)) {
+        return;
+      }
+      applyToElement(target);
+    };
+
+    document.addEventListener('focusin', onFocusIn, true);
+    this.removeValidationListeners.push(() =>
+      document.removeEventListener('focusin', onFocusIn, true),
+    );
+
+    this.suggestionObserver = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        mutation.addedNodes.forEach((node) => {
+          if (!(node instanceof Element)) {
+            return;
+          }
+          if (node instanceof HTMLInputElement || node instanceof HTMLTextAreaElement) {
+            applyToElement(node);
+            return;
+          }
+          applyToTree(node);
+        });
+      }
+    });
+
+    this.suggestionObserver.observe(document.body, {
+      childList: true,
+      subtree: true,
+    });
   }
 
   private initializeTheme(): void {

@@ -5,6 +5,7 @@ import { ActivatedRoute, Router, RouterModule } from "@angular/router";
 import { AuthService } from "@core/auth/auth.service";
 import { AlertService } from "@core/services/alert.service";
 import { TrimInputDirective } from "@shared/directives/trim-input.directive";
+import { sanitizeEmailCredential } from "@shared/utils/input-sanitizer.util";
 
 @Component({
   selector: "app-verify-email",
@@ -112,7 +113,7 @@ export class VerifyEmailComponent implements OnInit {
 
   resendVerification(): void {
     const email =
-      this.resendEmail.replace(/\s+/g, "") ||
+      sanitizeEmailCredential(this.resendEmail) ||
       this.authService.currentUserValue?.email ||
       "";
 

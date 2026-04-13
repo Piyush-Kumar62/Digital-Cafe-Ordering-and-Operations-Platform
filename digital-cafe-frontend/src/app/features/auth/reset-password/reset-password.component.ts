@@ -6,6 +6,7 @@ import { AuthService } from "@core/auth/auth.service";
 import { AlertService } from "@core/services/alert.service";
 import { NavbarComponent } from "@shared/components/navbar/navbar.component";
 import { TrimInputDirective } from "@shared/directives/trim-input.directive";
+import { sanitizeNoWhitespace } from "@shared/utils/input-sanitizer.util";
 
 function passwordMatchValidator(passwordKey: string, confirmPasswordKey: string): ValidatorFn {
   return (control: AbstractControl): ValidationErrors | null => {
@@ -62,6 +63,9 @@ export class ResetPasswordComponent implements OnInit {
       },
       { validators: passwordMatchValidator("newPassword", "confirmPassword") },
     );
+    this.bindNoWhitespaceSanitizer("oldPassword");
+    this.bindNoWhitespaceSanitizer("newPassword");
+    this.bindNoWhitespaceSanitizer("confirmPassword");
   }
 
   get f() {
@@ -127,9 +131,24 @@ export class ResetPasswordComponent implements OnInit {
       const control = this.resetForm.get(field);
       const value = control?.value;
       if (typeof value === "string") {
-        control?.setValue(value.replace(/\s+/g, ""), { emitEvent: false });
+        control?.setValue(sanitizeNoWhitespace(value), { emitEvent: false });
       }
     }
+  }
+
+  private bindNoWhitespaceSanitizer(
+    field: "oldPassword" | "newPassword" | "confirmPassword",
+  ): void {
+    const control = this.resetForm.get(field);
+    control?.valueChanges.subscribe((value) => {
+      if (typeof value !== "string") {
+        return;
+      }
+      const sanitized = sanitizeNoWhitespace(value);
+      if (sanitized !== value) {
+        control.setValue(sanitized, { emitEvent: false });
+      }
+    });
   }
 
   goToLogin(): void {

@@ -36,12 +36,11 @@
           class="cafe-search-input"
           placeholder="Search by name, city or keyword…"
           [(ngModel)]="searchQuery"
+          (ngModelChange)="onSearchChange()"
           autocomplete="off"
         />
         <span class="cafe-search-badge" *ngIf="searchQuery">
-          {{ filteredCafes.length }} result{{
-            filteredCafes.length !== 1 ? "s" : ""
-          }}
+          {{ totalElements }} result{{ totalElements !== 1 ? "s" : "" }}
         </span>
       </div>
 
@@ -82,10 +81,7 @@
     </div>
 
     <!-- Empty state -->
-    <div
-      class="cafe-empty"
-      *ngIf="!loading && !error && filteredCafes.length === 0"
-    >
+    <div class="cafe-empty" *ngIf="!loading && !error && cafes.length === 0">
       <i class="bi bi-cup cafe-empty-icon"></i>
       <h3>No cafés found</h3>
       <p *ngIf="searchQuery">
@@ -97,13 +93,10 @@
     </div>
 
     <!-- Card grid -->
-    <div
-      class="cafe-grid"
-      *ngIf="!loading && !error && filteredCafes.length > 0"
-    >
+    <div class="cafe-grid" *ngIf="!loading && !error && cafes.length > 0">
       <article
         class="cafe-card"
-        *ngFor="let cafe of filteredCafes; let i = index"
+        *ngFor="let cafe of cafes; let i = index"
         (click)="openCafe(cafe.id)"
         tabindex="0"
         (keydown.enter)="openCafe(cafe.id)"

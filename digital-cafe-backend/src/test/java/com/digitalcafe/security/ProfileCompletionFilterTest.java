@@ -94,7 +94,7 @@ class ProfileCompletionFilterTest {
 
     @Test
     void shouldAllowAdminRegardlessOfProfileStatus() throws Exception {
-        setAuth("admin@digitalcafe.com", "ROLE_ADMIN");
+        setAuth("cafehub.admin@gmail.com", "ROLE_ADMIN");
 
         MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/admin/dashboard");
         MockHttpServletResponse response = new MockHttpServletResponse();

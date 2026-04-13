@@ -157,10 +157,31 @@ select.invalid {
 }
 
 ::ng-deep .academic-autocomplete-panel .mat-mdc-option {
-  height: auto;
-  line-height: 1.2;
+  min-height: 56px;
+  height: auto !important;
+  line-height: 1.3;
   padding-top: 8px;
   padding-bottom: 8px;
+  align-items: flex-start;
+  background: #ffffff;
+}
+
+::ng-deep .academic-autocomplete-panel .mat-mdc-option:hover,
+::ng-deep .academic-autocomplete-panel .mat-mdc-option.mdc-list-item--selected,
+::ng-deep .academic-autocomplete-panel .mat-mdc-option.mat-mdc-option-active {
+  background: #eff6ff;
+}
+
+::ng-deep
+  .academic-autocomplete-panel
+  .mat-mdc-option
+  .mdc-list-item__primary-text,
+::ng-deep .academic-autocomplete-panel .mat-mdc-option .mat-mdc-option-text {
+  white-space: normal !important;
+  overflow: visible;
+  text-overflow: clip;
+  display: block;
+  line-height: 1.35;
 }
 
 ::ng-deep .academic-autocomplete-panel .academic-option__title {

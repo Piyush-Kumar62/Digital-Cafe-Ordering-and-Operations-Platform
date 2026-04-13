@@ -397,7 +397,7 @@ public class DevDataInitializer implements CommandLineRunner {
         Role chefRole     = ensureRole(Role.RoleName.CHEF,       "Chef");
         Role waiterRole   = ensureRole(Role.RoleName.WAITER,     "Waiter");
         Role customerRole = ensureRole(Role.RoleName.CUSTOMER,   "Customer");
-        ensureNonAdminProfilesComplete();
+        ensureAllProfilesComplete();
 
         // Always ensure owner@cafe.com exists and is active, including previously pending dev signups.
         User owner1 = findOrCreateOwner("owner@cafe.com", "Raj",     "Sharma",   "9876540001", OWNER_PW,  ownerRole);
@@ -510,16 +510,10 @@ public class DevDataInitializer implements CommandLineRunner {
                 .count();
     }
 
-    private void ensureNonAdminProfilesComplete() {
+    private void ensureAllProfilesComplete() {
         List<User> users = userRepository.findAll();
         int updated = 0;
         for (User user : users) {
-            boolean isAdmin = user.getRoles().stream()
-                    .anyMatch(role -> role.getName() == Role.RoleName.ADMIN);
-            if (isAdmin) {
-                continue;
-            }
-
             boolean changed = false;
             if (!Boolean.TRUE.equals(user.getIsProfileComplete())) {
                 user.setIsProfileComplete(true);
@@ -536,7 +530,7 @@ public class DevDataInitializer implements CommandLineRunner {
             }
         }
         if (updated > 0) {
-            log.info("[DevSeed] Marked {} non-admin users as profile-complete for demo access.", updated);
+            log.info("[DevSeed] Marked {} users as profile-complete for demo access.", updated);
         }
     }
     //  Dev credentials summary — always printed on startup

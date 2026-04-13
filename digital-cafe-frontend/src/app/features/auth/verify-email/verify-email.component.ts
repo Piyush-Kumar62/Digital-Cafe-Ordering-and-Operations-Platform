@@ -4,11 +4,13 @@ import { FormsModule } from "@angular/forms";
 import { ActivatedRoute, Router, RouterModule } from "@angular/router";
 import { AuthService } from "@core/auth/auth.service";
 import { AlertService } from "@core/services/alert.service";
+import { TrimInputDirective } from "@shared/directives/trim-input.directive";
+import { sanitizeEmailCredential } from "@shared/utils/input-sanitizer.util";
 
 @Component({
   selector: "app-verify-email",
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, TrimInputDirective],
   templateUrl: "./verify-email.component.html",
   styleUrls: ["./verify-email.component.scss"],
 })
@@ -111,7 +113,9 @@ export class VerifyEmailComponent implements OnInit {
 
   resendVerification(): void {
     const email =
-      this.resendEmail.trim() || this.authService.currentUserValue?.email || "";
+      sanitizeEmailCredential(this.resendEmail) ||
+      this.authService.currentUserValue?.email ||
+      "";
 
     if (!email) {
       this.alertService.error(

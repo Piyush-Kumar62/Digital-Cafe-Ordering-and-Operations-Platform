@@ -75,11 +75,16 @@ export class CafeBrowseService {
   getPublicCafes(
     page: number,
     size: number,
+    keyword?: string,
   ): Observable<PageResponse<PublicCafeCard>> {
+    const normalizedKeyword = String(keyword || "").trim();
+    const keywordQuery = normalizedKeyword
+      ? `&keyword=${encodeURIComponent(normalizedKeyword)}`
+      : "";
     return this.http
       .get<
         ApiResponse<any>
-      >(`${this.apiUrl}/public/cafes?page=${page}&size=${size}`)
+      >(`${this.apiUrl}/public/cafes?page=${page}&size=${size}${keywordQuery}`)
       .pipe(
         map((res) => {
           const payload = res?.data || {};

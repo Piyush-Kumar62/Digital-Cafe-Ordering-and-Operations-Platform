@@ -5,11 +5,19 @@ import { RouterModule } from "@angular/router";
 import { AuthService } from "@core/auth/auth.service";
 import { AlertService } from "@core/services/alert.service";
 import { NavbarComponent } from "@shared/components/navbar/navbar.component";
+import { TrimInputDirective } from "@shared/directives/trim-input.directive";
+import { sanitizeEmailCredential } from "@shared/utils/input-sanitizer.util";
 
 @Component({
   selector: "app-forgot-password",
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule, NavbarComponent],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    RouterModule,
+    NavbarComponent,
+    TrimInputDirective,
+  ],
   templateUrl: "./forgot-password.component.html",
   styleUrls: ["./forgot-password.component.scss"],
 })
@@ -26,6 +34,16 @@ export class ForgotPasswordComponent {
     this.forgotPasswordForm = this.fb.group({
       email: ["", [Validators.required, Validators.email]],
     });
+    const emailControl = this.forgotPasswordForm.get("email");
+    emailControl?.valueChanges.subscribe((value) => {
+      if (typeof value !== "string") {
+        return;
+      }
+      const sanitized = sanitizeEmailCredential(value);
+      if (sanitized !== value) {
+        emailControl.setValue(sanitized, { emitEvent: false });
+      }
+    });
   }
 
   get f() {
@@ -33,6 +51,8 @@ export class ForgotPasswordComponent {
   }
 
   onSubmit(): void {
+    this.trimCredentialControls();
+
     if (this.forgotPasswordForm.invalid) {
       this.forgotPasswordForm.markAllAsTouched();
       return;
@@ -55,6 +75,14 @@ export class ForgotPasswordComponent {
         this.alertService.error("Reset Request Failed", error.message || "Failed to send reset link.");
       },
     });
+  }
+
+  private trimCredentialControls(): void {
+    const control = this.forgotPasswordForm.get("email");
+    const value = control?.value;
+    if (typeof value === "string") {
+      control?.setValue(sanitizeEmailCredential(value), { emitEvent: false });
+    }
   }
 }
 

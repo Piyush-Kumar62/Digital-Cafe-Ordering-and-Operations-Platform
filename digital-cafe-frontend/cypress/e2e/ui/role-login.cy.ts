@@ -11,7 +11,9 @@ describe("Role login UI journeys", () => {
   });
 
   it("logs in as Admin and lands on dashboard", () => {
-    visitLogin("admin@digitalcafe.com", "Admin@123");
+    const adminEmail = (Cypress.env("adminEmail") as string) || "cafehub.admin@gmail.com";
+    const adminPassword = (Cypress.env("adminPassword") as string) || "Admin@123";
+    visitLogin(adminEmail, adminPassword);
     cy.url().should("include", "/admin/dashboard");
   });
 

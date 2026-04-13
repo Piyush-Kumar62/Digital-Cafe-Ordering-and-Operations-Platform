@@ -3,6 +3,8 @@ import { Component, OnDestroy, OnInit } from "@angular/core";
 import { Router, RouterModule, NavigationEnd } from "@angular/router";
 import { interval, Subject, of } from "rxjs";
 import {
+  debounceTime,
+  distinctUntilChanged,
   filter,
   switchMap,
   startWith,
@@ -34,10 +36,11 @@ export class CafeListComponent implements OnInit, OnDestroy {
   loading = true;
   error = false;
   pageIndex = 0;
-  readonly pageSize = 9;
+  readonly pageSize = 24;
   totalElements = 0;
   totalPages = 0;
   searchQuery = "";
+  private searchQuery$ = new Subject<string>();
 
   get rangeStart(): number {
     return this.totalElements === 0 ? 0 : this.pageIndex * this.pageSize + 1;
@@ -57,17 +60,6 @@ export class CafeListComponent implements OnInit, OnDestroy {
   private readonly POLL_INTERVAL_MS = 30_000;
   private destroy$ = new Subject<void>();
 
-  get filteredCafes(): PublicCafeCard[] {
-    const q = this.searchQuery.trim().toLowerCase();
-    if (!q) return this.cafes;
-    return this.cafes.filter(
-      (c) =>
-        c.name?.toLowerCase().includes(q) ||
-        c.location?.toLowerCase().includes(q) ||
-        c.description?.toLowerCase().includes(q),
-    );
-  }
-
   constructor(
     private cafeBrowseService: CafeBrowseService,
     private authService: AuthService,
@@ -79,6 +71,13 @@ export class CafeListComponent implements OnInit, OnDestroy {
       this.router.navigate(["/customer/browse-cafes"], { replaceUrl: true });
       return;
     }
+
+    this.searchQuery$
+      .pipe(debounceTime(250), distinctUntilChanged(), takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.pageIndex = 0;
+        this.loadPage(0);
+      });
 
     // Keep one polling stream and reset it on /cafes navigation for immediate fresh data.
     const onCafesRoute$ = this.router.events.pipe(
@@ -104,7 +103,7 @@ export class CafeListComponent implements OnInit, OnDestroy {
           this.loading = true;
           this.error = false;
           return this.cafeBrowseService
-            .getPublicCafes(this.pageIndex, this.pageSize)
+            .getPublicCafes(this.pageIndex, this.pageSize, this.searchQuery)
             .pipe(
               catchError(() => {
                 this.error = true;
@@ -128,6 +127,10 @@ export class CafeListComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  onSearchChange(): void {
+    this.searchQuery$.next(String(this.searchQuery || ""));
   }
 
   openCafe(cafeId: number): void {
@@ -183,18 +186,20 @@ export class CafeListComponent implements OnInit, OnDestroy {
   private loadPage(page: number): void {
     this.loading = true;
     this.error = false;
-    this.cafeBrowseService.getPublicCafes(page, this.pageSize).subscribe({
-      next: (res) => {
-        this.cafes = res.content || [];
-        this.totalPages = res.totalPages || 0;
-        this.totalElements = res.totalElements || 0;
-        this.loading = false;
-      },
-      error: () => {
-        this.error = true;
-        this.loading = false;
-      },
-    });
+    this.cafeBrowseService
+      .getPublicCafes(page, this.pageSize, this.searchQuery)
+      .subscribe({
+        next: (res) => {
+          this.cafes = res.content || [];
+          this.totalPages = res.totalPages || 0;
+          this.totalElements = res.totalElements || 0;
+          this.loading = false;
+        },
+        error: () => {
+          this.error = true;
+          this.loading = false;
+        },
+      });
   }
 
   private getCafeDetailRoute(cafeId: number): string[] {

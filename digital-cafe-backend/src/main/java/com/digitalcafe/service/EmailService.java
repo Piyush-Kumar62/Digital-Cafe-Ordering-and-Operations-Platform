@@ -40,5 +40,8 @@ public interface EmailService {
     /** Notifies the customer that their table booking has been cancelled. */
     void sendBookingCancelledEmail(String to, String bookingDetails);
 
+    /** Sends an admin alert email for system events. */
+    void sendAdminNotification(String to, String title, String message);
+
 }
 

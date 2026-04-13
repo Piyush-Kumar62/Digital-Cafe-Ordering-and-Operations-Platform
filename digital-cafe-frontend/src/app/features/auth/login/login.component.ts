@@ -11,11 +11,23 @@ import { Router, RouterModule, ActivatedRoute } from "@angular/router";
 import { AuthService } from "@core/auth/auth.service";
 import { AlertService } from "@core/services/alert.service";
 import { NavbarComponent } from "@shared/components/navbar/navbar.component";
+import { TrimInputDirective } from "@shared/directives/trim-input.directive";
+import {
+  sanitizeEmailCredential,
+  sanitizeNoWhitespace,
+} from "@shared/utils/input-sanitizer.util";
+import { Subject, takeUntil } from "rxjs";
 
 @Component({
   selector: "app-login",
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule, NavbarComponent],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    RouterModule,
+    NavbarComponent,
+    TrimInputDirective,
+  ],
   templateUrl: "./login.component.html",
   styleUrls: ["./login.component.scss"],
 })
@@ -28,6 +40,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   returnUrl: string = "/";
   private readonly fallbackHeroImage =
     "/assets/downloads/cafes/login-form-hero.webp";
+  private readonly destroy$ = new Subject<void>();
 
   constructor(
     private fb: FormBuilder,
@@ -46,6 +59,8 @@ export class LoginComponent implements OnInit, OnDestroy {
       email: ["", [Validators.required, Validators.email]],
       password: ["", [Validators.required, Validators.minLength(8)]],
     });
+    this.bindNoWhitespaceSanitizer("email");
+    this.bindNoWhitespaceSanitizer("password");
 
     // Get return URL from route parameters or default to role dashboard
     this.returnUrl = this.route.snapshot.queryParams["returnUrl"] || "/";
@@ -59,7 +74,8 @@ export class LoginComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    // no-op: fixed local hero image does not require timers
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   onHeroImageError(): void {
@@ -79,6 +95,8 @@ export class LoginComponent implements OnInit, OnDestroy {
   }
 
   onSubmit(): void {
+    this.trimCredentialControls();
+
     if (!this.loginForm || this.loginForm.invalid) {
       if (this.loginForm) {
         Object.keys(this.loginForm.controls).forEach((key) => {
@@ -140,6 +158,38 @@ export class LoginComponent implements OnInit, OnDestroy {
           error.message || "Please check your credentials and try again.",
         );
       },
+    });
+  }
+
+  private trimCredentialControls(): void {
+    const emailControl = this.loginForm.get("email");
+    if (typeof emailControl?.value === "string") {
+      emailControl.setValue(sanitizeEmailCredential(emailControl.value), {
+        emitEvent: false,
+      });
+    }
+
+    const passwordControl = this.loginForm.get("password");
+    if (typeof passwordControl?.value === "string") {
+      passwordControl.setValue(sanitizeNoWhitespace(passwordControl.value), {
+        emitEvent: false,
+      });
+    }
+  }
+
+  private bindNoWhitespaceSanitizer(field: "email" | "password"): void {
+    const control = this.loginForm.get(field);
+    control?.valueChanges.pipe(takeUntil(this.destroy$)).subscribe((value) => {
+      if (typeof value !== "string") {
+        return;
+      }
+      const sanitized =
+        field === "email"
+          ? sanitizeEmailCredential(value)
+          : sanitizeNoWhitespace(value);
+      if (sanitized !== value) {
+        control.setValue(sanitized, { emitEvent: false });
+      }
     });
   }
 }

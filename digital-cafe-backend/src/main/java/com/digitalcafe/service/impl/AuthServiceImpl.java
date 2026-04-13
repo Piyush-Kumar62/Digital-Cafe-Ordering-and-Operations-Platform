@@ -334,6 +334,11 @@ public class AuthServiceImpl implements AuthService {
     webSocketNotificationService.notifyAdmins(RealtimeNotification.builder()
         .type(type).title(title).message(message).severity(severity)
         .entityType("USER").entityId(entityId).timestamp(LocalDateTime.now()).build());
+    userRepository.findByRoleName(Role.RoleName.ADMIN).stream()
+        .map(User::getEmail)
+        .filter(email -> email != null && !email.isBlank())
+        .distinct()
+        .forEach(email -> emailService.sendAdminNotification(email, title, message));
   }
 
   private void validateLoginEligibility(User user) {

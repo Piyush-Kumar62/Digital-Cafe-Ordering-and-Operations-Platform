@@ -21,11 +21,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -60,6 +62,15 @@ public class AuthServiceImpl implements AuthService {
   private final FileStorageService fileStorageService;
   private final UserAccessPolicy userAccessPolicy;
   private final WebSocketNotificationService webSocketNotificationService;
+
+  @Value("${app.auth.lockout.enabled:true}")
+  private boolean lockoutEnabled;
+
+  @Value("${app.auth.lockout.max-failed-attempts:5}")
+  private int maxFailedAttempts;
+
+  @Value("${app.auth.lockout.duration-minutes:15}")
+  private int lockoutDurationMinutes;
 
   @Override
   @Transactional
@@ -168,10 +179,12 @@ public class AuthServiceImpl implements AuthService {
       authentication = authenticationManager.authenticate(
           new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
       );
-    } catch (Exception ex) {
+    } catch (AuthenticationException ex) {
+      registerFailedLoginAttempt(user);
       log.warn("security_error=LOGIN_FAILED userId={} email={} message={}", user.getId(), user.getEmail(), ex.getMessage());
-      throw ex;
+      throw new BadRequestException("Invalid credentials");
     }
+    clearFailedLoginState(user);
     SecurityContextHolder.getContext().setAuthentication(authentication);
     adminProfileService.markLastLoginAndBroadcast(user.getId());
     String displayName = resolveDisplayName(user);
@@ -342,6 +355,19 @@ public class AuthServiceImpl implements AuthService {
   }
 
   private void validateLoginEligibility(User user) {
+    if (lockoutEnabled && user.getLockedUntil() != null) {
+      LocalDateTime now = LocalDateTime.now();
+      if (user.getLockedUntil().isAfter(now)) {
+        log.warn("security_error=LOGIN_BLOCKED userId={} email={} reason=ACCOUNT_LOCKED lockedUntil={}",
+            user.getId(), user.getEmail(), user.getLockedUntil());
+        throw new BadRequestException("Too many failed login attempts. Try again later.");
+      }
+      // Lock expired; clear stale lock state.
+      user.setLockedUntil(null);
+      user.setFailedLoginAttempts(0);
+      userRepository.save(user);
+    }
+
     if (!user.getIsActive()) {
       log.warn("security_error=LOGIN_BLOCKED userId={} email={} reason=ACCOUNT_DISABLED", user.getId(), user.getEmail());
       throw new BadRequestException("Account is disabled. Awaiting admin approval");
@@ -358,6 +384,37 @@ public class AuthServiceImpl implements AuthService {
       log.warn("security_error=LOGIN_BLOCKED userId={} email={} reason=EMAIL_NOT_VERIFIED", user.getId(), user.getEmail());
       throw new BadRequestException("Please verify your email before logging in");
     }
+  }
+
+  private void registerFailedLoginAttempt(User user) {
+    if (!lockoutEnabled) {
+      return;
+    }
+    int attempts = user.getFailedLoginAttempts() == null ? 0 : user.getFailedLoginAttempts();
+    attempts++;
+    user.setFailedLoginAttempts(attempts);
+
+    if (attempts >= Math.max(1, maxFailedAttempts)) {
+      user.setLockedUntil(LocalDateTime.now().plusMinutes(Math.max(1, lockoutDurationMinutes)));
+      user.setFailedLoginAttempts(0);
+      log.warn("security_event=ACCOUNT_LOCKED userId={} email={} lockedUntil={}",
+          user.getId(), user.getEmail(), user.getLockedUntil());
+    }
+    userRepository.save(user);
+  }
+
+  private void clearFailedLoginState(User user) {
+    if (!lockoutEnabled) {
+      return;
+    }
+    boolean changed = (user.getFailedLoginAttempts() != null && user.getFailedLoginAttempts() > 0)
+        || user.getLockedUntil() != null;
+    if (!changed) {
+      return;
+    }
+    user.setFailedLoginAttempts(0);
+    user.setLockedUntil(null);
+    userRepository.save(user);
   }
 
   private AuthResponse buildAuthResponse(User user, String accessToken, String refreshToken, String message) {

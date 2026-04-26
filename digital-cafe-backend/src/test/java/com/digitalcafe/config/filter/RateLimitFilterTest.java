@@ -41,6 +41,9 @@ class RateLimitFilterTest {
         ReflectionTestUtils.setField(filter, "enabled", true);
         ReflectionTestUtils.setField(filter, "capacity", 1);
         ReflectionTestUtils.setField(filter, "refillPerMinute", 1);
+        ReflectionTestUtils.setField(filter, "authLimitEnabled", true);
+        ReflectionTestUtils.setField(filter, "authCapacity", 1);
+        ReflectionTestUtils.setField(filter, "authRefillPerMinute", 1);
 
         MockHttpServletRequest request = new MockHttpServletRequest("POST", "/api/payments/webhook/razorpay");
         MockHttpServletResponse response = new MockHttpServletResponse();
@@ -49,5 +52,30 @@ class RateLimitFilterTest {
         filter.doFilter(request, response, chain);
 
         verify(chain).doFilter(request, response);
+    }
+
+    @Test
+    void shouldRateLimitSensitiveAuthEndpoints() throws Exception {
+        RateLimitFilter filter = new RateLimitFilter();
+        ReflectionTestUtils.setField(filter, "enabled", true);
+        ReflectionTestUtils.setField(filter, "capacity", 100);
+        ReflectionTestUtils.setField(filter, "refillPerMinute", 100);
+        ReflectionTestUtils.setField(filter, "authLimitEnabled", true);
+        ReflectionTestUtils.setField(filter, "authCapacity", 1);
+        ReflectionTestUtils.setField(filter, "authRefillPerMinute", 1);
+
+        MockHttpServletRequest request = new MockHttpServletRequest("POST", "/api/auth/login");
+        request.addHeader("X-Forwarded-For", "10.0.0.2");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        FilterChain chain = mock(FilterChain.class);
+
+        filter.doFilter(request, response, chain);
+        verify(chain).doFilter(request, response);
+
+        MockHttpServletResponse secondResponse = new MockHttpServletResponse();
+        filter.doFilter(request, secondResponse, chain);
+
+        assertThat(secondResponse.getStatus()).isEqualTo(429);
+        verify(chain, never()).doFilter(request, secondResponse);
     }
 }

@@ -1,0 +1,61 @@
+name: Security Checks
+
+on:
+  pull_request:
+  schedule:
+    - cron: "0 3 * * 1"
+  workflow_dispatch:
+
+jobs:
+  dependency-review:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - name: Dependency Review
+        uses: actions/dependency-review-action@v4
+
+  frontend-npm-audit:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: digital-cafe-frontend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: digital-cafe-frontend/package-lock.json
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Audit high+ vulnerabilities
+        run: npm audit --audit-level=high
+
+  backend-owasp-dependency-check:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: digital-cafe-backend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: OWASP Dependency Check (CVSS >= 7 fails)
+        run: >
+          mvn -B -q org.owasp:dependency-check-maven:check
+          -DfailBuildOnCVSS=7
+          -Dformat=HTML

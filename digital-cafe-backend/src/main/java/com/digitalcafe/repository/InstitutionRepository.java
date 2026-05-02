@@ -52,4 +52,23 @@ public interface InstitutionRepository extends JpaRepository<Institution, Long> 
         order by i.id asc
     """)
     Page<Institution> search(@Param("q") String query, Pageable pageable);
+
+    @Query(value = """
+            select count(*) from (
+                select name, city, state
+                from institutions
+                group by name, city, state
+                having count(*) > 1
+            ) t
+            """, nativeQuery = true)
+    long countDuplicateGroups();
+
+    @Query(value = """
+            select name, city, state, count(*) cnt
+            from institutions
+            group by name, city, state
+            having count(*) > 1
+            limit 10
+            """, nativeQuery = true)
+    List<Object[]> findDuplicateSamples();
 }

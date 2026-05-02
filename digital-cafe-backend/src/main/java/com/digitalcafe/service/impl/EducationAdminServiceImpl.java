@@ -22,8 +22,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.Files;
@@ -52,9 +50,6 @@ public class EducationAdminServiceImpl implements EducationAdminService {
 
     @Value("${app.education.import.sync:true}")
     private boolean importSyncEnabled;
-
-    @PersistenceContext
-    private EntityManager entityManager;
 
     @Override
     @Transactional(readOnly = true)
@@ -189,37 +184,24 @@ public class EducationAdminServiceImpl implements EducationAdminService {
     @Override
     @Transactional(readOnly = true)
     public EducationDuplicateReportResponse getDuplicateReport() {
-        long institutionGroups = countDuplicateGroups(
-                "select count(*) from (" +
-                        "select name, city, state from institutions group by name, city, state having count(*) > 1" +
-                        ") t"
-        );
-        long degreeGroups = countDuplicateGroups(
-                "select count(*) from (" +
-                        "select name from degrees group by name having count(*) > 1" +
-                        ") t"
-        );
-        long branchGroups = countDuplicateGroups(
-                "select count(*) from (" +
-                        "select degree_id, name from branches group by degree_id, name having count(*) > 1" +
-                        ") t"
-        );
+        long institutionGroups = institutionRepository.countDuplicateGroups();
+        long degreeGroups = degreeRepository.countDuplicateGroups();
+        long branchGroups = branchRepository.countDuplicateGroups();
 
         List<EducationDuplicateReportResponse.DuplicateEntry> institutionSamples =
                 fetchDuplicateSamples(
-                        "select name, city, state, count(*) cnt from institutions " +
-                                "group by name, city, state having count(*) > 1 limit 10",
+                        institutionRepository.findDuplicateSamples(),
                         row -> String.format("%s (%s, %s)",
                                 row[0], row[1] == null ? "NA" : row[1], row[2] == null ? "NA" : row[2])
                 );
         List<EducationDuplicateReportResponse.DuplicateEntry> degreeSamples =
                 fetchDuplicateSamples(
-                        "select name, count(*) cnt from degrees group by name having count(*) > 1 limit 10",
+                        degreeRepository.findDuplicateSamples(),
                         row -> String.valueOf(row[0])
                 );
         List<EducationDuplicateReportResponse.DuplicateEntry> branchSamples =
                 fetchDuplicateSamples(
-                        "select degree_id, name, count(*) cnt from branches group by degree_id, name having count(*) > 1 limit 10",
+                        branchRepository.findDuplicateSamples(),
                         row -> String.format("degreeId=%s | %s", row[0], row[1])
                 );
 
@@ -233,19 +215,10 @@ public class EducationAdminServiceImpl implements EducationAdminService {
                 .build();
     }
 
-    private long countDuplicateGroups(String sql) {
-        Object result = entityManager.createNativeQuery(sql).getSingleResult();
-        if (result instanceof Number number) {
-            return number.longValue();
-        }
-        return 0;
-    }
-
     private List<EducationDuplicateReportResponse.DuplicateEntry> fetchDuplicateSamples(
-            String sql,
+            List<Object[]> rows,
             java.util.function.Function<Object[], String> labelMapper
     ) {
-        List<Object[]> rows = entityManager.createNativeQuery(sql).getResultList();
         List<EducationDuplicateReportResponse.DuplicateEntry> result = new java.util.ArrayList<>();
         for (Object[] row : rows) {
             String label = labelMapper.apply(row);

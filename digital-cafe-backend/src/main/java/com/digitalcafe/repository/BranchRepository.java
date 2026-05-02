@@ -64,4 +64,23 @@ public interface BranchRepository extends JpaRepository<Branch, Long> {
             order by b.name asc
             """)
     List<BranchRow> findRowsByName(@Param("name") String name);
+
+    @Query(value = """
+            select count(*) from (
+                select degree_id, name
+                from branches
+                group by degree_id, name
+                having count(*) > 1
+            ) t
+            """, nativeQuery = true)
+    long countDuplicateGroups();
+
+    @Query(value = """
+            select degree_id, name, count(*) cnt
+            from branches
+            group by degree_id, name
+            having count(*) > 1
+            limit 10
+            """, nativeQuery = true)
+    List<Object[]> findDuplicateSamples();
 }

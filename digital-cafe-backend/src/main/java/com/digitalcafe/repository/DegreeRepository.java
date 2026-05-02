@@ -17,4 +17,23 @@ public interface DegreeRepository extends JpaRepository<Degree, Long> {
 
     @Query("select d.name from Degree d where not exists (select 1 from Branch b where b.degree = d)")
     List<String> findDegreeNamesWithoutBranches();
+
+    @Query(value = """
+            select count(*) from (
+                select name
+                from degrees
+                group by name
+                having count(*) > 1
+            ) t
+            """, nativeQuery = true)
+    long countDuplicateGroups();
+
+    @Query(value = """
+            select name, count(*) cnt
+            from degrees
+            group by name
+            having count(*) > 1
+            limit 10
+            """, nativeQuery = true)
+    List<Object[]> findDuplicateSamples();
 }

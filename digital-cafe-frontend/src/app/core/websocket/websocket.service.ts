@@ -46,16 +46,12 @@ export class WebSocketService {
       return;
     }
 
-    const token = this.authService.getToken();
-    if (!token) {
+    if (!this.authService.currentUserValue) {
       return;
     }
 
     this.client = new Client({
       webSocketFactory: () => new SockJS(environment.wsUrl),
-      connectHeaders: {
-        Authorization: `Bearer ${token}`,
-      },
       debug: () => {},
       reconnectDelay: 5000,
       heartbeatIncoming: 4000,

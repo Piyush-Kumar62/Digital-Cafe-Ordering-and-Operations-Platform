@@ -72,6 +72,20 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     });
   }
 
+  const method = authReq.method.toUpperCase();
+  const isUnsafeMethod =
+    method === "POST" || method === "PUT" || method === "PATCH" || method === "DELETE";
+  if (isUnsafeMethod) {
+    const csrfToken = readCookie("XSRF-TOKEN");
+    if (csrfToken) {
+      authReq = authReq.clone({
+        setHeaders: {
+          "X-XSRF-TOKEN": csrfToken,
+        },
+      });
+    }
+  }
+
   return next(authReq).pipe(
     catchError((error: HttpErrorResponse) => {
       // Don't intercept auth endpoints to prevent loops
@@ -110,14 +124,18 @@ function handle401Error(
       switchMap((response: any) => {
         isRefreshing = false;
         // The service automatically stores the new access token
-        refreshTokenSubject.next(response.token);
-        return next(
-          request.clone({
-            setHeaders: {
-              Authorization: `Bearer ${response.token}`,
-            },
-          }),
-        ) as Observable<HttpEvent<any>>;
+        const token = response?.token ?? null;
+        refreshTokenSubject.next(token);
+        if (token) {
+          return next(
+            request.clone({
+              setHeaders: {
+                Authorization: `Bearer ${token}`,
+              },
+            }),
+          ) as Observable<HttpEvent<any>>;
+        }
+        return next(request) as Observable<HttpEvent<any>>;
       }),
       catchError((err) => {
         isRefreshing = false;
@@ -132,6 +150,9 @@ function handle401Error(
       filter((token) => token !== null),
       take(1),
       switchMap((token) => {
+        if (!token) {
+          return next(request) as Observable<HttpEvent<any>>;
+        }
         return next(
           request.clone({
             setHeaders: {
@@ -142,4 +163,10 @@ function handle401Error(
       }),
     );
   }
+}
+
+function readCookie(name: string): string | null {
+  const escaped = name.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
+  const match = document.cookie.match(new RegExp(`(?:^|; )${escaped}=([^;]*)`));
+  return match ? decodeURIComponent(match[1]) : null;
 }

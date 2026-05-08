@@ -24,6 +24,7 @@ export class AuthService {
   private currentUserSubject: BehaviorSubject<User | null>;
   public currentUser: Observable<User | null>;
   private apiUrl = `${environment.apiUrl}/auth`;
+  private accessToken: string | null = null;
 
   constructor(private http: HttpClient) {
     const storedUser = localStorage.getItem(environment.userKey);
@@ -39,7 +40,7 @@ export class AuthService {
   }
 
   public get isAuthenticated(): boolean {
-    return !!this.getToken() && !!this.currentUserValue;
+    return !!this.currentUserValue;
   }
 
   public get userRoles(): string[] {
@@ -202,24 +203,14 @@ export class AuthService {
   }
 
   private clearClientState(): void {
+    this.accessToken = null;
     localStorage.removeItem(environment.tokenKey);
     localStorage.removeItem(environment.userKey);
     this.currentUserSubject.next(null);
   }
 
   getToken(): string | null {
-    const token = localStorage.getItem(environment.tokenKey);
-    if (!token) {
-      this.clearStaleUser();
-      return null;
-    }
-
-    if (this.isTokenExpired(token)) {
-      this.logout();
-      return null;
-    }
-
-    return token;
+    return this.accessToken;
   }
 
   refreshToken(): Observable<AuthResponse> {
@@ -231,7 +222,7 @@ export class AuthService {
   }
 
   private handleAuthResponse(response: AuthResponse): void {
-    localStorage.setItem(environment.tokenKey, response.token);
+    this.accessToken = response.token || null;
 
     const user: User = {
       id: response.userId,
@@ -252,20 +243,9 @@ export class AuthService {
   }
 
   private normalizeAuthState(): void {
-    const token = localStorage.getItem(environment.tokenKey);
-    if (!token) {
-      this.clearStaleUser();
-      return;
-    }
-
-    if (this.isTokenExpired(token)) {
-      this.logout();
-      return;
-    }
-
-    // Token exists but no cached user — clear token to avoid auth drift
+    this.accessToken = null;
     if (!this.currentUserSubject.value) {
-      this.logout();
+      return;
     }
   }
 
@@ -273,26 +253,6 @@ export class AuthService {
     if (this.currentUserSubject.value) {
       localStorage.removeItem(environment.userKey);
       this.currentUserSubject.next(null);
-    }
-  }
-
-  private isTokenExpired(token: string): boolean {
-    try {
-      const payload = token.split(".")[1];
-      if (!payload) return false;
-      const base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
-      const json = decodeURIComponent(
-        atob(base64)
-          .split("")
-          .map((c) => `%${("00" + c.charCodeAt(0).toString(16)).slice(-2)}`)
-          .join(""),
-      );
-      const data = JSON.parse(json) as { exp?: number };
-      if (!data?.exp) return false;
-      const nowSeconds = Math.floor(Date.now() / 1000);
-      return data.exp <= nowSeconds;
-    } catch {
-      return false;
     }
   }
 

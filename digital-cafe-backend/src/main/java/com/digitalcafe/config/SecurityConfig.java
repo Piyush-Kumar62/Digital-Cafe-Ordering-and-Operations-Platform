@@ -1,8 +1,10 @@
 package com.digitalcafe.config;
 
 import com.digitalcafe.config.filter.CorrelationIdFilter;
+import com.digitalcafe.config.filter.CsrfDoubleSubmitFilter;
 import com.digitalcafe.config.filter.RateLimitFilter;
 import com.digitalcafe.config.filter.RequestLoggingFilter;
+import com.digitalcafe.config.filter.SecurityHeadersFilter;
 import com.digitalcafe.security.CustomUserDetailsService;
 import com.digitalcafe.security.JwtAuthenticationEntryPoint;
 import com.digitalcafe.security.JwtAuthenticationFilter;
@@ -44,7 +46,9 @@ public class SecurityConfig {
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     private final CorrelationIdFilter correlationIdFilter;
     private final RequestLoggingFilter requestLoggingFilter;
+    private final SecurityHeadersFilter securityHeadersFilter;
     private final RateLimitFilter rateLimitFilter;
+    private final CsrfDoubleSubmitFilter csrfDoubleSubmitFilter;
 
     /**
      * ProfileCompletionFilter: runs after JWT auth to enforce email verification
@@ -111,9 +115,11 @@ public class SecurityConfig {
                 // Correlation + logging + rate limit first
                 .addFilterBefore(correlationIdFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterAfter(requestLoggingFilter, CorrelationIdFilter.class)
+                .addFilterAfter(securityHeadersFilter, RequestLoggingFilter.class)
                 .addFilterAfter(rateLimitFilter, RequestLoggingFilter.class)
+                .addFilterAfter(csrfDoubleSubmitFilter, RateLimitFilter.class)
                 // JWT filter runs next; ProfileCompletionFilter runs after JWT to use the authenticated principal
-                .addFilterAfter(jwtAuthenticationFilter, RateLimitFilter.class)
+                .addFilterAfter(jwtAuthenticationFilter, CsrfDoubleSubmitFilter.class)
                 .addFilterAfter(profileCompletionFilter, JwtAuthenticationFilter.class);
 
         return http.build();

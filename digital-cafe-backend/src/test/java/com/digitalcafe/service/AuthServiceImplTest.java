@@ -19,13 +19,17 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -51,6 +55,12 @@ class AuthServiceImplTest {
 
     @InjectMocks
     private AuthServiceImpl authService;
+
+    private void enableLockoutForTests(int maxAttempts, int durationMinutes) {
+        ReflectionTestUtils.setField(authService, "lockoutEnabled", true);
+        ReflectionTestUtils.setField(authService, "maxFailedAttempts", maxAttempts);
+        ReflectionTestUtils.setField(authService, "lockoutDurationMinutes", durationMinutes);
+    }
 
     @Test
     void verifyEmailShouldRejectInvalidToken() {
@@ -172,5 +182,58 @@ class AuthServiceImplTest {
         assertThatThrownBy(() -> authService.login(request))
                 .isInstanceOf(BadRequestException.class)
                 .hasMessageContaining("verify your email");
+    }
+
+    @Test
+    void loginShouldLockUserAfterConfiguredFailedAttempts() {
+        enableLockoutForTests(3, 15);
+        User user = new User();
+        user.setId(10L);
+        user.setEmail("lock@test.com");
+        user.setIsActive(true);
+        user.setRegistrationStatus(User.RegistrationStatus.APPROVED);
+        user.setIsEmailVerified(true);
+        user.setFailedLoginAttempts(2);
+        user.setRoles(Set.of());
+
+        when(userRepository.findByEmail("lock@test.com")).thenReturn(Optional.of(user));
+        when(userAccessPolicy.isSystemAdmin(user)).thenReturn(false);
+        when(userAccessPolicy.requiresEmailVerification(user)).thenReturn(true);
+        when(authenticationManager.authenticate(any()))
+                .thenThrow(new BadCredentialsException("Bad credentials"));
+
+        LoginRequest request = new LoginRequest();
+        request.setEmail("lock@test.com");
+        request.setPassword("WrongPassword@123");
+
+        assertThatThrownBy(() -> authService.login(request))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("Invalid credentials");
+
+        verify(userRepository).save(user);
+    }
+
+    @Test
+    void loginShouldRejectLockedUserUntilLockExpires() {
+        enableLockoutForTests(5, 15);
+        User user = new User();
+        user.setId(11L);
+        user.setEmail("locked@test.com");
+        user.setIsActive(true);
+        user.setRegistrationStatus(User.RegistrationStatus.APPROVED);
+        user.setIsEmailVerified(true);
+        user.setLockedUntil(LocalDateTime.now().plusMinutes(5));
+
+        when(userRepository.findByEmail("locked@test.com")).thenReturn(Optional.of(user));
+
+        LoginRequest request = new LoginRequest();
+        request.setEmail("locked@test.com");
+        request.setPassword("Password@123");
+
+        assertThatThrownBy(() -> authService.login(request))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("Too many failed login attempts");
+
+        verify(authenticationManager, never()).authenticate(any());
     }
 }

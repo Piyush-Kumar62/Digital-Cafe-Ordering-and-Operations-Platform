@@ -37,10 +37,7 @@ public class AuthController {
     @PostMapping("/simple-register")
     public ResponseEntity<AuthResponse> simpleRegister(@Valid @RequestBody SimpleRegisterRequest request, HttpServletResponse servletResponse) {
         AuthResponse response = authService.register(request);
-        if (response.getRefreshToken() != null) {
-            HttpHeaders headers = cookieUtil.createRefreshTokenCookie(response.getRefreshToken());
-            headers.forEach((key, values) -> values.forEach(value -> servletResponse.addHeader(key, value)));
-        }
+        applyAuthCookies(servletResponse, response);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -63,20 +60,14 @@ public class AuthController {
             HttpServletResponse servletResponse) {
         List<MultipartFile> images = galleryImages == null ? List.of() : Arrays.asList(galleryImages);
         AuthResponse response = authService.registerCafeOwner(request, logo, images);
-        if (response.getRefreshToken() != null) {
-            HttpHeaders headers = cookieUtil.createRefreshTokenCookie(response.getRefreshToken());
-            headers.forEach((key, values) -> values.forEach(value -> servletResponse.addHeader(key, value)));
-        }
+        applyAuthCookies(servletResponse, response);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request, HttpServletResponse servletResponse) {
         AuthResponse response = authService.login(request);
-        if (response.getRefreshToken() != null) {
-            HttpHeaders headers = cookieUtil.createRefreshTokenCookie(response.getRefreshToken());
-            headers.forEach((key, values) -> values.forEach(value -> servletResponse.addHeader(key, value)));
-        }
+        applyAuthCookies(servletResponse, response);
         return ResponseEntity.ok(response);
     }
 
@@ -119,10 +110,7 @@ public class AuthController {
             @CookieValue(name = "refreshToken") String refreshToken, 
             HttpServletResponse servletResponse) {
         AuthResponse response = authService.refreshToken(refreshToken);
-        if (response.getRefreshToken() != null) {
-            HttpHeaders headers = cookieUtil.createRefreshTokenCookie(response.getRefreshToken());
-            headers.forEach((key, values) -> values.forEach(value -> servletResponse.addHeader(key, value)));
-        }
+        applyAuthCookies(servletResponse, response);
         return ResponseEntity.ok(response);
     }
 
@@ -135,9 +123,27 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<Map<String, String>> logout(HttpServletResponse servletResponse) {
         SecurityContextHolder.clearContext();
-        HttpHeaders headers = cookieUtil.clearRefreshTokenCookie();
-        headers.forEach((key, values) -> values.forEach(value -> servletResponse.addHeader(key, value)));
+        addHeaders(servletResponse, cookieUtil.clearRefreshTokenCookie());
+        addHeaders(servletResponse, cookieUtil.clearAccessTokenCookie());
+        addHeaders(servletResponse, cookieUtil.clearCsrfCookie());
         return ResponseEntity.ok(Map.of("message", "Logged out successfully"));
+    }
+
+    private void applyAuthCookies(HttpServletResponse servletResponse, AuthResponse response) {
+        if (response == null) {
+            return;
+        }
+        if (response.getRefreshToken() != null && !response.getRefreshToken().isBlank()) {
+            addHeaders(servletResponse, cookieUtil.createRefreshTokenCookie(response.getRefreshToken()));
+        }
+        if (response.getToken() != null && !response.getToken().isBlank()) {
+            addHeaders(servletResponse, cookieUtil.createAccessTokenCookie(response.getToken()));
+            addHeaders(servletResponse, cookieUtil.createCsrfCookie());
+        }
+    }
+
+    private void addHeaders(HttpServletResponse servletResponse, HttpHeaders headers) {
+        headers.forEach((key, values) -> values.forEach(value -> servletResponse.addHeader(key, value)));
     }
 }
 

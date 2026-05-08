@@ -61,9 +61,15 @@ class AuthControllerTest {
 
         HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.SET_COOKIE, "refreshToken=refresh-token; Path=/; HttpOnly");
+        HttpHeaders accessHeaders = new HttpHeaders();
+        accessHeaders.add(HttpHeaders.SET_COOKIE, "accessToken=access-token; Path=/; HttpOnly");
+        HttpHeaders csrfHeaders = new HttpHeaders();
+        csrfHeaders.add(HttpHeaders.SET_COOKIE, "XSRF-TOKEN=csrf-token; Path=/");
 
         when(authService.login(any(LoginRequest.class))).thenReturn(response);
         when(cookieUtil.createRefreshTokenCookie(anyString())).thenReturn(headers);
+        when(cookieUtil.createAccessTokenCookie(anyString())).thenReturn(accessHeaders);
+        when(cookieUtil.createCsrfCookie()).thenReturn(csrfHeaders);
 
         LoginRequest request = new LoginRequest();
         request.setEmail("customer@test.com");
@@ -91,7 +97,13 @@ class AuthControllerTest {
     void logoutShouldClearRefreshCookie() throws Exception {
         HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.SET_COOKIE, "refreshToken=; Path=/; Max-Age=0; HttpOnly");
+        HttpHeaders accessHeaders = new HttpHeaders();
+        accessHeaders.add(HttpHeaders.SET_COOKIE, "accessToken=; Path=/; Max-Age=0; HttpOnly");
+        HttpHeaders csrfHeaders = new HttpHeaders();
+        csrfHeaders.add(HttpHeaders.SET_COOKIE, "XSRF-TOKEN=; Path=/; Max-Age=0");
         when(cookieUtil.clearRefreshTokenCookie()).thenReturn(headers);
+        when(cookieUtil.clearAccessTokenCookie()).thenReturn(accessHeaders);
+        when(cookieUtil.clearCsrfCookie()).thenReturn(csrfHeaders);
 
         mockMvc.perform(post("/api/auth/logout"))
                 .andExpect(status().isOk())

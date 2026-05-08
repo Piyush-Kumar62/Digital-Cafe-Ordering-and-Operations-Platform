@@ -32,16 +32,6 @@ export class AppComponent implements OnInit, OnDestroy {
       this.disableTextSuggestionsGlobally();
       // this.initializeInlineValidationWarnings(); // Disabled to fix duplicate warnings
 
-      // Clear stale auth state on landing page when the JWT token is gone
-      const currentUrl = this.router.url;
-      if (
-        (currentUrl === '/' || currentUrl === '') &&
-        this.authService.currentUserValue &&
-        !this.authService.getToken()
-      ) {
-        this.authService.logout();
-      }
-
       // Defer WebSocket connection to avoid blocking the initial render
       setTimeout(() => {
         if (this.authService.isAuthenticated) {

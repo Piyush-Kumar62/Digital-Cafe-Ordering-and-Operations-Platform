@@ -85,7 +85,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: ./digital-cafe-backend
-          file: ./digital-cafe-backend/Dockerfile
+          file: ./infra/docker/backend.Dockerfile
           push: true
           tags: ${{ steps.backend_meta.outputs.tags }}
           labels: ${{ steps.backend_meta.outputs.labels }}
@@ -106,7 +106,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: ./digital-cafe-frontend
-          file: ./digital-cafe-frontend/Dockerfile
+          file: ./infra/docker/frontend.Dockerfile
           push: true
           build-args: |
             BUILD_CONFIGURATION=prod

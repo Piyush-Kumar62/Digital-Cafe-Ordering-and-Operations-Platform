@@ -7,7 +7,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.testcontainers.containers.MySQLContainer;
+import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
@@ -21,19 +21,19 @@ import static org.assertj.core.api.Assertions.assertThat;
 class MySqlSchemaContainerTest {
 
     @Container
-    static final MySQLContainer<?> MYSQL = new MySQLContainer<>("mysql:8.4")
+    static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:16")
             .withDatabaseName("digital_cafe_schema_test")
             .withUsername("test")
             .withPassword("test");
 
     @DynamicPropertySource
     static void configureDataSource(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", MYSQL::getJdbcUrl);
-        registry.add("spring.datasource.username", MYSQL::getUsername);
-        registry.add("spring.datasource.password", MYSQL::getPassword);
-        registry.add("spring.datasource.driver-class-name", () -> "com.mysql.cj.jdbc.Driver");
+        registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);
+        registry.add("spring.datasource.username", POSTGRES::getUsername);
+        registry.add("spring.datasource.password", POSTGRES::getPassword);
+        registry.add("spring.datasource.driver-class-name", () -> "org.postgresql.Driver");
         registry.add("spring.jpa.hibernate.ddl-auto", () -> "create");
-        registry.add("spring.jpa.database-platform", () -> "org.hibernate.dialect.MySQLDialect");
+        registry.add("spring.jpa.database-platform", () -> "org.hibernate.dialect.PostgreSQLDialect");
     }
 
     @Autowired
@@ -43,10 +43,10 @@ class MySqlSchemaContainerTest {
     void shouldCreateExpectedPaymentIndexes() {
         List<String> indexes = jdbcTemplate.queryForList(
                 """
-                SELECT DISTINCT index_name
-                FROM information_schema.statistics
-                WHERE table_schema = DATABASE()
-                  AND table_name = 'payments'
+                SELECT DISTINCT indexname
+                FROM pg_indexes
+                WHERE schemaname = 'public'
+                  AND tablename = 'payments'
                 """,
                 String.class
         );
@@ -61,7 +61,7 @@ class MySqlSchemaContainerTest {
                 """
                 SELECT COUNT(*)
                 FROM information_schema.key_column_usage
-                WHERE table_schema = DATABASE()
+                WHERE table_schema = 'public'
                   AND table_name = 'payments'
                   AND column_name = 'order_id'
                   AND referenced_table_name = 'orders'

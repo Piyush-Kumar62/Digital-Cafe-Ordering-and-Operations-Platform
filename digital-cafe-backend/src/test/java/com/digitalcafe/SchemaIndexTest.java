@@ -7,7 +7,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.containers.MySQLContainer;
+import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.EnabledIfDockerAvailable;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -21,17 +21,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 class SchemaIndexTest {
 
     @Container
-    private static final MySQLContainer<?> MYSQL =
-            new MySQLContainer<>("mysql:8.0")
+    private static final PostgreSQLContainer<?> POSTGRES =
+            new PostgreSQLContainer<>("postgres:16")
                     .withDatabaseName("digital_cafe_db")
                     .withUsername("test")
                     .withPassword("test");
 
     @DynamicPropertySource
     static void overrideProps(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", MYSQL::getJdbcUrl);
-        registry.add("spring.datasource.username", MYSQL::getUsername);
-        registry.add("spring.datasource.password", MYSQL::getPassword);
+        registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);
+        registry.add("spring.datasource.username", POSTGRES::getUsername);
+        registry.add("spring.datasource.password", POSTGRES::getPassword);
         registry.add("spring.jpa.hibernate.ddl-auto", () -> "update");
         registry.add("app.data.init.enabled", () -> "false");
     }
@@ -63,10 +63,11 @@ class SchemaIndexTest {
     private boolean indexExists(String table, String column) {
         Integer count = jdbcTemplate.queryForObject(
                 """
-                SELECT COUNT(*) FROM information_schema.statistics
-                WHERE table_schema = DATABASE()
-                  AND table_name = ?
-                  AND column_name = ?
+                SELECT COUNT(*)
+                FROM pg_indexes
+                WHERE schemaname = 'public'
+                  AND tablename = ?
+                  AND indexdef ILIKE '%' || ? || '%'
                 """,
                 Integer.class,
                 table,

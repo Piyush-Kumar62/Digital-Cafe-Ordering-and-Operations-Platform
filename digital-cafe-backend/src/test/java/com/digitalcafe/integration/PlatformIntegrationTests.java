@@ -16,6 +16,7 @@ import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 
+import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -42,6 +43,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 class PlatformIntegrationTests {
+    private static final String TEST_CSRF_TOKEN = "test-csrf-token";
+
 
     @Autowired
     private MockMvc mockMvc;
@@ -75,6 +78,8 @@ class PlatformIntegrationTests {
                 .build();
 
         mockMvc.perform(post("/api/bookings")
+                        .cookie(new Cookie("XSRF-TOKEN", TEST_CSRF_TOKEN))
+                        .header("X-XSRF-TOKEN", TEST_CSRF_TOKEN)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isConflict());
@@ -108,7 +113,9 @@ class PlatformIntegrationTests {
         when(orderService.updateOrderStatus(anyLong(), any()))
                 .thenThrow(new com.digitalcafe.exception.AccessDeniedException("Chef can only move PREPARING orders to READY"));
 
-        mockMvc.perform(put("/api/chef/order/1/ready"))
+        mockMvc.perform(put("/api/chef/order/1/ready")
+                        .cookie(new Cookie("XSRF-TOKEN", TEST_CSRF_TOKEN))
+                        .header("X-XSRF-TOKEN", TEST_CSRF_TOKEN))
                 .andExpect(status().isForbidden());
     }
 
@@ -134,7 +141,9 @@ class PlatformIntegrationTests {
         when(orderService.updateOrderStatus(anyLong(), any()))
                 .thenThrow(new com.digitalcafe.exception.AccessDeniedException("Waiter can only move READY orders to SERVED"));
 
-        mockMvc.perform(put("/api/waiter/order/1/served"))
+        mockMvc.perform(put("/api/waiter/order/1/served")
+                        .cookie(new Cookie("XSRF-TOKEN", TEST_CSRF_TOKEN))
+                        .header("X-XSRF-TOKEN", TEST_CSRF_TOKEN))
                 .andExpect(status().isForbidden());
     }
 

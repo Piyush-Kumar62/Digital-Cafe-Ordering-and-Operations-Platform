@@ -37,7 +37,7 @@ get_param_optional() {
 echo "Rendering backend env file from SSM prefix: $SSM_PREFIX"
 
 DB_HOST="$(get_param_optional "$SSM_PREFIX/DB_HOST" "")"
-DB_PORT="$(get_param_optional "$SSM_PREFIX/DB_PORT" "3306")"
+DB_PORT="$(get_param_optional "$SSM_PREFIX/DB_PORT" "5432")"
 DB_NAME="$(get_param_optional "$SSM_PREFIX/DB_NAME" "")"
 DB_URL="$(get_param_optional "$SSM_PREFIX/DB_URL" "")"
 
@@ -46,15 +46,15 @@ if [[ -n "$DB_URL" ]]; then
     echo "Refusing to write env: DB_URL points to localhost ($DB_URL)"
     exit 1
   fi
-  if [[ -z "$DB_HOST" ]] && [[ "$DB_URL" =~ jdbc:mysql://([^:/]+)(:([0-9]+))?/([^?]+) ]]; then
+  if [[ -z "$DB_HOST" ]] && [[ "$DB_URL" =~ jdbc:postgresql://([^:/]+)(:([0-9]+))?/([^?]+) ]]; then
     DB_HOST="${BASH_REMATCH[1]}"
-    DB_PORT="${BASH_REMATCH[3]:-3306}"
+    DB_PORT="${BASH_REMATCH[3]:-5432}"
     DB_NAME="${BASH_REMATCH[4]}"
   fi
 fi
 
 if [[ -z "$DB_HOST" || -z "$DB_NAME" ]]; then
-  echo "Missing DB settings in SSM. Provide DB_HOST/DB_NAME (or DB_URL parsable as jdbc:mysql://host:port/db)."
+  echo "Missing DB settings in SSM. Provide DB_HOST/DB_NAME (or DB_URL parsable as jdbc:postgresql://host:port/db)."
   exit 1
 fi
 

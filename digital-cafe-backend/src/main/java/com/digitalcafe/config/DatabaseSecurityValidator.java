@@ -13,8 +13,8 @@ import java.util.Arrays;
 @Component
 public class DatabaseSecurityValidator {
 
-    @Value("${app.database.enforce-mysql-only:true}")
-    private boolean enforceMySqlOnly;
+    @Value("${app.database.enforce-postgres-only:true}")
+    private boolean enforcePostgresOnly;
 
     @Value("${spring.datasource.url:}")
     private String datasourceUrl;
@@ -30,25 +30,25 @@ public class DatabaseSecurityValidator {
 
     @PostConstruct
     public void validateDatabaseConfiguration() {
-        if (!enforceMySqlOnly || isTestProfileActive()) {
+        if (!enforcePostgresOnly || isTestProfileActive()) {
             return;
         }
 
         String normalizedUrl = datasourceUrl == null ? "" : datasourceUrl.toLowerCase();
         String normalizedDriver = datasourceDriver == null ? "" : datasourceDriver.toLowerCase();
 
-        boolean mysqlUrl = normalizedUrl.startsWith("jdbc:mysql:");
-        boolean mysqlDriver = !StringUtils.hasText(normalizedDriver)
-                || normalizedDriver.contains("mysql");
+        boolean postgresUrl = normalizedUrl.startsWith("jdbc:postgresql:");
+        boolean postgresDriver = !StringUtils.hasText(normalizedDriver)
+                || normalizedDriver.contains("postgresql");
 
-        if (!mysqlUrl || !mysqlDriver) {
+        if (!postgresUrl || !postgresDriver) {
             throw new IllegalStateException(
-                    "MySQL-only policy violation: spring.datasource.url must start with 'jdbc:mysql:' "
-                            + "and driver must be MySQL-compatible."
+                    "PostgreSQL-only policy violation: spring.datasource.url must start with 'jdbc:postgresql:' "
+                            + "and driver must be PostgreSQL-compatible."
             );
         }
 
-        log.info("database_policy=MYSQL_ONLY_ENFORCED datasourceUrl={}", redactUrl(datasourceUrl));
+        log.info("database_policy=POSTGRES_ONLY_ENFORCED datasourceUrl={}", redactUrl(datasourceUrl));
     }
 
     private boolean isTestProfileActive() {

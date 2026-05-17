@@ -764,6 +764,7 @@ public class DevDataInitializer implements CommandLineRunner {
                 cafe.setRating(rating);
                 cafe.setFssaiNumber(fssai);
                 cafe.setIsActive(true);
+                cafe.setStatus(Cafe.CafeStatus.ACTIVE);
                 cafe.setOwner(owner);
                 Cafe savedCafe = cafeRepository.save(cafe);
                 existingByEmail.put(emailKey, savedCafe);
@@ -1752,6 +1753,10 @@ public class DevDataInitializer implements CommandLineRunner {
             }
             if (!Boolean.TRUE.equals(cafe.getIsActive())) {
                 cafe.setIsActive(true);
+                changed = true;
+            }
+            if (cafe.getStatus() == null) {
+                cafe.setStatus(Cafe.CafeStatus.ACTIVE);
                 changed = true;
             }
             if (changed) {

@@ -47,7 +47,7 @@ public class OpenAPIConfig {
 Secure REST API for managing cafe operations including authentication, table booking, order management, and payments.
 
 ### Tech Stack
-Spring Boot • Spring Security • JWT • MySQL • WebSocket • Mailtrap
+Spring Boot • Spring Security • JWT • PostgreSQL • WebSocket • Mailtrap
 """)
                 .contact(contact);
 

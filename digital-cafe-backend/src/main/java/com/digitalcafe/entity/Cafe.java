@@ -23,6 +23,11 @@ import java.util.List;
 @SuperBuilder
 public class Cafe extends BaseEntity {
 
+    public enum CafeStatus {
+        ACTIVE,
+        INACTIVE
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -75,6 +80,11 @@ public class Cafe extends BaseEntity {
     @Column(name = "is_active", nullable = false)
     @Builder.Default
     private Boolean isActive = true;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false, length = 30)
+    @Builder.Default
+    private CafeStatus status = CafeStatus.ACTIVE;
 
     @Column(name = "image_url")
     private String imageUrl;

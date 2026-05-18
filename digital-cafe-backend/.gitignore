@@ -30,6 +30,10 @@ env/.env.dev
 env/.env.prod
 !env/.env.prod.example
 
+# Accidental local Maven cache folder from misconfigured IDE path
+/${user.home}/
+/docker/
+
 # Secrets and keys
 *.pem
 *.key

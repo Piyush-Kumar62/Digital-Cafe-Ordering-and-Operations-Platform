@@ -7,7 +7,7 @@
 [![Java](https://img.shields.io/badge/Java-21-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)](https://openjdk.org/)
 [![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.5.10-6DB33F?style=for-the-badge&logo=spring-boot&logoColor=white)](https://spring.io/projects/spring-boot)
 [![Angular](https://img.shields.io/badge/Angular-20-DD0031?style=for-the-badge&logo=angular&logoColor=white)](https://angular.io/)
-[![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?style=for-the-badge&logo=mysql&logoColor=white)](https://www.mysql.com/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![Razorpay](https://img.shields.io/badge/Razorpay-Payment-002970?style=for-the-badge&logo=razorpay&logoColor=white)](https://razorpay.com/)
 [![AWS](https://img.shields.io/badge/AWS-EC2%20%7C%20RDS%20%7C%20S3-232F3E?style=for-the-badge&logo=amazonaws&logoColor=white)](https://aws.amazon.com/)
 [![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](LICENSE)
@@ -78,7 +78,7 @@ This platform digitizes the complete cafe flow:
 - Spring Security + JWT
 - Spring Data JPA (Hibernate)
 - Spring WebSocket (STOMP)
-- MySQL
+- PostgreSQL
 
 ### Frontend
 
@@ -105,7 +105,7 @@ This platform digitizes the complete cafe flow:
    |
    +--> [Spring Boot API]
             |
-            +--> [MySQL]
+            +--> [PostgreSQL]
             +--> [S3/Local Storage]
             +--> [SMTP / Payment Provider]
 ```
@@ -200,6 +200,7 @@ Digital-Cafe-Ordering-and-Operations-Platform/
 │       └── shared/
 ├── infra/
 │   ├── compose/
+│   ├── docker/
 │   ├── scripts/
 │   └── nginx/
 └── docs/
@@ -267,12 +268,14 @@ Production flow:
 - Push images to container registry
 - Deploy on AWS EC2 using Docker Compose
 - Nginx handles reverse proxy and HTTPS termination
-- MySQL hosted on AWS RDS (recommended)
+- PostgreSQL hosted on AWS RDS (recommended)
 - Static/media files can use S3
 
 Useful files:
 
 - `infra/compose/docker-compose.prod.yml`
+- `infra/docker/backend.Dockerfile`
+- `infra/docker/frontend.Dockerfile`
 - `infra/scripts/deploy.sh`
 - `infra/scripts/render-env-from-ssm.sh`
 - `.github/workflows/ci-cd.yml`
@@ -304,3 +307,4 @@ Useful files:
 - LinkedIn: https://linkedin.com/in/your-linkedin
 
 ---
+

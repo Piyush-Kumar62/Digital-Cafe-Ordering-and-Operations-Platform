@@ -53,6 +53,7 @@ public class OrderController {
     @GetMapping("/{orderId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'CUSTOMER', 'CAFE_OWNER', 'CHEF', 'WAITER')")
     public ResponseEntity<ApiResponse<OrderResponse>> getOrderById(@PathVariable Long orderId) {
+        orderService.validateOrderAccess(orderId);
         OrderResponse response = orderService.getOrderById(orderId);
         return ResponseEntity.ok(ApiResponse.success("Order retrieved successfully", response));
     }

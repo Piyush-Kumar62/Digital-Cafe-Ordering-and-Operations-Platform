@@ -25,6 +25,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.http.HttpMethod;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -72,8 +73,6 @@ public class SecurityConfig {
                                 "/api/institutions",
                                 "/api/degrees",
                                 "/api/branches",
-                                "/api/cafes",
-                                "/api/cafes/**",
                                 "/api/menu-items/cafe/**",
                                 "/api/tables/cafe/**",
                                 "/api/tables/available",
@@ -82,12 +81,20 @@ public class SecurityConfig {
                                 "/uploads/**",
                                 "/",
                                 "/health",
-                                "/actuator/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
                                 "/v3/api-docs/**",
                                 "/v3/api-docs",
                                 "/ws/**"
+                        ).permitAll()
+                        .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/cafes",
+                                "/api/cafes/active",
+                                "/api/cafes/*",
+                                "/api/cafes/*/logo",
+                                "/api/cafes/*/cover",
+                                "/api/cafes/*/gallery"
                         ).permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/owner/**").hasRole("CAFE_OWNER")

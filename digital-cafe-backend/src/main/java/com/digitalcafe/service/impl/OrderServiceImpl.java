@@ -8,6 +8,7 @@ import com.digitalcafe.dto.response.OrderResponse;
 import com.digitalcafe.dto.response.PageResponse;
 import com.digitalcafe.entity.*;
 import com.digitalcafe.exception.BusinessException;
+import com.digitalcafe.exception.AccessDeniedException;
 import com.digitalcafe.exception.ResourceNotFoundException;
 import com.digitalcafe.mapper.OrderMapper;
 import com.digitalcafe.repository.*;
@@ -20,6 +21,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -281,6 +284,41 @@ public class OrderServiceImpl implements OrderService {
     @Transactional(readOnly = true)
     public Order getOrderEntity(Long orderId) {
         return fetchOrder(orderId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public void validateOrderAccess(Long orderId) {
+        Order order = fetchOrder(orderId);
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+        User actor = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "email", email));
+
+        if (actor.hasRole(Role.RoleName.ADMIN)) {
+            return;
+        }
+
+        if (actor.hasRole(Role.RoleName.CUSTOMER)) {
+            if (!order.getCustomer().getId().equals(actor.getId())) {
+                throw new AccessDeniedException("You cannot access this order");
+            }
+            return;
+        }
+
+        if (actor.hasRole(Role.RoleName.CAFE_OWNER)
+                || actor.hasRole(Role.RoleName.CHEF)
+                || actor.hasRole(Role.RoleName.WAITER)) {
+            Long actorCafeId = actor.getCafe() != null ? actor.getCafe().getId() : null;
+            Long orderCafeId = order.getCafe() != null ? order.getCafe().getId() : null;
+            if (actorCafeId == null || orderCafeId == null || !actorCafeId.equals(orderCafeId)) {
+                throw new AccessDeniedException("You cannot access orders from another cafe");
+            }
+            return;
+        }
+
+        throw new AccessDeniedException("Order access denied");
     }
 
     private Order fetchOrder(Long orderId) {

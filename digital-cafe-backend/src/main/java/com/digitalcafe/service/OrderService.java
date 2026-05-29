@@ -86,6 +86,7 @@ public interface OrderService {
      * Get the raw Order entity by ID (for internal service-to-service use).
      */
     Order getOrderEntity(Long orderId);
+    void validateOrderAccess(Long orderId);
 
     /**
      * Get chef dashboard stats for a given cafe.

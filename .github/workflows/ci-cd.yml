@@ -33,7 +33,7 @@ jobs:
 
       - name: Backend compile
         working-directory: digital-cafe-backend
-        run: mvn -B -ntp -DskipTests clean package
+        run: mvn -B -ntp clean test package
 
       - name: Set up Node 20
         uses: actions/setup-node@v4

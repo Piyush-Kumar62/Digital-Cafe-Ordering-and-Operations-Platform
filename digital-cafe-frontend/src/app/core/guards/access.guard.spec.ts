@@ -27,6 +27,7 @@ describe('accessGuard', () => {
       },
       userRoles: [UserRole.CUSTOMER],
       isSystemAdmin: () => false,
+      isCafeOwner: () => false,
       isCustomer: () => true,
       getRoleDashboardRoute: () => '/customer/dashboard',
     };

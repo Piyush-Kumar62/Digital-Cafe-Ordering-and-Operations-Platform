@@ -32,18 +32,15 @@ describe("PostalPincodeService", () => {
     });
 
     const req = httpMock.expectOne(
-      "https://api.postalpincode.in/pincode/400001",
+      "http://localhost:8080/api/postal/pincode/400001",
     );
-    req.flush([
-      {
-        Status: "Success",
-        PostOffice: [
-          { District: "Mumbai", State: "Maharashtra" },
-          { District: "Mumbai", State: "Maharashtra" },
-          { District: "Navi Mumbai", State: "Maharashtra" },
-        ],
+    req.flush({
+      status: "success",
+      data: {
+        cities: ["Mumbai", "Navi Mumbai"],
+        states: ["Maharashtra"],
       },
-    ]);
+    });
   });
 
   it("should return not_found when API has no data", () => {
@@ -52,14 +49,11 @@ describe("PostalPincodeService", () => {
     });
 
     const req = httpMock.expectOne(
-      "https://api.postalpincode.in/pincode/000000",
+      "http://localhost:8080/api/postal/pincode/000000",
     );
-    req.flush([
-      {
-        Status: "Error",
-        PostOffice: null,
-      },
-    ]);
+    req.flush({
+      status: "not_found",
+    });
   });
 
   it("should return error on HTTP failure", () => {
@@ -68,7 +62,7 @@ describe("PostalPincodeService", () => {
     });
 
     const req = httpMock.expectOne(
-      "https://api.postalpincode.in/pincode/500000",
+      "http://localhost:8080/api/postal/pincode/500000",
     );
     req.flush("Server error", {
       status: 500,
